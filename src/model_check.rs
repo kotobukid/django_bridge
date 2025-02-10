@@ -37,7 +37,29 @@ class Card(models.Model):
                             if let Some(Ok((Tok::Name { name: field_type }, _))) =
                                 tokens_iter.next()
                             {
-                                fields.push((field_name, field_type));
+                                // アトリビュートを収集
+                                let mut attributes = vec![];
+                                if let Some(Ok((Tok::Lpar, _))) = tokens_iter.peek() {
+                                    tokens_iter.next(); // "(" を消費
+                                    while let Some(Ok((Tok::Name { name: attr_name }, _))) =
+                                        tokens_iter.next()
+                                    {
+                                        if let Some(Ok((Tok::Equal, _))) = tokens_iter.next() {
+                                            if let Some(Ok((attr_value, _))) = tokens_iter.next() {
+                                                attributes.push((
+                                                    attr_name.clone(),
+                                                    format!("{:?}", attr_value),
+                                                ));
+                                            }
+                                        }
+                                        if let Some(Ok((Tok::Rpar, _))) = tokens_iter.peek() {
+                                            tokens_iter.next(); // ")" を消費
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                fields.push((field_name, field_type, attributes));
                             }
                         }
                     }
@@ -49,7 +71,11 @@ class Card(models.Model):
 
     println!("Class Name: {}", class_name);
     println!("Fields:");
-    for (field_name, field_type) in fields {
-        println!("  {}: {}", field_name, field_type);
+    for (field_name, field_type, attributes) in fields {
+        println!("  {}: {} {{", field_name, field_type);
+        for (attr_name, attr_value) in attributes {
+            println!("    {}: {}", attr_name, attr_value);
+        }
+        println!("  }}");
     }
 }
