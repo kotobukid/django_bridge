@@ -9,3 +9,10 @@ class Card(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Tag(models.Model):
+    label = models.CharField(max_length=128, null=False, blank=False)
+
+    def __str__(self):
+        return self.label

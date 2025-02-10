@@ -1,17 +1,12 @@
-use std::fs;
-use std::env;
-use std::path::Path;
-// use rustpython_parser::Tok;
-// use rustpython_parser_core::mode::Mode;
-// use rustpython_parser::lexer::{lex, Mode};
 use rustpython_parser::lexer::lex;
 use rustpython_parser::Tok;
 use rustpython_parser_core::mode::Mode;
-// use num_bigint::BigInt;
-// use rustpython_parser::ast::Location;
+use std::fs;
+use std::fs::OpenOptions;
+use std::io::Write;
+use std::path::Path;
 
 fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
-
     // トークンを収集
     let tokens = lex(python_code, Mode::Module)
         .collect::<Result<Vec<_>, _>>()
@@ -45,7 +40,10 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
                                 if let (Tok::Dot, _) = &tokens[i + 3] {
                                     if let (Tok::Name { name: field_type }, _) = &tokens[i + 4] {
                                         if field_type.ends_with("Field") {
-                                            println!("Found field: {} of type {}", name, field_type);
+                                            println!(
+                                                "Found field: {} of type {}",
+                                                name, field_type
+                                            );
 
                                             // 属性を解析
                                             let mut is_nullable = false;
@@ -58,26 +56,45 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
                                                     Tok::Newline => break,
                                                     // null属性
                                                     Tok::Name { name: kw } if kw == "null" => {
-                                                        if let Some((Tok::Equal, _)) = tokens.get(j + 1) {
-                                                            if let Some((Tok::True, _)) = tokens.get(j + 2) {
+                                                        if let Some((Tok::Equal, _)) =
+                                                            tokens.get(j + 1)
+                                                        {
+                                                            if let Some((Tok::True, _)) =
+                                                                tokens.get(j + 2)
+                                                            {
                                                                 is_nullable = true;
                                                             }
                                                         }
                                                     }
                                                     // default属性
                                                     Tok::Name { name: kw } if kw == "default" => {
-                                                        if let Some((Tok::Equal, _)) = tokens.get(j + 1) {
-                                                            if let Some((Tok::String { value, .. }, _)) = tokens.get(j + 2) {
+                                                        if let Some((Tok::Equal, _)) =
+                                                            tokens.get(j + 1)
+                                                        {
+                                                            if let Some((
+                                                                Tok::String { value, .. },
+                                                                _,
+                                                            )) = tokens.get(j + 2)
+                                                            {
                                                                 default_value = Some(value.clone());
                                                             }
                                                         }
                                                     }
                                                     // max_length属性
-                                                    Tok::Name { name: kw } if kw == "max_length" => {
-                                                        if let Some((Tok::Equal, _)) = tokens.get(j + 1) {
-                                                            if let Some((Tok::Int { value, .. }, _)) = tokens.get(j + 2) {
+                                                    Tok::Name { name: kw }
+                                                        if kw == "max_length" =>
+                                                    {
+                                                        if let Some((Tok::Equal, _)) =
+                                                            tokens.get(j + 1)
+                                                        {
+                                                            if let Some((
+                                                                Tok::Int { value, .. },
+                                                                _,
+                                                            )) = tokens.get(j + 2)
+                                                            {
                                                                 // BigIntをStringに変換して保存
-                                                                max_length = Some(value.to_string());
+                                                                max_length =
+                                                                    Some(value.to_string());
                                                             }
                                                         }
                                                     }
@@ -108,8 +125,10 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
     }
 
     // Rustの構造体定義を生成
-    let mut rust_struct =
-        format!("use sqlx;\nuse chrono;\n\n#[derive(sqlx::FromRow, Debug, Clone)]\npub struct {} {{\n", format!("{}Db", struct_name));
+    let mut rust_struct = format!(
+        "#[derive(sqlx::FromRow, Debug, Clone)]\npub struct {} {{\n",
+        format!("{}Db", struct_name)
+    );
 
     rust_struct.push_str("    /// Primary Key\n    pub id: u64,\n");
 
@@ -155,16 +174,33 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
 
 fn main() {
     let out_dir = "src/gen";
-    let python_code = fs::read_to_string("../table_definition/wix/models.py").unwrap();
-
-    // Python コードを Rust のソースコードとして出力
-    let dest_path = Path::new(out_dir).join("django_models.rs");
-
     fs::create_dir_all(out_dir).unwrap();
 
-    fs::write(
-        &dest_path,
-        format!("{}", generate_struct_from_python("Card", &*python_code))
+    let models = [
+        ("Card", "../table_definition/wix/models.py"),
+        ("Tag", "../table_definition/wix/models.py"),
+    ];
 
-    ).unwrap();
+    let dest_path = Path::new(out_dir).join("django_models.rs");
+
+    fs::remove_file(&dest_path).unwrap();
+
+    let mut file = OpenOptions::new()
+        .create(true) // ファイルがなければ作成
+        .append(true) // 追記モード
+        .open(&dest_path)
+        .unwrap();
+
+    writeln!(file, "use sqlx;\nuse chrono;\n").unwrap();
+
+    for (struct_name, file_path) in models {
+        let python_code = fs::read_to_string(file_path).unwrap();
+
+        writeln!(
+            file,
+            "\n{}",
+            generate_struct_from_python(struct_name, &*python_code)
+        )
+        .unwrap();
+    }
 }

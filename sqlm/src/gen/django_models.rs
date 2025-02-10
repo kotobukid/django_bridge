@@ -1,6 +1,7 @@
 use sqlx;
 use chrono;
 
+
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct CardDb {
     /// Primary Key
@@ -12,3 +13,13 @@ pub struct CardDb {
     /// Max length: 128
     pub option1: Option<String>,
 }
+
+
+#[derive(sqlx::FromRow, Debug, Clone)]
+pub struct TagDb {
+    /// Primary Key
+    pub id: u64,
+    /// Max length: 128
+    pub label: String,
+}
+
