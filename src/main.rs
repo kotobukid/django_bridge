@@ -1,5 +1,14 @@
 use sqlx::postgres::{PgPool, PgPoolOptions};
+use sqlx::FromRow;
 use tokio;
+use chrono;
+
+#[derive(FromRow)]
+struct Card {
+    id: i64,
+    name: String,
+    created_at: chrono::DateTime<chrono::Utc> ,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {

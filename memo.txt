@@ -1,0 +1,7 @@
+# sqlx-cliをインストール
+cargo install sqlx-cli
+
+# マイグレーションファイルを生成
+sqlx migrate add create_card_table
+
+# migrations/にファイルが作成される（空テキスト）
