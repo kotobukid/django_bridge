@@ -1,7 +1,10 @@
-pub use crate::gen::django_models::CardDb;
-use std::fmt::{Display, Formatter}; // 再エクスポート
+use serde::Serialize;
+use std::fmt::{Display, Formatter};
 
-#[derive(Debug)]
+// 再エクスポート
+pub use crate::gen::django_models::CardDb;
+
+#[derive(Debug, Serialize)]
 pub struct Card(pub CardDb);
 
 impl From<CardDb> for Card {

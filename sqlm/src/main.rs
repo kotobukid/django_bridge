@@ -3,6 +3,7 @@ mod models;
 
 use models::{Card, CardDb};
 use sqlx::postgres::PgPoolOptions;
+use serde_json;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -19,8 +20,10 @@ async fn main() -> Result<(), sqlx::Error> {
         .collect();
 
     for card in cards {
-        println!("{:?}", card);
-        println!("{}", card.to_custom_string());
+        println!();
+        println!("Debug: {:?}", card);
+        println!("Custom: {}", card.to_custom_string());
+        println!("JSON: {}", serde_json::to_string(&card).unwrap());
     }
 
     Ok(())
