@@ -49,6 +49,18 @@ fn generate_struct_from_python(
                                                 name, field_type
                                             );
 
+                                            match field_type.as_str() {
+                                                "TimeField" => {
+                                                    use_crate.use_chrono = true;
+                                                    use_crate.use_chrono_naive_time = true;
+                                                }
+                                                "DateTimeField" => {
+                                                    use_crate.use_chrono = true;
+                                                    use_crate.use_chrono_datetimetz = true;
+                                                }
+                                                _ => {}
+                                            }
+
                                             // 属性を解析
                                             let mut is_nullable = false;
                                             let mut default_value = None;
@@ -210,10 +222,6 @@ fn generate_struct_from_python(
     if python_code.contains("GenericIPAddressField") {
         use_crate.use_std_net = true;
     }
-    if python_code.contains("TimeField") {
-        use_crate.use_chrono = true;
-        use_crate.use_chrono_naive_time = true;
-    }
     if python_code.contains("DurationField") {
         use_crate.use_chrono = true;
         use_crate.use_chrono_duration = true;
@@ -222,10 +230,15 @@ fn generate_struct_from_python(
         use_crate.use_chrono = true;
         use_crate.use_chrono_naive_date = true;
     }
-    if python_code.contains("DateTimeField") {
-        use_crate.use_chrono = true;
-        use_crate.use_chrono_datetimetz = true;
-    }
+    // トークン解析ステップで確認している
+    // if python_code.contains("TimeField") {
+    //     use_crate.use_chrono = true;
+    //     use_crate.use_chrono_naive_time = true;
+    // }
+    // if python_code.contains("DateTimeField") {
+    //     use_crate.use_chrono = true;
+    //     use_crate.use_chrono_datetimetz = true;
+    // }
 
     rust_struct.push_str("}\n");
     rust_struct
