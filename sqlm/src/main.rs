@@ -1,5 +1,4 @@
 mod gen;
-mod syncdb;
 
 use std::fmt::{write, Display, Formatter};
 use std::fs;
@@ -22,16 +21,20 @@ impl Display for Card {
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    // let pool = PgPoolOptions::new()
-    //     .max_connections(5)
-    //     .connect("postgres://postgres:postgres@192.168.33.10:5432/postgres")
-    //     .await?;
-    //
-    // let row: (i64,) = sqlx::query_as("SELECT $1")
-    //     .bind(150_i64)
-    //     .fetch_one(&pool)
-    //     .await?;
-    //
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect("postgres://postgres:postgres@192.168.33.10:5432/postgres")
+        .await?;
+
+    let cards: Vec<django_models::CardDb> = sqlx::query_as::<_, django_models::CardDb>("SELECT * FROM wix_card")
+        .fetch_all(&pool)
+        .await?;
+
+    for card in cards {
+        println!("{:?}", card);
+    }
+
+
     // assert_eq!(row.0, 150);
 
     // let file_path = "../table_definition/wix/models.py"; // Pythonファイルのパス
