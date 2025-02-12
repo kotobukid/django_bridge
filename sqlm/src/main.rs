@@ -24,6 +24,21 @@ async fn main() -> Result<(), sqlx::Error> {
         println!("Debug: {:?}", card);
         println!("Custom: {}", card.to_custom_string());
         println!("JSON: {}", serde_json::to_string(&card).unwrap());
+        match &card.info {
+            Some(info) => {
+                match serde_json::from_str::<serde_json::Value>(&info.to_string()) {
+                    Ok(value) => {
+                        println!("  .Info: {:?}", value);
+                    }
+                    Err(e) => {
+                        println!("  .Info(parse error): {:?}", e);
+                    }
+                }
+            }
+            None => {
+                println!("Info: None");
+            }
+        }
     }
 
     Ok(())

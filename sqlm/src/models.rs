@@ -1,10 +1,10 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 
 // 再エクスポート
 pub use crate::gen::django_models::CardDb;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Card(pub CardDb);
 
 impl From<CardDb> for Card {

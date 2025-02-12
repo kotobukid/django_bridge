@@ -13,6 +13,8 @@ pub struct CardDb {
     /// Max length: 128
     pub option1: Option<String>,
     pub info: Option<Value>,
+    /// Default: 813-0041, Max length: 10
+    pub zip_code: String,
 }
 
 #[allow(dead_code)]
