@@ -72,9 +72,9 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
                                                             tokens.get(j + 1)
                                                         {
                                                             if let Some((
-                                                                Tok::String { value, .. },
-                                                                _,
-                                                            )) = tokens.get(j + 2)
+                                                                            Tok::String { value, .. },
+                                                                            _,
+                                                                        )) = tokens.get(j + 2)
                                                             {
                                                                 default_value = Some(value.clone());
                                                             }
@@ -82,22 +82,22 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
                                                     }
                                                     // max_length属性
                                                     Tok::Name { name: kw }
-                                                        if kw == "max_length" =>
-                                                    {
-                                                        if let Some((Tok::Equal, _)) =
-                                                            tokens.get(j + 1)
+                                                    if kw == "max_length" =>
                                                         {
-                                                            if let Some((
-                                                                Tok::Int { value, .. },
-                                                                _,
-                                                            )) = tokens.get(j + 2)
+                                                            if let Some((Tok::Equal, _)) =
+                                                                tokens.get(j + 1)
                                                             {
-                                                                // BigIntをStringに変換して保存
-                                                                max_length =
-                                                                    Some(value.to_string());
+                                                                if let Some((
+                                                                                Tok::Int { value, .. },
+                                                                                _,
+                                                                            )) = tokens.get(j + 2)
+                                                                {
+                                                                    // BigIntをStringに変換して保存
+                                                                    max_length =
+                                                                        Some(value.to_string());
+                                                                }
                                                             }
                                                         }
-                                                    }
                                                     _ => {}
                                                 }
                                                 j += 1;
@@ -201,6 +201,6 @@ fn main() {
             "\n{}",
             generate_struct_from_python(struct_name, &*python_code)
         )
-        .unwrap();
+            .unwrap();
     }
 }

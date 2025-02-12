@@ -1,4 +1,5 @@
 mod gen;
+mod syncdb;
 
 use std::fmt::{write, Display, Formatter};
 use std::fs;
@@ -39,6 +40,7 @@ async fn main() -> Result<(), sqlx::Error> {
     // // Pythonコードをファイルから読み取る
     // let python_source = fs::read_to_string(file_path)?;
     // println!("{}", python_source);
+
 
 
     let card = Card(django_models::CardDb {
