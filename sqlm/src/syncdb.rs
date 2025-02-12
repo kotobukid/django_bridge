@@ -126,7 +126,7 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
 
     // Rustの構造体定義を生成
     let mut rust_struct = format!(
-        "#[derive(sqlx::FromRow, Debug, Clone)]\npub struct {} {{\n",
+        "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone)]\npub struct {} {{\n",
         format!("{}Db", struct_name)
     );
 

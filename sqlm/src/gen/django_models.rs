@@ -2,6 +2,7 @@ use sqlx;
 use chrono;
 
 
+#[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct CardDb {
     /// Primary Key
@@ -15,6 +16,7 @@ pub struct CardDb {
 }
 
 
+#[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct TagDb {
     /// Primary Key
