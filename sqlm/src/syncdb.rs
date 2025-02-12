@@ -210,12 +210,21 @@ fn generate_struct_from_python(
     if python_code.contains("GenericIPAddressField") {
         use_crate.use_std_net = true;
     }
-    if python_code.contains("TimeField")
-        || python_code.contains("DurationField")
-        || python_code.contains("DateField")
-        || python_code.contains("DateTimeField")
-    {
+    if python_code.contains("TimeField") {
         use_crate.use_chrono = true;
+        use_crate.use_chrono_naive_time = true;
+    }
+    if python_code.contains("DurationField") {
+        use_crate.use_chrono = true;
+        use_crate.use_chrono_duration = true;
+    }
+    if python_code.contains("DateField") {
+        use_crate.use_chrono = true;
+        use_crate.use_chrono_naive_date = true;
+    }
+    if python_code.contains("DateTimeField") {
+        use_crate.use_chrono = true;
+        use_crate.use_chrono_datetimetz = true;
     }
 
     rust_struct.push_str("}\n");
@@ -225,6 +234,10 @@ fn generate_struct_from_python(
 struct UseCrate {
     use_serde: bool,
     use_chrono: bool,
+    use_chrono_naive_date: bool,
+    use_chrono_naive_time: bool,
+    use_chrono_duration: bool,
+    use_chrono_datetimetz: bool,
     use_rust_decimal: bool,
     use_serde_json: bool,
     use_std_net: bool,
@@ -236,6 +249,10 @@ impl UseCrate {
         Self {
             use_serde: false,
             use_chrono: false,
+            use_chrono_naive_date: false,
+            use_chrono_naive_time: false,
+            use_chrono_duration: false,
+            use_chrono_datetimetz: false,
             use_rust_decimal: false,
             use_serde_json: false,
             use_std_net: false,
@@ -246,7 +263,20 @@ impl UseCrate {
 
     fn write_use_statements(&self, file: &mut fs::File) {
         if self.use_chrono {
-            writeln!(file, "use chrono::{{NaiveDate, Duration, DateTime, Utc}};").unwrap();
+            let mut modules = vec![];
+            if self.use_chrono_naive_date {
+                modules.push("NaiveDate");
+            }
+            if self.use_chrono_naive_time {
+                modules.push("NaiveTime");
+            }
+            if self.use_chrono_duration {
+                modules.push("Duration");
+            }
+            if self.use_chrono_datetimetz {
+                modules.push("DateTime, Utc");
+            }
+            writeln!(file, "use chrono::{{{}}};", modules.join(", ")).unwrap();
         }
         if self.use_serde {
             writeln!(file, "use serde::{{Serialize, Deserialize}};").unwrap();
