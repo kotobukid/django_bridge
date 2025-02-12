@@ -6,7 +6,11 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 
-fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
+fn generate_struct_from_python(
+    struct_name: &str,
+    python_code: &str,
+    use_crate: &mut UseCrate,
+) -> String {
     // トークンを収集
     let tokens = lex(python_code, Mode::Module)
         .collect::<Result<Vec<_>, _>>()
@@ -72,9 +76,9 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
                                                             tokens.get(j + 1)
                                                         {
                                                             if let Some((
-                                                                            Tok::String { value, .. },
-                                                                            _,
-                                                                        )) = tokens.get(j + 2)
+                                                                Tok::String { value, .. },
+                                                                _,
+                                                            )) = tokens.get(j + 2)
                                                             {
                                                                 default_value = Some(value.clone());
                                                             }
@@ -82,22 +86,22 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
                                                     }
                                                     // max_length属性
                                                     Tok::Name { name: kw }
-                                                    if kw == "max_length" =>
+                                                        if kw == "max_length" =>
+                                                    {
+                                                        if let Some((Tok::Equal, _)) =
+                                                            tokens.get(j + 1)
                                                         {
-                                                            if let Some((Tok::Equal, _)) =
-                                                                tokens.get(j + 1)
+                                                            if let Some((
+                                                                Tok::Int { value, .. },
+                                                                _,
+                                                            )) = tokens.get(j + 2)
                                                             {
-                                                                if let Some((
-                                                                                Tok::Int { value, .. },
-                                                                                _,
-                                                                            )) = tokens.get(j + 2)
-                                                                {
-                                                                    // BigIntをStringに変換して保存
-                                                                    max_length =
-                                                                        Some(value.to_string());
-                                                                }
+                                                                // BigIntをStringに変換して保存
+                                                                max_length =
+                                                                    Some(value.to_string());
                                                             }
                                                         }
+                                                    }
                                                     _ => {}
                                                 }
                                                 j += 1;
@@ -126,7 +130,7 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
 
     // Rustの構造体定義を生成
     let mut rust_struct = format!(
-        "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone)]\npub struct {} {{\n",
+        "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]\npub struct {} {{\n",
         format!("{}Db", struct_name)
     );
 
@@ -140,25 +144,25 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
             "BinaryField" => "Vec<u8>",
             "BooleanField" => "bool",
             "CharField" => "String",
-            "DateField" => "chrono::Date<chrono::Utc>",
-            "DateTimeField" => "chrono::DateTime<chrono::Utc>",
+            "DateField" => "NaiveDate",
+            "DateTimeField" => "DateTime<Utc>",
             "DecimalField" => "rust_decimal::Decimal",
             "DurationField" => "chrono::Duration",
             "EmailField" => "String",
-            "FileField" => "String",    // filepath
+            "FileField" => "String", // filepath
             "FilePathField" => "String",
             "FloatField" => "f64",
-            "GeneratedField" => "String",   // フォールバック
+            "GeneratedField" => "String", // フォールバック
             "GenericIPAddressField" => "std::net::IpAddr",
-            "ImageField" => "String",    // FileFieldと同じ扱い
+            "ImageField" => "String", // FileFieldと同じ扱い
             "IntegerField" => "i32",
-            "JSONField" => "serde_json::Value",
-            "PositiveBigIntegerField" => "u64",    // 0 to 9223372036854775807
-            "PositiveIntegerField" => "u32",   // 0 to 2147483647
-            "PositiveSmallIntegerField" => "u16",  // 0 to 32767
-            "SlugField" => "String",    // ascii only?
-            "SmallAutoField" => "u16", //  1 to 32767
-            "SmallIntegerField" => "i16",  // -32768 to 32767
+            "JSONField" => "Value",
+            "PositiveBigIntegerField" => "u64", // 0 to 9223372036854775807
+            "PositiveIntegerField" => "u32",    // 0 to 2147483647
+            "PositiveSmallIntegerField" => "u16", // 0 to 32767
+            "SlugField" => "String",            // ascii only?
+            "SmallAutoField" => "u16",          //  1 to 32767
+            "SmallIntegerField" => "i16",       // -32768 to 32767
             "TextField" => "String",
             "TimeField" => "chrono::NaiveTime",
             "URLField" => "String",
@@ -194,8 +198,75 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
         rust_struct.push_str(&format!("    pub {}: {},\n", field_name, rust_field_type));
     }
 
+    if python_code.contains("BinaryField") {
+        use_crate.use_serde_json = true; // BinaryFieldで`serde_json`が必要と仮定
+    }
+    if python_code.contains("DecimalField") {
+        use_crate.use_rust_decimal = true; // DecimalFieldで`rust_decimal`が必要
+    }
+    if python_code.contains("JSONField") {
+        use_crate.use_serde_json = true;
+    }
+    if python_code.contains("GenericIPAddressField") {
+        use_crate.use_std_net = true;
+    }
+    if python_code.contains("TimeField")
+        || python_code.contains("DurationField")
+        || python_code.contains("DateField")
+        || python_code.contains("DateTimeField")
+    {
+        use_crate.use_chrono = true;
+    }
+
     rust_struct.push_str("}\n");
     rust_struct
+}
+
+struct UseCrate {
+    use_serde: bool,
+    use_chrono: bool,
+    use_rust_decimal: bool,
+    use_serde_json: bool,
+    use_std_net: bool,
+    use_rust_decimal_macros: bool,
+    use_rust_decimal_ops: bool,
+}
+impl UseCrate {
+    fn new() -> Self {
+        Self {
+            use_serde: false,
+            use_chrono: false,
+            use_rust_decimal: false,
+            use_serde_json: false,
+            use_std_net: false,
+            use_rust_decimal_macros: false,
+            use_rust_decimal_ops: false,
+        }
+    }
+
+    fn write_use_statements(&self, file: &mut fs::File) {
+        if self.use_chrono {
+            writeln!(file, "use chrono::{{NaiveDate, Duration, DateTime, Utc}};").unwrap();
+        }
+        if self.use_serde {
+            writeln!(file, "use serde::{{Serialize, Deserialize}};").unwrap();
+        }
+        if self.use_serde_json {
+            writeln!(file, "use serde_json::Value;").unwrap();
+        }
+        if self.use_rust_decimal {
+            writeln!(file, "use rust_decimal::Decimal;").unwrap();
+        }
+        if self.use_std_net {
+            writeln!(file, "use std::net::IpAddr;").unwrap();
+        }
+        if self.use_rust_decimal_macros {
+            writeln!(file, "use rust_decimal_macros;").unwrap();
+        }
+        if self.use_rust_decimal_ops {
+            writeln!(file, "use rust_decimal_ops;").unwrap();
+        }
+    }
 }
 
 fn main() {
@@ -209,7 +280,7 @@ fn main() {
 
     let dest_path = Path::new(out_dir).join("django_models.rs");
 
-    fs::remove_file(&dest_path).unwrap();
+    fs::remove_file(&dest_path).ok();
 
     let mut file = OpenOptions::new()
         .create(true) // ファイルがなければ作成
@@ -217,16 +288,23 @@ fn main() {
         .open(&dest_path)
         .unwrap();
 
-    writeln!(file, "use sqlx;\nuse chrono;\n").unwrap();
+    let mut use_crate = UseCrate::new();
+    use_crate.use_serde = true;
 
-    for (struct_name, file_path) in models {
-        let python_code = fs::read_to_string(file_path).unwrap();
+    // モデル定義を収集する
+    let struct_defs: Vec<String> = models
+        .iter()
+        .map(|(struct_name, file_path)| {
+            let python_code = fs::read_to_string(file_path).unwrap();
 
-        writeln!(
-            file,
-            "\n{}",
-            generate_struct_from_python(struct_name, &*python_code)
-        )
-            .unwrap();
-    }
+            // 構造体生成コードと依存クレート解析
+            generate_struct_from_python(struct_name, &python_code, &mut use_crate)
+        })
+        .collect(); // Vec<String> に変換
+
+    // 必要なuse文を冒頭に書き込み
+    use_crate.write_use_statements(&mut file);
+
+    // 収集したモデル情報
+    file.write_all(struct_defs.join("\n").as_bytes()).unwrap();
 }
