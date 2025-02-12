@@ -3,7 +3,6 @@ mod models;
 
 use models::{Card, CardDb};
 use sqlx::postgres::PgPoolOptions;
-use tokio;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -16,7 +15,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .fetch_all(&pool)
         .await?
         .into_iter()
-        .map(|row| Card(row))
+        .map(|row| row.into())
         .collect();
 
     for card in cards {
