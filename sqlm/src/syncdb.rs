@@ -130,7 +130,7 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
         format!("{}Db", struct_name)
     );
 
-    rust_struct.push_str("    /// Primary Key\n    pub id: u64,\n");
+    rust_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
 
     for (field_name, field_type, is_nullable, default_value, max_length) in fields {
         let rust_type = match field_type.as_str() {

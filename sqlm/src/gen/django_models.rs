@@ -5,7 +5,7 @@ use chrono;
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct CardDb {
     /// Primary Key
-    pub id: u64,
+    pub id: i64,
     /// Default: taro, Max length: 256
     pub name: String,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -18,7 +18,7 @@ pub struct CardDb {
 #[derive(sqlx::FromRow, Debug, Clone)]
 pub struct TagDb {
     /// Primary Key
-    pub id: u64,
+    pub id: i64,
     /// Max length: 128
     pub label: String,
 }
