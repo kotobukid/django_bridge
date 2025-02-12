@@ -134,14 +134,40 @@ fn generate_struct_from_python(struct_name: &str, python_code: &str) -> String {
 
     for (field_name, field_type, is_nullable, default_value, max_length) in fields {
         let rust_type = match field_type.as_str() {
-            "CharField" => "String",
-            "DateTimeField" => "chrono::DateTime<chrono::Utc>",
-            "IntegerField" => "i32",
-            "FloatField" => "f64",
+            "AutoField" => "u32",
+            "BigAutoField" => "u64",
+            "BigIntegerField" => "i64",
+            "BinaryField" => "Vec<u8>",
             "BooleanField" => "bool",
-            "TextField" => "String",
-            "EmailField" => "String",
+            "CharField" => "String",
+            "DateField" => "chrono::Date<chrono::Utc>",
+            "DateTimeField" => "chrono::DateTime<chrono::Utc>",
             "DecimalField" => "rust_decimal::Decimal",
+            "DurationField" => "chrono::Duration",
+            "EmailField" => "String",
+            "FileField" => "String",    // filepath
+            "FilePathField" => "String",
+            "FloatField" => "f64",
+            "GeneratedField" => "String",   // フォールバック
+            "GenericIPAddressField" => "std::net::IpAddr",
+            "ImageField" => "String",    // FileFieldと同じ扱い
+            "IntegerField" => "i32",
+            "JSONField" => "serde_json::Value",
+            "PositiveBigIntegerField" => "u64",    // 0 to 9223372036854775807
+            "PositiveIntegerField" => "u32",   // 0 to 2147483647
+            "PositiveSmallIntegerField" => "u16",  // 0 to 32767
+            "SlugField" => "String",    // ascii only?
+            "SmallAutoField" => "u16", //  1 to 32767
+            "SmallIntegerField" => "i16",  // -32768 to 32767
+            "TextField" => "String",
+            "TimeField" => "chrono::NaiveTime",
+            "URLField" => "String",
+
+            // relationships
+            "ForeignKey" => "u32",
+            "ManyToManyField" => "u32",
+            "OneToOneField" => "u32",
+            "OneToManyField" => "u32",
             _ => "String", // フォールバック
         };
 
