@@ -20,7 +20,7 @@ async fn main() -> Result<(), sqlx::Error> {
 
     for card in cards {
         println!("{:?}", card);
-        println!("{}", card.custom_print());
+        println!("{}", card.to_custom_string());
     }
 
     Ok(())
