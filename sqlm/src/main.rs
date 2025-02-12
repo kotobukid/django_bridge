@@ -15,10 +15,27 @@ impl From<django_models::CardDb> for Card {
     }
 }
 
+impl std::ops::Deref for Card {
+    type Target = django_models::CardDb;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        // Newtype 内の CardDb を参照するために .0 を使用
-        write!(f, "{}", self.0.name)
+        // Newtype 内の CardDb を参照するために .0 を使用 -> Derefで不要に
+        write!(f, "{}", self.name)
+    }
+}
+
+impl Card {
+    fn custom_print(&self) -> String {
+        match &self.option1 {
+            Some(option1) => format!("{}: {} ({})", self.id, self.name, option1),
+            None => format!("{}: {}", self.id, self.name),
+        }
     }
 }
 
@@ -29,24 +46,17 @@ async fn main() -> Result<(), sqlx::Error> {
         .connect("postgres://postgres:postgres@192.168.33.10:5432/postgres")
         .await?;
 
-    let cards: Vec<Card> =
-        sqlx::query_as::<_, django_models::CardDb>("SELECT * FROM wix_card")
-            .fetch_all(&pool)
-            .await?
-            .into_iter().map(|row| Card(row)).collect();
+    let cards: Vec<Card> = sqlx::query_as::<_, django_models::CardDb>("SELECT * FROM wix_card")
+        .fetch_all(&pool)
+        .await?
+        .into_iter()
+        .map(|row| Card(row))
+        .collect();
 
     for card in cards {
         println!("{:?}", card);
+        println!("{}", card.custom_print());
     }
-
-    // assert_eq!(row.0, 150);
-
-    // let file_path = "../table_definition/wix/models.py"; // Pythonファイルのパス
-    // let target_class = "Card"; // 対象のクラス名
-    //
-    // // Pythonコードをファイルから読み取る
-    // let python_source = fs::read_to_string(file_path)?;
-    // println!("{}", python_source);
 
     Ok(())
 }
