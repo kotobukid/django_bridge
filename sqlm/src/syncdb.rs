@@ -9,7 +9,7 @@ use std::path::Path;
 fn generate_struct_from_python(
     struct_name: &str,
     python_code: &str,
-    use_crate: &mut UseCrate,
+    crate_requirements: &mut CrateRequirements,
 ) -> String {
     // トークンを収集
     let tokens = lex(python_code, Mode::Module)
@@ -51,12 +51,12 @@ fn generate_struct_from_python(
 
                                             match field_type.as_str() {
                                                 "TimeField" => {
-                                                    use_crate.use_chrono = true;
-                                                    use_crate.use_chrono_naive_time = true;
+                                                    crate_requirements.use_chrono = true;
+                                                    crate_requirements.use_chrono_naive_time = true;
                                                 }
                                                 "DateTimeField" => {
-                                                    use_crate.use_chrono = true;
-                                                    use_crate.use_chrono_datetimetz = true;
+                                                    crate_requirements.use_chrono = true;
+                                                    crate_requirements.use_chrono_datetimetz = true;
                                                 }
                                                 _ => {}
                                             }
@@ -211,24 +211,24 @@ fn generate_struct_from_python(
     }
 
     if python_code.contains("BinaryField") {
-        use_crate.use_serde_json = true; // BinaryFieldで`serde_json`が必要と仮定
+        crate_requirements.use_serde_json = true; // BinaryFieldで`serde_json`が必要と仮定
     }
     if python_code.contains("DecimalField") {
-        use_crate.use_rust_decimal = true; // DecimalFieldで`rust_decimal`が必要
+        crate_requirements.use_rust_decimal = true; // DecimalFieldで`rust_decimal`が必要
     }
     if python_code.contains("JSONField") {
-        use_crate.use_serde_json = true;
+        crate_requirements.use_serde_json = true;
     }
     if python_code.contains("GenericIPAddressField") {
-        use_crate.use_std_net = true;
+        crate_requirements.use_std_net = true;
     }
     if python_code.contains("DurationField") {
-        use_crate.use_chrono = true;
-        use_crate.use_chrono_duration = true;
+        crate_requirements.use_chrono = true;
+        crate_requirements.use_chrono_duration = true;
     }
     if python_code.contains("DateField") {
-        use_crate.use_chrono = true;
-        use_crate.use_chrono_naive_date = true;
+        crate_requirements.use_chrono = true;
+        crate_requirements.use_chrono_naive_date = true;
     }
     // トークン解析ステップで確認している
     // if python_code.contains("TimeField") {
@@ -244,7 +244,7 @@ fn generate_struct_from_python(
     rust_struct
 }
 
-struct UseCrate {
+struct CrateRequirements {
     use_serde: bool,
     use_chrono: bool,
     use_chrono_naive_date: bool,
@@ -257,7 +257,7 @@ struct UseCrate {
     use_rust_decimal_macros: bool,
     use_rust_decimal_ops: bool,
 }
-impl UseCrate {
+impl CrateRequirements {
     fn new() -> Self {
         Self {
             use_serde: false,
@@ -331,8 +331,8 @@ fn main() {
         .open(&dest_path)
         .unwrap();
 
-    let mut use_crate = UseCrate::new();
-    use_crate.use_serde = true;
+    let mut crate_req = CrateRequirements::new();
+    crate_req.use_serde = true;
 
     // モデル定義を収集する
     let struct_defs: Vec<String> = models
@@ -341,12 +341,12 @@ fn main() {
             let python_code = fs::read_to_string(file_path).unwrap();
 
             // 構造体生成コードと依存クレート解析
-            generate_struct_from_python(struct_name, &python_code, &mut use_crate)
+            generate_struct_from_python(struct_name, &python_code, &mut crate_req)
         })
         .collect(); // Vec<String> に変換
 
     // 必要なuse文を冒頭に書き込み
-    use_crate.write_use_statements(&mut file);
+    crate_req.write_use_statements(&mut file);
 
     // 収集したモデル情報
     file.write_all(struct_defs.join("\n").as_bytes()).unwrap();
