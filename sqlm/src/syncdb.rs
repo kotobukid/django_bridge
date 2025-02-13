@@ -1,6 +1,7 @@
 use rustpython_parser::lexer::lex;
 use rustpython_parser::Tok;
 use rustpython_parser_core::mode::Mode;
+use std::collections::HashMap;
 use std::fs;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -334,11 +335,19 @@ fn main() {
     let mut crate_req = CrateRequirements::new();
     crate_req.use_serde = true;
 
+    let mut source_hash: HashMap<&str, String> = HashMap::new();
+
     // モデル定義を収集する
     let struct_defs: Vec<String> = models
         .iter()
         .map(|(struct_name, file_path)| {
-            let python_code = fs::read_to_string(file_path).unwrap();
+            let python_code = source_hash
+                .entry(file_path) // file_path がキー
+                .or_insert_with(|| {
+                    // キャッシュにない場合、ファイルを読み込む
+                    fs::read_to_string(file_path)
+                        .unwrap_or_else(|err| panic!("Failed to read file {}: {}", file_path, err))
+                });
 
             // 構造体生成コードと依存クレート解析
             generate_struct_from_python(struct_name, &python_code, &mut crate_req)
