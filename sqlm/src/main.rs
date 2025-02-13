@@ -1,10 +1,12 @@
 mod gen;
 mod models;
 
+use crate::models::OnlyCardNameRepository;
 use models::{Card, CardRepository, ICardRepository};
 use serde_json;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -13,7 +15,9 @@ async fn main() -> Result<(), sqlx::Error> {
         .connect("postgres://postgres:postgres@192.168.33.10:5432/postgres")
         .await?;
 
-    let card_repo = CardRepository::new(pool);
+    let pool = Arc::new(pool);
+
+    let card_repo = CardRepository::new(pool.clone());
 
     let cards: Vec<Card> = card_repo.get_all().await;
 
@@ -35,6 +39,13 @@ async fn main() -> Result<(), sqlx::Error> {
                 println!("Info: None");
             }
         }
+    }
+
+    let co_repo = OnlyCardNameRepository::new(pool);
+
+    let names = co_repo.get_all().await;
+    for name in names {
+        println!("Name: {}", name);
     }
 
     Ok(())

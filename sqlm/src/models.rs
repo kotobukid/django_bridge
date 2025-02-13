@@ -3,6 +3,8 @@ use sqlx::{Pool, Postgres};
 use std::fmt::{Display, Formatter};
 use std::future::Future;
 use std::pin::Pin;
+use std::sync::Arc;
+
 // 再エクスポート
 pub use crate::gen::django_models::CardDb;
 
@@ -39,29 +41,28 @@ impl Card {
     }
 }
 
-
 pub trait ICardRepository {
-    fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output=Vec<Card>> + Send + 'a>>;
+    fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Card>> + Send + 'a>>;
     // async fn get_by_id(&self, id: i64) -> Option<Card>;
     // async fn add(&self, card: Card);
     // async fn delete(&self, id: i64);
 }
 
 pub struct CardRepository {
-    db_connector: Pool<Postgres>,
+    db_connector: Arc<Pool<Postgres>>,
 }
 
 impl CardRepository {
-    pub fn new(pool: Pool<Postgres>) -> Self {
+    pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
         Self { db_connector: pool }
     }
 }
 
 impl ICardRepository for CardRepository {
-    fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output=Vec<Card>> + Send + 'a>> {
+    fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Card>> + Send + 'a>> {
         Box::pin(async move {
             let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card")
-                .fetch_all(&self.db_connector)
+                .fetch_all(&*self.db_connector)
                 .await
                 .unwrap();
 
@@ -78,4 +79,35 @@ impl ICardRepository for CardRepository {
     // async fn delete(&self, id: i64) {
     //     todo!()
     // }
+}
+
+#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
+pub struct OnlyCardName {
+    pub name: String,
+}
+
+impl Display for OnlyCardName {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.name)
+    }
+}
+
+pub struct OnlyCardNameRepository {
+    db_connector: Arc<Pool<Postgres>>,
+}
+
+impl OnlyCardNameRepository {
+    pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
+        Self { db_connector: pool }
+    }
+    pub fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<OnlyCardName>> + Send + 'a>> {
+        Box::pin(async move {
+            let cards = sqlx::query_as::<_, OnlyCardName>("SELECT name FROM wix_card")
+                .fetch_all(&*self.db_connector)
+                .await
+                .unwrap();
+
+            cards
+        })
+    }
 }
