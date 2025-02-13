@@ -7,6 +7,12 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
 
+enum DjangoFieldType {
+    Valid(&'static str),
+    Relation(&'static str),
+    None(String),
+}
+
 fn generate_struct_from_python(
     struct_name: &str,
     python_code: &str,
@@ -49,18 +55,6 @@ fn generate_struct_from_python(
                                                 "Found field: {} of type {}",
                                                 name, field_type
                                             );
-
-                                            match field_type.as_str() {
-                                                "TimeField" => {
-                                                    crate_requirements.use_chrono = true;
-                                                    crate_requirements.use_chrono_naive_time = true;
-                                                }
-                                                "DateTimeField" => {
-                                                    crate_requirements.use_chrono = true;
-                                                    crate_requirements.use_chrono_datetimetz = true;
-                                                }
-                                                _ => {}
-                                            }
 
                                             // 属性を解析
                                             let mut is_nullable = false;
@@ -150,99 +144,110 @@ fn generate_struct_from_python(
     rust_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
 
     for (field_name, field_type, is_nullable, default_value, max_length) in fields {
+        update_crate_requirements(crate_requirements, field_type.as_str());
+
         let rust_type = match field_type.as_str() {
-            "AutoField" => "u32",
-            "BigAutoField" => "u64",
-            "BigIntegerField" => "i64",
-            "BinaryField" => "Vec<u8>",
-            "BooleanField" => "bool",
-            "CharField" => "String",
-            "DateField" => "NaiveDate",
-            "DateTimeField" => "DateTime<Utc>",
-            "DecimalField" => "rust_decimal::Decimal",
-            "DurationField" => "chrono::Duration",
-            "EmailField" => "String",
-            "FileField" => "String", // filepath
-            "FilePathField" => "String",
-            "FloatField" => "f64",
-            "GeneratedField" => "String", // フォールバック
-            "GenericIPAddressField" => "std::net::IpAddr",
-            "ImageField" => "String", // FileFieldと同じ扱い
-            "IntegerField" => "i32",
-            "JSONField" => "Value",
-            "PositiveBigIntegerField" => "u64", // 0 to 9223372036854775807
-            "PositiveIntegerField" => "u32",    // 0 to 2147483647
-            "PositiveSmallIntegerField" => "u16", // 0 to 32767
-            "SlugField" => "String",            // ascii only?
-            "SmallAutoField" => "u16",          //  1 to 32767
-            "SmallIntegerField" => "i16",       // -32768 to 32767
-            "TextField" => "String",
-            "TimeField" => "chrono::NaiveTime",
-            "URLField" => "String",
+            "AutoField" => DjangoFieldType::Valid("u32"),
+            "BigAutoField" => DjangoFieldType::Valid("u64"),
+            "BigIntegerField" => DjangoFieldType::Valid("i64"),
+            "BinaryField" => DjangoFieldType::Valid("Vec<u8>"),
+            "BooleanField" => DjangoFieldType::Valid("bool"),
+            "CharField" => DjangoFieldType::Valid("String"),
+            "DateField" => DjangoFieldType::Valid("NaiveDate"),
+            "DateTimeField" => DjangoFieldType::Valid("DateTime<Utc>"),
+            "DecimalField" => DjangoFieldType::Valid("rust_decimal::Decimal"),
+            "DurationField" => DjangoFieldType::Valid("chrono::Duration"),
+            "EmailField" => DjangoFieldType::Valid("String"),
+            "FileField" => DjangoFieldType::Valid("String"), // filepath
+            "FilePathField" => DjangoFieldType::Valid("String"),
+            "FloatField" => DjangoFieldType::Valid("f64"),
+            "GeneratedField" => DjangoFieldType::Valid("String"), // フォールバック
+            "GenericIPAddressField" => DjangoFieldType::Valid("std::net::IpAddr"),
+            "ImageField" => DjangoFieldType::Valid("String"), // FileFieldと同じ扱い
+            "IntegerField" => DjangoFieldType::Valid("i32"),
+            "JSONField" => DjangoFieldType::Valid("Value"),
+            "PositiveBigIntegerField" => DjangoFieldType::Valid("u64"), // 0 to 9223372036854775807
+            "PositiveIntegerField" => DjangoFieldType::Valid("u32"),    // 0 to 2147483647
+            "PositiveSmallIntegerField" => DjangoFieldType::Valid("u16"), // 0 to 32767
+            "SlugField" => DjangoFieldType::Valid("String"),            // ascii only?
+            "SmallAutoField" => DjangoFieldType::Valid("u16"),          //  1 to 32767
+            "SmallIntegerField" => DjangoFieldType::Valid("i16"),       // -32768 to 32767
+            "TextField" => DjangoFieldType::Valid("String"),
+            "TimeField" => DjangoFieldType::Valid("chrono::NaiveTime"),
+            "URLField" => DjangoFieldType::Valid("String"),
 
             // relationships
-            "ForeignKey" => "u32",
-            "ManyToManyField" => "u32",
-            "OneToOneField" => "u32",
-            "OneToManyField" => "u32",
-            _ => "String", // フォールバック
+            "ForeignKey" => DjangoFieldType::Relation("u32"),
+            "ManyToManyField" => DjangoFieldType::Relation("u32"),
+            "OneToOneField" => DjangoFieldType::Relation("u32"),
+            "OneToManyField" => DjangoFieldType::Relation("u32"),
+            _ => DjangoFieldType::None(field_type),
         };
 
-        // null許容型の場合Rustの型をOptionでラップ
-        let rust_field_type = if is_nullable {
-            format!("Option<{}>", rust_type)
-        } else {
-            rust_type.to_string()
-        };
+        match rust_type {
+            DjangoFieldType::Valid(ty) => {
+                // コメント生成（default値とmax_lengthを含める）
+                if default_value.is_some() || max_length.is_some() {
+                    rust_struct.push_str("    /// ");
+                    if let Some(default) = &default_value {
+                        rust_struct.push_str(&format!("Default: {}, ", default));
+                    }
+                    if let Some(length) = &max_length {
+                        rust_struct.push_str(&format!("Max length: {}", length));
+                    }
+                    rust_struct.push_str("\n");
+                }
 
-        // コメント生成（default値とmax_lengthを含める）
-        if default_value.is_some() || max_length.is_some() {
-            rust_struct.push_str("    /// ");
-            if let Some(default) = &default_value {
-                rust_struct.push_str(&format!("Default: {}, ", default));
+                let ty = if is_nullable {
+                    format!("Option<{}>", ty)
+                } else {
+                    ty.to_string()
+                };
+                rust_struct.push_str(&format!("    pub {}: {},\n", field_name, ty));
             }
-            if let Some(length) = &max_length {
-                rust_struct.push_str(&format!("Max length: {}", length));
+            DjangoFieldType::Relation(ty) => {
+                rust_struct.push_str(&format!(
+                    "\n    /// Related field: {}\n",
+                    field_name // 本当は参照先のモデル名が分かるならそれを使うと良い
+                ));
+
+                rust_struct.push_str("    /// Note: Check on_delete behavior.\n");
+                rust_struct.push_str(&format!("    pub {}: {},\n", field_name, ty));
             }
-            rust_struct.push_str("\n");
+            DjangoFieldType::None(ty) => {
+                rust_struct.push_str(&format!("    /// No field type matches: {}\n", ty));
+            }
         }
-
-        // フィールド定義追加
-        rust_struct.push_str(&format!("    pub {}: {},\n", field_name, rust_field_type));
     }
-
-    if python_code.contains("BinaryField") {
-        crate_requirements.use_serde_json = true; // BinaryFieldで`serde_json`が必要と仮定
-    }
-    if python_code.contains("DecimalField") {
-        crate_requirements.use_rust_decimal = true; // DecimalFieldで`rust_decimal`が必要
-    }
-    if python_code.contains("JSONField") {
-        crate_requirements.use_serde_json = true;
-    }
-    if python_code.contains("GenericIPAddressField") {
-        crate_requirements.use_std_net = true;
-    }
-    if python_code.contains("DurationField") {
-        crate_requirements.use_chrono = true;
-        crate_requirements.use_chrono_duration = true;
-    }
-    if python_code.contains("DateField") {
-        crate_requirements.use_chrono = true;
-        crate_requirements.use_chrono_naive_date = true;
-    }
-    // トークン解析ステップで確認している
-    // if python_code.contains("TimeField") {
-    //     use_crate.use_chrono = true;
-    //     use_crate.use_chrono_naive_time = true;
-    // }
-    // if python_code.contains("DateTimeField") {
-    //     use_crate.use_chrono = true;
-    //     use_crate.use_chrono_datetimetz = true;
-    // }
 
     rust_struct.push_str("}\n");
     rust_struct
+}
+
+fn update_crate_requirements(crate_requirements: &mut CrateRequirements, field_type: &str) {
+    match field_type {
+        "BinaryField" => crate_requirements.use_serde_json = true,
+        "DecimalField" => crate_requirements.use_rust_decimal = true,
+        "JSONField" => crate_requirements.use_serde_json = true,
+        "GenericIPAddressField" => crate_requirements.use_std_net = true,
+        "DurationField" => {
+            crate_requirements.use_chrono = true;
+            crate_requirements.use_chrono_duration = true;
+        }
+        "DateField" => {
+            crate_requirements.use_chrono = true;
+            crate_requirements.use_chrono_naive_date = true;
+        }
+        "DateTimeField" => {
+            crate_requirements.use_chrono = true;
+            crate_requirements.use_chrono_datetimetz = true;
+        }
+        "TimeField" => {
+            crate_requirements.use_chrono = true;
+            crate_requirements.use_chrono_naive_time = true;
+        }
+        _ => {}
+    }
 }
 
 struct CrateRequirements {
