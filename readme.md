@@ -146,10 +146,27 @@ pub struct CardDb {
 }
 ```
 
-さらに、`models.rs`にカスタムロジックを追加可能です：
+さらに、`models.rs`にカスタムロジックを追加可能です(RustのOrphansルールの都合上、自動生成されたCardDb構造体自信にトレイト実装を記述するのは難儀するため、別ファイル内でNewTypeパターンを用いて派生させます)：
 
 ```rust
-impl CardDb {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Card(pub CardDb);
+
+impl From<CardDb> for Card {
+   fn from(db: CardDb) -> Self {
+      Self(db)
+   }
+}
+
+impl std::ops::Deref for Card {
+   type Target = CardDb;
+
+   fn deref(&self) -> &Self::Target {
+      &self.0
+   }
+}
+
+impl Card {
     pub fn display_info(&self) -> String {
         format!("{} - {}", self.name, self.option1.clone().unwrap_or_default())
     }
