@@ -315,7 +315,7 @@ impl CrateRequirements {
 
 fn main() {
     let out_dir = "src/gen";
-    fs::create_dir_all(out_dir).unwrap();
+    fs::create_dir_all(out_dir).expect("Output directory creation failed");
 
     let models = [
         ("Card", "../table_definition/wix/models.py"),
@@ -324,13 +324,15 @@ fn main() {
 
     let dest_path = Path::new(out_dir).join("django_models.rs");
 
-    fs::remove_file(&dest_path).ok();
+    if dest_path.exists() {
+        fs::remove_file(&dest_path).expect("Failed to remove existing django_models.rs");
+    }
 
     let mut file = OpenOptions::new()
         .create(true) // ファイルがなければ作成
         .append(true) // 追記モード
         .open(&dest_path)
-        .unwrap();
+        .expect("Failed to open or create output file");
 
     let mut crate_req = CrateRequirements::new();
     crate_req.use_serde = true;
@@ -358,5 +360,8 @@ fn main() {
     crate_req.write_use_statements(&mut file);
 
     // 収集したモデル情報
-    file.write_all(struct_defs.join("\n").as_bytes()).unwrap();
+    file.write_all(struct_defs.join("\n").as_bytes())
+        .expect("Failed to write struct definitions to file");
+
+    println!("Django model definitions successfully synced to Rust structs!");
 }
