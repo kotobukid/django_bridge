@@ -11,13 +11,15 @@ enum DjangoFieldType {
     Valid(&'static str),
     Relation(&'static str),
     None(String),
+    ManyToMany,
 }
 
 fn generate_struct_from_python(
+    app_name: &str,
     struct_name: &str,
     python_code: &str,
     crate_requirements: &mut CrateRequirements,
-) -> String {
+) -> (String, String) {
     // トークンを収集
     let tokens = lex(python_code, Mode::Module)
         .collect::<Result<Vec<_>, _>>()
@@ -178,7 +180,9 @@ fn generate_struct_from_python(
 
     rust_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
 
-    for (field_name, field_type, is_nullable, default_value, max_length, tokens) in fields {
+    let mut intermediate_structs: Vec<String> = Vec::new();
+
+    for (field_name, field_type, is_nullable, default_value, max_length, tokens) in &fields {
         update_crate_requirements(crate_requirements, field_type.as_str());
 
         let rust_type = match field_type.as_str() {
@@ -213,9 +217,9 @@ fn generate_struct_from_python(
             "UUIDField" => DjangoFieldType::Valid("String"),
 
             // relationships
-            "ForeignKey" | "ManyToManyField" | "OneToOneField" => {
+            "ForeignKey" | "OneToOneField" => { // ManyToManyは別処理
                 // リレーションの解析処理で関連モデル名を取得
-                let related_model = analyze_relation_field(tokens, field_name.as_str());
+                let related_model = analyze_relation_field(tokens.clone(), field_name.as_str());
 
                 if let Some(model) = related_model {
                     rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
@@ -226,9 +230,10 @@ fn generate_struct_from_python(
                     ));
                 }
 
-                DjangoFieldType::Relation("u32")
+                DjangoFieldType::Relation("i64")
             }
-            _ => DjangoFieldType::None(field_type),
+            "ManyToManyField" => DjangoFieldType::ManyToMany,
+            _ => DjangoFieldType::None(field_type.clone()),
         };
 
         match rust_type {
@@ -245,7 +250,7 @@ fn generate_struct_from_python(
                     rust_struct.push_str("\n");
                 }
 
-                let ty = if is_nullable {
+                let ty = if *is_nullable {
                     format!("Option<{}>", ty)
                 } else {
                     ty.to_string()
@@ -256,6 +261,28 @@ fn generate_struct_from_python(
                 rust_struct.push_str("    /// Note: Check on_delete behavior.\n");
                 rust_struct.push_str(&format!("    pub {}: {},\n", field_name, ty));
             }
+            DjangoFieldType::ManyToMany => {
+                let sub_model_name =
+                    analyze_relation_field(tokens.clone(), field_name.as_str())
+                        .expect("to attribute or model name not found on ManyToManyField");
+
+                let class_name = format!(
+                    "{}{}{}Rel",
+                    first_upper(app_name),
+                    first_upper(struct_name),
+                    // first_upper(&sub_model_name) // フィールド名でありモデル名ではない
+                    first_upper(&field_name)
+                );
+
+                // 中間テーブルの構造体を生成
+                let intermediate_struct = format!(
+                    "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone)]\npub struct {} {{\n    /// Primary Key\n    pub id: i64,\n    pub {}_id: i64,\n    pub {}_id: i64,\n}}\n",
+                    class_name,
+                    struct_name.to_lowercase(),
+                    sub_model_name.to_lowercase()   // モデル名でありフィールド名ではない
+                );
+                intermediate_structs.push(intermediate_struct);
+            }
             DjangoFieldType::None(ty) => {
                 rust_struct.push_str(&format!("    /// No field type matches: {}\n", ty));
             }
@@ -263,7 +290,15 @@ fn generate_struct_from_python(
     }
 
     rust_struct.push_str("}\n");
-    rust_struct
+    (rust_struct, intermediate_structs.join("\n"))
+}
+
+fn first_upper(s: &str) -> String {
+    let mut c = s.chars();
+    match c.next() {
+        None => String::new(),
+        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+    }
 }
 
 fn analyze_relation_field(
@@ -402,8 +437,8 @@ fn main() {
     fs::create_dir_all(out_dir).expect("Output directory creation failed");
 
     let models = [
-        ("Card", "../table_definition/wix/models.py"),
-        ("Tag", "../table_definition/wix/models.py"),
+        ("wix", "Card", "../table_definition/wix/models.py"),
+        ("wix", "Tag", "../table_definition/wix/models.py"),
     ];
 
     let dest_path = Path::new(out_dir).join("django_models.rs");
@@ -424,9 +459,9 @@ fn main() {
     let mut source_hash: HashMap<&str, String> = HashMap::new();
 
     // モデル定義を収集する
-    let struct_defs: Vec<String> = models
+    let struct_defs: Vec<(String, String)> = models
         .iter()
-        .map(|(struct_name, file_path)| {
+        .map(|(app_name, struct_name, file_path)| {
             let python_code = source_hash
                 .entry(file_path) // file_path がキー
                 .or_insert_with(|| {
@@ -436,7 +471,7 @@ fn main() {
                 });
 
             // 構造体生成コードと依存クレート解析
-            generate_struct_from_python(struct_name, &python_code, &mut crate_req)
+            generate_struct_from_python(app_name, struct_name, &python_code, &mut crate_req)
         })
         .collect(); // Vec<String> に変換
 
@@ -446,8 +481,15 @@ fn main() {
         .expect("Failed to write use statements to file");
 
     // 収集したモデル情報
-    file.write_all(struct_defs.join("\n").as_bytes())
-        .expect("Failed to write struct definitions to file");
+    file.write_all(
+        struct_defs
+            .into_iter()
+            .map(|def| format!("{}\n{}", def.0, def.1))
+            .collect::<Vec<_>>()
+            .join("\n")
+            .as_bytes(),
+    )
+    .expect("Failed to write struct definitions to file");
 
     println!("Django model definitions successfully synced to Rust structs!");
 }
