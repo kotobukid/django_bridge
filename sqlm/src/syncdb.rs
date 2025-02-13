@@ -23,9 +23,19 @@ fn generate_struct_from_python(
         .collect::<Result<Vec<_>, _>>()
         .expect("Failed to tokenize Python code");
 
-    let mut fields = vec![];
+    let mut fields: Vec<(
+        String,         // フィールド名
+        String,         // フィールドタイプ
+        bool,           // is_nullable
+        Option<String>, // default_value
+        Option<String>, // max_length
+        Vec<Tok>,       // tokens (リレーショナル系フィールド専用のto属性解析オプション)
+    )> = vec![];
+
     let mut in_class_def = false;
     let mut current_class_name = String::new();
+    let mut tokens_relational: Vec<Tok> = Vec::new();
+
     let mut i = 0;
 
     while i < tokens.len() {
@@ -60,6 +70,28 @@ fn generate_struct_from_python(
                                             let mut is_nullable = false;
                                             let mut default_value = None;
                                             let mut max_length = None;
+
+                                            // リレーショナルフィールド用トークン収集を開始
+                                            if matches!(
+                                                field_type.as_str(),
+                                                "ForeignKey" | "ManyToManyField" | "OneToOneField"
+                                            ) {
+                                                tokens_relational.clear(); // 前回のトークンをクリア
+
+                                                // フィールド定義の中身を収集
+                                                let mut j = i + 5;
+                                                while j < tokens.len() {
+                                                    match &tokens[j].0 {
+                                                        Tok::Newline => break, // 定義終了
+                                                        _ => {
+                                                            // トークンを収集
+                                                            tokens_relational
+                                                                .push(tokens[j].0.clone());
+                                                        }
+                                                    }
+                                                    j += 1;
+                                                }
+                                            }
 
                                             let mut j = i + 5;
                                             while j < tokens.len() {
@@ -121,7 +153,10 @@ fn generate_struct_from_python(
                                                 is_nullable,
                                                 default_value,
                                                 max_length,
+                                                tokens_relational.clone(),
                                             ));
+
+                                            tokens_relational.clear();
                                         }
                                     }
                                 }
@@ -143,7 +178,7 @@ fn generate_struct_from_python(
 
     rust_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
 
-    for (field_name, field_type, is_nullable, default_value, max_length) in fields {
+    for (field_name, field_type, is_nullable, default_value, max_length, tokens) in fields {
         update_crate_requirements(crate_requirements, field_type.as_str());
 
         let rust_type = match field_type.as_str() {
@@ -175,12 +210,24 @@ fn generate_struct_from_python(
             "TextField" => DjangoFieldType::Valid("String"),
             "TimeField" => DjangoFieldType::Valid("chrono::NaiveTime"),
             "URLField" => DjangoFieldType::Valid("String"),
+            "UUIDField" => DjangoFieldType::Valid("String"),
 
             // relationships
-            "ForeignKey" => DjangoFieldType::Relation("u32"),
-            "ManyToManyField" => DjangoFieldType::Relation("u32"),
-            "OneToOneField" => DjangoFieldType::Relation("u32"),
-            "OneToManyField" => DjangoFieldType::Relation("u32"),
+            "ForeignKey" | "ManyToManyField" | "OneToOneField" => {
+                // リレーションの解析処理で関連モデル名を取得
+                let related_model = analyze_relation_field(tokens, field_name.as_str());
+
+                if let Some(model) = related_model {
+                    rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
+                } else {
+                    rust_struct.push_str(&format!(
+                        "\n    /// Related field: {} (unknown related model)",
+                        field_name
+                    ));
+                }
+
+                DjangoFieldType::Relation("u32")
+            }
             _ => DjangoFieldType::None(field_type),
         };
 
@@ -206,11 +253,6 @@ fn generate_struct_from_python(
                 rust_struct.push_str(&format!("    pub {}: {},\n", field_name, ty));
             }
             DjangoFieldType::Relation(ty) => {
-                rust_struct.push_str(&format!(
-                    "\n    /// Related field: {}\n",
-                    field_name // 本当は参照先のモデル名が分かるならそれを使うと良い
-                ));
-
                 rust_struct.push_str("    /// Note: Check on_delete behavior.\n");
                 rust_struct.push_str(&format!("    pub {}: {},\n", field_name, ty));
             }
@@ -222,6 +264,41 @@ fn generate_struct_from_python(
 
     rust_struct.push_str("}\n");
     rust_struct
+}
+
+fn analyze_relation_field(
+    tokens: Vec<Tok>, // Djangoのモデル定義のトークン
+    _field_name: &str,
+) -> Option<String> {
+    let mut seen_to_keyword = false;
+    let mut related_model = None; // to属性やモデル名を保持する変数
+
+    for token in tokens {
+        match token {
+            Tok::Name { name } => {
+                // `to` キーワード引数を検知
+                if seen_to_keyword {
+                    related_model = Some(name.clone());
+                    break;
+                }
+
+                // 名前がリレーション引数として指定されていれば検知
+                if name == "to" {
+                    seen_to_keyword = true; // 次のトークンを関連モデル名とみなす
+                }
+            }
+            Tok::String { value, .. } => {
+                // 文字列で指定されている場合はそのモデルとして解釈
+                if seen_to_keyword || related_model.is_none() {
+                    related_model = Some(value.clone());
+                    break;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    related_model
 }
 
 fn update_crate_requirements(crate_requirements: &mut CrateRequirements, field_type: &str) {
