@@ -7,7 +7,8 @@ class Card(models.Model):
     bool1 = models.BooleanField(default=False)
     option1 = models.CharField(max_length=128, null=True, blank=True)
     info = models.JSONField(null=True, blank=True)
-    zip_code= models.CharField(max_length=10, null=False, blank=False, default='813-0041')
+    zip_code = models.CharField(max_length=10, null=False, blank=False, default='813-0041')
+    tags = models.ManyToManyField('Tag')
 
     def __str__(self):
         return self.name

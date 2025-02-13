@@ -15,6 +15,10 @@ pub struct CardDb {
     pub info: Option<Value>,
     /// Default: 813-0041, Max length: 10
     pub zip_code: String,
+
+    /// Related field: tags
+    /// Note: Check on_delete behavior.
+    pub tags: u32,
 }
 
 #[allow(dead_code)]
