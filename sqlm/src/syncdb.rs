@@ -275,7 +275,7 @@ impl CrateRequirements {
         }
     }
 
-    fn write_use_statements(&self, file: &mut fs::File) {
+    fn write_use_statements(&self, file: &mut fs::File) -> std::io::Result<()> {
         if self.use_chrono {
             let mut modules = vec![];
             if self.use_chrono_naive_date {
@@ -290,26 +290,28 @@ impl CrateRequirements {
             if self.use_chrono_datetimetz {
                 modules.push("DateTime, Utc");
             }
-            writeln!(file, "use chrono::{{{}}};", modules.join(", ")).unwrap();
+            writeln!(file, "use chrono::{{{}}};", modules.join(", "))?;
         }
         if self.use_serde {
-            writeln!(file, "use serde::{{Serialize, Deserialize}};").unwrap();
+            writeln!(file, "use serde::{{Serialize, Deserialize}};")?;
         }
         if self.use_serde_json {
-            writeln!(file, "use serde_json::Value;").unwrap();
+            writeln!(file, "use serde_json::Value;")?;
         }
         if self.use_rust_decimal {
-            writeln!(file, "use rust_decimal::Decimal;").unwrap();
+            writeln!(file, "use rust_decimal::Decimal;")?;
         }
         if self.use_std_net {
-            writeln!(file, "use std::net::IpAddr;").unwrap();
+            writeln!(file, "use std::net::IpAddr;")?;
         }
         if self.use_rust_decimal_macros {
-            writeln!(file, "use rust_decimal_macros;").unwrap();
+            writeln!(file, "use rust_decimal_macros;")?;
         }
         if self.use_rust_decimal_ops {
-            writeln!(file, "use rust_decimal_ops;").unwrap();
+            writeln!(file, "use rust_decimal_ops;")?;
         }
+
+        Ok(())
     }
 }
 
@@ -357,7 +359,9 @@ fn main() {
         .collect(); // Vec<String> に変換
 
     // 必要なuse文を冒頭に書き込み
-    crate_req.write_use_statements(&mut file);
+    crate_req
+        .write_use_statements(&mut file)
+        .expect("Failed to write use statements to file");
 
     // 収集したモデル情報
     file.write_all(struct_defs.join("\n").as_bytes())
