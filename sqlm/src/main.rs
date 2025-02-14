@@ -7,12 +7,15 @@ use serde_json;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::sync::Arc;
+use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
+
     let pool: Pool<Postgres> = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://postgres:postgres@192.168.33.10:5432/postgres")
+        .acquire_timeout(Duration::from_secs(5))
+        .connect("postgres://postgres:postgres@192.168.33.10:5432/postgres?connect_timeout=5")
         .await?;
 
     let pool = Arc::new(pool);
