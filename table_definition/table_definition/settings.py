@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'admin_server',
     'wix'
 ]
 
@@ -125,3 +126,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # STATICFILES_DIRS = [
 #     os.path.join(BASE_DIR, 'static'),
 # ]
+
+# manage.py run_with_custom_adminで起動時、adminサイトのルートアドレスを外部から注入している
+# print(CUSTOM_ADMIN_ROOT)

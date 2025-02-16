@@ -5,11 +5,21 @@ use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
 use tokio::sync::Mutex;
+// use rand::{distributions::Alphanumeric, Rng};
+use rand::prelude::*;
+
+fn random_string() -> String {
+    let mut rng = rand::rng();
+    let mut arr2 = [0u8; 10];
+    rng.fill(&mut arr2);
+    arr2.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("")
+}
 
 pub async fn start_django_server(
     State(process_handle): State<Arc<Mutex<Option<Child>>>>,
 ) -> impl IntoResponse {
     let mut handle = process_handle.lock().await;
+    let admin_root = format!("custom_{}/admin/", random_string());
 
     if handle.is_some() {
         println!("Django server is already running!");
@@ -25,7 +35,9 @@ pub async fn start_django_server(
 
     command.args([
         "../table_definition/manage.py", // 適切なmanage.pyへのパス
-        "runserver",
+        "run_with_custom_admin",
+        "--admin-root",
+        &admin_root,
         &admin_origin,
     ]);
 
@@ -47,10 +59,11 @@ pub async fn start_django_server(
                 StatusCode::OK,
                 Html(format!(
                     "Django server started successfully.\
-            <br /><a href=\"http://{}/admin\" target=\"_blank\">Admin page</a>\
+            <br /><a href=\"http://{}/{}\" target=\"_blank\">Admin page</a>\
             <br /><a href=\"admin_stop\">Stop Admin page</a>\
             ",
-                    admin_origin
+                    admin_origin,
+                    admin_root,
                 )),
             )
         }
