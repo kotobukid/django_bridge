@@ -1,9 +1,11 @@
-use std::os::windows::process::CommandExt;
-use std::process::{Child, Command};
-use std::sync::Arc;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
+use axum::routing::get;
+use axum::Router;
+use std::os::windows::process::CommandExt;
+use std::process::{Child, Command};
+use std::sync::Arc;
 use tokio::sync::Mutex;
 // use rand::{distributions::Alphanumeric, Rng};
 use rand::prelude::*;
@@ -12,13 +14,17 @@ fn random_string() -> String {
     let mut rng = rand::rng();
     let mut arr2 = [0u8; 10];
     rng.fill(&mut arr2);
-    arr2.iter().map(|x| x.to_string()).collect::<Vec<String>>().join("")
+    arr2.iter()
+        .map(|x| x.to_string())
+        .collect::<Vec<String>>()
+        .join("")
 }
 
-pub async fn start_django_server(
-    State(process_handle): State<Arc<Mutex<Option<Child>>>>,
-) -> impl IntoResponse {
+async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl IntoResponse {
+    let process_handle = Arc::clone(&state.django_process_handle); // クローンして取り出す
     let mut handle = process_handle.lock().await;
+    let router_root_path = state.router_root_path.clone();
+
     let admin_root = format!("custom_{}/admin/", random_string());
 
     if handle.is_some() {
@@ -60,10 +66,9 @@ pub async fn start_django_server(
                 Html(format!(
                     "Django server started successfully.\
             <br /><a href=\"http://{}/{}\" target=\"_blank\">Admin page</a>\
-            <br /><a href=\"admin_stop\">Stop Admin page</a>\
+            <br /><a href=\"{}admin_stop\">Stop Admin page</a>\
             ",
-                    admin_origin,
-                    admin_root,
+                    admin_origin, admin_root, router_root_path
                 )),
             )
         }
@@ -77,10 +82,10 @@ pub async fn start_django_server(
     }
 }
 
-pub async fn stop_django_server(
-    State(process_handle): State<Arc<Mutex<Option<Child>>>>,
-) -> impl IntoResponse {
+async fn stop_django_server(State(state): State<Arc<RouterState>>) -> impl IntoResponse {
+    let process_handle = Arc::clone(&state.django_process_handle); // クローンして取り出す
     let mut handle = process_handle.lock().await;
+    let router_root_path = state.router_root_path.clone();
 
     if let Some(mut child) = handle.take() {
         println!("Stopping Django server with PID {}", child.id());
@@ -114,18 +119,56 @@ pub async fn stop_django_server(
         // プロセスが自動停止せずにまだ動作している場合にkillを試みる
         if let Err(err) = child.kill() {
             println!("Error stopping Django server: {}", err);
-            Html("Error stopping Django server")
+            Html("Error stopping Django server".to_string())
         } else {
             println!("Django server stopped successfully.");
-            Html(
+            Html(format!(
                 "Django server stopped successfully.\
             <br />redirect to home page in 2 seconds.\
-            <script>setTimeout(() => (location.assign('/')), 2000)</script>"
-                    .into(),
-            )
+            <script>setTimeout(() => (location.assign('{}')), 2000)</script>",
+                router_root_path
+            ))
         }
     } else {
         println!("No server is running.");
-        Html("No server is running.")
+        Html(format!(
+            "No server is running.\
+            <br />redirect to home page in 2 seconds.\
+            <script>setTimeout(() => (location.assign('{}')), 2000)</script>",
+            router_root_path
+        ))
     }
+}
+
+async fn get_index(State(state): State<Arc<RouterState>>) -> impl IntoResponse {
+    let router_root_path = state.router_root_path.clone();
+    (
+        StatusCode::OK,
+        Html(
+            format!("<!doctype html><html><title>admin site portal</title><body><a href=\"/\">HOME</a><br /><a href=\"{router_root_path}admin_start\">Start Django Server</a>\
+        <br />\
+        <a href=\"{router_root_path}admin_stop\">Stop Django Server</a>\
+    </body></html>")
+        ),
+    )
+        .into_response()
+}
+
+#[derive(Clone)]
+struct RouterState {
+    router_root_path: String,
+    django_process_handle: Arc<Mutex<Option<Child>>>, // プロセス管理用のデモ的な型
+}
+
+pub fn create_admin_portal_router(router_root_path: &str) -> Router {
+    let state = Arc::new(RouterState {
+        router_root_path: router_root_path.to_string(),
+        django_process_handle: Arc::new(Mutex::new(None)),
+    });
+
+    Router::new()
+        .route("/", get(get_index))
+        .route("/admin_start", get(start_django_server))
+        .route("/admin_stop", get(stop_django_server))
+        .with_state(state)
 }

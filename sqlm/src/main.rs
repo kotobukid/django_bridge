@@ -12,9 +12,9 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::os::windows::process::CommandExt;
 
+use axum::handler::Handler;
 use std::sync::Arc;
 use std::time::Duration;
-use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
@@ -56,14 +56,10 @@ async fn main() -> Result<(), sqlx::Error> {
     for name in names {
         println!("Name: {}", name);
     }
-
-    let django_process_handle = Arc::new(Mutex::new(None));
-
-    let app = Router::new()
-        .route("/", get(get_index))
-        .route("/admin_start", get(admin_process::start_django_server))
-        .route("/admin_stop", get(admin_process::stop_django_server))
-        .with_state(django_process_handle);
+    let app = Router::new().route("/", get(get_index)).nest(
+        "/admin_portal/",
+        admin_process::create_admin_portal_router("/admin_portal/"),
+    );
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
@@ -76,10 +72,8 @@ async fn get_index() -> impl IntoResponse {
     (
         StatusCode::OK,
         Html(
-            "<a href=\"/admin_start\">Start Django Server</a>\
-        <br />\
-        <a href=\"/admin_stop\">Stop Django Server</a>\
-    ",
+            "<!doctype html><html><title>HOME</title><body><a href=\"/admin_portal/\">manage Django Server</a>\
+    </body></html>",
         ),
     )
         .into_response()
