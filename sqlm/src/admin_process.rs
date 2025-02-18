@@ -12,9 +12,9 @@ use rand::prelude::*;
 
 fn random_string() -> String {
     let mut rng = rand::rng();
-    let mut arr2 = [0u8; 10];
-    rng.fill(&mut arr2);
-    arr2.iter()
+    let mut arr = [0u8; 10];
+    rng.fill(&mut arr);
+    arr.iter()
         .map(|x| x.to_string())
         .collect::<Vec<String>>()
         .join("")
