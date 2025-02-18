@@ -7,12 +7,9 @@ use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
 use axum::{routing::get, Router};
 use models::{Card, CardRepository, ICardRepository};
-use serde_json;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
-use std::os::windows::process::CommandExt;
 
-use axum::handler::Handler;
 use std::sync::Arc;
 use std::time::Duration;
 

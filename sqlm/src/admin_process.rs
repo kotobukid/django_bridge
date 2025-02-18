@@ -44,7 +44,7 @@ async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl Into
         "run_with_custom_admin",
         "--admin-root",
         &admin_root,
-        &admin_origin,
+        admin_origin,
     ]);
 
     // Windows でプロセスグループを作成（UNIX系でも有効）

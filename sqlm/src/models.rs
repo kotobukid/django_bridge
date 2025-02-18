@@ -102,12 +102,10 @@ impl OnlyCardNameRepository {
     }
     pub fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<OnlyCardName>> + Send + 'a>> {
         Box::pin(async move {
-            let cards = sqlx::query_as::<_, OnlyCardName>("SELECT name FROM wix_card")
+            sqlx::query_as::<_, OnlyCardName>("SELECT name FROM wix_card")
                 .fetch_all(&*self.db_connector)
                 .await
-                .unwrap();
-
-            cards
+                .unwrap()
         })
     }
 }
