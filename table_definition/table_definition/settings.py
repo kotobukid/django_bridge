@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 import os
 from pathlib import Path
+import environ
+
+env = environ.Env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,6 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-n%3c39_sh-ux@@kd5n!4=x*z#e4odo2c5(5^w(zut$7+z#$t5a'
+
+environ.Env.read_env(os.path.join(BASE_DIR, '../.env'))
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -83,11 +89,11 @@ WSGI_APPLICATION = 'table_definition.wsgi.application'
 DATABASES = {
     'default': {  # PostgreSQL接続設定
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # データベース名
-        'USER': 'postgres',  # ユーザー名
-        'PASSWORD': 'postgres',  # パスワード
-        'HOST': '192.168.33.10',  # ホスト
-        'PORT': '5432',  # ポート番号
+        'NAME': env("DB_NAME"),  # データベース名
+        'USER': env("DB_USER"),  # ユーザー名
+        'PASSWORD': env("DB_PASSWORD"),  # パスワード
+        'HOST': env("DB_HOST"),  # ホスト
+        'PORT': env("DB_PORT"),  # ポート番号
     },
 }
 

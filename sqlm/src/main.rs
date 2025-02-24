@@ -7,19 +7,34 @@ use crate::models::OnlyCardNameRepository;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
 use axum::{routing::get, Router};
+use dotenvy;
 use models::{Card, CardRepository, ICardRepository};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
+use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
+    dotenvy::dotenv().ok();
+    let db_url = {
+        let host = env::var("DB_HOST").unwrap();
+        let port = env::var("DB_PORT").unwrap();
+        let user = env::var("DB_USER").unwrap();
+        let password = env::var("DB_PASSWORD").unwrap();
+        let db_name = env::var("DB_NAME").unwrap();
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            user, password, host, port, db_name
+        )
+    };
+
     let pool: Pool<Postgres> = PgPoolOptions::new()
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(5))
-        .connect("postgres://postgres:postgres@192.168.33.10:5432/postgres?connect_timeout=5")
+        .connect(format!("{db_url}?connect_timeout=5").as_str())
         .await?;
 
     let pool = Arc::new(pool);
