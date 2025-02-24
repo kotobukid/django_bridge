@@ -34,8 +34,8 @@ async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl Into
     let mut handle = process_handle.lock().await;
     let router_root_path = state.router_root_path.clone();
 
-    let admin_root = format!("admin_proxy/{}/", random_string());
-    // let admin_root = format!("custom_{}/admin/", random_string());
+    let rand_string = random_string();
+    let admin_root = format!("admin_proxy/{}/", rand_string);
 
     if handle.is_some() {
         println!("Django server is already running!");
@@ -74,11 +74,25 @@ async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl Into
             (
                 StatusCode::OK,
                 Html(format!(
-                    "Django server started successfully.\
-            <br /><a href=\"http://{}/{}\" target=\"_blank\">Admin page</a>\
-            <br /><a href=\"{}_admin_stop\">Stop Admin page</a>\
-            ",
-                    admin_origin, admin_root, router_root_path
+                    r#"<!doctype html><html lang="ja"><body>Django server started successfully.
+            <br /><a id="entrance" href="/{admin_root}" target="_blank">Admin page</a>
+            <br /><a href="{router_root_path}_admin_stop">Stop Admin page</a>
+            <style>#entrance {{ color: grey; }} #entrance.on {{ color: green; }}</style>
+            <script>
+                const health_check_endpoint = "/admin_proxy/{rand_string}/health-check";
+                setInterval(() => {{
+                    fetch(health_check_endpoint).then((res) => {{
+                        const alive = res.statusText == "OK";
+                        if (alive) {{
+                            document.getElementById("entrance").classList.add("on");
+                        }} else {{
+                            document.getElementById("entrance").classList.remove("on");
+                        }}
+                    }});
+                }}, 1000);
+            </script>
+            </body></html>
+            "#
                 )),
             )
         }

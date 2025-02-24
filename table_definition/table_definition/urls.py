@@ -18,9 +18,14 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+# from admin_server.views import h
+
+from admin_server.views import health_check_admin
+
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
+    path(f'{settings.CUSTOM_ADMIN_ROOT}health-check', health_check_admin),
     path(settings.CUSTOM_ADMIN_ROOT, admin.site.urls),
 ]
 
