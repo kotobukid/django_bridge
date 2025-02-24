@@ -1,0 +1,18 @@
+[config]
+cargo-make = true
+
+[tasks.manage]
+description = "Run Django manage.py commands from the Rust project root"
+args = ["../table_definition/manage.py", "${@}"]
+command = "python"
+
+[tasks.syncdb]
+description = "Run syncdb binary with generator-deps feature"
+command = "cargo"
+args = [
+    "run",
+    "--bin",
+    "syncdb",
+    "--features",
+    "generator-deps"
+]

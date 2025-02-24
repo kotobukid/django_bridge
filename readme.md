@@ -11,7 +11,7 @@
    Djangoの`makemigrations`や`migrate`コマンドを直接実行し、データベーススキーマ管理を行います。
 
 2. **Rustプロジェクトとの同期**  
-   マイグレーション後のDjangoモデルの変更をRustコードで利用可能な状態に同期します（`cargo run --bin syncdb`）。
+   マイグレーション後のDjangoモデルの変更をRustコードで利用可能な状態に同期します（`cargo make syncdb`）。
 
 3. **Django管理画面の利用**  
    必要に応じてDjangoの自動生成管理画面（`runserver`）を活用し、データ管理を効率化。
@@ -25,19 +25,21 @@
 
 このプロジェクトでは以下のワークフロ―を採用します：
 
+`manage.py` 関連コマンドは、Rustプロジェクトのルートにて `cargo make manage [command] [options]` を用いて使用できます。
+
 1. **Djangoでモデルとマイグレーションを管理**  
-   Pythonコードでモデルを定義するとともに、`manage.py makemigrations`や`migrate`などのDjango標準コマンドでデータベース定義を操作します。
+   Pythonコードでモデルを定義するとともに、`cargo make manage makemigrations`や`migrate`などのDjango標準コマンドでデータベース定義を操作します。
 
    ```bash
-   python manage.py makemigrations
-   python manage.py migrate
+   cargo make manage makemigrations
+   cargo make manage migrate
    ```
 
 2. **Rustで変更を同期**  
    Djangoによるスキーマ変更後、Rustコードベースにその変更を同期させます。
 
    ```bash
-   cargo run --bin syncdb --features="generator-deps"
+   cargo make syncdb
    ```
 
    これにより、Django側のモデルがRustコード内で利用可能な形（例: `CardDb` や `TagDb` 構造体）になります。
@@ -83,16 +85,15 @@
    Djangoで初期スキーマを適用します。
 
    ```bash
-   cd table_definition
-   python manage.py makemigrations
-   python manage.py migrate
+   cargo make manage makemigrations
+   cargo make manage migrate
    ```
 
 2. **Rustコードの同期**  
    マイグレーションが完了したら、Rustで同期を行います。
 
    ```bash
-   cargo run --bin syncdb --features="generator-deps"
+   cargo make syncdb
    ```
 
 ---
@@ -101,11 +102,11 @@
 
 ### Django関連コマンド
 
-- **`manage.py makemigrations`**  
+- **`cargo make manage makemigrations`**  
   モデル変更に基づくマイグレーションファイルを生成します。
-- **`manage.py migrate`**  
+- **`cargo mane manage migrate`**  
   マイグレーションをデータベースに適用します。
-- **`manage.py runserver`**  
+- **`cargo make manage runserver`**  
   開発用サーバを起動し、Django管理画面にアクセス可能にします。
 
 Djangoのカスタムコマンド作成機能も便利です。
@@ -113,7 +114,7 @@ Djangoのカスタムコマンド作成機能も便利です。
 
 ### Rust関連コマンド
 
-- **`cargo run --bin syncdb --features="generator-deps"`**  
+- **`cargo make syncdb`**  
   DjangoモデルをRustプロジェクトに同期します。
 
 ---

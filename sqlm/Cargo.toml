@@ -36,3 +36,4 @@ dotenvy = "0.15.7"
 
 [features]
 generator-deps = ["dep:rustpython-parser", "dep:rustpython-parser-core"]
+
