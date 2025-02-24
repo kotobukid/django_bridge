@@ -1,6 +1,7 @@
 mod admin_process;
 mod gen;
 mod models;
+mod tokiort;
 
 use crate::models::OnlyCardNameRepository;
 use axum::http::StatusCode;
@@ -53,10 +54,12 @@ async fn main() -> Result<(), sqlx::Error> {
     for name in names {
         println!("Name: {}", name);
     }
-    let app = Router::new().route("/", get(get_index)).nest(
-        "/admin_portal/",
-        admin_process::create_admin_portal_router("/admin_portal/"),
-    );
+    let a_routers = admin_process::create_admin_portal_router("/admin_operation/");
+    let app = Router::new()
+        .route("/", get(get_index))
+        .nest("/admin_operation/", a_routers.0)
+        .nest("/admin_proxy/", a_routers.1)
+        .nest("/a_static/", a_routers.2);
 
     // run our app with hyper, listening globally on port 3000
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
@@ -69,7 +72,7 @@ async fn get_index() -> impl IntoResponse {
     (
         StatusCode::OK,
         Html(
-            "<!doctype html><html><title>HOME</title><body><a href=\"/admin_portal/\">manage Django Server</a>\
+            "<!doctype html><html><title>HOME</title><body><a href=\"/admin_operation/\">manage Django Server</a>\
     </body></html>",
         ),
     )
