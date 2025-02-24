@@ -140,9 +140,9 @@ STATIC_URL = f"{CUSTOM_ADMIN_ROOT}a_static/"
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'staticfiles'),
-]
+# STATICFILES_DIRS = [
+#     os.path.join(BASE_DIR, 'staticfiles'),
+# ]
 
 # manage.py run_with_custom_adminで起動時、adminサイトのルートアドレスを外部から注入している
 # print(CUSTOM_ADMIN_ROOT)

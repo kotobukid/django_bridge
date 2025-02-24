@@ -7,7 +7,7 @@ use crate::models::OnlyCardNameRepository;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
 use axum::{routing::get, Router};
-use dotenvy;
+use dotenvy::dotenv;
 use models::{Card, CardRepository, ICardRepository};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
@@ -18,7 +18,8 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    dotenvy::dotenv().ok();
+    dotenv().ok();
+
     let db_url = {
         let host = env::var("DB_HOST").unwrap();
         let port = env::var("DB_PORT").unwrap();
