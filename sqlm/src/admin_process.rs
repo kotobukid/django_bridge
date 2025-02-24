@@ -276,7 +276,7 @@ async fn proxy_handler(OriginalUri(uri): OriginalUri, mut req: Request<Body>) ->
                 match frame {
                     Ok(chunk) if chunk.is_data() => {
                         if let Some(bytes) = chunk.data_ref() {
-                            response_bytes.extend_from_slice(&bytes);
+                            response_bytes.extend_from_slice(bytes);
                         }
                     }
                     Ok(_) => {}

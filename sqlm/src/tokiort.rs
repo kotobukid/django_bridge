@@ -55,6 +55,11 @@ impl TokioTimer {
         Self {}
     }
 }
+impl Default for TokioTimer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 // Use TokioSleep to get tokio::time::Sleep to implement Unpin.
 // see https://docs.rs/tokio/latest/tokio/time/struct.Sleep.html
