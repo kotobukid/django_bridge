@@ -1,3 +1,8 @@
+// This file is copied from hyper project:
+// https://github.com/hyperium/hyper/blob/master/benches/support/tokiort.rs
+// Copyright (c) 2014-2024 Sean McArthur
+// Licensed under MIT License - https://github.com/hyperium/hyper/blob/master/LICENSE
+
 #![allow(dead_code)]
 //! Various runtimes for hyper
 use std::{
