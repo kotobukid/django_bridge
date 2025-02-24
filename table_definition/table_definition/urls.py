@@ -15,13 +15,11 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 from django.conf import settings
-from django.conf.urls.static import static
-# from admin_server.views import h
+from django.views.static import serve
 
 from admin_server.views import health_check_admin
-
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
@@ -29,4 +27,7 @@ urlpatterns = [
     path(settings.CUSTOM_ADMIN_ROOT, admin.site.urls),
 ]
 
-urlpatterns += static(f"{settings.STATIC_URL}", document_root=settings.STATIC_ROOT)
+if not settings.DEBUG:
+    urlpatterns += [
+        re_path(r'^%s(?P<path>.*)$' % settings.STATIC_URL.lstrip('/'), serve, {'document_root': settings.STATIC_ROOT}),
+    ]
