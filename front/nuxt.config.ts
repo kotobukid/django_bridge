@@ -30,6 +30,12 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: site_name,
+      link: [
+        {rel: "icon", type: "image/x-icon", href: "/favicon.ico"},
+        // 必要に応じて他のアイコンも追加
+        // { rel: "icon", type: "image/png", href: "/favicon-32x32.png", sizes: "32x32" },
+        // { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" }
+      ]
     },
   },
   runtimeConfig: {
