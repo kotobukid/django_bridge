@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-
+use std::time::Duration;
 // 再エクスポート
 pub use crate::gen::django_models::CardDb;
 
@@ -101,12 +101,18 @@ impl OnlyCardNameRepository {
     pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
         Self { db_connector: pool }
     }
-    pub fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<OnlyCardName>> + Send + 'a>> {
+    pub fn get_all<'a>(
+        &'a self,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<OnlyCardName>, sqlx::Error>> + Send + 'a>> {
         Box::pin(async move {
-            sqlx::query_as::<_, OnlyCardName>("SELECT name FROM wix_card")
-                .fetch_all(&*self.db_connector)
-                .await
-                .unwrap()
+            tokio::time::timeout(
+                Duration::from_secs(5),
+                sqlx::query_as::<_, OnlyCardName>("SELECT name FROM wix_card")
+                    .fetch_all(&*self.db_connector),
+            )
+            .await
+            .map_err(|_| sqlx::Error::PoolTimedOut)?
+            .map_err(|e| e)
         })
     }
 }
