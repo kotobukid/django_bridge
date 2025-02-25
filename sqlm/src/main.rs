@@ -51,10 +51,10 @@ async fn main() -> Result<(), sqlx::Error> {
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:80")
         .await
         .expect("Failed to bind port");
-    println!("Server is running on http://localhost:3000");
+    println!("Server is running on http://localhost:80");
     axum::serve(listener, app).await?;
 
     Ok(())
