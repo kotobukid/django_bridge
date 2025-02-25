@@ -1,12 +1,11 @@
 use webapp::admin_process;
 
-use axum::http::StatusCode;
-use axum::response::{Html, IntoResponse};
-use axum::{routing::get, Router};
+use axum::Router;
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::env;
+use tower_http::services::ServeDir;
 
 use std::sync::Arc;
 use std::time::Duration;
@@ -38,36 +37,25 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let pool = Arc::new(pool);
 
-    let a_routers = admin_process::create_admin_portal_router("/admin_operation/");
+    let a_routers = admin_process::create_admin_portal_router();
     let card_router = create_card_router(pool.clone());
 
     let app_state = AppState { db_pool: pool };
 
     let app = Router::new()
-        .route("/", get(get_index))
         .nest("/card/", card_router)
         .nest("/admin_operation/", a_routers.0)
         .nest("/admin_proxy/", a_routers.1)
         .nest("/a_static/", a_routers.2)
+        .fallback_service(ServeDir::new("../front/dist"))
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind port");
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000")
+        .await
+        .expect("Failed to bind port");
     println!("Server is running on http://localhost:3000");
     axum::serve(listener, app).await?;
 
     Ok(())
-}
-
-async fn get_index() -> impl IntoResponse {
-    (
-        StatusCode::OK,
-        Html(
-            r#"<!doctype html><html><title>HOME</title><body>
-            <a href="/card/">Card list</a>
-            <br /><a href="/admin_operation/">manage Django Server</a>
-    </body></html>"#,
-        ),
-    )
-        .into_response()
 }
