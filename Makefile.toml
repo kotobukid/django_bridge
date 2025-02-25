@@ -1,5 +1,4 @@
 [config]
-cargo-make = true
 default_to_workspace = false
 
 [tasks.manage]
