@@ -7,7 +7,7 @@ use crate::models::OnlyCardNameRepository;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
 use axum::{routing::get, Router};
-use dotenvy::dotenv;
+use dotenvy::from_filename;
 use models::{Card, CardRepository, ICardRepository};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
@@ -18,14 +18,14 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    dotenv().ok();
+    from_filename("../.env").ok();
 
     let db_url = {
-        let host = env::var("DB_HOST").unwrap();
-        let port = env::var("DB_PORT").unwrap();
-        let user = env::var("DB_USER").unwrap();
-        let password = env::var("DB_PASSWORD").unwrap();
-        let db_name = env::var("DB_NAME").unwrap();
+        let host = env::var("DB_HOST").expect("DB_HOST not found in .env");
+        let port = env::var("DB_PORT").expect("DB_PORT not found in .env");
+        let user = env::var("DB_USER").expect("DB_USER not found in .env");
+        let password = env::var("DB_PASSWORD").expect("DB_PASSWORD not found in .env");
+        let db_name = env::var("DB_NAME").expect("DB_NAME not found in .env");
         format!(
             "postgres://{}:{}@{}:{}/{}",
             user, password, host, port, db_name
@@ -36,7 +36,8 @@ async fn main() -> Result<(), sqlx::Error> {
         .max_connections(5)
         .acquire_timeout(Duration::from_secs(5))
         .connect(format!("{db_url}?connect_timeout=5").as_str())
-        .await?;
+        .await
+        .expect("Failed to connect to database");
 
     let pool = Arc::new(pool);
 
