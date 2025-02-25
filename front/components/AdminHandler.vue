@@ -39,8 +39,8 @@ const stopAdmin = () => {
 <template lang="pug">
   .admin-handler
     h1 Admin Handler
-    v-btn(@click="startAdmin" v-if="!admin_alive" color="primary") Start Admin
-    v-btn(@click="stopAdmin" v-if="admin_alive" color="brown") Stop Admin
+    v-btn(@click="startAdmin" color="primary") Start Admin
+    v-btn(@click="stopAdmin" color="brown") Stop Admin
     br
     a(:href="admin_entry" target="_blank" v-if="admin_alive") {{ admin_entry }}
 </template>
