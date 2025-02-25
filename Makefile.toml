@@ -7,7 +7,7 @@ args = ["./table_definition/manage.py", "${@}"]
 command = "python"
 
 [tasks.syncdb]
-description = "Run syncdb binary with generator-deps feature"
+description = "Run syncdb binary"
 command = "cargo"
 env = { "CARGO_MANIFEST_DIR" = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/webapp" }
 args = [
