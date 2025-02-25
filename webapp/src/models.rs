@@ -92,6 +92,7 @@ impl Display for OnlyCardName {
     }
 }
 
+#[derive(Clone)]
 pub struct OnlyCardNameRepository {
     db_connector: Arc<Pool<Postgres>>,
 }

@@ -1,23 +1,16 @@
 use webapp::admin_process;
-use webapp::gen;
-use webapp::models;
-use webapp::routers;
-use webapp::tokiort;
 
-use crate::models::OnlyCardNameRepository;
-// use crate::routers::card_router::create_card_router;
 use axum::http::StatusCode;
 use axum::response::{Html, IntoResponse};
 use axum::{routing::get, Router};
 use dotenvy::from_filename;
-use models::{Card, CardRepository, ICardRepository};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
-use axum::extract::State;
+use webapp::routers::card_router::create_card_router;
 use webapp::state::AppState;
 
 #[tokio::main]
@@ -45,57 +38,28 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let pool = Arc::new(pool);
 
-    // let card_repo = CardRepository::new(pool.clone());
-    //
-    // let cards: Vec<Card> = card_repo.get_all().await;
-    //
-    // for card in cards {
-    //     println!();
-    //     println!("Debug: {:?}", card);
-    //     println!("Custom: {}", card.to_custom_string());
-    //     println!("JSON: {}", serde_json::to_string(&card).unwrap());
-    //     match &card.info {
-    //         Some(info) => match serde_json::from_str::<serde_json::Value>(&info.to_string()) {
-    //             Ok(value) => {
-    //                 println!("  .Info: {:?}", value);
-    //             }
-    //             Err(e) => {
-    //                 println!("  .Info(parse error): {:?}", e);
-    //             }
-    //         },
-    //         None => {
-    //             println!("Info: None");
-    //         }
-    //     }
-    // }
-    //
-    // let co_repo = OnlyCardNameRepository::new(pool);
-    //
-    // let names = co_repo.get_all().await;
-    // for name in names {
-    //     println!("Name: {}", name);
-    // }
     let a_routers = admin_process::create_admin_portal_router("/admin_operation/");
-    // let card_router = create_card_router();
+    let card_router = create_card_router(pool.clone());
 
     let app_state = AppState { db_pool: pool };
 
     let app = Router::new()
         .route("/", get(get_index))
-        // .nest("/card/", card_router)
+        .nest("/card/", card_router)
         .nest("/admin_operation/", a_routers.0)
         .nest("/admin_proxy/", a_routers.1)
         .nest("/a_static/", a_routers.2)
         .with_state(app_state);
 
     // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await?;
+    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.expect("Failed to bind port");
+    println!("Server is running on http://localhost:3000");
     axum::serve(listener, app).await?;
 
     Ok(())
 }
 
-async fn get_index(State(state): State<AppState>) -> impl IntoResponse {
+async fn get_index() -> impl IntoResponse {
     (
         StatusCode::OK,
         Html(
