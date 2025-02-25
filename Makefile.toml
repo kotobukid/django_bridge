@@ -10,6 +10,7 @@ command = "python"
 [tasks.syncdb]
 description = "Run syncdb binary with generator-deps feature"
 command = "cargo"
+env = { "CARGO_MANIFEST_DIR" = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/webapp" }
 args = [
     "run",
     "--package",

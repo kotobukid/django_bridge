@@ -2,10 +2,10 @@ use rustpython_parser::lexer::lex;
 use rustpython_parser::Tok;
 use rustpython_parser_core::mode::Mode;
 use std::collections::HashMap;
-use std::fs;
+use std::{env, fs};
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 enum DjangoFieldType {
     Valid(&'static str),
@@ -431,17 +431,26 @@ impl CrateRequirements {
         Ok(())
     }
 }
+fn get_output_dir() -> PathBuf {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR")
+        .expect("Failed to get CARGO_MANIFEST_DIR");
+    PathBuf::from(manifest_dir).join("src").join("gen")
+}
 
 fn main() {
-    let out_dir = "src/gen";
-    fs::create_dir_all(out_dir).expect("Output directory creation failed");
+    let out_dir: PathBuf = get_output_dir();
+    println!("Output directory: {}", out_dir.display());
+
+    fs::create_dir_all(&out_dir).expect("Output directory creation failed");
 
     let models = [
-        ("wix", "Card", "../table_definition/wix/models.py"),
-        ("wix", "Tag", "../table_definition/wix/models.py"),
+        ("wix", "Card", "./table_definition/wix/models.py"),
+        ("wix", "Tag", "./table_definition/wix/models.py"),
     ];
 
-    let dest_path = Path::new(out_dir).join("django_models.rs");
+    let dest_path = Path::new(&out_dir).join("django_models.rs");
+
+    println!("Output file: {}", dest_path.display());
 
     if dest_path.exists() {
         fs::remove_file(&dest_path).expect("Failed to remove existing django_models.rs");
