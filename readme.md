@@ -75,7 +75,6 @@
    ```bash
    git clone <REPOSITORY_URL>
    cd <PROJECT_DIRECTORY>
-   cd sqlm
    cargo build
    ```
 

@@ -18,6 +18,7 @@ use axum::{
 };
 use http_body_util::BodyExt;
 use hyper::client::conn::http1;
+use crate::state::AppState;
 
 fn random_string() -> String {
     let mut rng = rand::rng();
@@ -184,7 +185,7 @@ struct RouterState {
     django_process_handle: Arc<Mutex<Option<Child>>>, // プロセス管理用のデモ的な型
 }
 
-pub fn create_admin_portal_router(router_root_path: &str) -> (Router, Router, Router) {
+pub fn create_admin_portal_router(router_root_path: &str) -> (Router<AppState>, Router<AppState>, Router<AppState>) {
     let state = Arc::new(RouterState {
         router_root_path: router_root_path.to_string(),
         django_process_handle: Arc::new(Mutex::new(None)),

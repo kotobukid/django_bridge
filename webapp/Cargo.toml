@@ -1,10 +1,14 @@
 [package]
-name = "sqlm"
+name = "webapp"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "syncdb"
+path = "src/syncdb.rs"
+required-features = ["generator-deps"]
+
 [dependencies]
-webapp = { path = "../webapp" }
 chrono = { version = "0.4.39", features = ["serde"] }
 sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "postgres", "chrono"] }
 tokio = { version = "1.43.0", features = ["full"] }
