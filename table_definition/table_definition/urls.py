@@ -23,6 +23,7 @@ from admin_server.views import health_check_admin
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
+    path('admin_proxy/health-check', health_check_admin),
     path(f'{settings.CUSTOM_ADMIN_ROOT}health-check', health_check_admin),
     path(settings.CUSTOM_ADMIN_ROOT, admin.site.urls),
 ]
