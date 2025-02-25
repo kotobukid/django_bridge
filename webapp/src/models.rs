@@ -112,7 +112,6 @@ impl OnlyCardNameRepository {
             )
             .await
             .map_err(|_| sqlx::Error::PoolTimedOut)?
-            .map_err(|e| e)
         })
     }
 }

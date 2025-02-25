@@ -2,16 +2,45 @@ use rustpython_parser::lexer::lex;
 use rustpython_parser::Tok;
 use rustpython_parser_core::mode::Mode;
 use std::collections::HashMap;
-use std::{env, fs};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::{env, fs};
 
 enum DjangoFieldType {
     Valid(&'static str),
     Relation(&'static str),
     None(String),
     ManyToMany,
+}
+
+struct Fields {
+    name: String,
+    f_type: String,
+    is_nullable: bool,
+    default_value: Option<String>,
+    max_length: Option<String>,
+    tokens: Vec<Tok>,
+}
+
+impl Fields {
+    fn new(
+        name: String,
+        f_type: String,
+        is_nullable: bool,
+        default_value: Option<String>,
+        max_length: Option<String>,
+        tokens: Vec<Tok>,
+    ) -> Self {
+        Self {
+            name,
+            f_type,
+            is_nullable,
+            default_value,
+            max_length,
+            tokens,
+        }
+    }
 }
 
 fn generate_struct_from_python(
@@ -25,14 +54,7 @@ fn generate_struct_from_python(
         .collect::<Result<Vec<_>, _>>()
         .expect("Failed to tokenize Python code");
 
-    let mut fields: Vec<(
-        String,         // フィールド名
-        String,         // フィールドタイプ
-        bool,           // is_nullable
-        Option<String>, // default_value
-        Option<String>, // max_length
-        Vec<Tok>,       // tokens (リレーショナル系フィールド専用のto属性解析オプション)
-    )> = vec![];
+    let mut fields_vec: Vec<Fields> = Vec::new();
 
     let mut in_class_def = false;
     let mut current_class_name = String::new();
@@ -71,7 +93,7 @@ fn generate_struct_from_python(
                                             // 属性を解析
                                             let mut is_nullable = false;
                                             let mut default_value = None;
-                                            let mut max_length = None;
+                                            let mut max_length: Option<String> = None;
 
                                             // リレーショナルフィールド用トークン収集を開始
                                             if matches!(
@@ -117,9 +139,9 @@ fn generate_struct_from_python(
                                                             tokens.get(j + 1)
                                                         {
                                                             if let Some((
-                                                                            Tok::String { value, .. },
-                                                                            _,
-                                                                        )) = tokens.get(j + 2)
+                                                                Tok::String { value, .. },
+                                                                _,
+                                                            )) = tokens.get(j + 2)
                                                             {
                                                                 default_value = Some(value.clone());
                                                             }
@@ -127,29 +149,29 @@ fn generate_struct_from_python(
                                                     }
                                                     // max_length属性
                                                     Tok::Name { name: kw }
-                                                    if kw == "max_length" =>
+                                                        if kw == "max_length" =>
+                                                    {
+                                                        if let Some((Tok::Equal, _)) =
+                                                            tokens.get(j + 1)
                                                         {
-                                                            if let Some((Tok::Equal, _)) =
-                                                                tokens.get(j + 1)
+                                                            if let Some((
+                                                                Tok::Int { value, .. },
+                                                                _,
+                                                            )) = tokens.get(j + 2)
                                                             {
-                                                                if let Some((
-                                                                                Tok::Int { value, .. },
-                                                                                _,
-                                                                            )) = tokens.get(j + 2)
-                                                                {
-                                                                    // BigIntをStringに変換して保存
-                                                                    max_length =
-                                                                        Some(value.to_string());
-                                                                }
+                                                                // BigIntをStringに変換して保存
+                                                                max_length =
+                                                                    Some(value.to_string());
                                                             }
                                                         }
+                                                    }
                                                     _ => {}
                                                 }
                                                 j += 1;
                                             }
 
                                             // フィールド情報を追加
-                                            fields.push((
+                                            fields_vec.push(Fields::new(
                                                 name.clone(),
                                                 field_type.clone(),
                                                 is_nullable,
@@ -174,18 +196,17 @@ fn generate_struct_from_python(
 
     // Rustの構造体定義を生成
     let mut rust_struct = format!(
-        "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]\npub struct {} {{\n",
-        format!("{}Db", struct_name)
+        "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]\npub struct {struct_name}Db {{\n"
     );
 
     rust_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
 
     let mut intermediate_structs: Vec<String> = Vec::new();
 
-    for (field_name, field_type, is_nullable, default_value, max_length, tokens) in &fields {
-        update_crate_requirements(crate_requirements, field_type.as_str());
+    for fields in &fields_vec {
+        update_crate_requirements(crate_requirements, fields.f_type.as_str());
 
-        let rust_type = match field_type.as_str() {
+        let rust_type = match fields.f_type.as_str() {
             "AutoField" => DjangoFieldType::Valid("u32"),
             "BigAutoField" => DjangoFieldType::Valid("u64"),
             "BigIntegerField" => DjangoFieldType::Valid("i64"),
@@ -217,53 +238,55 @@ fn generate_struct_from_python(
             "UUIDField" => DjangoFieldType::Valid("String"),
 
             // relationships
-            "ForeignKey" | "OneToOneField" => { // ManyToManyは別処理
+            "ForeignKey" | "OneToOneField" => {
+                // ManyToManyは別処理
                 // リレーションの解析処理で関連モデル名を取得
-                let related_model = analyze_relation_field(tokens.clone(), field_name.as_str());
+                let related_model =
+                    analyze_relation_field(fields.tokens.clone(), fields.name.as_str());
 
                 if let Some(model) = related_model {
                     rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
                 } else {
                     rust_struct.push_str(&format!(
                         "\n    /// Related field: {} (unknown related model)",
-                        field_name
+                        fields.name
                     ));
                 }
 
                 DjangoFieldType::Relation("i64")
             }
             "ManyToManyField" => DjangoFieldType::ManyToMany,
-            _ => DjangoFieldType::None(field_type.clone()),
+            _ => DjangoFieldType::None(fields.f_type.clone()),
         };
 
         match rust_type {
             DjangoFieldType::Valid(ty) => {
                 // コメント生成（default値とmax_lengthを含める）
-                if default_value.is_some() || max_length.is_some() {
+                if fields.default_value.is_some() || fields.max_length.is_some() {
                     rust_struct.push_str("    /// ");
-                    if let Some(default) = &default_value {
+                    if let Some(default) = &fields.default_value {
                         rust_struct.push_str(&format!("Default: {}, ", default));
                     }
-                    if let Some(length) = &max_length {
+                    if let Some(length) = &fields.max_length {
                         rust_struct.push_str(&format!("Max length: {}", length));
                     }
-                    rust_struct.push_str("\n");
+                    rust_struct.push('\n');
                 }
 
-                let ty = if *is_nullable {
+                let ty = if fields.is_nullable {
                     format!("Option<{}>", ty)
                 } else {
                     ty.to_string()
                 };
-                rust_struct.push_str(&format!("    pub {}: {},\n", field_name, ty));
+                rust_struct.push_str(&format!("    pub {}: {},\n", fields.name, ty));
             }
             DjangoFieldType::Relation(ty) => {
                 rust_struct.push_str("    /// Note: Check on_delete behavior.\n");
-                rust_struct.push_str(&format!("    pub {}: {},\n", field_name, ty));
+                rust_struct.push_str(&format!("    pub {}: {},\n", fields.name, ty));
             }
             DjangoFieldType::ManyToMany => {
                 let sub_model_name =
-                    analyze_relation_field(tokens.clone(), field_name.as_str())
+                    analyze_relation_field(fields.tokens.clone(), fields.name.as_str())
                         .expect("to attribute or model name not found on ManyToManyField");
 
                 let class_name = format!(
@@ -271,7 +294,7 @@ fn generate_struct_from_python(
                     first_upper(app_name),
                     first_upper(struct_name),
                     // first_upper(&sub_model_name) // フィールド名でありモデル名ではない
-                    first_upper(&field_name)
+                    first_upper(&fields.name)
                 );
 
                 // 中間テーブルの構造体を生成
@@ -432,12 +455,11 @@ impl CrateRequirements {
     }
 }
 fn get_output_dir() -> PathBuf {
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR")
-        .expect("Failed to get CARGO_MANIFEST_DIR");
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("Failed to get CARGO_MANIFEST_DIR");
     PathBuf::from(manifest_dir)
-        .parent()                    // マニフェストディレクトリの親に移動
+        .parent() // マニフェストディレクトリの親に移動
         .expect("Failed to get parent directory")
-        .join("webapp")              // webappディレクトリに移動
+        .join("webapp") // webappディレクトリに移動
         .join("src")
         .join("gen")
 }
@@ -485,7 +507,7 @@ fn main() {
                 });
 
             // 構造体生成コードと依存クレート解析
-            generate_struct_from_python(app_name, struct_name, &python_code, &mut crate_req)
+            generate_struct_from_python(app_name, struct_name, python_code, &mut crate_req)
         })
         .collect(); // Vec<String> に変換
 
@@ -503,7 +525,7 @@ fn main() {
             .join("\n")
             .as_bytes(),
     )
-        .expect("Failed to write struct definitions to file");
+    .expect("Failed to write struct definitions to file");
 
     println!("Django model definitions successfully synced to Rust structs!");
 }
