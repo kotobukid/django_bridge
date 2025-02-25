@@ -15,3 +15,9 @@ args = [
     "--package",
     "syncdb"
 ]
+
+[tasks.generate]
+description = "Run npm run generate in the ./front Nuxt.js project"
+cwd = "./front"
+command = "npm"
+args = ["run", "generate"]
