@@ -14,9 +14,5 @@ env = { "CARGO_MANIFEST_DIR" = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/webapp
 args = [
     "run",
     "--package",
-    "webapp",
-    "--bin",
-    "syncdb",
-    "--features",
-    "generator-deps"
+    "syncdb"
 ]

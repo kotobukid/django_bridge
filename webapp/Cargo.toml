@@ -3,11 +3,6 @@ name = "webapp"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "syncdb"
-path = "src/syncdb.rs"
-required-features = ["generator-deps"]
-
 [dependencies]
 chrono = { version = "0.4.39", features = ["serde"] }
 sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "postgres", "chrono"] }
@@ -29,7 +24,3 @@ http-body-util = "0.1.2"
 hyper = { version = "1.6.0", features = ["client"] }
 pin-project-lite = "0.2.16"
 dotenvy = "0.15.7"
-
-[features]
-generator-deps = ["dep:rustpython-parser", "dep:rustpython-parser-core"]
-

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "sqlm",
+    "sqlm", "syncdb",
     "webapp"
 ]
 
