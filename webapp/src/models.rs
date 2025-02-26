@@ -34,10 +34,7 @@ impl Display for Card {
 
 impl Card {
     pub fn to_custom_string(&self) -> String {
-        match &self.option1 {
-            Some(option1) => format!("{}: {} ({})", self.id, self.name, option1),
-            None => format!("{}: {}", self.id, self.name),
-        }
+        self.name.to_string()
     }
 }
 
