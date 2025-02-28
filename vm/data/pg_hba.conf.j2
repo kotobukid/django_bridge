@@ -1,0 +1,13 @@
+# PostgreSQL .pg_hba.conf ファイル
+local   all             postgres                                {{ local_auth }}
+local   all             all                                     {{ local_auth }}
+# IPv4 local connections:
+host    all             all             127.0.0.1/32            {{ ipv4_auth_method }}
+host    all             {{ normal_username }}       0.0.0.1/0   {{ ipv4_auth_method }}
+# IPv6 local connections:
+host    all             all             ::1/128                 {{ ipv6_auth_method }}
+# Allow replication connections from localhost, by a user with the
+# replication privilege.
+local   replication     all                                     {{ local_auth }}
+host    replication     all             127.0.0.1/32            scram-sha-256
+host    replication     all             ::1/128                 scram-sha-256

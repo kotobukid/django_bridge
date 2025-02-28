@@ -4,14 +4,19 @@
   become: true
 
   vars:
-    db_username: "postgres" # データベース用のユーザー名
-    db_password: "postgres" # データベース用のパスワード
-    normal_username: "wix" # データベース用のユーザー名
-    normal_password: "wix" # データベース用のパスワード
-    normal_dbname: "wix" # データベース用のパスワード
-    db_name: "postgres" # 作成するデータベース名
-    postgres_version: "14" # PostgreSQLのバージョン
-    pgvector_version: "v0.8.0" # pgvectorのバージョン
+    db_username: "postgres"        # データベース用のユーザー名
+    db_password: "postgres"        # データベース用のパスワード
+    normal_username: "wix"         # 一般ユーザーログイン名
+    normal_password: "wix"         # 一般ユーザーパスワード
+    normal_dbname: "wixdb"         # 一般ユーザー用のデータベース名
+    db_name: "postgres"            # 作成するデータベース名
+    postgres_version: "14"         # PostgreSQLのバージョン
+    pgvector_version: "v0.8.0"     # pgvectorのバージョン
+
+    # 認証方式（テンプレートで使用）
+    local_auth: "peer"
+    ipv4_auth_method: "md5"
+    ipv6_auth_method: "md5"
 
   handlers:
     - name: restart postgresql
@@ -21,30 +26,64 @@
 
   tasks:
 
-    - name: システムのアップデートと必要なパッケージのインストール
-      apt:
-        update_cache: yes
-        upgrade: dist
-        cache_valid_time: 3600
-      tags: always
+    - name: apt関連
+      block:
+        - name: システムのパッケージキャッシュを更新
+          apt:
+            update_cache: yes
+            cache_valid_time: 3600
+            state: present
 
-    - name: 必要なパッケージをインストール
-      apt:
-        name:
-          - postgresql-server-dev-all
-          - postgresql
-          - postgresql-server-dev-{{ postgres_version }}
-          - gcc
-          - make
-          - postgresql-contrib
-          - python3-psycopg2
-        state: present
+        - name: 必要なパッケージをインストール
+          apt:
+            name:
+              - postgresql-server-dev-all
+              - postgresql
+              - postgresql-server-dev-{{ postgres_version }}
+              - gcc
+              - make
+              - postgresql-contrib
+              - python3-psycopg2
+          become: true
 
     - name: PostgreSQLのステータス確認
       service:
         name: postgresql
         state: started
         enabled: true
+
+    - name: シェルコマンドでパスワードを設定
+      shell: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
+
+    - name: 管理者用の認証方式を設定（postgres ユーザー）
+      lineinfile:
+        path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+        regexp: '^local +all +postgres +peer'
+        line: 'local   all             postgres                                md5'
+      notify:
+        - restart postgresql
+
+    - name: PostgreSQLを再起動
+      service:
+        name: postgresql
+        state: restarted
+
+    - name: PostgreSQL一般ユーザー {{ normal_username }} とデータベース {{ normal_dbname }} を作成
+      postgresql_user:
+        name: "{{ normal_username }}"
+        password: "{{ normal_password }}"
+        db: "{{ db_name }}"
+        state: present
+        login_user: "{{ db_username }}"
+        login_password: "{{ db_password }}"
+
+    - name: PostgreSQL一般ユーザー専用データベースを追加
+      postgresql_db:
+        name: "{{ normal_dbname }}"
+        owner: "{{ normal_username }}"
+        state: present
+        login_user: "{{ db_username }}"
+        login_password: "{{ db_password }}"
 
     - name: postgresql.conf を編集して listen_addresses を変更
       lineinfile:
@@ -54,142 +93,36 @@
         state: present
       notify: restart postgresql
 
-    - name: 管理者用の認証方式を設定一旦peerにする
-      lineinfile:
-        path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
-        regexp: '^local +all +postgres +md5'
-        line: 'local   all             postgres                                peer'
-      notify:
-        - restart postgresql
-
-    - name: PostgreSQL を再起動
-      service:
-        name: postgresql
-        state: restarted
-
-    #    - name: PostgreSQLユーザーのパスワードを設定
-    #      become: yes
-    #      become_user: postgres  # peer認証でpostgresユーザーとしてログイン
-    #      community.postgresql.postgresql_user:
-    #        name: "postgres"  # パスワードを設定したいユーザー名
-    #        password: "postgres"
-    #        state: present
-    #        login_unix_socket: "{{ postgresql_unix_socket_path | default('/var/run/postgresql') }}"
-    #    - name: SQLコマンドでパスワードを設定
-    #      become: yes
-    #      become_user: postgres
-    #      command: psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-    - name: シェルコマンドでパスワードを設定
-      shell: sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD 'postgres';"
-
-    - name: pg_hba.conf を修正して全て md5 認証に統一
+    - name: pg_hba.conf を一時的に md5 認証に変更
       block:
-        - name: 管理者用の認証方式を設定（postgres ユーザー）
-          lineinfile:
-            path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
-            regexp: '^local +all +postgres +peer'
-            line: 'local   all             postgres                                md5'
-          notify:
-            - restart postgresql
-
-        - name: 一般接続の認証方式を設定（UNIX domain socket）
-          lineinfile:
-            path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
-            regexp: '^local +all +all +peer'
-            line: 'local   all             all                                     md5'
-          notify:
-            - restart postgresql
-
-        - name: IPv4 の接続認証方式を設定
-          lineinfile:
-            path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
-            regexp: '^host +all +all +127.0.0.1/32 +scram-sha-256'
-            line: 'host    all             all             127.0.0.1/32            md5'
-          notify:
-            - restart postgresql
-
-        - name: IPv6 の接続認証方式を設定
-          lineinfile:
-            path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
-            regexp: '^host +all +all +::1/128 +scram-sha-256'
-            line: 'host    all             all             ::1/128                 md5'
-          notify:
-            - restart postgresql
-
-        - name: レプリケーション用の認証方式を設定
-          lineinfile:
-            path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
-            regexp: '^local +replication +all +peer'
-            line: 'local   replication     all                                     md5'
-          notify:
-            - restart postgresql
-
-        - name: ホストマシンから {{ normal_username }} ユーザーの接続を許可
-          lineinfile:
-            path: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
-            line: 'host    all         {{ normal_username }}             0.0.0.1/0            md5'
-            state: present
-          notify:
-            - restart postgresql
-
-    - name: PostgreSQL を再起動
-      service:
-        name: postgresql
-        state: restarted
-
-    - name: PostgreSQLユーザー {{ normal_username }} の作成
-      postgresql_user:
-        name: "{{ normal_username }}"
-        password: "{{ normal_password }}"
-        state: present
-        login_user: "{{ db_username }}"
-        login_password: "{{ db_password }}"
-
-
-    - name: PostgreSQLデータベース {{ normal_dbname }} の作成
-      postgresql_db:
-        name: "{{ normal_dbname }}"
-        owner: "{{ normal_username }}"
-        login_user: "{{ db_username }}"
-        login_password: "{{ db_password }}"
-
-        state: present
-
-    - name: pg_hba.conf の設定変更
-      lineinfile:
-        path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
-        line: "host   all             postgres        0.0.0.0/0                        md5"
-        state: present
-        create: yes
-        backup: yes
+        - name: pg_hba.confの設定 (md5認証で切替)
+          blockinfile:
+            backup: yes
+            path: "/etc/postgresql/{{ postgres_version }}/main/pg_hba.conf"
+            marker: "# {mark} Managed by Ansible"
+            block: |
+              local   all             postgres                                md5
+              local   all             all                                     md5
+              host    all             all             127.0.0.1/32            md5
+              host    all             all             ::1/128                 md5
+          notify: restart postgresql
 
     - name: PostgreSQLを再起動
       service:
         name: postgresql
         state: restarted
 
-    - name: リポジトリ設定変更 (日本のミラーサイト)
-      shell: sudo sed -i 's/archive.ubuntu.com/jp.archive.ubuntu.com/g' /etc/apt/sources.list
-
-    - name: pgvectorのリポジトリをClone
-      git:
-        repo: "https://github.com/pgvector/pgvector.git"
-        dest: "/tmp/pgvector"
-        version: "{{ pgvector_version }}"
-
-    - name: pgvectorをビルド
+    - name: pgvector のインストール
       shell: |
-        cd /tmp/pgvector
-        make
-
-    - name: pgvector をインストール
-      command: >
-        make install
+        git clone https://github.com/pgvector/pgvector.git
+        cd pgvector
+        git checkout {{ pgvector_version }}
+        make && make install
       args:
-        chdir: "/tmp/pgvector"
-      notify: restart postgresql
+        chdir: /tmp
+      register: pgvector_install
 
-    - name: pgvector
+    - name: pgvectorを有効化
       block:
         - name: ユーザーに一時的にスーパーユーザー権限を付与
           community.postgresql.postgresql_query:
@@ -198,12 +131,17 @@
             login_user: "{{ db_username }}"
             login_password: "{{ db_password }}"
 
-        - name: pgvectorを有効化 ({{ normal_dbname }} データベースにて)
-          community.postgresql.postgresql_query:
-            query: "CREATE EXTENSION IF NOT EXISTS vector;"
-            db: "{{ normal_dbname }}"
-            login_user: "{{ normal_username }}"
-            login_password: "{{ normal_password }}"
+        #        - name: pgvectorを有効化 ({{ normal_dbname }} データベースにて)
+        #          community.postgresql.postgresql_query:
+        #            query: "CREATE EXTENSION IF NOT EXISTS vector;"
+        #            db: "{{ normal_dbname }}"
+        #            login_user: "{{ normal_username }}"
+        #            login_password: "{{ normal_password }}"
+
+        - name: シェルコマンドでエクステンションをインストール
+          shell: psql -U {{ normal_username }} -h localhost {{ normal_dbname }} -c "CREATE EXTENSION IF NOT EXISTS vector;"
+          environment:
+            PGPASSWORD: "{{ normal_password }}"
 
         - name: スーパーユーザー権限を取り消す（セキュリティのため）
           community.postgresql.postgresql_query:
@@ -212,13 +150,31 @@
             login_user: "{{ db_username }}"
             login_password: "{{ db_password }}"
 
-    - name: ファイアウォールの無効化 (任意)
-      command: ufw disable
-      ignore_errors: yes
+    - name: pg_hba.conf をテンプレートで配置
+      template:
+        src: /vagrant_data/pg_hba.conf.j2
+        dest: /etc/postgresql/{{ postgres_version }}/main/pg_hba.conf
+        owner: postgres
+        group: postgres
+        mode: '0644'
+      notify: restart postgresql
 
-    - name: 接続確認用メッセージ表示
-      debug:
-        msg: |
-          PostgreSQL のセットアップが完了しました。
-          データベース名: {{ normal_dbname }}
-          ユーザー名: {{ normal_username }}
+    - name: PostgreSQLを再起動
+      service:
+        name: postgresql
+        state: restarted
+
+    - name: ファイアウォールを開く(5432)
+      command: sudo ufw allow 5432/tcp
+      ignore_errors: yes
+      become: true
+
+    - name: ファイアウォールを開く(3000)
+      command: sudo ufw allow 3000/tcp
+      ignore_errors: yes
+      become: true
+
+    - name: ファイアウォールを開く(8000)
+      command: sudo ufw allow 8000/tcp
+      ignore_errors: yes
+      become: true
