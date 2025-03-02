@@ -6,24 +6,34 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 // 再エクスポート
-pub use crate::gen::django_models::CardDb;
+pub use crate::gen::django_models::{CardDb, ProductDb};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Card(pub CardDb);
+macro_rules! new_type {
+    ($outer:ident, $inner:ty) => {
+        #[derive(Debug, Serialize, Deserialize)]
+        pub struct $outer(pub $inner);
 
-impl From<CardDb> for Card {
-    fn from(db: CardDb) -> Self {
-        Self(db)
-    }
-}
+        impl From<$inner> for $outer {
+            fn from(inner: $inner) -> Self {
+                Self(inner)
+            }
+        }
 
-impl std::ops::Deref for Card {
-    type Target = CardDb;
+        impl std::ops::Deref for $outer {
+            type Target = $inner;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+    };
+}
+
+new_type!(Card, CardDb);
 
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
