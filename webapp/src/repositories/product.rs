@@ -1,16 +1,11 @@
+use crate::models::{Product, ProductDb};
+use sqlx::{Pool, Postgres};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
-use sqlx::{Pool, Postgres};
-use crate::models::{Product, ProductDb};
+use std::time::Duration;
 
-pub trait IProductRepository {
-    fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Product>> + Send + 'a>>;
-    // async fn get_by_id(&self, id: i64) -> Option<Card>;
-    // async fn add(&self, card: Card);
-    // async fn delete(&self, id: i64);
-}
-
+#[derive(Clone)]
 pub struct ProductRepository {
     db_connector: Arc<Pool<Postgres>>,
 }
@@ -19,27 +14,22 @@ impl ProductRepository {
     pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
         Self { db_connector: pool }
     }
-}
 
-impl IProductRepository for ProductRepository {
-    fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Product>> + Send + 'a>> {
+    pub fn get_all<'a>(
+        &'a self,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<Product>, sqlx::Error>> + Send + 'a>> {
         Box::pin(async move {
-            let products = sqlx::query_as::<_, ProductDb>("SELECT * FROM wix_product")
-                .fetch_all(&*self.db_connector)
-                .await
-                .unwrap();
+            let query_future = sqlx::query_as::<_, ProductDb>(
+                "SELECT id, name, product_code, url, product_type, sort_asc FROM wix_product",
+            )
+            .fetch_all(&*self.db_connector);
 
-            products.into_iter().map(Product::from).collect()
+            match tokio::time::timeout(Duration::from_secs(5), query_future).await {
+                Ok(result) => {
+                    result.map(|products| products.into_iter().map(Product::from).collect())
+                }
+                Err(_) => Err(sqlx::Error::PoolTimedOut),
+            }
         })
     }
-
-    // async fn get_by_id(&self, id: i64) -> Option<Card> {
-    //     todo!()
-    // }
-    // async fn add(&self, card: Card) {
-    //     todo!()
-    // }
-    // async fn delete(&self, id: i64) {
-    //     todo!()
-    // }
 }

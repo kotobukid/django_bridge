@@ -10,6 +10,7 @@ use tower_http::services::ServeDir;
 use std::sync::Arc;
 use std::time::Duration;
 use webapp::routers::card_router::create_card_router;
+use webapp::routers::product_router::create_product_router;
 use webapp::state::AppState;
 
 #[tokio::main]
@@ -39,11 +40,13 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let a_routers = admin_process::create_admin_portal_router();
     let card_router = create_card_router(pool.clone());
+    let product_router = create_product_router(pool.clone());
 
     let app_state = AppState { db_pool: pool };
 
     let app = Router::new()
         .nest("/card/", card_router)
+        .nest("/product/", product_router)
         .nest("/admin_operation/", a_routers.0)
         .nest("/admin_proxy/", a_routers.1)
         .nest("/a_static/", a_routers.2)

@@ -1,0 +1,5 @@
+### GET request to web api
+GET http://localhost/product/api/list.json
+
+###
+GET http://localhost:3001/product/api/list.json

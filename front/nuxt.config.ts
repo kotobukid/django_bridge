@@ -60,6 +60,10 @@ export default defineNuxtConfig({
           target: 'http://127.0.0.1:80',
           changeOrigin: true,
         },
+        '/product/api': {
+          target: 'http://127.0.0.1:80',
+          changeOrigin: true,
+        },
         '/admin_operation/api': {
           target: 'http://127.0.0.1:80',
           changeOrigin: true,
