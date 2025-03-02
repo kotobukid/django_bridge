@@ -1,5 +1,5 @@
-use std::fmt::{Display, Formatter};
 use serde::Serialize;
+use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum CardType {
@@ -39,5 +39,26 @@ impl Display for CardType {
             _ => "不明",
         };
         write!(f, "{}", s)
+    }
+}
+
+pub fn detect_card_type(text: &str) -> CardType {
+    #[allow(unreachable_patterns)]
+    match text {
+        "ルリグ" => CardType::Lrig,
+        "アシストルリグ" => CardType::LrigAssist,
+        "アーツ" => CardType::Arts,
+        "キー" => CardType::Key,
+        "シグニ" => CardType::Signi,
+        "スペル" => CardType::Spell,
+        "レゾナ" => CardType::Resona,
+        "アーツ<br />\nクラフト" => CardType::ArtsCraft,
+        "シグニ<br />\nクラフト" => CardType::ResonaCraft,
+        "スペル<br />\nクラフト" => CardType::SpellCraft,
+        "ピース" => CardType::Piece,
+        "ピース<br />\nリレー" => CardType::PieceRelay,
+        "コイン" => CardType::Token,
+        "トークン" => CardType::Token,
+        _ => CardType::Unknown,
     }
 }
