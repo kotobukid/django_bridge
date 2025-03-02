@@ -1,14 +1,15 @@
 #[macro_use]
 pub mod constants;
 
+use crate::features;
+use crate::wixoss::constants::color::Colors;
+use crate::wixoss::constants::CardFeature;
+use regex::Regex;
+use scraper::{Html, Selector};
+use serde::ser::SerializeSeq;
+use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-use scraper::{Html, Selector};
-use regex::Regex;
-use serde::{Serialize, Serializer};
-use crate::features;
-use crate::wixoss::constants::CardFeature;
-use serde::ser::SerializeSeq;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub enum CardType {
@@ -45,7 +46,7 @@ impl Display for CardType {
             CardType::Piece => "ピース",
             CardType::PieceRelay => "ピース(リレー)",
             CardType::Token => "トークン",
-            _ => "不明"
+            _ => "不明",
         };
         write!(f, "{}", s)
     }
@@ -76,7 +77,7 @@ impl Display for Format {
         match self {
             Format::AllStar => write!(f, "all star"),
             Format::KeySelection => write!(f, "key selection"),
-            Format::DivaSelection => write!(f, "diva selection")
+            Format::DivaSelection => write!(f, "diva selection"),
         }
     }
 }
@@ -87,7 +88,8 @@ pub struct OptionString {
 }
 
 impl OptionString {
-    pub fn from_string(value: String) -> Self { // Noneの場合はNoneではなく""空文字
+    pub fn from_string(value: String) -> Self {
+        // Noneの場合はNoneではなく""空文字
         if value == *"" {
             Self { value: None }
         } else {
@@ -101,14 +103,15 @@ impl OptionString {
 }
 
 impl Serialize for OptionString {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         match &self.value {
-            Some(s) => {
-                match s.as_str() {
-                    "" => serializer.serialize_str(""),
-                    "-" => serializer.serialize_str(""),
-                    _ => serializer.serialize_str(s)
-                }
+            Some(s) => match s.as_str() {
+                "" => serializer.serialize_str(""),
+                "-" => serializer.serialize_str(""),
+                _ => serializer.serialize_str(s),
             },
             None => serializer.serialize_str(""),
         }
@@ -119,7 +122,7 @@ impl Display for OptionString {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self.value {
             Some(v) => write!(f, "{}", v),
-            None => write!(f, "")
+            None => write!(f, ""),
         }
     }
 }
@@ -133,7 +136,7 @@ impl OptionInteger {
     fn from(value: Option<u32>) -> Self {
         match value {
             Some(v) => Self { value: Some(v) },
-            None => Self { value: None }
+            None => Self { value: None },
         }
     }
 }
@@ -142,7 +145,7 @@ impl Display for OptionInteger {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self.value {
             None => write!(f, ""),
-            Some(v) => write!(f, "{}", v)
+            Some(v) => write!(f, "{}", v),
         }
     }
 }
@@ -159,7 +162,10 @@ impl Skills {
 }
 
 impl Serialize for Skills {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error> where S: Serializer {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let mut seq = serializer.serialize_seq(Some(self.value.len()))?;
         for e in &self.value {
             seq.serialize_element(e)?;
@@ -181,7 +187,8 @@ fn custom_vec_string_serialize<S>(value: &[String], serializer: S) -> Result<S::
 where
     S: Serializer,
 {
-    let joined = value.iter()
+    let joined = value
+        .iter()
         .filter_map(|t| if t != "-" { Some(t.as_str()) } else { None })
         .collect::<Vec<&str>>()
         .join(", ");
@@ -203,7 +210,7 @@ pub struct Card {
     artist: String,
     pub card_type: CardType,
     klass: OptionString,
-    color: String,
+    color: Colors,
     level: OptionString,
     cost: OptionString,
     limit: OptionString,
@@ -222,25 +229,31 @@ pub struct Card {
 
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}\n{}\n{}",
-               self.no,
-               self.name,
-               self.pronounce,
-               self.artist,
-               self.card_type,
-               self.klass,
-               self.color,
-               self.level,
-               self.cost,
-               self.limit,
-               self.power,
-               self.user,
-               self.time.join(", "),
-               self.story,
-               self.format,
-               self.rarity,
-               self.skill,
-               self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", ")
+        write!(
+            f,
+            "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}\n{}\n{}",
+            self.no,
+            self.name,
+            self.pronounce,
+            self.artist,
+            self.card_type,
+            self.klass,
+            self.color,
+            self.level,
+            self.cost,
+            self.limit,
+            self.power,
+            self.user,
+            self.time.join(", "),
+            self.story,
+            self.format,
+            self.rarity,
+            self.skill,
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
         )
     }
 }
@@ -273,7 +286,7 @@ impl Card {
             "ピース<br />\nリレー" => CardType::PieceRelay,
             "コイン" => CardType::Token,
             "トークン" => CardType::Token,
-            _ => CardType::Unknown
+            _ => CardType::Unknown,
         }
     }
 
@@ -292,7 +305,7 @@ impl Card {
             CardType::Piece => Some(Piece::from_source(text.to_owned()).into()),
             CardType::PieceRelay => Some(PieceRelay::from_source(text.to_owned()).into()),
             CardType::Token => Some(Token::from_source(text.to_owned()).into()),
-            _ => None
+            _ => None,
         }
     }
 
@@ -325,9 +338,13 @@ fn element_to_name_and_pronounce(source: String) -> (String, String) {
     let re_head = Regex::new(r"^＜").unwrap();
     let re_tail = Regex::new(r"＞$").unwrap();
 
-    (name, re_tail.replace(&re_head.replace(&pronounce, ""), "").to_string())
+    (
+        name,
+        re_tail
+            .replace(&re_head.replace(&pronounce, ""), "")
+            .to_string(),
+    )
 }
-
 
 #[derive(Debug)]
 pub struct Piece {
@@ -336,7 +353,7 @@ pub struct Piece {
     pronounce: String,
     artist: String,
     card_type: CardType,
-    color: String,
+    color: Colors,
     // level: Option<i32>,
     cost: OptionString,
     // limit: Option<String>,
@@ -359,7 +376,7 @@ impl From<Piece> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -382,25 +399,25 @@ impl WixossCard for Piece {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -424,7 +441,7 @@ impl WixossCard for Piece {
             pronounce: card_name.1,
             artist,
             card_type: CardType::Piece,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[8].clone()),
             time: split_by_break(card_data[9].clone()),
@@ -455,7 +472,16 @@ impl Display for Piece {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -467,7 +493,7 @@ pub struct PieceRelay {
     pronounce: String,
     artist: String,
     card_type: CardType,
-    color: String,
+    color: Colors,
     // level: Option<i32>,
     cost: OptionString,
     // limit: Option<String>,
@@ -490,7 +516,7 @@ impl From<PieceRelay> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -502,7 +528,6 @@ impl From<PieceRelay> for Card {
             rarity: val.rarity.clone(),
             skill: val.skill.clone(),
             features: val.features.clone(),
-
         }
     }
 }
@@ -514,25 +539,25 @@ impl WixossCard for PieceRelay {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -556,7 +581,7 @@ impl WixossCard for PieceRelay {
             pronounce: card_name.1,
             artist,
             card_type: CardType::PieceRelay,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[8].clone()),
             time: split_by_break(card_data[9].clone()),
@@ -587,7 +612,16 @@ impl Display for PieceRelay {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -599,7 +633,7 @@ pub struct Key {
     pronounce: String,
     artist: String,
     card_type: CardType,
-    color: String,
+    color: Colors,
     // level: Option<i32>,
     cost: OptionString,
     // limit: Option<String>,
@@ -622,7 +656,7 @@ impl From<Key> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -645,25 +679,25 @@ impl WixossCard for Key {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -687,7 +721,7 @@ impl WixossCard for Key {
             pronounce: card_name.1,
             artist,
             card_type: CardType::Key,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[8].clone()),
             time: split_by_break(card_data[9].clone()),
@@ -718,7 +752,16 @@ impl Display for Key {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -731,7 +774,7 @@ pub struct Signi {
     artist: String,
     card_type: CardType,
     klass: OptionString,
-    color: String,
+    color: Colors,
     level: OptionString,
     // cost: OptionString,
     limit: OptionString,
@@ -755,7 +798,7 @@ impl From<Signi> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: val.klass.clone(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: val.level.clone(),
             cost: OptionString::from_string("".into()),
             limit: val.limit.clone(),
@@ -778,25 +821,25 @@ impl WixossCard for Signi {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -821,7 +864,7 @@ impl WixossCard for Signi {
             artist,
             card_type: CardType::Signi,
             klass: OptionString::from_string(card_data[1].clone()),
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             level: OptionString::from_string(card_data[3].clone()),
             // cost: OptionString::from_string(card_data[5].clone()),
             limit: OptionString::from_string(card_data[6].clone()),
@@ -854,11 +897,19 @@ impl Display for Signi {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
-
 
 #[derive(Debug)]
 pub struct Spell {
@@ -867,7 +918,7 @@ pub struct Spell {
     pronounce: String,
     artist: String,
     card_type: CardType,
-    color: String,
+    color: Colors,
     // level: OptionString,
     cost: OptionString,
     // limit: OptionString,
@@ -890,7 +941,7 @@ impl From<Spell> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -913,25 +964,25 @@ impl WixossCard for Spell {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -955,7 +1006,7 @@ impl WixossCard for Spell {
             pronounce: card_name.1,
             artist,
             card_type: CardType::Spell,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             // level: OptionString::from_string(card_data[3].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             // limit: OptionString::from_string(card_data[6].clone()),
@@ -988,7 +1039,16 @@ impl Display for Spell {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -1000,7 +1060,7 @@ pub struct SpellCraft {
     pronounce: String,
     artist: String,
     card_type: CardType,
-    color: String,
+    color: Colors,
     // level: OptionString,
     cost: OptionString,
     // limit: OptionString,
@@ -1023,7 +1083,7 @@ impl From<SpellCraft> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -1046,25 +1106,25 @@ impl WixossCard for SpellCraft {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -1088,7 +1148,7 @@ impl WixossCard for SpellCraft {
             pronounce: card_name.1,
             artist,
             card_type: CardType::SpellCraft,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             // level: OptionString::from_string(card_data[3].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             // limit: OptionString::from_string(card_data[6].clone()),
@@ -1121,11 +1181,19 @@ impl Display for SpellCraft {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
-
 
 #[derive(Debug)]
 pub struct Lrig {
@@ -1135,7 +1203,7 @@ pub struct Lrig {
     artist: String,
     card_type: CardType,
     // klass: OptionString,
-    color: String,
+    color: Colors,
     level: OptionString,
     cost: OptionString,
     limit: OptionString,
@@ -1158,7 +1226,7 @@ impl From<Lrig> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: val.level.clone(),
             cost: val.cost.clone(),
             limit: val.limit.clone(),
@@ -1181,25 +1249,25 @@ impl WixossCard for Lrig {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -1223,7 +1291,7 @@ impl WixossCard for Lrig {
             pronounce: card_name.1,
             artist,
             card_type: CardType::Lrig,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             level: OptionString::from_string(card_data[3].clone()),
             cost: OptionString::from_string(flatten_break(card_data[4].clone())),
             limit: OptionString::from_string(card_data[6].clone()),
@@ -1256,7 +1324,16 @@ impl Display for Lrig {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -1269,7 +1346,7 @@ pub struct LrigAssist {
     artist: String,
     card_type: CardType,
     // klass: OptionString,
-    color: String,
+    color: Colors,
     level: OptionString,
     cost: OptionString,
     limit: OptionString,
@@ -1292,7 +1369,7 @@ impl From<LrigAssist> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: val.level.clone(),
             cost: val.cost.clone(),
             limit: val.limit.clone(),
@@ -1315,25 +1392,25 @@ impl WixossCard for LrigAssist {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -1357,7 +1434,7 @@ impl WixossCard for LrigAssist {
             pronounce: card_name.1,
             artist,
             card_type: CardType::LrigAssist,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             level: OptionString::from_string(card_data[3].clone()),
             cost: OptionString::from_string(flatten_break(card_data[4].clone())),
             limit: OptionString::from_string(card_data[6].clone()),
@@ -1391,11 +1468,19 @@ impl Display for LrigAssist {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
-
 
 #[derive(Debug)]
 pub struct Arts {
@@ -1405,7 +1490,7 @@ pub struct Arts {
     artist: String,
     card_type: CardType,
     // klass: OptionString,
-    color: String,
+    color: Colors,
     // level: OptionString,
     cost: OptionString,
     // limit: OptionString,
@@ -1428,7 +1513,7 @@ impl From<Arts> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -1451,25 +1536,25 @@ impl WixossCard for Arts {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -1493,7 +1578,7 @@ impl WixossCard for Arts {
             pronounce: card_name.1,
             artist,
             card_type: CardType::Arts,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[1].clone()),
             time: split_by_break(card_data[9].clone()),
@@ -1524,7 +1609,16 @@ impl Display for Arts {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -1537,7 +1631,7 @@ pub struct Resona {
     artist: String,
     card_type: CardType,
     klass: OptionString,
-    color: String,
+    color: Colors,
     level: OptionString,
     cost: OptionString,
     // limit: OptionString,
@@ -1560,7 +1654,7 @@ impl From<Resona> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: val.klass.clone(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: val.level.clone(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -1583,25 +1677,25 @@ impl WixossCard for Resona {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -1628,7 +1722,7 @@ impl WixossCard for Resona {
             artist,
             card_type: CardType::Resona,
             klass: OptionString::from_string(card_data[1].clone()),
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             level: OptionString::from_string(card_data[3].clone()),
             power: OptionString::from_string(card_data[7].clone()),
@@ -1662,7 +1756,16 @@ impl Display for Resona {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -1675,7 +1778,7 @@ pub struct ResonaCraft {
     artist: String,
     card_type: CardType,
     klass: OptionString,
-    color: String,
+    color: Colors,
     level: OptionString,
     cost: OptionString,
     // limit: OptionString,
@@ -1698,7 +1801,7 @@ impl From<ResonaCraft> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: val.klass.clone(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: val.level.clone(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -1721,25 +1824,25 @@ impl WixossCard for ResonaCraft {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -1766,7 +1869,7 @@ impl WixossCard for ResonaCraft {
             artist,
             card_type: CardType::ResonaCraft,
             klass: OptionString::from_string(card_data[1].clone()),
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             level: OptionString::from_string(card_data[3].clone()),
             power: OptionString::from_string(card_data[7].clone()),
@@ -1800,7 +1903,16 @@ impl Display for ResonaCraft {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
@@ -1813,7 +1925,7 @@ pub struct ArtsCraft {
     artist: String,
     card_type: CardType,
     // klass: OptionString,
-    color: String,
+    color: Colors,
     // level: OptionString,
     cost: OptionString,
     // limit: OptionString,
@@ -1836,7 +1948,7 @@ impl From<ArtsCraft> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: val.cost.clone(),
             limit: OptionString::empty(),
@@ -1859,25 +1971,25 @@ impl WixossCard for ArtsCraft {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -1901,7 +2013,7 @@ impl WixossCard for ArtsCraft {
             pronounce: card_name.1,
             artist,
             card_type: CardType::ArtsCraft,
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[1].clone()),
             time: split_by_break(card_data[9].clone()),
@@ -1932,11 +2044,19 @@ impl Display for ArtsCraft {
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
-
 
 fn parse_card_skill(source: Vec<String>) -> (Skills, HashSet<CardFeature>) {
     let re_br = Regex::new(r"<br\s?>").unwrap();
@@ -1955,7 +2075,7 @@ fn parse_card_skill(source: Vec<String>) -> (Skills, HashSet<CardFeature>) {
                 features.extend(features_detected);
                 l
             })
-            .filter(|line| !line.is_empty())  // 空の行を除去
+            .filter(|line| !line.is_empty()) // 空の行を除去
             .collect();
 
         all_skills.extend(skills_for_this_string);
@@ -1972,7 +2092,7 @@ pub struct Token {
     artist: String,
     card_type: CardType,
     // klass: OptionString,
-    color: String,
+    color: Colors,
     // level: OptionString,
     // cost: OptionString,
     // limit: OptionString,
@@ -1995,7 +2115,7 @@ impl From<Token> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: val.color.clone(),
+            color: Colors::from(val.color.clone()),
             level: OptionString::empty(),
             cost: OptionString::empty(),
             limit: OptionString::empty(),
@@ -2018,25 +2138,25 @@ impl WixossCard for Token {
         let selector_card_num = Selector::parse(".cardNum").unwrap();
         let card_no = match document.select(&selector_card_num).next() {
             Some(card_no) => card_no.inner_html(),
-            None => "unknown".into()
+            None => "unknown".into(),
         };
 
         let selector_card_name = Selector::parse(".cardName").unwrap();
         let card_name = match document.select(&selector_card_name).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
-            None => ("unknown".into(), "unknown".into())
+            None => ("unknown".into(), "unknown".into()),
         };
 
         let selector_rarity = Selector::parse(".cardRarity").unwrap();
         let card_rarity = match document.select(&selector_rarity).next() {
             Some(card_rarity) => card_rarity.inner_html(),
-            None => "unknown rarity".into()
+            None => "unknown rarity".into(),
         };
 
         let selector_artist = Selector::parse(".cardImg p span").unwrap();
         let artist = match document.select(&selector_artist).next() {
             Some(artist) => artist.inner_html(),
-            None => "unknown artist".into()
+            None => "unknown artist".into(),
         };
 
         let selector_card_data = Selector::parse(".cardData dd").unwrap();
@@ -2061,7 +2181,7 @@ impl WixossCard for Token {
             artist,
             card_type: CardType::Token,
             // klass: OptionString::from_string(card_data[1].clone()),
-            color: card_data[2].clone(),
+            color: Colors::from(card_data[2].clone()),
             // cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             // level: OptionString::from_string(card_data[3].clone()),
             // power: OptionString::from_string(card_data[7].clone()),
@@ -2095,11 +2215,19 @@ impl Display for Token {
         // write!(f, "フォーマット\t:{}\n", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;
         writeln!(f, "テキスト({})\t:{}", self.skill.value.len(), self.skill)?;
-        writeln!(f, "フィーチャー({})\t:{:?}", self.features.len(), self.features.iter().map(|i| i.to_string()).collect::<Vec<String>>().join(", "))?;
+        writeln!(
+            f,
+            "フィーチャー({})\t:{:?}",
+            self.features.len(),
+            self.features
+                .iter()
+                .map(|i| i.to_string())
+                .collect::<Vec<String>>()
+                .join(", ")
+        )?;
         write!(f, "")
     }
 }
-
 
 fn wrap_by_gainskill(html: String) -> String {
     let replaced = html.replace("<div class=\"card_ability_add_border\">", "\n<gainskill>");
@@ -2115,73 +2243,362 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
     let mut features: Vec<CardFeature> = Vec::new();
 
     let remove_patterns: Vec<(&str, bool, &str, HashSet<CardFeature>)> = vec![
-        (r"『", true, "", features![]),  // アクセのみ？
-        (r"』", true, "", features![]),  // アクセのみ？
-        (r"ライフバースト：", true, "LB:", features![CardFeature::LifeBurst]),
-        (r"（対戦相手のライフクロスが１枚以上ある場合、ライフクロス１枚をクラッシュし、０枚の場合、あなたはゲームに勝利する）", true, "", features![CardFeature::Damage]),
-        (r"（【ランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスを１枚クラッシュする）", true, "", features![CardFeature::Lancer]),
-        (r"（このクラフトは効果以外によっては場に出せない）", true, "", features![CardFeature::Craft]),
-        (r"（このスペルはあなたのメインフェイズにルリグデッキから使用できる）", true, "", features![CardFeature::Craft]),
-        (r"（クラフトであるスペルは、使用後にゲームから除外される）", true, "", features![CardFeature::Craft]),
+        (r"『", true, "", features![]), // アクセのみ？
+        (r"』", true, "", features![]), // アクセのみ？
+        (
+            r"ライフバースト：",
+            true,
+            "LB:",
+            features![CardFeature::LifeBurst],
+        ),
+        (
+            r"（対戦相手のライフクロスが１枚以上ある場合、ライフクロス１枚をクラッシュし、０枚の場合、あなたはゲームに勝利する）",
+            true,
+            "",
+            features![CardFeature::Damage],
+        ),
+        (
+            r"（【ランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスを１枚クラッシュする）",
+            true,
+            "",
+            features![CardFeature::Lancer],
+        ),
+        (
+            r"（このクラフトは効果以外によっては場に出せない）",
+            true,
+            "",
+            features![CardFeature::Craft],
+        ),
+        (
+            r"（このスペルはあなたのメインフェイズにルリグデッキから使用できる）",
+            true,
+            "",
+            features![CardFeature::Craft],
+        ),
+        (
+            r"（クラフトであるスペルは、使用後にゲームから除外される）",
+            true,
+            "",
+            features![CardFeature::Craft],
+        ),
         (r"アクセ", false, "*ACCE*", features![CardFeature::Acce]),
-        (r"（【アクセ】はシグニ１体に１枚までしか付けられない。このクラフトが付いているシグニが場を離れるとこのクラフトはゲームから除外される）", true, "", features![CardFeature::Acce]),
-        (r"（あなたのルリグの下からカードを合計４枚ルリグトラッシュに置く）", true, "*EXCEED*", features![CardFeature::Exceed]),
-        (r"（【チーム】または【ドリームチーム】を持つピースはルリグデッキに合計１枚までしか入れられない）", true, "*DREAM TEAM*", features![]),
-        (r"（あなたの場にいるルリグ３体がこの条件を満たす）", true, "*TEAM*", features![]),
-        (r"（シグニは覚醒すると場にあるかぎり覚醒状態になる）", true, "*AWAKE*", features![CardFeature::Awake]),
-        (r"（凍結されたシグニは次の自分のアップフェイズにアップしない）", true, "*FROZEN*", features![CardFeature::Freeze]),
-        (r"（フェゾーネマジックは５種類ある）", true, "*FESONE MAGIC*", features![]),
-        (r"（【出】能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい）", true, "*CIP COST*", features![]),
-        (r"ガードアイコン", true, "ガード", features![CardFeature::Guard]),
-        (r"捨てさせる。", false, "*HAND DESTRUCTION*", features![CardFeature::DiscardOpponent]),
-        (r"見ないで選び、捨てさせる。", false, "*RANDOM HAND DESTRUCTION*", features![CardFeature::RandomDiscard]),
-        (r"ダウンする。", false, "*DOWN*", features![CardFeature::Down]),
-        (r"エナチャージ", false, "*CHARGE*", features![CardFeature::Charge]),
-        (r"残りを好きな順番でデッキの一番下に置く", false, "*BOTTOM CHECK*", features![CardFeature::BottomCheck]),
-        (r"それをトラッシュに置", false, "*TRASH*", features![CardFeature::Trash]),
-        (r"シグニバリア", false, "*BARRIER*", features![CardFeature::Barrier]),
-        (r"ルリグバリア", false, "*BARRIER*", features![CardFeature::Barrier]),
+        (
+            r"（【アクセ】はシグニ１体に１枚までしか付けられない。このクラフトが付いているシグニが場を離れるとこのクラフトはゲームから除外される）",
+            true,
+            "",
+            features![CardFeature::Acce],
+        ),
+        (
+            r"（あなたのルリグの下からカードを合計４枚ルリグトラッシュに置く）",
+            true,
+            "*EXCEED*",
+            features![CardFeature::Exceed],
+        ),
+        (
+            r"（【チーム】または【ドリームチーム】を持つピースはルリグデッキに合計１枚までしか入れられない）",
+            true,
+            "*DREAM TEAM*",
+            features![],
+        ),
+        (
+            r"（あなたの場にいるルリグ３体がこの条件を満たす）",
+            true,
+            "*TEAM*",
+            features![],
+        ),
+        (
+            r"（シグニは覚醒すると場にあるかぎり覚醒状態になる）",
+            true,
+            "*AWAKE*",
+            features![CardFeature::Awake],
+        ),
+        (
+            r"（凍結されたシグニは次の自分のアップフェイズにアップしない）",
+            true,
+            "*FROZEN*",
+            features![CardFeature::Freeze],
+        ),
+        (
+            r"（フェゾーネマジックは５種類ある）",
+            true,
+            "*FESONE MAGIC*",
+            features![],
+        ),
+        (
+            r"（【出】能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい）",
+            true,
+            "*CIP COST*",
+            features![],
+        ),
+        (
+            r"ガードアイコン",
+            true,
+            "ガード",
+            features![CardFeature::Guard],
+        ),
+        (
+            r"捨てさせる。",
+            false,
+            "*HAND DESTRUCTION*",
+            features![CardFeature::DiscardOpponent],
+        ),
+        (
+            r"見ないで選び、捨てさせる。",
+            false,
+            "*RANDOM HAND DESTRUCTION*",
+            features![CardFeature::RandomDiscard],
+        ),
+        (
+            r"ダウンする。",
+            false,
+            "*DOWN*",
+            features![CardFeature::Down],
+        ),
+        (
+            r"エナチャージ",
+            false,
+            "*CHARGE*",
+            features![CardFeature::Charge],
+        ),
+        (
+            r"残りを好きな順番でデッキの一番下に置く",
+            false,
+            "*BOTTOM CHECK*",
+            features![CardFeature::BottomCheck],
+        ),
+        (
+            r"それをトラッシュに置",
+            false,
+            "*TRASH*",
+            features![CardFeature::Trash],
+        ),
+        (
+            r"シグニバリア",
+            false,
+            "*BARRIER*",
+            features![CardFeature::Barrier],
+        ),
+        (
+            r"ルリグバリア",
+            false,
+            "*BARRIER*",
+            features![CardFeature::Barrier],
+        ),
         // (r"がアタックしたとき", false, "*ON ATTACK*", features![CardFeature::OnAttack]),
-        (r"アサシン", false, "*ASSASSIN*", features![CardFeature::Assassin]),
-        (r"シャドウ", false, "*SHADOW*", features![CardFeature::Shadow]),
-        (r"【マルチエナ】", false, "*MULTI ENER*", features![CardFeature::MultiEner]),
+        (
+            r"アサシン",
+            false,
+            "*ASSASSIN*",
+            features![CardFeature::Assassin],
+        ),
+        (
+            r"シャドウ",
+            false,
+            "*SHADOW*",
+            features![CardFeature::Shadow],
+        ),
+        (
+            r"【マルチエナ】",
+            false,
+            "*MULTI ENER*",
+            features![CardFeature::MultiEner],
+        ),
         (r"チャーム", false, "*CHARM*", features![CardFeature::Charm]),
-        (r"ダブルクラッシュ", false, "*DOUBLE CRUSH*", features![CardFeature::DoubleCrush]),
-        (r"トリプルクラッシュ", false, "*TRIPLE CRUSH*", features![CardFeature::TripleCrush]),
-        (r"Sランサー", false, "*S LANCER*", features![CardFeature::SLancer]),
-        (r"Ｓランサー", false, "*S LANCER*", features![CardFeature::SLancer]),
-        (r"バニッシュ", false, "*BANISH*", features![CardFeature::Banish]),
-        (r"凍結する", false, "*FREEZE*", features![CardFeature::Freeze]),
-        (r"対戦相手のシグニを[（\u{FF10}-\u{FF19}）]+体まで対象とし、それらを手札に戻", false, "*BOUNCE*", features![CardFeature::Bounce]),
-        (r"対戦相手のシグニ[（\u{FF10}-\u{FF19}）]+体を対象とし、それを手札に戻", false, "BOUNCE", features![CardFeature::Bounce]),
+        (
+            r"ダブルクラッシュ",
+            false,
+            "*DOUBLE CRUSH*",
+            features![CardFeature::DoubleCrush],
+        ),
+        (
+            r"トリプルクラッシュ",
+            false,
+            "*TRIPLE CRUSH*",
+            features![CardFeature::TripleCrush],
+        ),
+        (
+            r"Sランサー",
+            false,
+            "*S LANCER*",
+            features![CardFeature::SLancer],
+        ),
+        (
+            r"Ｓランサー",
+            false,
+            "*S LANCER*",
+            features![CardFeature::SLancer],
+        ),
+        (
+            r"バニッシュ",
+            false,
+            "*BANISH*",
+            features![CardFeature::Banish],
+        ),
+        (
+            r"凍結する",
+            false,
+            "*FREEZE*",
+            features![CardFeature::Freeze],
+        ),
+        (
+            r"対戦相手のシグニを[（\u{FF10}-\u{FF19}）]+体まで対象とし、それらを手札に戻",
+            false,
+            "*BOUNCE*",
+            features![CardFeature::Bounce],
+        ),
+        (
+            r"対戦相手のシグニ[（\u{FF10}-\u{FF19}）]+体を対象とし、それを手札に戻",
+            false,
+            "BOUNCE",
+            features![CardFeature::Bounce],
+        ),
         // (r"手札に加え", false, "*SALVAGE*", features![CardFeature::Salvage]),
-        (r"ライフクロス[（\u{FF10}-\u{FF19}）]+枚をトラッシュに置", false, "*LIFE TRASH*", features![CardFeature::LifeTrash]),
-        (r"エナゾーンからカード[（\u{FF10}-\u{FF19}）]+枚を.+トラッシュに置", false, "*ENER ATTACK*", features![CardFeature::EnerAttack]),
-        (r"ルリグトラッシュに置", false, "*LRIG TRASH*", features![CardFeature::LrigTrash]),
+        (
+            r"ライフクロス[（\u{FF10}-\u{FF19}）]+枚をトラッシュに置",
+            false,
+            "*LIFE TRASH*",
+            features![CardFeature::LifeTrash],
+        ),
+        (
+            r"エナゾーンからカード[（\u{FF10}-\u{FF19}）]+枚を.+トラッシュに置",
+            false,
+            "*ENER ATTACK*",
+            features![CardFeature::EnerAttack],
+        ),
+        (
+            r"ルリグトラッシュに置",
+            false,
+            "*LRIG TRASH*",
+            features![CardFeature::LrigTrash],
+        ),
         // (r"アタックフェイズ開始時", false, "*ON ATTACK START*", features![CardFeature::OnAttackStart]),
-        (r"ライフクロスに加える", false, "*ADD LIFE*", features![CardFeature::AddLife]),
-        (r"ランサー", false, "*LANCER*", features![CardFeature::Lancer]),
-        (r"ライフクロスを１枚クラッシュする", false, "*CRUSH*", features![CardFeature::LifeCrush]),
-        (r"対戦相手のライフクロス１枚をクラッシュする。", false, "*CRUSH*", features![CardFeature::LifeCrush]),
-        (r"対戦相手にダメージを与える。", false, "*DAMAGE*", features![CardFeature::Damage]),
-        (r"リコレクトアイコン", false, "*RECOLLECT*", features![CardFeature::Recollect]),
+        (
+            r"ライフクロスに加える",
+            false,
+            "*ADD LIFE*",
+            features![CardFeature::AddLife],
+        ),
+        (
+            r"ランサー",
+            false,
+            "*LANCER*",
+            features![CardFeature::Lancer],
+        ),
+        (
+            r"ライフクロスを１枚クラッシュする",
+            false,
+            "*CRUSH*",
+            features![CardFeature::LifeCrush],
+        ),
+        (
+            r"対戦相手のライフクロス１枚をクラッシュする。",
+            false,
+            "*CRUSH*",
+            features![CardFeature::LifeCrush],
+        ),
+        (
+            r"対戦相手にダメージを与える。",
+            false,
+            "*DAMAGE*",
+            features![CardFeature::Damage],
+        ),
+        (
+            r"リコレクトアイコン",
+            false,
+            "*RECOLLECT*",
+            features![CardFeature::Recollect],
+        ),
         (r"枚見", false, "*SEEK*", features![CardFeature::SeekTop]),
-        (r"能力を失う", false, "*ERASE SKILL*", features![CardFeature::EraseSkill]),
-        (r"アタックできない", false, "*NON ATTACKABLE*", features![CardFeature::NonAttackable]),
-        (r"カードを[（\u{FF10}-\u{FF19}）]+枚引", false, "*DRAW*", features![CardFeature::Draw]),
-        (r"デッキの上からカードを[（\u{FF10}-\u{FF19}）]+枚トラッシュに置", false, "*DROP*", features![CardFeature::Drop]),
-        (r"対戦相手のエナゾーンからカードを[（\u{FF10}-\u{FF19}）]+枚まで対象とし、それらを手札に戻", false, "*ENER ATTACK*", features![CardFeature::EnerAttack]),
-        (r"デッキの一番下に置", false, "*DECK BOUNCE*", features![CardFeature::DeckBounce]),
-        (r"シグニのパワーを＋", false, "*POWER UP*", features![CardFeature::PowerUp]),
-        (r"(シグニ|それ)のパワーを－", false, "*POWER DOWN*", features![CardFeature::PowerDown]),
-        (r"ダメージを受けない", false, "*CANCEL DAMAGE*", features![CardFeature::CancelDamage]),
-        (r"トラッシュからシグニ.+場に出", false, "*REANIMATE*", features![CardFeature::Reanimate]),
-        (r"このルリグをアップし", false, "*ADDITIONAL ATTACK*", features![CardFeature::AdditionalAttack]),
-        (r"対戦相手は【ガード】ができない", false, "*UNGUARDABLE*", features![CardFeature::UnGuardable]),
-        (r"スペル[（\u{FF10}-\u{FF19}）]+枚を.+手札に加え", false, "*SALVAGE SPELL*", features![CardFeature::SalvageSpell]),
-        (r"シグニ[（\u{FF10}-\u{FF19}）]+枚を.+手札に加え", false, "*SALVAGE SIGNI*", features![CardFeature::Salvage]),
-        (r"このシグニがアタックしたとき.+バニッシュする", false, "*BANISH ON ATTACK*", features![CardFeature::BanishOnAttack]),
-
+        (
+            r"能力を失う",
+            false,
+            "*ERASE SKILL*",
+            features![CardFeature::EraseSkill],
+        ),
+        (
+            r"アタックできない",
+            false,
+            "*NON ATTACKABLE*",
+            features![CardFeature::NonAttackable],
+        ),
+        (
+            r"カードを[（\u{FF10}-\u{FF19}）]+枚引",
+            false,
+            "*DRAW*",
+            features![CardFeature::Draw],
+        ),
+        (
+            r"デッキの上からカードを[（\u{FF10}-\u{FF19}）]+枚トラッシュに置",
+            false,
+            "*DROP*",
+            features![CardFeature::Drop],
+        ),
+        (
+            r"対戦相手のエナゾーンからカードを[（\u{FF10}-\u{FF19}）]+枚まで対象とし、それらを手札に戻",
+            false,
+            "*ENER ATTACK*",
+            features![CardFeature::EnerAttack],
+        ),
+        (
+            r"デッキの一番下に置",
+            false,
+            "*DECK BOUNCE*",
+            features![CardFeature::DeckBounce],
+        ),
+        (
+            r"シグニのパワーを＋",
+            false,
+            "*POWER UP*",
+            features![CardFeature::PowerUp],
+        ),
+        (
+            r"(シグニ|それ)のパワーを－",
+            false,
+            "*POWER DOWN*",
+            features![CardFeature::PowerDown],
+        ),
+        (
+            r"ダメージを受けない",
+            false,
+            "*CANCEL DAMAGE*",
+            features![CardFeature::CancelDamage],
+        ),
+        (
+            r"トラッシュからシグニ.+場に出",
+            false,
+            "*REANIMATE*",
+            features![CardFeature::Reanimate],
+        ),
+        (
+            r"このルリグをアップし",
+            false,
+            "*ADDITIONAL ATTACK*",
+            features![CardFeature::AdditionalAttack],
+        ),
+        (
+            r"対戦相手は【ガード】ができない",
+            false,
+            "*UNGUARDABLE*",
+            features![CardFeature::UnGuardable],
+        ),
+        (
+            r"スペル[（\u{FF10}-\u{FF19}）]+枚を.+手札に加え",
+            false,
+            "*SALVAGE SPELL*",
+            features![CardFeature::SalvageSpell],
+        ),
+        (
+            r"シグニ[（\u{FF10}-\u{FF19}）]+枚を.+手札に加え",
+            false,
+            "*SALVAGE SIGNI*",
+            features![CardFeature::Salvage],
+        ),
+        (
+            r"このシグニがアタックしたとき.+バニッシュする",
+            false,
+            "*BANISH ON ATTACK*",
+            features![CardFeature::BanishOnAttack],
+        ),
     ];
 
     let replaced_text = remove_patterns.iter().fold(text, |current_text, pat| {
@@ -2201,7 +2618,6 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
     (replaced_text, features)
 }
 
-
 fn replace_img_with_alt(html: String) -> String {
     let re = Regex::new(r#"<img[^>]*alt="([^"]*)"[^>]*>"#).unwrap();
     let replaced = re.replace_all(&html, |caps: &regex::Captures| {
@@ -2220,7 +2636,8 @@ fn parse_story(html: String) -> OptionString {
 }
 
 fn split_by_break(html: String) -> Vec<String> {
-    html.replace('\n', "").split("<br>")
+    html.replace('\n', "")
+        .split("<br>")
         .map(|s| s.to_string())
         .collect()
 }
