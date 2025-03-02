@@ -1,4 +1,4 @@
-use crate::wixoss::card_type::CardType;
+use crate::wixoss::card::CardType;
 use crate::wixoss::color::Colors;
 use crate::wixoss::feature::CardFeature;
 use crate::wixoss::format::Format;

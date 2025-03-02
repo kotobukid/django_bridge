@@ -1,4 +1,4 @@
-use analyze_card::wixoss::{Card, card_type::CardType, Signi, WixossCard};
+use analyze_card::wixoss::{Card, card::CardType, Signi, WixossCard};
 
 fn main() {
     let source: String = r#"
