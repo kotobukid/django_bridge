@@ -1,4 +1,4 @@
-mod wixoss;
+pub mod wixoss;
 
 use async_recursion::async_recursion;
 use reqwest::{Client, Response, Url};
@@ -10,11 +10,6 @@ use std::fs;
 use std::fs::{File, ReadDir};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
-
-
-fn main() {
-    println!("Hello, world!");
-}
 
 #[derive(Clone, Debug)]
 pub struct SearchQuery {

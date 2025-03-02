@@ -278,7 +278,7 @@ impl Card {
     }
 
     pub fn card_from_html(text: &str) -> Option<Self> {
-        match Self::detect_card_type(text.clone()) {
+        match Self::detect_card_type(text) {
             CardType::Lrig => Some(Lrig::from_source(text.to_owned()).into()),
             CardType::LrigAssist => Some(LrigAssist::from_source(text.to_owned()).into()),
             CardType::Arts => Some(Arts::from_source(text.to_owned()).into()),
