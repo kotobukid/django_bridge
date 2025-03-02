@@ -1,9 +1,10 @@
 #[macro_use]
-pub mod constants;
+pub mod feature;
+pub mod color;
 
 use crate::features;
-use crate::wixoss::constants::color::Colors;
-use crate::wixoss::constants::CardFeature;
+use crate::wixoss::color::Colors;
+use crate::wixoss::feature::CardFeature;
 use regex::Regex;
 use scraper::{Html, Selector};
 use serde::ser::SerializeSeq;
