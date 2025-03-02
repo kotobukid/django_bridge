@@ -443,9 +443,8 @@ def update_product():
             new_product = Product(product_code=prod[1], name=prod[3], product_type=prod[1], sort_asc=prod[0])
             new_product.save()
         else:
-            if p[0].name != prod[3]:
-                target_product = Product.objects.get(product_code=prod[2])
-                target_product.name = prod[3]
-                target_product.sort_asc = prod[0]
-                target_product.save()
+            target_product = Product.objects.get(product_code=prod[2])
+            target_product.name = prod[3]
+            target_product.sort_asc = prod[0]
+            target_product.save()
     print('product update complete.')
