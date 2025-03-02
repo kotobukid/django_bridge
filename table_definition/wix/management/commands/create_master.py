@@ -45,11 +45,18 @@ def update_card_type():
     type_source = (
         ('lrig', 'ルリグ', 0),
         ('arts', 'アーツ', 1),
-        ('piece', 'ピース', 2),
-        ('signi', 'シグニ', 3),
-        ('spell', 'スペル', 4),
-        ('resona', 'レゾナ', 5),
+        ('lrig_assist', 'アシストルリグ', 2),
+        ('piece', 'ピース', 3),
+        ('signi', 'シグニ', 4),
+        ('spell', 'スペル', 5),
+        ('resona', 'レゾナ', 6),
+        ('key', 'キー', 7),
+        ('arts_craft', 'クラフトアーツ', 8),
+        ('signi_craft', 'クラフトシグニ', 9),
+        ('spell_craft', 'クラフトスペル', 10),
+        ('piece_relay', 'リレーピース', 11),
         ('token', 'トークン', 100),
+        ('coin', 'コイン', 101),
     )
     types_existing = CardType.objects.all()
     for _type in type_source:
