@@ -48,7 +48,7 @@ fn generate_struct_from_python(
     struct_name: &str,
     python_code: &str,
     crate_requirements: &mut CrateRequirements,
-) -> (String, String) {
+) -> (String, String, String) {
     // トークンを収集
     let tokens = lex(python_code, Mode::Module)
         .collect::<Result<Vec<_>, _>>()
@@ -199,7 +199,14 @@ fn generate_struct_from_python(
         "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]\npub struct {struct_name}Db {{\n"
     );
 
+    let mut create_struct = format!(
+        "#[allow(dead_code)]\n#[derive(Debug, Clone, Serialize, Deserialize)]\npub struct Create{struct_name} {{\n"
+    );
+
     rust_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
+
+    // CreateFooはidを持たない
+    // create_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
 
     let mut intermediate_structs: Vec<String> = Vec::new();
 
@@ -246,8 +253,13 @@ fn generate_struct_from_python(
 
                 if let Some(model) = related_model {
                     rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
+                    create_struct.push_str(&format!("\n    /// Related field to model: {}", model));
                 } else {
                     rust_struct.push_str(&format!(
+                        "\n    /// Related field: {} (unknown related model)",
+                        fields.name
+                    ));
+                    create_struct.push_str(&format!(
                         "\n    /// Related field: {} (unknown related model)",
                         fields.name
                     ));
@@ -264,13 +276,17 @@ fn generate_struct_from_python(
                 // コメント生成（default値とmax_lengthを含める）
                 if fields.default_value.is_some() || fields.max_length.is_some() {
                     rust_struct.push_str("    /// ");
+                    create_struct.push_str("    /// ");
                     if let Some(default) = &fields.default_value {
                         rust_struct.push_str(&format!("Default: {}, ", default));
+                        create_struct.push_str(&format!("Default: {}, ", default));
                     }
                     if let Some(length) = &fields.max_length {
                         rust_struct.push_str(&format!("Max length: {}", length));
+                        create_struct.push_str(&format!("Max length: {}", length));
                     }
                     rust_struct.push('\n');
+                    create_struct.push('\n');
                 }
 
                 let ty = if fields.is_nullable {
@@ -279,6 +295,9 @@ fn generate_struct_from_python(
                     ty.to_string()
                 };
                 rust_struct.push_str(&format!("    pub {}: {},\n", fields.name, ty));
+                if fields.name != "id" {
+                    create_struct.push_str(&format!("    pub {}: {},\n", fields.name, ty));
+                }
             }
             DjangoFieldType::Relation(ty) => {
                 rust_struct.push_str("    /// Note: Check on_delete behavior.\n");
@@ -313,7 +332,8 @@ fn generate_struct_from_python(
     }
 
     rust_struct.push_str("}\n");
-    (rust_struct, intermediate_structs.join("\n"))
+    create_struct.push_str("}\n");
+    (rust_struct, create_struct, intermediate_structs.join("\n"))
 }
 
 fn first_upper(s: &str) -> String {
@@ -495,7 +515,7 @@ fn main() {
     let mut source_hash: HashMap<&str, String> = HashMap::new();
 
     // モデル定義を収集する
-    let struct_defs: Vec<(String, String)> = models
+    let struct_defs: Vec<(String, String, String)> = models
         .iter()
         .map(|(app_name, struct_name, file_path)| {
             let python_code = source_hash
@@ -520,7 +540,7 @@ fn main() {
     file.write_all(
         struct_defs
             .into_iter()
-            .map(|def| format!("{}\n{}", def.0, def.1))
+            .map(|def| format!("{}\n{}\n{}", def.0, def.1, def.2))
             .collect::<Vec<_>>()
             .join("\n")
             .as_bytes(),
