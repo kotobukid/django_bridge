@@ -38,7 +38,7 @@ impl From<Lrig> for Card {
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
             klass: OptionString::empty(),
-            color: Colors::from(val.color.clone()),
+            color: val.color.clone(),
             level: val.level.clone(),
             cost: val.cost.clone(),
             limit: val.limit.clone(),
