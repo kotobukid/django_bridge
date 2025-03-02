@@ -1,7 +1,7 @@
 from linecache import updatecache
 
 from django.core.management.base import BaseCommand
-from wix.models import Color, CardType, Lrig, Klass, Timing
+from wix.models import Color, CardType, Lrig, Klass, Timing, Product
 
 
 class Command(BaseCommand):
@@ -13,6 +13,7 @@ class Command(BaseCommand):
         update_lrig()
         update_klass()
         update_timing()
+        update_product()
 
 
 def update_color():
@@ -298,3 +299,146 @@ def update_timing():
                 target_timing[0].sort_asc = timing[2]
                 target_timing[0].save()
     print('timing update complete.')
+
+
+def update_product():
+    products_source = (
+        (130, "st", "WX24-D5", "BLACK ALT DESIRE〔WX24-D5〕"),
+        (131, "st", "WX24-D4", "GREEN ALT WANNA〔WX24-D4〕"),
+        (132, "st", "WX24-D3", "BLUE ALT APPLI〔WX24-D3〕"),
+        (133, "st", "WX24-D2", "RED ALT AMBITION〔WX24-D2〕"),
+        (134, "st", "WX24-D1", "WHITE ALT HOPE〔WX24-D1〕"),
+        (135, "st", "WXDi-D09", "SUPER DIVA DECK DOUBLE HEROINES -ピルルク＆ヒラナ-〔WXDi-D09〕"),
+        (136, "st", "WXDi-D08", "DIVA DEBUT DECK WHITE HOPE〔WXDi-D08〕"),
+        (137, "st", "WXDi-D07", "TOP DIVA DECK D・X・M〔WXDi-D07〕"),
+        (138, "st", "WXDi-D06", "DIVA DEBUT DECK DIAGRAM〔WXDi-D06〕"),
+        (139, "st", "WXDi-D05", "DIVA DEBUT DECK うちゅうのはじまり〔WXDi-D05〕"),
+        (140, "st", "WXDi-D04", "DIVA DEBUT DECK Card Jockey〔WXDi-D04〕"),
+        (141, "st", "WXDi-D03", "DIVA DEBUT DECK No Limit〔WXDi-D03〕"),
+        (142, "st", "WXDi-D02", "DIVA DEBUT DECK にじさんじ ver.さんばか〔WXDi-D02〕"),
+        (143, "st", "WXDi-D01", "ANCIENT SURPRISE〔WXDi-D01〕"),
+        (310, "st", "WDA-F05", "グズ子ではじめるウィクロスASは強烈連携攻撃で勝つ!〔WXA-DF05〕"),
+        (311, "st", "WDA-F04", "ドーナではじめるウィクロスASは強烈全体強化で勝つ!〔WXA-DF04〕"),
+        (312, "st", "WDA-F03", "遊月ではじめるウィクロスASは強烈焼却で勝つ!〔WXA-DF03〕"),
+        (313, "st", "WDA-F02", "ピルルクではじめるウィクロスASは強烈手札破壊で勝つ!〔WXA-DF02〕"),
+        (314, "st", "WDA-F01", "タマではじめるウィクロスASは強烈連続攻撃で勝つ!〔WXA-DF01〕"),
+        (315, "st", "WDK-17", "ブラックアルフォウ〔WDK-17〕"),
+        (316, "st", "WDK-16", "にじさんじウィクロスバトルセット〔WDK-16〕"),
+        (317, "st", "WDK-15", "ブラックナナシ〔WDK-15〕"),
+        (318, "st", "WDK-14", "レッドタウィル〔WDK-14〕"),
+        (319, "st", "WDK-13", "ブラックミュウ〔WDK-13〕"),
+        (320, "st", "WDK-12", "グリーンメル〔WDK-12〕"),
+        (321, "st", "WDK-F05", "カーニバルではじめるウィクロスは墓地活用で勝つ!〔WXK-DF05〕"),
+        (322, "st", "WDK-F04", "リルではじめるウィクロスは進化して勝つ!〔WXK-DF04〕"),
+        (323, "st", "WDK-F03", "タマではじめるウィクロスは手札に戻して勝つ!〔WXK-DF03〕"),
+        (324, "st", "WDK-F02", "グズ子ではじめるウィクロスは山札操作で勝つ！〔WXK-DF02〕"),
+        (325, "st", "WDK-F01", "ピルルクではじめるウィクロスは手札破壊で勝つ!〔WXK-DF01〕"),
+        (326, "st", "WDK-11", "ホワイトエマ〔WDK-11〕"),
+        (327, "st", "WDK-10", "ブラックウリス〔WDK-10〕"),
+        (328, "st", "WDK-09", "ブルーウムル〔WDK-09〕"),
+        (329, "st", "WDK-08", "デュアルブラスト〔WDK-08〕"),
+        (330, "st", "WDK-07", "デュアルプラント〔WDK-07〕"),
+        (331, "st", "WDK-06", "デュアルブラッド〔WDK-06〕"),
+        (332, "st", "WDK-05", "デュアルペイルネス〔WDK-05〕"),
+        (333, "st", "WDK-04", "ブラックダイレクト 〔WDK-04〕"),
+        (334, "st", "WDK-03", "グリーンテンタクル 〔WDK-03〕"),
+        (335, "st", "WDK-02", "ブルーカタルシス 〔WDK-02〕"),
+        (336, "st", "WDK-01", "レッドドーピング 〔WDK-01〕"),
+        (510, "st", "WXD-23", "ブルーコンフレーション 〔WXD-23〕"),
+        (511, "st", "WXD-22", "ブラックコンフレーション 〔WXD-22〕"),
+        (512, "st", "WXD-21", "レッドジョーカー〔WXD-21〕"),
+        (513, "st", "WXD-20", "グリーンカンニング 〔WXD-20〕"),
+        (514, "st", "WXD-19", "ブラックブラインド 〔WXD-19〕"),
+        (515, "st", "WXD-18", "グリーンベルセルク 〔WXD-18〕"),
+        (516, "st", "WXD-17", "レッドオーネスト 〔WXD-17〕"),
+        (517, "st", "WXD-16", "ブルーペティション〔WXD-16〕"),
+        (518, "st", "WXD-15", "レッドプロミス〔WXD-15〕"),
+        (519, "st", "WXD-14", "ブラックデザイア　ムービーバージョン〔WXD-14〕"),
+        (520, "st", "WXD-13", "ホワイトホープ　ムービーバージョン〔WXD-13〕"),
+        (521, "st", "WXD-12", "グリーンドリーム〔WXD-12〕"),
+        (522, "st", "WXD-11", "ブラックニード 〔WXD-11〕"),
+        (523, "st", "WXD-10", "レッドホープ 〔WXD-10〕"),
+        (524, "st", "WXD-09", "ホワイトプレイ 〔WXD-09〕"),
+        (525, "st", "WXD-08", "ブラックウィル 〔WXD-08〕"),
+        (526, "st", "WXD-07", "ブラッククレイヴ 〔WXD-07〕"),
+        (527, "st", "WXD-06", "ブルーリクエスト 〔WXD-06〕"),
+        (528, "st", "WXD-05", "ブラックデザイア 〔WXD-05〕"),
+        (529, "st", "WXD-04", "グリーンワナ 〔WXD-04〕"),
+        (530, "st", "WXD-03", "ブルーアプリ 〔WXD-03〕"),
+        (531, "st", "WXD-02", "レッドアンビション 〔WXD-02〕"),
+        (532, "st", "WXD-01", "ホワイトホープ 〔WXD-01〕"),
+        (20, "bo", "WX25-CP1", "ブルーアーカイブ SELECTOR"),
+        (21, "bo", "WX24-P4", "FORTH SELECTOR"),
+        (22, "bo", "WX24-P3", "REVERSAL SELECTOR"),
+        (23, "bo", "WX24-P2", "loth SELECTOR"),
+        (24, "bo", "WX24-P1", "RECOLLECT SELECTOR"),
+        (25, "bo", "WXDi-P16", "LEGENDARY DIVA"),
+        (26, "bo", "WXDi-P15", "DIVISIONS DIVA"),
+        (27, "bo", "WXDi-CP02", "ブルーアーカイブ DIVA"),
+        (28, "bo", "WXDi-P14", "フェゾーネ DIVA with 電音部"),
+        (29, "bo", "WXDi-P13", "CONCORD DIVA"),
+        (30, "bo", "WXDi-P12", "DISSONANCE DIVA"),
+        (31, "bo", "WXDi-CP01", "にじさんじ DIVA"),
+        (32, "bo", "WXDi-P11", "REUNION DIVA"),
+        (33, "bo", "WXDi-P10", "PRISMATIC DIVA"),
+        (34, "bo", "WXDi-P09", "CONFLATED DIVA"),
+        (35, "bo", "WXDi-P08", "SPREAD DIVA"),
+        (36, "bo", "WXDi-P07", "WELCOME BACK DIVA ～Lostorage～"),
+        (37, "bo", "WXDi-P06", "WELCOME BACK DIVA ～selector～"),
+        (38, "bo", "WXDi-P05", "CURIOSITY DIVA"),
+        (39, "bo", "WXDi-P04", "VERTEX DIVA"),
+        (40, "bo", "WXDi-P03", "STANDUP DIVA"),
+        (41, "bo", "WXDi-P02", "CHANGING DIVA"),
+        (42, "bo", "WXDi-P01", "GLOWING DIVA"),
+        (43, "bo", "WXDi-P00", "INTERLUDE DIVA"),
+        (101, "bo", "WXK-11", "リンカーネイション"),
+        (102, "bo", "WXK-10", "コリジョン"),
+        (401, "bo", "WXEX-2", "アンブレイカブルセレクター"),
+        (103, "bo", "WXK-09", "ディセンブル"),
+        (104, "bo", "WXK-08", "アンリアリスティック"),
+        (105, "bo", "WXK-07", "エクスプロード"),
+        (106, "bo", "WXK-06", "オルタナティブ"),
+        (402, "bo", "WXEX-1", "アンリミテッドセレクター"),
+        (107, "bo", "WXK-05", "レトリック"),
+        (108, "bo", "WXK-04", "ワイルズ"),
+        (109, "bo", "WXK-03", "ユートピア"),
+        (110, "bo", "WXK-02", "フルスクラッチ"),
+        (111, "bo", "WXK-01", "クラクション"),
+        (402, "bo", "WX-22", "アンロックドセレクター"),
+        (403, "bo", "WX-21", "ビトレイドセレクター"),
+        (404, "bo", "WX-20", "コネクテッドセレクター"),
+        (405, "bo", "WX-19", "アンソルブドセレクター"),
+        (406, "bo", "WX-18", "コンフレーテッド セレクター"),
+        (407, "bo", "WX-17", "エクスポーズド セレクター"),
+        (408, "bo", "WX-16", "ディサイデッド セレクター"),
+        (409, "bo", "WX-15", "インサイテッド セレクター"),
+        (410, "bo", "WX-14", "サクシードセレクター"),
+        (411, "bo", "WX-13", "アンフェインドセレクター"),
+        (412, "bo", "WX-12", "リプライドセレクター"),
+        (413, "bo", "WX-11", "ディストラクテッドセレクター"),
+        (414, "bo", "WX-10", "チェインドセレクター"),
+        (415, "bo", "WX-09", "リアクテッドセレクター"),
+        (416, "bo", "WX-08", "インキュベイトセレクター"),
+        (417, "bo", "WX-07", "ネクストセレクター"),
+        (418, "bo", "WX-06", "フォーチュンセレクター"),
+        (419, "bo", "WX-05", "ビギニングセレクター"),
+        (420, "bo", "WX-04", "インフェクテッドセレクター"),
+        (421, "bo", "WX-03", "スプレッドセレクター"),
+        (422, "bo", "WX-02", "ステアード セレクター"),
+        (423, "bo", "WX-01", "サーブドセレクター"),
+    )
+    products = Product.objects.all()
+    for prod in products_source:
+        print(prod)
+        p = products.filter(product_code=prod[2])
+
+        if p.count() == 0:
+            new_product = Product(product_code=prod[1], name=prod[3], product_type=prod[1], sort_asc=prod[0])
+            new_product.save()
+        else:
+            if p[0].name != prod[3]:
+                target_product = Product.objects.get(product_code=prod[2])
+                target_product.name = prod[3]
+                target_product.sort_asc = prod[0]
+                target_product.save()
+    print('product update complete.')
