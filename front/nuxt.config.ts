@@ -49,19 +49,19 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/admin_proxy': {
-          target: 'http://127.0.0.1:3000',
+          target: 'http://127.0.0.1:80',
           changeOrigin: true,
         },
         '/a_static': {
-          target: 'http://127.0.0.1:3000',
+          target: 'http://127.0.0.1:80',
           changeOrigin: true,
         },
         '/card/api': {
-          target: 'http://127.0.0.1:3000',
+          target: 'http://127.0.0.1:80',
           changeOrigin: true,
         },
         '/admin_operation/api': {
-          target: 'http://127.0.0.1:3000',
+          target: 'http://127.0.0.1:80',
           changeOrigin: true,
         },
       },
