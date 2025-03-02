@@ -1,57 +1,19 @@
 #[macro_use]
 pub mod feature;
+pub mod card_type;
 pub mod color;
 
 use crate::features;
+use crate::wixoss::card_type::CardType;
 use crate::wixoss::color::Colors;
 use crate::wixoss::feature::CardFeature;
+
 use regex::Regex;
 use scraper::{Html, Selector};
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-
-#[derive(Debug, Clone, PartialEq, Serialize)]
-pub enum CardType {
-    Lrig,
-    LrigAssist,
-    Arts,
-    Key,
-    Signi,
-    Spell,
-    Resona,
-    ArtsCraft,
-    ResonaCraft,
-    SpellCraft,
-    Piece,
-    PieceRelay,
-    Token,
-    Unknown,
-}
-
-impl Display for CardType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        #[allow(unreachable_patterns)]
-        let s: &str = match &self {
-            CardType::Lrig => "ルリグ",
-            CardType::LrigAssist => "ルリグ(アシスト)",
-            CardType::Arts => "アーツ",
-            CardType::Key => "キー",
-            CardType::Signi => "シグニ",
-            CardType::Spell => "スペル",
-            CardType::Resona => "レゾナ",
-            CardType::ArtsCraft => "アーツ(クラフト)",
-            CardType::ResonaCraft => "レゾナ(クラフト)",
-            CardType::SpellCraft => "スペル(クラフト)",
-            CardType::Piece => "ピース",
-            CardType::PieceRelay => "ピース(リレー)",
-            CardType::Token => "トークン",
-            _ => "不明",
-        };
-        write!(f, "{}", s)
-    }
-}
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;
