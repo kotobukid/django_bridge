@@ -2,11 +2,13 @@
 pub mod feature;
 pub mod card_type;
 pub mod color;
+pub mod format;
 
 use crate::features;
 use crate::wixoss::card_type::CardType;
 use crate::wixoss::color::Colors;
 use crate::wixoss::feature::CardFeature;
+use crate::wixoss::format::Format;
 
 use regex::Regex;
 use scraper::{Html, Selector};
@@ -27,23 +29,6 @@ pub trait WixossCard: Sized {
 //         )
 //     }
 // }
-
-#[derive(Debug, Clone, Serialize)]
-enum Format {
-    AllStar,
-    KeySelection,
-    DivaSelection,
-}
-
-impl Display for Format {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Format::AllStar => write!(f, "all star"),
-            Format::KeySelection => write!(f, "key selection"),
-            Format::DivaSelection => write!(f, "diva selection"),
-        }
-    }
-}
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OptionString {
