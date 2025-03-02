@@ -75,8 +75,16 @@ pub struct WixCardFeatureRel {
 
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
-pub struct TagDb {
+pub struct ProductDb {
     /// Primary Key
     pub id: i64,
+    /// Max length: 256
+    pub name: String,
+    /// Max length: 128
+    pub product_code: String,
+    pub url: Option<String>,
+    /// Max length: 2
+    pub product_type: String,
+    pub sort_asc: i32,
 }
 

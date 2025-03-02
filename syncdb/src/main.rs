@@ -472,7 +472,7 @@ fn main() {
 
     let models = [
         ("wix", "Card", "./table_definition/wix/models.py"),
-        ("wix", "Tag", "./table_definition/wix/models.py"),
+        ("wix", "Product", "./table_definition/wix/models.py"),
     ];
 
     let dest_path = Path::new(&out_dir).join("django_models.rs");
