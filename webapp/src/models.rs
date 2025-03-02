@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 // 再エクスポート
-pub use crate::gen::django_models::{CardDb, ProductDb};
+pub use crate::gen::django_models::{CardDb, CreateCard, CreateProduct, ProductDb};
 
 macro_rules! new_type {
     ($outer:ident, $inner:ty) => {

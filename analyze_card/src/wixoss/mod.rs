@@ -18,8 +18,10 @@ use regex::Regex;
 use scraper::{Html, Selector};
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
+use sqlx::encode::IsNull::No;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
+use webapp::models::CreateCard;
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;
@@ -177,6 +179,28 @@ pub struct Card {
     rarity: String,
     skill: Skills,
     features: HashSet<CardFeature>,
+}
+
+impl Into<CreateCard> for Card {
+    fn into(self) -> CreateCard {
+        CreateCard {
+            name: self.name,
+            code: self.no,
+            pronunciation: self.pronounce,
+            power: self.power.value,
+            cost: self.cost.value,
+            level: Some(0),
+            limit: Some(0),
+            limit_ex: Some(0),
+            has_burst: true,
+            skill_text: None,
+            burst_text: None,
+            format: 001_i32,
+            story: self.story.value,
+            rarity: Some(self.rarity),
+            url: None,
+        }
+    }
 }
 
 impl Display for Card {

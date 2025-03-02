@@ -1,11 +1,11 @@
+use crate::models::{Card, CardDb, CreateCard};
+use serde::{Deserialize, Serialize};
+use sqlx::{Pool, Postgres};
 use std::fmt::{Display, Formatter};
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
-use serde::{Deserialize, Serialize};
-use sqlx::{Pool, Postgres};
-use crate::models::{Card, CardDb};
 
 pub trait ICardRepository {
     fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Card>> + Send + 'a>>;
@@ -21,6 +21,39 @@ pub struct CardRepository {
 impl CardRepository {
     pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
         Self { db_connector: pool }
+    }
+
+    pub async fn insert(&self, source: CreateCard) -> Result<Card, sqlx::Error> {
+        let card = sqlx::query_as::<_, CardDb>(
+            r#"INSERT INTO wix_card (
+                name, code, pronunciation, cost, level, "limit",
+                limit_ex, power, has_burst, skill_text, burst_text,
+                format, story, rarity, url
+            ) VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+                $12, $13, $14, $15
+            ) RETURNING *"#,
+        )
+        .bind(source.name)
+        .bind(source.code)
+        .bind(source.pronunciation)
+        .bind(source.cost)
+        .bind(source.level)
+        .bind(source.limit)
+        .bind(source.limit_ex)
+        .bind(source.power)
+        .bind(source.has_burst)
+        .bind(source.skill_text)
+        .bind(source.burst_text)
+        .bind(source.format)
+        .bind(source.story)
+        .bind(source.rarity)
+        .bind(source.url)
+        // .bind(source.card_type_id)
+        // .bind(source.product_id)
+        .fetch_one(&*self.db_connector)
+        .await?;
+        Ok(card.into())
     }
 }
 
@@ -76,8 +109,8 @@ impl OnlyCardNameRepository {
                 sqlx::query_as::<_, OnlyCardName>("SELECT name FROM wix_card")
                     .fetch_all(&*self.db_connector),
             )
-                .await
-                .map_err(|_| sqlx::Error::PoolTimedOut)?
+            .await
+            .map_err(|_| sqlx::Error::PoolTimedOut)?
         })
     }
 }

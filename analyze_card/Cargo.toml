@@ -4,21 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-axum = { version = "0.6.20", features = ["ws"] }
-futures = "0.3.28"
 serde = { version = "1.0.188", features = ["derive"] }
 serde_json = "1.0.107"
 serde_qs = "0.12.0"
 tokio = { version = "1.32.0", features = ["full"] }
-tower = { version = "0.4.13", features = ["full"] }
-tower-http = { version = "0.4.4", features = ["util"] }
-axum-extra = { version = "0.8.0", features = ["cookie"] }
-rand = "0.8.5"
-uuid = { version = "1.4.1", features = ["v4"] }
-#sqlx = { version = "0.7.2", features = ["runtime-tokio", "tls-rustls", "postgres"] }
-hyper = "0.14.27"
-bcrypt = "0.15.0"
 reqwest = { version = "0.11.20", features = ["cookies", "multipart"] }
 scraper = "0.17.1"
 async-recursion = "1.0.5"
 regex = "1.9.6"
+sqlx = "0.8.3"
+dotenvy = "0.15.7"
+webapp = { path = "../webapp" }
