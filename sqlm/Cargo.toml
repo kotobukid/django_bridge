@@ -4,12 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+sqlx = { workspace = true }
+tokio = { workspace = true }
+axum = { workspace = true }
+dotenvy = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
 webapp = { path = "../webapp" }
-sqlx = { version = "0.8", features = ["runtime-tokio-native-tls", "postgres", "chrono"] }
-tokio = { version = "1.43.0", features = ["full"] }
-
-axum = { version = "0.8.1", features = ["tokio"] }
-dotenvy = "0.15.7"
-tower = "0.5.1"
-tower-http = { version = "0.6.2", features = ["cors", "fs"] }
 
