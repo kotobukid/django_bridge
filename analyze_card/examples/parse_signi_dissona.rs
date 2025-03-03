@@ -1,6 +1,47 @@
-use analyze_card::wixoss::{Signi, WixossCard};
+use analyze_card::wixoss::{Card, Signi, WixossCard};
 
-fn main() {
+use dotenvy::from_filename;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
+use std::env;
+
+use std::sync::Arc;
+use std::time::Duration;
+use webapp::models::CreateCard;
+use webapp::repositories::CardRepository;
+
+async fn db(item: CreateCard) -> Result<(), sqlx::Error> {
+    from_filename("../.env").ok();
+
+    let db_url = {
+        let host = env::var("DB_HOST").expect("DB_HOST not found in .env");
+        let port = env::var("DB_PORT").expect("DB_PORT not found in .env");
+        let user = env::var("DB_USER").expect("DB_USER not found in .env");
+        let password = env::var("DB_PASSWORD").expect("DB_PASSWORD not found in .env");
+        let db_name = env::var("DB_NAME").expect("DB_NAME not found in .env");
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            user, password, host, port, db_name
+        )
+    };
+
+    let pool: Pool<Postgres> = PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(5))
+        .connect(format!("{db_url}?connect_timeout=5").as_str())
+        .await
+        .expect("Failed to connect to database");
+
+    let pool = Arc::new(pool);
+
+    let card_repo = CardRepository::new(pool.clone());
+    card_repo.insert(item).await?;
+
+    Ok(())
+}
+
+#[tokio::main]
+async fn main() -> Result<(), sqlx::Error> {
     let source: String = r#"
     <div id="primary" class="content-area">
         <main id="main" class="site-main" role="main">
@@ -127,4 +168,11 @@ fn main() {
 
     let signi = Signi::from_source(source);
     println!("{}", &signi);
+    let card: Card = signi.into();
+
+    let cc: CreateCard = card.into();
+
+    db(cc).await?;
+
+    Ok(())
 }

@@ -909,7 +909,7 @@ fn replace_img_with_alt(html: String) -> String {
 
 fn parse_story(html: String) -> OptionString {
     if html.contains(r#"class="cardData_story_img""#) {
-        OptionString::from_string("ディソナ".into())
+        OptionString::from_string("dissona".into())
     } else {
         OptionString::empty()
     }
