@@ -22,6 +22,7 @@ class Product(models.Model):
 class Color(models.Model):  # 白、赤…無色
     name = models.CharField(max_length=256, null=False, blank=False)
     code = models.CharField(max_length=16, null=False, blank=False)
+    bit = models.IntegerField(null=False, blank=False, default=1 << 7)
     sort_asc = models.IntegerField(null=False, blank=False, default=0)
 
     def __str__(self):
@@ -109,7 +110,7 @@ class Card(models.Model):
     code = models.CharField(max_length=16, null=False, blank=False, default='N/A')
     pronunciation = models.CharField(max_length=32, null=False, blank=False, default='N/A')
     user = models.ManyToManyField(to=Lrig, blank=True)
-    color = models.ManyToManyField(to=Color)
+    color = models.IntegerField(null=False, blank=False, default=1 << 7)
     cost = models.CharField(max_length=16, null=True, blank=True)
     level = models.IntegerField(null=True, blank=True)
     limit = models.IntegerField(null=True, blank=True)

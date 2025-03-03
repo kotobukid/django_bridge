@@ -18,12 +18,13 @@ class Command(BaseCommand):
 
 def update_color():
     color_source = (
-        ('w', '白', 0),
-        ('r', '赤', 1),
-        ('u', '青', 2),
-        ('g', '緑', 3),
-        ('k', '黒', 4),
-        ('l', '無', 5),
+        ('w', '白', 1 << 1, 1),
+        ('u', '青', 1 << 2, 3),
+        ('r', '赤', 1 << 3, 2),
+        ('k', '黒', 1 << 4, 4),
+        ('g', '緑', 1 << 5, 5),
+        ('l', '無', 1 << 6, 6),
+        ('x', '?', 1 << 7, 7),
     )
     colors_existing = Color.objects.all()
     for color in color_source:
@@ -31,12 +32,14 @@ def update_color():
         c_ex = colors_existing.filter(code=color[0])
 
         if c_ex.count() == 0:
-            new_color = Color(code=color[0], name=color[1], sort_asc=color[2])
+            new_color = Color(code=color[0], name=color[1], bit=color[2], sort_asc=color[3])
             new_color.save()
         else:
             if c_ex[0].name != color[1]:
                 target_color = Color.objects.get(code=color[0])
                 target_color[0].name = color[1]
+                target_color[0].bit = color[2]
+                target_color[0].sort_asc = color[3]
                 target_color[0].save()
     print('color update complete.')
 

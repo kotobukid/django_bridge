@@ -1,4 +1,4 @@
-use webapp::analyze::wixoss::{card::CardType, card::LrigAssist, Card, WixossCard};
+use webapp::analyze::wixoss::{card::Arts, WixossCard, Card, card::CardType};
 
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
@@ -42,8 +42,7 @@ async fn db(item: CreateCard) -> Result<(), sqlx::Error> {
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    let source: String = r#"
-    <div id="primary" class="content-area">
+    let source: String = r#"<div id="primary" class="content-area">
         <main id="main" class="site-main" role="main">
 
 
@@ -53,47 +52,47 @@ async fn main() -> Result<(), sqlx::Error> {
                         <!--<button class="close"><i class="fas fa-times"></i></button>-->
                         <div class="cardDetailWrap">
                             <div class="cardttlwrap">
-                                <p class="cardNum">WXDi-P14-026</p>
-                                <p class="cardName">ミルルン☆キャッチ<br class="sp"><span>＜ミルルンキャッチ＞</span></p>
-                                <div class="cardRarity">LC</div>
+                                <p class="cardNum">WX24-P4-005</p>
+                                <p class="cardName">竜花相搏<br class="sp"><span>＜リュウカソウハク＞</span></p>
+                                <div class="cardRarity">LR</div>
                             </div>
                             <div class="cardImg">
-                                                                    <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/WXDi/WXDi-P14-026.jpg">
-                                                                <p>Illust <span>かにかま</span></p>
+                                                                    <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/WX24/WX24-P4-005.jpg">
+                                                                <p>Illust <span>夕子</span></p>
                             </div>
                             <div class="cardData">
                                 <dl>
                                     <dt>カード種類</dt>
-                                    <dd>アシストルリグ</dd>
+                                    <dd>アーツ</dd>
 
                                     <dt>カードタイプ</dt>
-                                    <dd>ミルルン</dd>
-
-                                    <dt>色</dt>
-                                    <dd>青</dd>
-
-                                    <dt>レベル</dt>
-                                    <dd>2</dd>
-
-                                    <dt>グロウコスト</dt>
-                                    <dd>《無》×３</dd>
-
-                                    <dt>コスト</dt>
                                     <dd>-</dd>
 
+                                    <dt>色</dt>
+                                    <dd>赤緑</dd>
+
+                                    <dt>レベル</dt>
+                                    <dd>-</dd>
+
+                                    <dt>グロウコスト</dt>
+                                    <dd>-</dd>
+
+                                    <dt>コスト</dt>
+                                    <dd>《赤》×１<br />
+《緑》×１</dd>
+
                                     <dt>リミット</dt>
-                                    <dd>1</dd>
+                                    <dd>-</dd>
 
                                     <dt>パワー</dt>
                                     <dd>-</dd>
 
                                     <!-- チーム -->
-                                    <dt>チーム</dt>
+                                    <dt>限定条件</dt>
                                     <dd>-</dd>
                                     <!-- コイン -->
                                     <dt>使用タイミング</dt>
-                                    <dd>メインフェイズ<br />
-アタックフェイズ</dd>
+                                    <dd>メインフェイズ</dd>
 
                                     <dt>フォーマット</dt>
                                     <dd><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_format_key.png" height="23" alt="《キーアイコン》" /><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_format_diva.png" height="23" alt="《ディーヴァアイコン》" /></dd>
@@ -107,14 +106,28 @@ async fn main() -> Result<(), sqlx::Error> {
                                 </dl>
 
                                                                     <div class="cardSkill">
-                                        <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_arrival.png" height="23" alt="【出】" />：対戦相手のシグニを２体まで対象とし、それらをダウンする。<br />
-<img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_arrival.png" height="23" alt="【出】" /><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_blue.png" height="23" alt="《青》" />：対戦相手の手札を１枚見ないで選び、捨てさせる。<br />
-（<img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_arrival.png" height="23" alt="【出】" />能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい）                                    </div>
+										                                        あなたのデッキをシャッフルし一番上のカードをライフクロスに加える。あなたのライフクロス１枚をクラッシュしてもよい。そうした場合、対戦相手のライフクロス１枚をクラッシュする。                                    </div>
 
                                                                     <div class="cardText mb20">
-                                        「捕まえる～ん☆」                                    </div>
+                                        今なら、きっと過去の自分たちにも勝つことができる――<br />
+自然と、自信がわいてくるのだった。                                    </div>
 
-                                                                                            </div>
+                                                                                                    <div class="cardFaq">
+                                        <p class="faqTtl">FAQ</p>
+                                        <dl>
+                                                                                            <dt>
+																										この効果でクラッシュする自分のライフクロスは、直前の効果で加えたカードですか？
+												</dt>
+                                                <dd>
+																										はい、最初の効果でライフクロスの1番上に1枚加え、それをクラッシュすることになります。ライフクロスを加えたりクラッシュするのは常に一番上からに対してとなります。                                                </dd>
+                                                                                            <dt>
+																										この効果で自分と相手のライフクロスをそれぞれクラッシュしたら、お互いのカードにライフバーストがありました。どういう順番で発動しますか？
+												</dt>
+                                                <dd>
+																										ライフバーストはトリガー能力であり、トリガーしている能力はターンプレイヤー側から先に発動します。メインフェイズにこのアーツを使用した場合、あなたがターンプレイヤーですので、あなたのライフバーストが先に発動します。                                                </dd>
+                                                                                    </dl>
+                                    </div>
+                                                            </div>
                         </div>
                     </div>
                 </section>
@@ -151,14 +164,12 @@ async fn main() -> Result<(), sqlx::Error> {
     <!-- /新デザイン -->
     </body>
     </html>
-
 "#.into();
 
-    let lrig = LrigAssist::from_source(source);
-    println!("{}", &lrig);
-    let card: Card = lrig.into();
+    let arts = Arts::from_source(source);
+    println!("{}", &arts);
+    let card: Card = arts.into();
     // println!("{}", card);
-
     let cc: CreateCard = card.into();
 
     db(cc).await?;

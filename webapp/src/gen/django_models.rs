@@ -1,6 +1,4 @@
 use serde::{Serialize, Deserialize};
-use sqlx;
-
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
 pub struct CardDb {
@@ -12,6 +10,7 @@ pub struct CardDb {
     pub code: String,
     /// Default: N/A, Max length: 32
     pub pronunciation: String,
+    pub color: i32,
     /// Max length: 16
     pub cost: Option<String>,
     pub level: Option<i32>,
@@ -31,7 +30,7 @@ pub struct CardDb {
 }
 
 #[allow(dead_code)]
-#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateCard {
     /// Default: N/A, Max length: 256
     pub name: String,
@@ -39,6 +38,7 @@ pub struct CreateCard {
     pub code: String,
     /// Default: N/A, Max length: 32
     pub pronunciation: String,
+    pub color: i32,
     /// Max length: 16
     pub cost: Option<String>,
     pub level: Option<i32>,
@@ -64,15 +64,6 @@ pub struct WixCardUserRel {
     pub id: i64,
     pub card_id: i64,
     pub lrig_id: i64,
-}
-
-#[allow(dead_code)]
-#[derive(sqlx::FromRow, Debug, Clone)]
-pub struct WixCardColorRel {
-    /// Primary Key
-    pub id: i64,
-    pub card_id: i64,
-    pub color_id: i64,
 }
 
 #[allow(dead_code)]

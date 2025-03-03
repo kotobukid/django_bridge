@@ -56,13 +56,14 @@ impl Color {
     #[allow(dead_code)]
     pub fn to_bit(&self) -> u64 {
         match self {
-            Color::White => 1_u64 << 1,
-            Color::Blue => 1 << 2,
-            Color::Red => 1 << 3,
-            Color::Black => 1 << 4,
-            Color::Green => 1 << 5,
-            Color::Colorless => 1 << 6,
-            Color::Unknown => 1 << 7,
+            Color::White => 1_u64 << 1, // 2
+            Color::Blue => 1 << 2,      // 4
+            Color::Red => 1 << 3,       // 8
+            Color::Black => 1 << 4,     // 16
+            Color::Green => 1 << 5,     // 32
+            Color::Colorless => 1 << 6, // 64
+            Color::Unknown => 1 << 7,   // 128
+                                         // Color::White && Color::Red -> 10
         }
     }
 }
@@ -106,6 +107,16 @@ impl Display for Colors {
             .collect::<Vec<String>>()
             .join("");
         write!(f, "{}", s)
+    }
+}
+
+impl Colors {
+    pub fn to_bitset(&self) -> i32 {
+        let mut bits = 0_u64;
+        for c in &self.0 {
+            bits |= c.to_bit();
+        }
+        bits.to_string().parse::<i32>().unwrap()
     }
 }
 
