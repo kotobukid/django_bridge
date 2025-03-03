@@ -15,6 +15,7 @@ pub trait ICardRepository {
     // async fn delete(&self, id: i64);
 }
 
+#[derive(Clone)]
 pub struct CardRepository {
     db_connector: Arc<Pool<Postgres>>,
 }
@@ -24,6 +25,19 @@ impl CardRepository {
         Self { db_connector: pool }
     }
 
+    pub fn get_all<'a>(
+        &'a self,
+    ) -> Pin<Box<dyn Future<Output = Result<Vec<CardDb>, sqlx::Error>> + Send + 'a>> {
+        Box::pin(async move {
+            tokio::time::timeout(
+                Duration::from_secs(5),
+                sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card")
+                    .fetch_all(&*self.db_connector),
+            )
+            .await
+            .map_err(|_| sqlx::Error::PoolTimedOut)?
+        })
+    }
     pub async fn create_card_full(&self, source: wixoss::Card) -> Result<Card, sqlx::Error> {
         let cc: CreateCard = source.into();
         let res = self.insert(cc).await;
@@ -117,7 +131,7 @@ impl OnlyCardNameRepository {
         Box::pin(async move {
             tokio::time::timeout(
                 Duration::from_secs(5),
-                sqlx::query_as::<_, OnlyCardName>("SELECT name FROM wix_card")
+                sqlx::query_as::<_, OnlyCardName>("SELECT * FROM wix_card")
                     .fetch_all(&*self.db_connector),
             )
             .await

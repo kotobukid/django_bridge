@@ -1,4 +1,4 @@
-use crate::repositories::{OnlyCardName, OnlyCardNameRepository};
+use crate::repositories::{CardRepository, OnlyCardName};
 use crate::state::AppState;
 use axum::extract::State;
 use axum::http::StatusCode;
@@ -9,21 +9,22 @@ use axum::Router;
 use serde::Serialize;
 use sqlx::{Pool, Postgres};
 use std::sync::Arc;
+use crate::models::Card;
 
 #[derive(Clone)]
 struct RouterState {
-    card_repo: OnlyCardNameRepository,
+    card_repo: CardRepository,
 }
 
 pub fn create_card_router(pool: Arc<Pool<Postgres>>) -> Router<AppState> {
-    let only_card_name_repo = OnlyCardNameRepository::new(pool);
+    let card_repo = CardRepository::new(pool);
     let state = RouterState {
-        card_repo: only_card_name_repo,
+        card_repo
     };
 
     Router::new()
         .route("/", get(card_list))
-        .route("/api/card_list.json", get(card_list_json))
+        .route("/api/list.json", get(card_list_json))
         .with_state(state)
 }
 
@@ -42,7 +43,7 @@ async fn card_list(State(state): State<RouterState>) -> impl IntoResponse {
 
 #[derive(Serialize)]
 struct CardListJson {
-    cards: Vec<OnlyCardName>,
+    cards: Vec<Card>,
 }
 async fn card_list_json(
     State(state): State<RouterState>,
@@ -52,7 +53,7 @@ async fn card_list_json(
         .get_all()
         .await
         .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-
+    let cards = cards.into_iter().map(|card| card.into()).collect::<Vec<Card>>();
     let res: CardListJson = CardListJson { cards };
     Ok(Json(res))
 }
