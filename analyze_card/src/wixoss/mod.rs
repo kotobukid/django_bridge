@@ -198,10 +198,11 @@ pub struct Card {
 impl Into<CreateCard> for Card {
     fn into(self) -> CreateCard {
         let burst = self.burst();
+        let card_number = self.no;
 
         CreateCard {
             name: self.name,
-            code: self.no,
+            code: card_number.clone(),
             pronunciation: self.pronounce,
             power: self.power.value,
             cost: self.cost.value,
@@ -227,7 +228,7 @@ impl Into<CreateCard> for Card {
             },
             story: self.story.value,
             rarity: Some(self.rarity),
-            url: None,
+            url: Some(format!("https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no={}", card_number)),
         }
     }
 }
