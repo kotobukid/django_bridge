@@ -7,6 +7,7 @@ edition = "2021"
 sqlx = { workspace = true }
 tokio = { workspace = true }
 serde = { workspace = true }
+serde_qs = "0.13.0"
 base64 = "0.22.1"
 ring = "0.17.11"
 pbkdf2 = { version = "0.12.2", features = ["simple"] }
@@ -15,7 +16,11 @@ axum = { workspace = true }
 winapi = { version = "0.3.9", features = ["winbase", "wincon"] }
 nix = "0.29.0"
 rand = "0.9.0"
+reqwest = { version = "0.12.12", features = ["cookies", "multipart"] }
 http-body-util = "0.1.2"
 hyper = { version = "1.6.0", features = ["client"] }
 pin-project-lite = "0.2.16"
 dotenvy = { workspace = true }
+scraper = "0.23.1"
+async-recursion = "1.1.1"
+regex = "1.9.6"

@@ -6,6 +6,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
+use webapp::analyze::wixoss::CardType;
+
 
 pub trait ICardRepository {
     fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Card>> + Send + 'a>>;
@@ -23,7 +25,10 @@ impl CardRepository {
         Self { db_connector: pool }
     }
 
+    // pub async fn create_card_full(&self, source: )
+
     pub async fn insert(&self, source: CreateCard) -> Result<Card, sqlx::Error> {
+
         let card = sqlx::query_as::<_, CardDb>(
             r#"INSERT INTO wix_card (
                 name, code, pronunciation, cost, level, "limit",

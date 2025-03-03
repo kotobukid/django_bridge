@@ -4,7 +4,7 @@ use sqlx::{Pool, Postgres};
 use std::env;
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::repositories::{IProductRepository, ProductRepository};
+use webapp::repositories::ProductRepository;
 
 #[tokio::main]
 async fn main() {

@@ -1,6 +1,5 @@
 [workspace]
 members = [
-    "analyze_card",
     "sqlm",
     "syncdb",
     "webapp"
