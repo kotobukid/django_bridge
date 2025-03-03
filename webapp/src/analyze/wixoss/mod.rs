@@ -303,8 +303,8 @@ impl Into<CreateCard> for Card {
             burst_text: Some(life_burst_skills.join("\n")),
             format: match self.format {
                 Format::AllStar => 111_i32,
-                Format::KeySelection => 011_i32,
-                Format::DivaSelection => 001_i32,
+                Format::KeySelection => 11_i32,
+                Format::DivaSelection => 1_i32,
             },
             story: self.story.value,
             rarity: Some(self.rarity),
