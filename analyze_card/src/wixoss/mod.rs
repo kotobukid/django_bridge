@@ -193,7 +193,7 @@ impl Into<CreateCard> for Card {
             limit: Some(0),
             limit_ex: Some(0),
             has_burst: true,
-            skill_text: None,
+            skill_text: Some(self.skill.value.iter().map(|i| i.to_string()).collect()),
             burst_text: None,
             format: match self.format {
                 Format::AllStar => 111_i32,
