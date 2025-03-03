@@ -183,6 +183,8 @@ pub struct Card {
 
 impl Into<CreateCard> for Card {
     fn into(self) -> CreateCard {
+        let burst = self.burst();
+
         CreateCard {
             name: self.name,
             code: self.no,
@@ -192,7 +194,7 @@ impl Into<CreateCard> for Card {
             level: Some(0),
             limit: Some(0),
             limit_ex: Some(0),
-            has_burst: true,
+            has_burst: burst,
             skill_text: Some(self.skill.value.iter().map(|i| i.to_string()).collect()),
             burst_text: None,
             format: match self.format {
@@ -274,6 +276,10 @@ impl Card {
     pub fn check_have_feature(&self, card_feature: CardFeature) -> bool {
         println!("feature check: positive {}", card_feature);
         self.features.contains(&card_feature)
+    }
+
+    pub fn burst(&self) -> bool {
+        self.features.contains(&CardFeature::LifeBurst)
     }
 }
 
