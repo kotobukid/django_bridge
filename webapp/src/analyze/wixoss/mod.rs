@@ -3,6 +3,7 @@ pub mod feature;
 pub mod card;
 pub mod color;
 pub mod format;
+mod timing;
 
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
 use crate::analyze::wixoss::color::Colors;
@@ -14,6 +15,7 @@ pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceRelay, Resona, ResonaCraft, Signi, Spell,
     SpellCraft,
 };
+use crate::analyze::wixoss::timing::TimingList;
 use crate::models::CreateCard;
 use regex::Regex;
 use scraper::{Html, Selector};
@@ -227,6 +229,7 @@ impl Display for Skills {
     }
 }
 
+#[allow(dead_code)]
 fn custom_vec_string_serialize<S>(value: &[String], serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -261,8 +264,7 @@ pub struct Card {
     power: OptionString,
     user: OptionString,
 
-    #[serde(serialize_with = "custom_vec_string_serialize")]
-    time: Vec<String>,
+    time: TimingList,
 
     pub story: OptionString,
     format: Format,
@@ -307,6 +309,7 @@ impl Into<CreateCard> for Card {
             },
             story: self.story.value,
             rarity: Some(self.rarity),
+            timing: Some(self.time.to_bitset()),
             url: Some(format!("https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no={}", card_number)),
         }
     }
@@ -329,7 +332,7 @@ impl Display for Card {
             self.limit,
             self.power,
             self.user,
-            self.time.join(", "),
+            self.time,
             self.story,
             self.format,
             self.rarity,
@@ -339,24 +342,6 @@ impl Display for Card {
                 .map(|i| i.to_string())
                 .collect::<Vec<String>>()
                 .join(", ")
-        )
-    }
-}
-
-pub struct CardInformation {
-    pub(crate) colors: Colors,
-    features: HashSet<CardFeature>,
-    time: Vec<String>,
-}
-
-impl Display for CardInformation {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "colors: {}\nfeatures: {:?}\ntime: {}\n",
-            self.colors,
-            &self.features,
-            &self.time.join(", ")
         )
     }
 }
@@ -401,14 +386,6 @@ impl Card {
 
     pub fn burst(&self) -> bool {
         self.features.contains(&CardFeature::LifeBurst)
-    }
-
-    pub fn get_information(&self) -> CardInformation {
-        CardInformation {
-            colors: self.color.clone(),
-            features: self.features.clone(),
-            time: self.time.clone(),
-        }
     }
 
     pub fn get_skill_texts(&self) -> (Vec<CardSkill>, Vec<CardSkill>) {
@@ -527,7 +504,7 @@ impl From<Token> for Card {
             limit: OptionString::empty(),
             power: OptionString::empty(),
             user: OptionString::empty(),
-            time: Vec::new(),
+            time: TimingList::new(),
             story: OptionString::empty(),
             format: Format::DivaSelection,
             rarity: val.rarity.clone(),

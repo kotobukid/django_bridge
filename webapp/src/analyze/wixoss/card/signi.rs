@@ -9,6 +9,7 @@ use crate::analyze::wixoss::{
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
+use crate::analyze::wixoss::timing::TimingList;
 
 #[derive(Debug)]
 pub struct Signi {
@@ -48,7 +49,7 @@ impl From<Signi> for Card {
             limit: val.limit.clone(),
             power: val.power.clone(),
             user: val.user.clone(),
-            time: Vec::new(),
+            time: TimingList::new(),
             story: val.story.clone(),
             format: val.format.clone(),
             rarity: val.rarity.clone(),

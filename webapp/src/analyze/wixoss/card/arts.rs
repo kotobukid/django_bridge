@@ -2,6 +2,7 @@ use crate::analyze::wixoss::card::CardType;
 use crate::analyze::wixoss::color::Colors;
 use crate::analyze::wixoss::feature::CardFeature;
 use crate::analyze::wixoss::format::Format;
+use crate::analyze::wixoss::timing::TimingList;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story,
     split_by_break, Card, OptionString, Skills, WixossCard,
@@ -24,7 +25,7 @@ pub struct Arts {
     // limit: OptionString,
     // power: OptionString,
     user: OptionString,
-    time: Vec<String>,
+    time: TimingList,
     story: OptionString,
     format: Format,
     rarity: String,
@@ -109,7 +110,7 @@ impl WixossCard for Arts {
             color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[1].clone()),
-            time: split_by_break(card_data[9].clone()),
+            time: TimingList::from_vec_string(split_by_break(card_data[9].clone())),
             story: parse_story(card_data[11].clone().trim().to_string()),
             format: parse_format(card_data[10].clone()),
             rarity: card_rarity,
@@ -132,7 +133,7 @@ impl Display for Arts {
         // write!(f, "リミット\t:{}\n", self.limit)?;
         // write!(f, "パワー\t:{}\n", self.power)?;
         writeln!(f, "ルリグタイプ\t:{}", self.user)?;
-        writeln!(f, "タイミング\t:{}", self.time.join(", "))?;
+        writeln!(f, "タイミング\t:{}", self.time)?;
         writeln!(f, "ストーリー\t:{}", self.story)?;
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;

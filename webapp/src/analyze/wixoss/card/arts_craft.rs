@@ -9,6 +9,7 @@ use crate::analyze::wixoss::{
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
+use crate::analyze::wixoss::timing::TimingList;
 
 #[derive(Debug)]
 pub struct ArtsCraft {
@@ -24,7 +25,7 @@ pub struct ArtsCraft {
     // limit: OptionString,
     // power: OptionString,
     user: OptionString,
-    time: Vec<String>,
+    time: TimingList,
     story: OptionString,
     format: Format,
     rarity: String,
@@ -109,7 +110,7 @@ impl WixossCard for ArtsCraft {
             color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[1].clone()),
-            time: split_by_break(card_data[9].clone()),
+            time: TimingList::from_vec_string(split_by_break(card_data[9].clone())),
             story: parse_story(card_data[11].clone().trim().to_string()),
             format: parse_format(card_data[10].clone()),
             rarity: card_rarity,
@@ -132,7 +133,7 @@ impl Display for ArtsCraft {
         // write!(f, "リミット\t:{}\n", self.limit)?;
         // write!(f, "パワー\t:{}\n", self.power)?;
         writeln!(f, "ルリグタイプ\t:{}", self.user)?;
-        writeln!(f, "タイミング\t:{}", self.time.join(", "))?;
+        writeln!(f, "タイミング\t:{}", self.time)?;
         writeln!(f, "ストーリー\t:{}", self.story)?;
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;

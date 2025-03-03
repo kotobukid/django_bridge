@@ -290,9 +290,9 @@ def update_klass():
 
 def update_timing():
     timing_source = (
-        ('main', 'メインフェイズ', 0),
-        ('attack', 'アタックフェイズ', 1),
-        ('spellcutin', 'スペルカットイン', 2),
+        ('main', 'メインフェイズ', 1 << 1, 0),
+        ('attack', 'アタックフェイズ', 1 << 2, 1),
+        ('spellcutin', 'スペルカットイン', 1 << 3, 2),
     )
     timing_existing = Timing.objects.all()
     for timing in timing_source:
@@ -300,13 +300,14 @@ def update_timing():
         t_ex = timing_existing.filter(code=timing[0])
 
         if t_ex.count() == 0:
-            new_timing = Timing(code=timing[0], name=timing[1], sort_asc=timing[2])
+            new_timing = Timing(code=timing[0], name=timing[1], bit=timing[2], sort_asc=timing[3])
             new_timing.save()
         else:
             if t_ex[0].name != timing[1] or t_ex[0].sort_asc != timing[2]:
                 target_timing = Timing.objects.get(code=timing[0])
                 target_timing[0].name = timing[1]
-                target_timing[0].sort_asc = timing[2]
+                target_timing[0].bit = timing[2]
+                target_timing[0].sort_asc = timing[3]
                 target_timing[0].save()
     print('timing update complete.')
 

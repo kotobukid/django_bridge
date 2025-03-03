@@ -26,6 +26,7 @@ pub struct CardDb {
     pub story: Option<String>,
     /// Max length: 8
     pub rarity: Option<String>,
+    pub timing: Option<i32>,
     pub url: Option<String>,
 }
 
@@ -54,6 +55,7 @@ pub struct CreateCard {
     pub story: Option<String>,
     /// Max length: 8
     pub rarity: Option<String>,
+    pub timing: Option<i32>,
     pub url: Option<String>,
 }
 
@@ -63,7 +65,7 @@ pub struct WixCardUserRel {
     /// Primary Key
     pub id: i64,
     pub card_id: i64,
-    pub lrig_id: i64,
+    pub 限定条件_id: i64,
 }
 
 #[allow(dead_code)]
@@ -72,16 +74,7 @@ pub struct WixCardKlassRel {
     /// Primary Key
     pub id: i64,
     pub card_id: i64,
-    pub klass_id: i64,
-}
-
-#[allow(dead_code)]
-#[derive(sqlx::FromRow, Debug, Clone)]
-pub struct WixCardTimingRel {
-    /// Primary Key
-    pub id: i64,
-    pub card_id: i64,
-    pub timing_id: i64,
+    pub 種族_id: i64,
 }
 
 #[allow(dead_code)]
@@ -90,7 +83,7 @@ pub struct WixCardFeatureRel {
     /// Primary Key
     pub id: i64,
     pub card_id: i64,
-    pub feature_id: i64,
+    pub 特性_id: i64,
 }
 
 #[allow(dead_code)]

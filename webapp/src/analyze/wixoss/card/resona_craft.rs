@@ -9,6 +9,7 @@ use crate::analyze::wixoss::{
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
+use crate::analyze::wixoss::timing::TimingList;
 
 #[derive(Debug)]
 pub struct ResonaCraft {
@@ -24,7 +25,7 @@ pub struct ResonaCraft {
     // limit: OptionString,
     power: OptionString,
     user: OptionString,
-    time: Vec<String>,
+    time: TimingList,
     story: OptionString,
     format: Format,
     rarity: String,
@@ -114,7 +115,7 @@ impl WixossCard for ResonaCraft {
             level: OptionString::from_string(card_data[3].clone()),
             power: OptionString::from_string(card_data[7].clone()),
             user: OptionString::from_string(card_data[8].clone()),
-            time: split_by_break(card_data[9].clone()),
+            time: TimingList::from_vec_string(split_by_break(card_data[9].clone())),
             story: parse_story(card_data[11].clone().trim().to_string()),
             format: parse_format(card_data[10].clone()),
             rarity: card_rarity,
@@ -138,7 +139,7 @@ impl Display for ResonaCraft {
         // write!(f, "リミット\t:{}\n", self.limit)?;
         writeln!(f, "パワー\t:{}", self.power)?;
         writeln!(f, "ルリグタイプ\t:{}", self.user)?;
-        writeln!(f, "タイミング\t:{}", self.time.join(", "))?;
+        writeln!(f, "タイミング\t:{}", self.time)?;
         writeln!(f, "ストーリー\t:{}", self.story)?;
         writeln!(f, "フォーマット\t:{}", self.format)?;
         writeln!(f, "レアリティ\t:{}", self.rarity)?;

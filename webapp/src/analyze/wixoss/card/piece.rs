@@ -9,6 +9,7 @@ use crate::analyze::wixoss::{
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
+use crate::analyze::wixoss::timing::TimingList;
 
 #[derive(Debug)]
 pub struct Piece {
@@ -23,7 +24,7 @@ pub struct Piece {
     // limit: Option<String>,
     // power: Option<String>,
     user: OptionString,
-    time: Vec<String>,
+    time: TimingList,
     story: OptionString,
     format: Format,
     rarity: String,
@@ -108,7 +109,7 @@ impl WixossCard for Piece {
             color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[8].clone()),
-            time: split_by_break(card_data[9].clone()),
+            time: TimingList::from_vec_string(split_by_break(card_data[9].clone())),
             story: parse_story(card_data[11].clone().trim().to_string()),
             format: parse_format(card_data[10].clone()),
             rarity: card_rarity,

@@ -37,10 +37,10 @@ impl CardRepository {
             r#"INSERT INTO wix_card (
                 name, code, pronunciation, color, cost, level, "limit",
                 limit_ex, power, has_burst, skill_text, burst_text,
-                format, story, rarity, url
+                format, story, rarity, url, timing
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-                $12, $13, $14, $15, $16
+                $12, $13, $14, $15, $16, $17
             ) RETURNING *"#,
         )
         .bind(source.name)
@@ -59,6 +59,7 @@ impl CardRepository {
         .bind(source.story)
         .bind(source.rarity)
         .bind(source.url)
+        .bind(source.timing)
         // .bind(source.card_type_id)
         // .bind(source.product_id)
         .fetch_one(&*self.db_connector)

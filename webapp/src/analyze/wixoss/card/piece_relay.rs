@@ -6,6 +6,7 @@ use crate::analyze::wixoss::color::Colors;
 use crate::analyze::wixoss::format::Format;
 use crate::analyze::wixoss::{element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story, split_by_break, Card, OptionString, Skills, WixossCard};
 use crate::analyze::wixoss::feature::CardFeature;
+use crate::analyze::wixoss::timing::TimingList;
 
 #[derive(Debug)]
 pub struct PieceRelay {
@@ -20,7 +21,7 @@ pub struct PieceRelay {
     // limit: Option<String>,
     // power: Option<String>,
     user: OptionString,
-    time: Vec<String>,
+    time: TimingList,
     story: OptionString,
     format: Format,
     rarity: String,
@@ -105,7 +106,7 @@ impl WixossCard for PieceRelay {
             color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             user: OptionString::from_string(card_data[8].clone()),
-            time: split_by_break(card_data[9].clone()),
+            time: TimingList::from_vec_string(split_by_break(card_data[9].clone())),
             story: parse_story(card_data[11].clone().trim().to_string()),
             format: parse_format(card_data[10].clone()),
             rarity: card_rarity,

@@ -1,3 +1,5 @@
+use webapp::analyze::wixoss::{card::Arts, Card, WixossCard};
+
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
@@ -5,7 +7,6 @@ use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::analyze::wixoss::{Card, card::Arts, WixossCard};
 use webapp::models::CreateCard;
 use webapp::repositories::CardRepository;
 
@@ -41,8 +42,7 @@ async fn db(item: CreateCard) -> Result<(), sqlx::Error> {
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    let source: String = r#"
-    <div id="primary" class="content-area">
+    let source: String = r#"<div id="primary" class="content-area">
         <main id="main" class="site-main" role="main">
 
 
@@ -52,13 +52,13 @@ async fn main() -> Result<(), sqlx::Error> {
                         <!--<button class="close"><i class="fas fa-times"></i></button>-->
                         <div class="cardDetailWrap">
                             <div class="cardttlwrap">
-                                <p class="cardNum">WXK11-002</p>
-                                <p class="cardName">四炎楚歌<br class="sp"><span>＜シエンソカ＞</span></p>
+                                <p class="cardNum">WX03-003</p>
+                                <p class="cardName">業火絢爛<br class="sp"><span>＜ゴウカケンラン＞</span></p>
                                 <div class="cardRarity">LR</div>
                             </div>
                             <div class="cardImg">
-                                                                    <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/WXK11/WXK11-002.jpg">
-                                                                <p>Illust <span>しおぼい</span></p>
+                                                                    <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/WX03/WX03-003.jpg">
+                                                                <p>Illust <span>コウサク</span></p>
                             </div>
                             <div class="cardData">
                                 <dl>
@@ -79,7 +79,7 @@ async fn main() -> Result<(), sqlx::Error> {
 
                                     <dt>コスト</dt>
                                     <dd>《赤》×２<br />
-《無》×２</dd>
+《無》×３</dd>
 
                                     <dt>リミット</dt>
                                     <dd>-</dd>
@@ -92,10 +92,11 @@ async fn main() -> Result<(), sqlx::Error> {
                                     <dd>-</dd>
                                     <!-- コイン -->
                                     <dt>使用タイミング</dt>
-                                    <dd>メインフェイズ</dd>
+                                    <dd>メインフェイズ<br />
+アタックフェイズ</dd>
 
                                     <dt>フォーマット</dt>
-                                    <dd><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_format_key.png" height="23" alt="《キーアイコン》" /></dd>
+                                    <dd></dd>
 
                                     <!-- 0205mao -->
                                     <!-- 0205niimura -->
@@ -106,41 +107,14 @@ async fn main() -> Result<(), sqlx::Error> {
                                 </dl>
 
                                                                     <div class="cardSkill">
-                                        このアーツはあなたのセンタールリグがレベル４以上の場合にしか使用できない。 <br />
+										                                        対戦相手のセンタールリグが緑の場合、このカードの基本コストは<img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_red_02.png" height="23" alt="《赤×2》" />になる。<br />
 <br />
-以下の４つを行う。<br />
-①対戦相手のシグニ１体を対象とし、それをトラッシュに置く。<br />
-②対戦相手のライフクロス１枚をトラッシュに置く。<br />
-③対戦相手のエナゾーンからカード１枚を対象とし、それをトラッシュに置く。<br />
-④対戦相手のセンタールリグの下にあるカード１枚を対象とし、それをルリグトラッシュに置く。                                    </div>
+対戦相手のパワー15000以下のシグニ１体を対象とし、それをバニッシュする。                                    </div>
 
                                                                     <div class="cardText mb20">
-                                        もう一度味わってもらうよ！～遊月～                                    </div>
+                                        燃えやすい色ね！                                    </div>
 
-                                                                    <div class="cardFaq mb20">
-                                        <p class="faqTtl">四炎楚歌に関するお知らせ一覧</p>
-                                        <dl class="limitedInfo">
-                                                                                            <dt>2021-04-30</dt>
-                                                <dd>
-                                                    <p>こちらのカードは【同時使用制限カード】として指定されました。詳細な内容はルールページ<a href="https://www.takaratomy.co.jp/products/wixoss/library/rule/210430">『《ホーリー・グランドスラム》と《ビカム・ユー》《四炎楚歌》の同時使用制限』</a>をご覧ください。</p>
-                                                </dd>
-                                                                                    </dl>
-                                    </div>
-                                                                                                    <div class="cardFaq">
-                                        <p class="faqTtl">FAQ</p>
-                                        <dl>
-                                                                                            <dt>このアーツは、対戦相手のシグニやライフクロスがない場合でも使用できますか？</dt>
-                                                <dd>
-                                                    はい、対象とすることができるカードがない場合でも使用できます。その場合は対象とすることができない部分の効果を無視し、他の効果を処理します。                                                </dd>
-                                                                                            <dt>「このシグニが場を離れたとき」にトリガーする自動能力を持ったシグニを、①の効果でトラッシュに置きました。自動能力と、このアーツの②～④はどちらが先に処理されますか？</dt>
-                                                <dd>
-                                                    トリガー能力は、効果の処理中には発動しません。このアーツの効果は①～④まで１つの効果ですのでまずこのアーツを最後まで処理します。その後に、トリガーしていた能力を発動します。                                                </dd>
-                                                                                            <dt>①から④のうち、行いたくないものを飛ばすことはできますか？</dt>
-                                                <dd>
-                                                    いいえ、できません。例えば①の場合、対象とすることができる対戦相手のシグニがあるなら必ずそのうちの１体を対象とし、トラッシュに置きます。                                                </dd>
-                                                                                    </dl>
-                                    </div>
-                                                            </div>
+                                                                                            </div>
                         </div>
                     </div>
                 </section>
@@ -177,13 +151,11 @@ async fn main() -> Result<(), sqlx::Error> {
     <!-- /新デザイン -->
     </body>
     </html>
-
 "#.into();
 
     let arts = Arts::from_source(source);
     println!("{}", &arts);
     let card: Card = arts.into();
-
     let cc: CreateCard = card.into();
 
     db(cc).await?;

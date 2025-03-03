@@ -83,6 +83,7 @@ class Lrig(models.Model):
 class Timing(models.Model):
     name = models.CharField(verbose_name="名前", max_length=16, null=False, blank=False)
     code = models.CharField(verbose_name="内部値", max_length=16, null=False, blank=False)
+    bit = models.IntegerField(verbose_name="ビット値", null=False, blank=False, default=1 << 4)
     sort_asc = models.IntegerField(verbose_name="ソート順(昇順)", null=False, blank=False, default=0)
 
     def __str__(self):
@@ -135,7 +136,7 @@ class Card(models.Model):
         ('lr', 'LR'), ('lc', 'LC'), ('sr', 'SR'), ('r', 'R'), ('c', 'C'),
         ('stlr', 'STLR'), ('st', 'ST'), ('pr', 'PR'), ('sp', 'SP'), ('re', 'Re'), ('cb', 'CB'), ('pl', 'Pl'), ('l', 'L')
     ))
-    timing = models.ManyToManyField(verbose_name="使用タイミング", to=Timing, blank=True)
+    timing = models.IntegerField(verbose_name="使用タイミング", null=True, blank=True, default=1 << 0)
     feature = models.ManyToManyField(verbose_name="特性", to=Feature, blank=True)
     url = models.URLField(verbose_name="詳細ページ",
                           null=True, blank=True

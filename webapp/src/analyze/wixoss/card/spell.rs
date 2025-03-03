@@ -6,6 +6,7 @@ use crate::analyze::wixoss::color::Colors;
 use crate::analyze::wixoss::format::Format;
 use crate::analyze::wixoss::{element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story, Card, OptionString, Skills, WixossCard};
 use crate::analyze::wixoss::feature::CardFeature;
+use crate::analyze::wixoss::timing::TimingList;
 
 #[derive(Debug)]
 pub struct Spell {
@@ -43,7 +44,7 @@ impl From<Spell> for Card {
             limit: OptionString::empty(),
             power: OptionString::empty(),
             user: val.user.clone(),
-            time: Vec::new(),
+            time: TimingList::new(),
             story: val.story.clone(),
             format: val.format.clone(),
             rarity: val.rarity.clone(),
