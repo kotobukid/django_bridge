@@ -54,6 +54,13 @@ impl OptionString {
     pub fn empty() -> Self {
         Self { value: None }
     }
+
+    pub fn to_option_integer(&self) -> Option<i32> {
+        match &self.value {
+            Some(v) => Some(v.parse::<i32>().map_err(|_| ()).unwrap_or(-1)),
+            None => None,
+        }
+    }
 }
 
 impl Serialize for OptionString {
@@ -91,6 +98,13 @@ impl OptionInteger {
         match value {
             Some(v) => Self { value: Some(v) },
             None => Self { value: None },
+        }
+    }
+
+    fn to_option_string(&self) -> OptionString {
+        match &self.value {
+            Some(v) => OptionString::from_string(v.to_string()),
+            None => OptionString::empty(),
         }
     }
 }
@@ -191,16 +205,25 @@ impl Into<CreateCard> for Card {
             pronunciation: self.pronounce,
             power: self.power.value,
             cost: self.cost.value,
-            level: Some(0),
-            limit: Some(0),
-            limit_ex: Some(0),
+            level: self.level.to_option_integer(),
+            limit: match self.card_type {
+                CardType::Lrig => self.limit.to_option_integer(),
+                CardType::LrigAssist => self.limit.to_option_integer(),
+                _ => None,
+            },
+            limit_ex: match self.card_type {
+                CardType::Signi => self.limit.to_option_integer(),
+                CardType::Resona => self.limit.to_option_integer(),
+                CardType::ResonaCraft => self.limit.to_option_integer(),
+                _ => None,
+            },
             has_burst: burst,
             skill_text: Some(self.skill.value.iter().map(|i| i.to_string()).collect()),
             burst_text: None,
             format: match self.format {
                 Format::AllStar => 111_i32,
                 Format::KeySelection => 011_i32,
-                Format::DivaSelection => 001_i32
+                Format::DivaSelection => 001_i32,
             },
             story: self.story.value,
             rarity: Some(self.rarity),
