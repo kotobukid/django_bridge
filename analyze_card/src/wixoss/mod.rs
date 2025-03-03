@@ -195,7 +195,11 @@ impl Into<CreateCard> for Card {
             has_burst: true,
             skill_text: None,
             burst_text: None,
-            format: 001_i32,
+            format: match self.format {
+                Format::AllStar => 111_i32,
+                Format::KeySelection => 011_i32,
+                Format::DivaSelection => 001_i32
+            },
             story: self.story.value,
             rarity: Some(self.rarity),
             url: None,
