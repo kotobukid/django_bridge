@@ -304,9 +304,9 @@ fn generate_struct_from_python(
                 rust_struct.push_str(&format!("    pub {}: {},\n", fields.name, ty));
             }
             DjangoFieldType::ManyToMany => {
-                let sub_model_name =
-                    analyze_relation_field(fields.tokens.clone(), fields.name.as_str())
-                        .expect("to attribute or model name not found on ManyToManyField");
+                // let sub_model_name =
+                //     analyze_relation_field(fields.tokens.clone(), fields.name.as_str())
+                //         .expect("to attribute or model name not found on ManyToManyField");
 
                 let class_name = format!(
                     "{}{}{}Rel",
@@ -321,7 +321,7 @@ fn generate_struct_from_python(
                     "#[allow(dead_code)]\n#[derive(sqlx::FromRow, Debug, Clone)]\npub struct {} {{\n    /// Primary Key\n    pub id: i64,\n    pub {}_id: i64,\n    pub {}_id: i64,\n}}\n",
                     class_name,
                     struct_name.to_lowercase(),
-                    sub_model_name.to_lowercase()   // モデル名でありフィールド名ではない
+                    &fields.name.to_lowercase()
                 );
                 intermediate_structs.push(intermediate_struct);
             }

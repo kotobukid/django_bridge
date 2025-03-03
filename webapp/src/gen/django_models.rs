@@ -65,7 +65,7 @@ pub struct WixCardUserRel {
     /// Primary Key
     pub id: i64,
     pub card_id: i64,
-    pub 限定条件_id: i64,
+    pub user_id: i64,
 }
 
 #[allow(dead_code)]
@@ -74,7 +74,7 @@ pub struct WixCardKlassRel {
     /// Primary Key
     pub id: i64,
     pub card_id: i64,
-    pub 種族_id: i64,
+    pub klass_id: i64,
 }
 
 #[allow(dead_code)]
@@ -83,7 +83,7 @@ pub struct WixCardFeatureRel {
     /// Primary Key
     pub id: i64,
     pub card_id: i64,
-    pub 特性_id: i64,
+    pub feature_id: i64,
 }
 
 #[allow(dead_code)]
