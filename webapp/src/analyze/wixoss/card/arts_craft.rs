@@ -41,7 +41,7 @@ impl From<ArtsCraft> for Card {
             pronounce: val.pronounce.clone(),
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
-            klass: OptionString::empty(),
+            klass: None,
             color: val.color.clone(),
             level: OptionString::empty(),
             cost: val.cost.clone(),

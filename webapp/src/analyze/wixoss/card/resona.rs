@@ -18,7 +18,7 @@ pub struct Resona {
     pronounce: String,
     artist: String,
     card_type: CardType,
-    klass: OptionString,
+    klass: Option<i64>,
     color: Colors,
     level: OptionString,
     cost: OptionString,
@@ -109,7 +109,9 @@ impl WixossCard for Resona {
             pronounce: card_name.1,
             artist,
             card_type: CardType::Resona,
-            klass: OptionString::from_string(card_data[1].clone()),
+            // todo
+            klass: None,
+            // klass: OptionString::from_string(card_data[1].clone()),
             color: Colors::from(card_data[2].clone()),
             cost: OptionString::from_string(flatten_break(card_data[5].clone())),
             level: OptionString::from_string(card_data[3].clone()),
@@ -127,13 +129,14 @@ impl WixossCard for Resona {
 
 impl Display for Resona {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let k = self.klass.map(|n| n.to_string()).unwrap_or_default();
         writeln!(f, "NO.\t:{}", self.no)?;
         writeln!(f, "Name\t:{}", self.name)?;
         writeln!(f, "読み\t:{}", self.pronounce)?;
         writeln!(f, "絵\t:{}", self.artist)?;
         writeln!(f, "Type\t:{}", self.card_type)?;
         writeln!(f, "色\t:{}", self.color)?;
-        writeln!(f, "種族\t:{}", self.klass)?;
+        writeln!(f, "種族\t:{}", k)?;
         writeln!(f, "レベル\t:{}", self.level)?;
         writeln!(f, "コスト\t:{}", self.cost)?;
         // write!(f, "リミット\t:{}\n", self.limit)?;

@@ -9,7 +9,7 @@ use axum::Router;
 use serde::Serialize;
 use sqlx::{Pool, Postgres};
 use std::sync::Arc;
-use crate::models1::Card;
+use crate::models::card::Card;
 
 #[derive(Clone)]
 struct RouterState {

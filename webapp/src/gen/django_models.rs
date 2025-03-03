@@ -31,7 +31,7 @@ pub struct CardDb {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct CreateCard {
     /// Default: N/A, Max length: 256
     pub name: String,
@@ -102,7 +102,7 @@ pub struct ProductDb {
 }
 
 #[allow(dead_code)]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
 pub struct CreateProduct {
     /// Max length: 256
     pub name: String,
@@ -111,6 +111,33 @@ pub struct CreateProduct {
     pub url: Option<String>,
     /// Max length: 2
     pub product_type: String,
+    pub sort_asc: i32,
+}
+
+
+#[allow(dead_code)]
+#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
+pub struct KlassDb {
+    /// Primary Key
+    pub id: i64,
+    /// Max length: 5
+    pub cat1: String,
+    /// Max length: 5
+    pub cat2: Option<String>,
+    /// Max length: 5
+    pub cat3: Option<String>,
+    pub sort_asc: i32,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+pub struct CreateKlass {
+    /// Max length: 5
+    pub cat1: String,
+    /// Max length: 5
+    pub cat2: Option<String>,
+    /// Max length: 5
+    pub cat3: Option<String>,
     pub sort_asc: i32,
 }
 

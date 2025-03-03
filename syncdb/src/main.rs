@@ -200,7 +200,7 @@ fn generate_struct_from_python(
     );
 
     let mut create_struct = format!(
-        "#[allow(dead_code)]\n#[derive(Debug, Clone, Serialize, Deserialize)]\npub struct Create{struct_name} {{\n"
+        "#[allow(dead_code)]\n#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]\npub struct Create{struct_name} {{\n"
     );
 
     rust_struct.push_str("    /// Primary Key\n    pub id: i64,\n");
@@ -493,6 +493,7 @@ fn main() {
     let models = [
         ("wix", "Card", "./table_definition/wix/models.py"),
         ("wix", "Product", "./table_definition/wix/models.py"),
+        ("wix", "Klass", "./table_definition/wix/models.py"),
     ];
 
     let dest_path = Path::new(&out_dir).join("django_models.rs");

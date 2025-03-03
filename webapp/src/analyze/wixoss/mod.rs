@@ -256,7 +256,7 @@ pub struct Card {
     pronounce: String,
     artist: String,
     pub card_type: CardType,
-    klass: OptionString,
+    pub klass: Option<i64>,
     color: Colors,
     level: OptionString,
     cost: OptionString,
@@ -317,6 +317,7 @@ impl Into<CreateCard> for Card {
 
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let k = self.klass.unwrap_or_else(|| 0);
         write!(
             f,
             "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}\n{}\n{}",
@@ -325,7 +326,7 @@ impl Display for Card {
             self.pronounce,
             self.artist,
             self.card_type,
-            self.klass,
+            k,
             self.color,
             self.level,
             self.cost,
@@ -497,7 +498,7 @@ impl From<Token> for Card {
             pronounce: val.pronounce.clone(),
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
-            klass: OptionString::empty(),
+            klass: None,
             color: val.color.clone(),
             level: OptionString::empty(),
             cost: OptionString::empty(),

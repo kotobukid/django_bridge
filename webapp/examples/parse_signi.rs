@@ -1,4 +1,4 @@
-use webapp::analyze::wixoss::{card::CardType, Card, card::Signi, WixossCard};
+use webapp::analyze::wixoss::{Card, card::Signi, WixossCard};
 
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
@@ -7,10 +7,12 @@ use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
+use webapp::gen::django_models::WixCardKlassRel;
 use webapp::models::card::CreateCard;
-use webapp::repositories::CardRepository;
+use webapp::models::klass::create_klass;
+use webapp::repositories::{CardRepository, KlassRelRepository};
 
-async fn db(item: CreateCard) -> Result<(), sqlx::Error> {
+async fn create_db() -> Pool<Postgres> {
     from_filename("../.env").ok();
 
     let db_url = {
@@ -31,13 +33,13 @@ async fn db(item: CreateCard) -> Result<(), sqlx::Error> {
         .connect(format!("{db_url}?connect_timeout=5").as_str())
         .await
         .expect("Failed to connect to database");
+    pool
+}
 
-    let pool = Arc::new(pool);
+async fn db(pool: Arc<Pool<Postgres>>, item: CreateCard) -> Result<webapp::models::card::Card, sqlx::Error> {
 
     let card_repo = CardRepository::new(pool.clone());
-    card_repo.insert(item).await?;
-
-    Ok(())
+    Ok(card_repo.insert(item).await?)
 }
 
 #[tokio::main]
@@ -160,15 +162,37 @@ async fn main() -> Result<(), sqlx::Error> {
     </html>
 
 "#.into();
+    let pool = create_db().await;
+    let pool = Arc::new(pool);
+    let mut klass_rel_repo: KlassRelRepository = KlassRelRepository::new(pool.clone());
+    klass_rel_repo.create_cache().await;
 
-    let signi = Signi::from_source(source);
-    println!("{}", &signi);
-    let card: Card = signi.into();
-    // println!("{}", card);
+    let mut signi = Signi::from_source(source);
+
+    println!("{:?}", signi);
+
+    let klasses = create_klass(signi.klass.clone().as_str());
+    let klass_found = klass_rel_repo.get_id(&klasses);
+    println!("klass_found: {:?}", klass_found);
+
+    let klass_id = match klass_found {
+        Some(id) => id,
+        None => -1
+    };
+
+    let mut card: Card = signi.into();
 
     let cc: CreateCard = card.into();
 
-    db(cc).await?;
+    let created_card: webapp::models::card::Card = db(pool, cc).await?;
+
+    let rel: WixCardKlassRel = WixCardKlassRel {
+        id: -1,
+        card_id: created_card.id,
+        klass_id
+    };
+
+    println!("{:?}", rel);
 
     Ok(())
 }

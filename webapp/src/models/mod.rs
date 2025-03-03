@@ -1,10 +1,11 @@
 pub mod card;
 pub mod product;
+pub mod klass;
 
 #[macro_export]
-pub macro_rules! new_type {
+macro_rules! new_type {
     ($outer:ident, $inner:ty) => {
-        #[derive(Debug, Serialize, Deserialize)]
+        #[derive(Debug, serde::Serialize, serde::Deserialize)]
         pub struct $outer(pub $inner);
 
         impl From<$inner> for $outer {

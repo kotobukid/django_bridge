@@ -10,6 +10,7 @@ use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use crate::analyze::wixoss::timing::TimingList;
+use crate::models::klass::create_klass;
 
 #[derive(Debug)]
 pub struct Signi {
@@ -18,7 +19,7 @@ pub struct Signi {
     pronounce: String,
     artist: String,
     card_type: CardType,
-    klass: OptionString,
+    pub klass: String,
     color: Colors,
     level: OptionString,
     // cost: OptionString,
@@ -36,13 +37,17 @@ pub struct Signi {
 
 impl From<Signi> for Card {
     fn from(val: Signi) -> Self {
+        let klass_id = val.klass.clone();
         Card {
             no: val.no.clone(),
             name: val.name.clone(),
             pronounce: val.pronounce.clone(),
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
-            klass: val.klass.clone(),
+
+            // set by outer
+            klass: None,
+
             color: val.color.clone(),
             level: val.level.clone(),
             cost: OptionString::from_string("".into()),
@@ -108,7 +113,8 @@ impl WixossCard for Signi {
             pronounce: card_name.1,
             artist,
             card_type: CardType::Signi,
-            klass: OptionString::from_string(card_data[1].clone()),
+            // klass:  create_klass(card_data[1].clone().as_str()),
+            klass: card_data[1].clone(),
             color: Colors::from(card_data[2].clone()),
             level: OptionString::from_string(card_data[3].clone()),
             // cost: OptionString::from_string(card_data[5].clone()),
