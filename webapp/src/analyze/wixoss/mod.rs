@@ -119,13 +119,89 @@ impl Display for OptionInteger {
 }
 
 #[derive(Clone, Debug)]
+pub enum CardSkill {
+    Normal(String),
+    LifeBurst(String),
+}
+
+const SKILL_PREFIX_NORMAL: &str = "N:";
+const SKILL_PREFIX_LB: &str = "LB:";
+
+impl CardSkill {
+    fn from_string(s: String) -> Self {
+        if s.starts_with(SKILL_PREFIX_LB) {
+            Self::LifeBurst(s.replace(SKILL_PREFIX_LB, ""))
+        } else if s.starts_with(SKILL_PREFIX_NORMAL) {
+            Self::Normal(s.replace(SKILL_PREFIX_NORMAL, ""))
+        } else {
+            Self::Normal(s)
+        }
+    }
+
+    fn to_string(&self) -> String {
+        match self {
+            CardSkill::Normal(text) => format!("{}{}", SKILL_PREFIX_NORMAL, text),
+            CardSkill::LifeBurst(text) => format!("{}{}", SKILL_PREFIX_LB, text),
+        }
+    }
+}
+
+impl Serialize for CardSkill {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&self.to_string())
+    }
+}
+
+impl Display for CardSkill {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CardSkill::Normal(s) => write!(f, "{}", s),
+            CardSkill::LifeBurst(s) => write!(f, "{}", s),
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
 pub struct Skills {
-    value: Vec<String>,
+    value: Vec<CardSkill>,
 }
 
 impl Skills {
     fn from_vec(skills: Vec<String>) -> Self {
-        Self { value: skills }
+        let value = skills.into_iter().map(CardSkill::from_string).collect();
+        Skills { value }
+    }
+
+    pub fn as_vec(&self) -> Vec<String> {
+        self.value.iter().map(|skill| skill.to_string()).collect()
+    }
+    pub fn get_normal_skills(&self) -> Vec<String> {
+        self.value
+            .iter()
+            .filter_map(|skill| {
+                if let CardSkill::Normal(text) = skill {
+                    Some(text.clone())
+                } else {
+                    None
+                }
+            })
+            .collect()
+    }
+
+    pub fn get_life_burst_skills(&self) -> Vec<String> {
+        self.value
+            .iter()
+            .filter_map(|skill| {
+                if let CardSkill::LifeBurst(text) = skill {
+                    Some(text.clone())
+                } else {
+                    None
+                }
+            })
+            .collect()
     }
 }
 
@@ -147,7 +223,8 @@ impl Serialize for Skills {
 
 impl Display for Skills {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.value.join("\n"))
+        let res: String = self.value.iter().map(|s| s.to_string()).collect();
+        write!(f, "{res}")
     }
 }
 
@@ -198,6 +275,8 @@ pub struct Card {
 impl Into<CreateCard> for Card {
     fn into(self) -> CreateCard {
         let burst = self.burst();
+        let normal_skills = self.skill.get_normal_skills();
+        let life_burst_skills = self.skill.get_life_burst_skills();
         let card_number = self.no;
 
         CreateCard {
@@ -220,8 +299,8 @@ impl Into<CreateCard> for Card {
                 _ => None,
             },
             has_burst: burst,
-            skill_text: Some(self.skill.value.iter().map(|i| i.to_string()).collect()),
-            burst_text: None,
+            skill_text: Some(normal_skills.join("\n")),
+            burst_text: Some(life_burst_skills.join("\n")),
             format: match self.format {
                 Format::AllStar => 111_i32,
                 Format::KeySelection => 011_i32,
@@ -276,7 +355,9 @@ impl Display for CardInformation {
         write!(
             f,
             "colors: {}\nfeatures: {:?}\ntime: {}\n",
-            self.colors, &self.features, &self.time.join(", ")
+            self.colors,
+            &self.features,
+            &self.time.join(", ")
         )
     }
 }
@@ -329,6 +410,27 @@ impl Card {
             features: self.features.clone(),
             time: self.time.clone(),
         }
+    }
+
+    pub fn get_skill_texts(&self) -> (Vec<CardSkill>, Vec<CardSkill>) {
+        let mut skill_texts: Vec<CardSkill> = Vec::new();
+        let mut burst_texts: Vec<CardSkill> = Vec::new();
+
+        for skill in self.skill.value.iter() {
+            let skill_text = skill.to_string();
+            let (skill_text, features) = rule_explain_to_feature(skill_text);
+            let mut features_detected = HashSet::new();
+            features_detected.extend(features);
+            if self.features.contains(&CardFeature::LifeBurst) {
+                if features_detected.contains(&CardFeature::LifeBurst) {
+                    burst_texts.push(CardSkill::LifeBurst(skill_text));
+                } else {
+                    skill_texts.push(CardSkill::Normal(skill_text));
+                }
+            }
+        }
+
+        (skill_texts, burst_texts)
     }
 }
 
