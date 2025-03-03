@@ -6,8 +6,8 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::analyze::wixoss::CardType;
-
+use crate::analyze::wixoss;
+use crate::analyze::wixoss::color::Color;
 
 pub trait ICardRepository {
     fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Card>> + Send + 'a>>;
@@ -25,23 +25,32 @@ impl CardRepository {
         Self { db_connector: pool }
     }
 
-    // pub async fn create_card_full(&self, source: )
+    pub async fn create_card_full(&self, source: wixoss::Card) -> Result<Card, sqlx::Error> {
+        let info = source.get_information();
+        let cc: CreateCard = source.into();
+        // cc.color = color_bits;
+        let res = self.insert(cc).await;
+        let created_card = res?;
+
+        Ok(created_card)
+    }
 
     pub async fn insert(&self, source: CreateCard) -> Result<Card, sqlx::Error> {
 
         let card = sqlx::query_as::<_, CardDb>(
             r#"INSERT INTO wix_card (
-                name, code, pronunciation, cost, level, "limit",
+                name, code, pronunciation, color, cost, level, "limit",
                 limit_ex, power, has_burst, skill_text, burst_text,
                 format, story, rarity, url
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-                $12, $13, $14, $15
+                $12, $13, $14, $15, $16
             ) RETURNING *"#,
         )
         .bind(source.name)
         .bind(source.code)
         .bind(source.pronunciation)
+        .bind(source.color)
         .bind(source.cost)
         .bind(source.level)
         .bind(source.limit)

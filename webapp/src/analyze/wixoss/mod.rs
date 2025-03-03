@@ -5,12 +5,12 @@ pub mod color;
 pub mod format;
 
 use crate::features;
-use webapp::analyze::wixoss::card::{detect_card_type, CardType};
-use webapp::analyze::wixoss::color::Colors;
-use webapp::analyze::wixoss::feature::CardFeature;
-use webapp::analyze::wixoss::format::Format;
+pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
+use crate::analyze::wixoss::color::Colors;
+use crate::analyze::wixoss::feature::CardFeature;
+use crate::analyze::wixoss::format::Format;
 
-pub use webapp::analyze::wixoss::card::{
+pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceRelay, Resona, ResonaCraft, Signi, Spell,
     SpellCraft,
 };
@@ -21,7 +21,7 @@ use serde::{Serialize, Serializer};
 use sqlx::encode::IsNull::No;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-use webapp::models::CreateCard;
+use crate::models::CreateCard;
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;
@@ -204,6 +204,7 @@ impl Into<CreateCard> for Card {
             name: self.name,
             code: card_number.clone(),
             pronunciation: self.pronounce,
+            color: self.color.to_bitset(),
             power: self.power.value,
             cost: self.cost.value,
             level: self.level.to_option_integer(),
@@ -265,7 +266,7 @@ impl Display for Card {
 }
 
 pub struct CardInformation {
-    colors: Colors,
+    pub(crate) colors: Colors,
     features: HashSet<CardFeature>,
     time: Vec<String>,
 }
