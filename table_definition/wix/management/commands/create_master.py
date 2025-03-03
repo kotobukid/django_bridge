@@ -440,7 +440,7 @@ def update_product():
         p = products.filter(product_code=prod[2])
 
         if p.count() == 0:
-            new_product = Product(product_code=prod[1], name=prod[3], product_type=prod[1], sort_asc=prod[0])
+            new_product = Product(product_code=prod[2], name=prod[3], product_type=prod[1], sort_asc=prod[0])
             new_product.save()
         else:
             target_product = Product.objects.get(product_code=prod[2])
