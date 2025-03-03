@@ -5,8 +5,8 @@ use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::analyze::wixoss::{Card, card::Arts, WixossCard};
-use webapp::models::CreateCard;
+use webapp::analyze::wixoss::{card::Arts, Card, WixossCard};
+use webapp::models::card::CreateCard;
 use webapp::repositories::CardRepository;
 
 async fn db(item: CreateCard) -> Result<(), sqlx::Error> {

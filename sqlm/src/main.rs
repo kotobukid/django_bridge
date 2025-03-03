@@ -1,5 +1,3 @@
-use webapp::admin_process;
-
 use axum::Router;
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
@@ -9,8 +7,10 @@ use tower_http::services::ServeDir;
 
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::routers::card_router::create_card_router;
-use webapp::routers::product_router::create_product_router;
+use webapp::routers::{
+    admin_process::create_admin_portal_router, card_router::create_card_router,
+    product_router::create_product_router,
+};
 use webapp::state::AppState;
 
 #[tokio::main]
@@ -38,7 +38,7 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let pool = Arc::new(pool);
 
-    let a_routers = admin_process::create_admin_portal_router();
+    let a_routers = create_admin_portal_router();
     let card_router = create_card_router(pool.clone());
     let product_router = create_product_router(pool.clone());
 

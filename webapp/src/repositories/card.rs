@@ -1,5 +1,5 @@
 use crate::analyze::wixoss;
-use crate::models::{Card, CardDb, CreateCard};
+use crate::models::card::{Card, CardDb, CreateCard};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
 use std::fmt::{Display, Formatter};

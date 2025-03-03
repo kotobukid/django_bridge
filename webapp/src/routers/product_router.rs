@@ -1,4 +1,4 @@
-use crate::models::Product;
+use crate::models::card::Product;
 use crate::repositories::ProductRepository;
 use crate::state::AppState;
 use axum::extract::State;

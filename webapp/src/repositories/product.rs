@@ -1,4 +1,4 @@
-use crate::models::{Product, ProductDb};
+use crate::models::product::{Product, ProductDb};
 use sqlx::{Pool, Postgres};
 use std::future::Future;
 use std::pin::Pin;
