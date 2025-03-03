@@ -4,24 +4,23 @@ pub mod card;
 pub mod color;
 pub mod format;
 
-use crate::features;
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
 use crate::analyze::wixoss::color::Colors;
 use crate::analyze::wixoss::feature::CardFeature;
 use crate::analyze::wixoss::format::Format;
+use crate::features;
 
 pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceRelay, Resona, ResonaCraft, Signi, Spell,
     SpellCraft,
 };
+use crate::models::CreateCard;
 use regex::Regex;
 use scraper::{Html, Selector};
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
-use sqlx::encode::IsNull::No;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-use crate::models::CreateCard;
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;

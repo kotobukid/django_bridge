@@ -1,3 +1,4 @@
+use crate::analyze::wixoss;
 use crate::models::{Card, CardDb, CreateCard};
 use serde::{Deserialize, Serialize};
 use sqlx::{Pool, Postgres};
@@ -6,8 +7,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
-use crate::analyze::wixoss;
-use crate::analyze::wixoss::color::Color;
 
 pub trait ICardRepository {
     fn get_all<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Card>> + Send + 'a>>;
@@ -26,9 +25,7 @@ impl CardRepository {
     }
 
     pub async fn create_card_full(&self, source: wixoss::Card) -> Result<Card, sqlx::Error> {
-        let info = source.get_information();
         let cc: CreateCard = source.into();
-        // cc.color = color_bits;
         let res = self.insert(cc).await;
         let created_card = res?;
 
@@ -36,7 +33,6 @@ impl CardRepository {
     }
 
     pub async fn insert(&self, source: CreateCard) -> Result<Card, sqlx::Error> {
-
         let card = sqlx::query_as::<_, CardDb>(
             r#"INSERT INTO wix_card (
                 name, code, pronunciation, color, cost, level, "limit",
