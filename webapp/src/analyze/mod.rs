@@ -190,7 +190,7 @@ pub fn find_one(content: &str, selector: String) -> Option<String> {
     let document: Html = Html::parse_document(content);
     let main_selector: Selector = Selector::parse(selector.as_str()).unwrap();
 
-    println!("{:?}", document.clone());
+    // println!("{:?}", document.clone());
     document
         .select(&main_selector)
         .next()
@@ -202,7 +202,7 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
     let path_s: String = format!("./text_cache/{}", product_root);
     let product_dir: &Path = Path::new(&path_s);
 
-    println!("{}", product_dir.display());
+    // println!("{}", product_dir.display());
 
     try_mkdir(product_dir).unwrap();
     let files_result: std::io::Result<ReadDir> = fs::read_dir(product_dir);
@@ -319,6 +319,7 @@ impl CardQuery {
                 _ => None,
             }
         } else {
+                        // "https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=WX24-P3-001"
             let url = "https://www.takaratomy.co.jp/products/wixoss/card_list.php";
 
             let form: HashMap<String, String> = self.to_hashmap();
@@ -343,7 +344,7 @@ impl CardQuery {
                             _ => None,
                         }
                     } else {
-                        println!("{}", body);
+                        // println!("{}", body);
                         None
                     }
                 }

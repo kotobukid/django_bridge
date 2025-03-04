@@ -8,6 +8,7 @@ mod piece_relay;
 mod resona;
 mod resona_craft;
 mod signi;
+mod signi_craft;
 mod spell;
 mod spell_craft;
 
@@ -21,6 +22,7 @@ pub use piece_relay::*;
 pub use resona::*;
 pub use resona_craft::*;
 pub use signi::*;
+pub use signi_craft::*;
 pub use spell::*;
 pub use spell_craft::*;
 
@@ -36,6 +38,7 @@ pub enum CardType {
     Signi,
     Spell,
     Resona,
+    SigniCraft,
     ArtsCraft,
     ResonaCraft,
     SpellCraft,
@@ -56,6 +59,7 @@ impl Display for CardType {
             CardType::Signi => "シグニ",
             CardType::Spell => "スペル",
             CardType::Resona => "レゾナ",
+            CardType::SigniCraft => "シグニ(クラフト)",
             CardType::ArtsCraft => "アーツ(クラフト)",
             CardType::ResonaCraft => "レゾナ(クラフト)",
             CardType::SpellCraft => "スペル(クラフト)",
@@ -78,8 +82,9 @@ pub fn detect_card_type(text: &str) -> CardType {
         "シグニ" => CardType::Signi,
         "スペル" => CardType::Spell,
         "レゾナ" => CardType::Resona,
+        "シグニ<br>\nクラフト" => CardType::SigniCraft,
         "アーツ<br />\nクラフト" => CardType::ArtsCraft,
-        "シグニ<br />\nクラフト" => CardType::ResonaCraft,
+        "シグニ<br>\nレゾナ<br>\nクラフト" => CardType::ResonaCraft,
         "スペル<br />\nクラフト" => CardType::SpellCraft,
         "ピース" => CardType::Piece,
         "ピース<br />\nリレー" => CardType::PieceRelay,

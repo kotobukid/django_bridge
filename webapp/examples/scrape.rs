@@ -59,7 +59,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     try_mkdir(Path::new("./text_cache")).unwrap();
 
     // let product_type = ProductType::Starter(String::from("WDA-F03"));
-    let product_type = ProductType::Booster(String::from("WX24-P4"));
+    let product_type = ProductType::Booster(String::from("WXDi-P11"));
+    // let product_type = ProductType::Booster(String::from("WX24-P3"));
 
     cache_product_index(&product_type, 1).await.unwrap();
 
@@ -89,11 +90,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                 cq.download_card_detail().await
             };
-
             match text {
                 Some(text) => {
                     // let t = Card::detect_card_type(text.as_str());
                     let c = Card::card_from_html(text.as_str());
+                    println!("{:?}", c);
                     match c {
                         Some(card) => {
                             let cc: CreateCard = card.into();
@@ -101,7 +102,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             db(pool, cc).await?;
                         },
                         None => {
-                            panic!("card parse error");
+                            eprintln!("card parse error[skip]: {}", card_no);
                         }
                     }
                 },
