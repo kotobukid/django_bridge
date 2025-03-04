@@ -59,7 +59,7 @@ impl KlassRelRepository {
         self.cache.insert(klass, id);
     }
 
-    pub fn get_id(&self, klass: &CreateKlass) -> Option<i64> {
+    pub fn get_id_by_create_klass(&self, klass: &CreateKlass) -> Option<i64> {
         println!("tree: {:?}", self.cache);
         println!("klass: {:?}", klass);
         self.cache.get(klass).cloned()
@@ -70,7 +70,7 @@ impl KlassRelRepository {
         klass: CreateKlass,
     ) -> Result<i64, sqlx::Error> {
         if self.check_klass_exists(klass.clone()).await? {
-            Ok(self.get_id(&klass).unwrap())
+            Ok(self.get_id_by_create_klass(&klass).unwrap())
         } else {
             let id = self.create_klass(klass.clone()).await?;
             self.append_to_cache(klass, id);

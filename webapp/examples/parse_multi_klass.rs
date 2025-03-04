@@ -189,7 +189,7 @@ async fn main() -> Result<(), sqlx::Error> {
     // println!("{:?}", signi);
 
     let klass = create_klass(signi.klass.clone().as_str());
-    let klass_found = klass_rel_repo.get_id(&klass);
+    let klass_found = klass_rel_repo.get_id_by_create_klass(&klass);
 
     let klass_id = match klass_found {
         Some(id) => id,
