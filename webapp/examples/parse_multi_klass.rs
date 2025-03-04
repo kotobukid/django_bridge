@@ -46,8 +46,7 @@ async fn db(
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    let source: String = r#"
-    <div id="primary" class="content-area">
+    let source: String = r#"<div id="primary" class="content-area">
         <main id="main" class="site-main" role="main">
 
 
@@ -57,13 +56,13 @@ async fn main() -> Result<(), sqlx::Error> {
                         <!--<button class="close"><i class="fas fa-times"></i></button>-->
                         <div class="cardDetailWrap">
                             <div class="cardttlwrap">
-                                <p class="cardNum">WXDi-P14-040</p>
-                                <p class="cardName">羅星姫　リメンバ//フェゾーネ<br class="sp"><span>＜ラセイキリメンバフェゾーネ＞</span></p>
-                                <div class="cardRarity">SR</div>
+                                <p class="cardNum">PR-213</p>
+                                <p class="cardName">小剣　ミカムネ（WIXOSS PARTY 参加賞 selectors pack vol7）<br class="sp"><span>＜ショウケンミカムネ＞</span></p>
+                                <div class="cardRarity">PR</div>
                             </div>
                             <div class="cardImg">
-                                                                    <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/WXDi/WXDi-P14-040.jpg">
-                                                                <p>Illust <span>九十きゅうり</span></p>
+                                                                    <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/PR/PR-213.jpg">
+                                                                <p>Illust <span>クロサワテツ</span></p>
                             </div>
                             <div class="cardData">
                                 <dl>
@@ -71,13 +70,13 @@ async fn main() -> Result<(), sqlx::Error> {
                                     <dd>シグニ</dd>
 
                                     <dt>カードタイプ</dt>
-                                    <dd>奏羅：宇宙</dd>
+                                    <dd>精武：アーム/ウェポン</dd>
 
                                     <dt>色</dt>
                                     <dd>白</dd>
 
                                     <dt>レベル</dt>
-                                    <dd>3</dd>
+                                    <dd>1</dd>
 
                                     <dt>グロウコスト</dt>
                                     <dd>-</dd>
@@ -89,7 +88,7 @@ async fn main() -> Result<(), sqlx::Error> {
                                     <dd>-</dd>
 
                                     <dt>パワー</dt>
-                                    <dd>10000</dd>
+                                    <dd>2000</dd>
 
                                     <!-- チーム -->
                                     <dt>限定条件</dt>
@@ -99,7 +98,7 @@ async fn main() -> Result<(), sqlx::Error> {
                                     <dd>-</dd>
 
                                     <dt>フォーマット</dt>
-                                    <dd><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_format_key.png" height="23" alt="《キーアイコン》" /><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_format_diva.png" height="23" alt="《ディーヴァアイコン》" /></dd>
+                                    <dd></dd>
 
                                     <!-- 0205mao -->
                                     <!-- 0205niimura -->
@@ -110,19 +109,36 @@ async fn main() -> Result<(), sqlx::Error> {
                                 </dl>
 
                                                                     <div class="cardSkill">
-                                        <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_auto.png" height="23" alt="【自】" />：このシグニがアタックしたとき、対戦相手の場に凍結状態のルリグとシグニが合計３体以上いる場合、<img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_null.png" height="23" alt="《無》" /><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_null.png" height="23" alt="《無》" /><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_null.png" height="23" alt="《無》" />を支払ってもよい。そうした場合、ターン終了時まで、このシグニは【アサシン】を得る。<br />
-<img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_arrival.png" height="23" alt="【出】" />：センタールリグではない対戦相手のルリグ１体を対象とし、それを凍結する。<br />
-<img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_starting.png" height="23" alt="【起】" /><img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_turn_01.png" height="23" alt="《ターン１回》" />アップ状態のシグニ１体をダウンする：対戦相手のシグニ１体を対象とし、それを凍結する。                                    </div>
+										                                        <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_regular.png" height="23" alt="【常】" />：あなたの場に白ではないシグニがある場合、このシグニの基本パワーは5000になる。<br />
+<img src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_regular.png" height="23" alt="【常】" />：このシグニがエナゾーンにあるかぎり、あなたは自分のセンタールリグが持つ色のエナ１つを支払う際に、代わりにあなたのエナゾーンからこのシグニをトラッシュに置いてもよい。                                    </div>
 
                                                                     <div class="cardText mb20">
-                                        「さあ、私と楽しみましょうよ～？」                                    </div>
+                                        予は天下五剣の１つにして、最も美なる剣であるぞ。～ミカムネ～                                    </div>
 
                                                                                                     <div class="cardFaq">
                                         <p class="faqTtl">FAQ</p>
                                         <dl>
-                                                                                            <dt>起動能力のコストとして、対戦相手のアップ状態のシグニをダウンすることはできますか？</dt>
+                                                                                            <dt>
+																										《小剣　ミカムネ》、白のシグニ、黒のシグニのように場にある場合、《小剣　ミカムネ》のパワーはいくつになりますか？
+												</dt>
                                                 <dd>
-                                                    いいえ、できません。特に記載がない限り、コストとして支払えるのは自分側のカードのみとなります。                                                </dd>
+																										《小剣　ミカムネ》上段常時能力は、白以外のシグニが１体でもいれば条件を満たしパワーが5000となります。同時に白のシグニがいてもそれは影響しません。                                                </dd>
+                                                                                            <dt>
+																										《小剣　ミカムネ》と《サーバント　Ｏ》のような無色のシグニが場にある場合、《小剣　ミカムネ》のパワーはいくつになりますか？
+												</dt>
+                                                <dd>
+																										《サーバント　Ｏ》がいる場合、それは無色であり白以外のシグニですので、《小剣　ミカムネ》のパワーは5000となります。                                                </dd>
+                                                                                            <dt>
+																										《黒点の巫女　タマヨリヒメ》などで、色が白以外に変更された《小剣　ミカムネ》だけが場にある場合、《小剣　ミカムネ》のパワーはいくつになりますか？
+												</dt>
+                                                <dd>
+																										《小剣　ミカムネ》自身の色が白以外になった場合、《小剣　ミカムネ》上段常時能力は条件を満たし、パワーは5000となります。                                                </dd>
+                                                                                            <dt>
+																										自分のルリグが《コード・ピルルク　VERMILION》の場合、エナゾーンの《小剣　ミカムネ》は常時能力でどの色のエナの代わりにすることができますか？
+												</dt>
+                                                <dd>
+																										《コード・ピルルク　VERMILION》は青と黒の色を持つルリグですので、青か黒のエナを支払う際に代わりに《小剣　ミカムネ》をエナゾーンからトラッシュに置けます。<br />
+常時能力を使用せず、《小剣　ミカムネ》の本来の色として白エナを支払うこともできます。                                                </dd>
                                                                                     </dl>
                                     </div>
                                                             </div>
@@ -162,7 +178,6 @@ async fn main() -> Result<(), sqlx::Error> {
     <!-- /新デザイン -->
     </body>
     </html>
-
 "#.into();
     let pool = create_db().await;
     let pool = Arc::new(pool);
