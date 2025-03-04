@@ -7,6 +7,53 @@ use webapp::analyze::{
     cache_product_index, collect_card_detail_links, try_mkdir, CardQuery, ProductType,
 };
 
+use webapp::analyze::wixoss::{card::Signi, Card, WixossCard};
+
+use dotenvy::from_filename;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
+use std::env;
+
+use std::sync::Arc;
+use webapp::gen::django_models::WixCardKlassRel;
+use webapp::models::card::CreateCard;
+use webapp::models::klass::create_klass;
+use webapp::repositories::{CardRepository, CardTypeRepository, KlassRelRepository};
+
+async fn create_db() -> Pool<Postgres> {
+    from_filename("../.env").ok();
+
+    let db_url = {
+        let host = env::var("DB_HOST").expect("DB_HOST not found in .env");
+        let port = env::var("DB_PORT").expect("DB_PORT not found in .env");
+        let user = env::var("DB_USER").expect("DB_USER not found in .env");
+        let password = env::var("DB_PASSWORD").expect("DB_PASSWORD not found in .env");
+        let db_name = env::var("DB_NAME").expect("DB_NAME not found in .env");
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            user, password, host, port, db_name
+        )
+    };
+
+    let pool: Pool<Postgres> = PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(5))
+        .connect(format!("{db_url}?connect_timeout=5").as_str())
+        .await
+        .expect("Failed to connect to database");
+    pool
+}
+
+async fn db(
+    pool: Arc<Pool<Postgres>>,
+    item: CreateCard,
+) -> Result<webapp::models::card::Card, sqlx::Error> {
+    let card_repo = CardRepository::new(pool.clone());
+    Ok(card_repo.insert(item).await?)
+}
+
+
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     try_mkdir(Path::new("./text_cache")).unwrap();
@@ -18,18 +65,50 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let links = collect_card_detail_links(&product_type).await;
 
+    let pool = Arc::new(create_db().await);
+    let mut card_type_repo = CardTypeRepository::new(pool.clone());
+    let _ = card_type_repo.create_cache().await;
+
+
+
     if let Ok(links) = links {
         for link in links {
+            let pool = pool.clone();
             let card_no = extract_card_no(&link).unwrap();
-            println!("{card_no}");
 
-            // ランダムな待機時間（1000ms-3000ms）を生成
-            let wait_time = rand::rng().random_range(1000..=3000);
-            sleep(Duration::from_millis(wait_time)).await;
+            let dir = Path::new("./text_cache/single");
+            let cq: CardQuery = CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
 
-            let cq: CardQuery = CardQuery::from_card_no(card_no.into());
-            let text: Option<String> = cq.download_card_detail("./text_cache/single").await;
-            println!("{}", text.unwrap_or("detail download error".into()));
+            let text = if cq.check_cache_file_exists() {
+                println!("cache exists {card_no}");
+                cq.get_cache_text()
+            } else {
+                // ランダムな待機時間（1000ms-3000ms）を生成
+                let wait_time = rand::rng().random_range(1000..=3000);
+                sleep(Duration::from_millis(wait_time)).await;
+
+                cq.download_card_detail().await
+            };
+
+            match text {
+                Some(text) => {
+                    // let t = Card::detect_card_type(text.as_str());
+                    let c = Card::card_from_html(text.as_str());
+                    match c {
+                        Some(card) => {
+                            let cc: CreateCard = card.into();
+
+                            db(pool, cc).await?;
+                        },
+                        None => {
+                            panic!("card parse error");
+                        }
+                    }
+                },
+                None => {
+                    panic!("download error");
+                }
+            }
         }
     }
 

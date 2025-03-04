@@ -257,6 +257,7 @@ pub fn extract_number(s: &str) -> Option<i32> {
 pub struct CardQuery {
     card: String,
     card_no: String,
+    cache_dir: Box<Path>,
 }
 
 impl CardQuery {
@@ -269,12 +270,34 @@ impl CardQuery {
         format!("{}/{}.html", dir, id)
     }
 
-    pub fn from_card_no(card_no: String) -> Self {
+    pub fn new(card_no: String, cache_dir: Box<Path>) -> Self {
         Self {
             card_no,
             card: "card_detail".into(),
+            cache_dir
         }
     }
+
+    pub fn check_cache_file_exists(&self) -> bool {
+        let cache_file: PathBuf =
+            PathBuf::from(format!("{}/{}", &self.cache_dir.display().to_string(), self.get_relative_filename()));
+        cache_file.exists()
+    }
+
+    pub fn get_cache_text(&self) -> Option<String> {
+        let cache_file: PathBuf = PathBuf::from(format!("{}/{}", &self.cache_dir.display().to_string(), self.get_relative_filename()));
+        if cache_file.exists() {
+            let mut file: File = File::open(&cache_file).expect("cache file open error");
+            let mut contents = String::new();
+            match file.read_to_string(&mut contents) {
+                Ok(_) => Some(contents),
+                _ => None,
+            }
+        } else {
+            None
+        }
+    }
+
     pub fn to_hashmap(&self) -> HashMap<String, String> {
         HashMap::from_iter(vec![
             ("card_no".into(), self.card_no.clone()),
@@ -282,11 +305,11 @@ impl CardQuery {
         ])
     }
 
-    pub async fn download_card_detail(&self, cache_dir: &'static str) -> Option<String> {
+    pub async fn download_card_detail(&self) -> Option<String> {
         let cache_file: PathBuf =
-            PathBuf::from(format!("{}/{}", cache_dir, self.get_relative_filename()));
+            PathBuf::from(format!("{}/{}", &self.cache_dir.display().to_string(), self.get_relative_filename()));
 
-        println!("{:?}", cache_file);
+        // println!("{:?}", cache_file);
         if cache_file.exists() {
             let mut file: File = File::open(&cache_file).expect("cache file open error");
             let mut contents = String::new();
