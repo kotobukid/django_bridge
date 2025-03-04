@@ -88,6 +88,29 @@ pub struct WixCardFeatureRel {
 
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
+pub struct CardTypeDb {
+    /// Primary Key
+    pub id: i64,
+    /// Max length: 8
+    pub name: String,
+    /// Max length: 32
+    pub code: String,
+    pub sort_asc: i32,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+pub struct CreateCardType {
+    /// Max length: 8
+    pub name: String,
+    /// Max length: 32
+    pub code: String,
+    pub sort_asc: i32,
+}
+
+
+#[allow(dead_code)]
+#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
 pub struct ProductDb {
     /// Primary Key
     pub id: i64,

@@ -492,6 +492,7 @@ fn main() {
 
     let models = [
         ("wix", "Card", "./table_definition/wix/models.py"),
+        ("wix", "CardType", "./table_definition/wix/models.py"),
         ("wix", "Product", "./table_definition/wix/models.py"),
         ("wix", "Klass", "./table_definition/wix/models.py"),
     ];
