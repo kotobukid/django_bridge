@@ -40,15 +40,66 @@ impl CardRepository {
     }
     pub async fn create_card_full(&self, source: wixoss::Card) -> Result<Card, sqlx::Error> {
         let cc: CreateCard = source.into();
-        let res = self.insert(cc).await;
+        let res = self.upsert(cc).await;
         let created_card = res?;
 
         Ok(created_card)
     }
 
-    pub async fn insert(&self, source: CreateCard) -> Result<Card, sqlx::Error> {
-        let card = sqlx::query_as::<_, CardDb>(
-            r#"INSERT INTO wix_card (
+    pub async fn upsert(&self, source: CreateCard) -> Result<Card, sqlx::Error> {
+        // まず、指定されたcodeのレコードが存在するか確認
+        let existing =
+            sqlx::query_scalar::<_, bool>("SELECT EXISTS(SELECT 1 FROM wix_card WHERE code = $1)")
+                .bind(&source.code)
+                .fetch_one(&*self.db_connector)
+                .await?;
+
+        let card = if existing {
+            // レコードが存在する場合はUPDATE
+            sqlx::query_as::<_, CardDb>(
+                r#"UPDATE wix_card SET
+                name = $1,
+                pronunciation = $3,
+                color = $4,
+                cost = $5,
+                level = $6,
+                "limit" = $7,
+                limit_ex = $8,
+                power = $9,
+                has_burst = $10,
+                skill_text = $11,
+                burst_text = $12,
+                format = $13,
+                story = $14,
+                rarity = $15,
+                url = $16,
+                timing = $17
+            WHERE code = $2
+            RETURNING *"#,
+            )
+            .bind(source.name)
+            .bind(source.code)
+            .bind(source.pronunciation)
+            .bind(source.color)
+            .bind(source.cost)
+            .bind(source.level)
+            .bind(source.limit)
+            .bind(source.limit_ex)
+            .bind(source.power)
+            .bind(source.has_burst)
+            .bind(source.skill_text)
+            .bind(source.burst_text)
+            .bind(source.format)
+            .bind(source.story)
+            .bind(source.rarity)
+            .bind(source.url)
+            .bind(source.timing)
+            .fetch_one(&*self.db_connector)
+            .await?
+        } else {
+            // レコードが存在しない場合はINSERT
+            sqlx::query_as::<_, CardDb>(
+                r#"INSERT INTO wix_card (
                 name, code, pronunciation, color, cost, level, "limit",
                 limit_ex, power, has_burst, skill_text, burst_text,
                 format, story, rarity, url, timing
@@ -56,28 +107,28 @@ impl CardRepository {
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
                 $12, $13, $14, $15, $16, $17
             ) RETURNING *"#,
-        )
-        .bind(source.name)
-        .bind(source.code)
-        .bind(source.pronunciation)
-        .bind(source.color)
-        .bind(source.cost)
-        .bind(source.level)
-        .bind(source.limit)
-        .bind(source.limit_ex)
-        .bind(source.power)
-        .bind(source.has_burst)
-        .bind(source.skill_text)
-        .bind(source.burst_text)
-        .bind(source.format)
-        .bind(source.story)
-        .bind(source.rarity)
-        .bind(source.url)
-        .bind(source.timing)
-        // .bind(source.card_type_id)
-        // .bind(source.product_id)
-        .fetch_one(&*self.db_connector)
-        .await?;
+            )
+            .bind(source.name)
+            .bind(source.code)
+            .bind(source.pronunciation)
+            .bind(source.color)
+            .bind(source.cost)
+            .bind(source.level)
+            .bind(source.limit)
+            .bind(source.limit_ex)
+            .bind(source.power)
+            .bind(source.has_burst)
+            .bind(source.skill_text)
+            .bind(source.burst_text)
+            .bind(source.format)
+            .bind(source.story)
+            .bind(source.rarity)
+            .bind(source.url)
+            .bind(source.timing)
+            .fetch_one(&*self.db_connector)
+            .await?
+        };
+
         Ok(card.into())
     }
 }

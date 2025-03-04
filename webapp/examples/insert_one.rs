@@ -34,7 +34,7 @@ async fn db(item: CreateCard) -> Result<(), sqlx::Error> {
     let pool = Arc::new(pool);
 
     let card_repo = CardRepository::new(pool.clone());
-    card_repo.insert(item).await?;
+    card_repo.upsert(item).await?;
 
     Ok(())
 }
