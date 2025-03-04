@@ -1,6 +1,51 @@
-use webapp::analyze::wixoss::{Card};
+use webapp::analyze::wixoss::{card::Signi, Card, WixossCard};
 
-fn main() {
+use dotenvy::from_filename;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
+use std::env;
+
+use std::sync::Arc;
+use std::time::Duration;
+use webapp::gen::django_models::WixCardKlassRel;
+use webapp::models::card::CreateCard;
+use webapp::models::klass::create_klass;
+use webapp::repositories::{CardRepository, CardTypeRepository, KlassRelRepository};
+
+async fn create_db() -> Pool<Postgres> {
+    from_filename("../.env").ok();
+
+    let db_url = {
+        let host = env::var("DB_HOST").expect("DB_HOST not found in .env");
+        let port = env::var("DB_PORT").expect("DB_PORT not found in .env");
+        let user = env::var("DB_USER").expect("DB_USER not found in .env");
+        let password = env::var("DB_PASSWORD").expect("DB_PASSWORD not found in .env");
+        let db_name = env::var("DB_NAME").expect("DB_NAME not found in .env");
+        format!(
+            "postgres://{}:{}@{}:{}/{}",
+            user, password, host, port, db_name
+        )
+    };
+
+    let pool: Pool<Postgres> = PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(5))
+        .connect(format!("{db_url}?connect_timeout=5").as_str())
+        .await
+        .expect("Failed to connect to database");
+    pool
+}
+
+async fn db(
+    pool: Arc<Pool<Postgres>>,
+    item: CreateCard,
+) -> Result<webapp::models::card::Card, sqlx::Error> {
+    let card_repo = CardRepository::new(pool.clone());
+    Ok(card_repo.insert(item).await?)
+}
+
+#[tokio::main]
+async fn main() {
     let text = r#"
     <div id="primary" class="content-area">
         <main id="main" class="site-main" role="main">
@@ -150,8 +195,16 @@ fn main() {
 
 "#;
 
+    let pool = Arc::new(create_db().await);
+    let mut card_type_repo = CardTypeRepository::new(pool.clone());
+    let _ = card_type_repo.create_cache().await;
+
     let t = Card::detect_card_type(&String::from(text));
     let c = Card::card_from_html(&String::from(text));
-    println!("{}", t);
+    let card_type_id: i64 = card_type_repo
+        .find_id_by_name(format!("{}", t).as_str())
+        .unwrap();
+    println!("カード種類: {}", t);
     println!("{}", c.unwrap());
+    println!("card_type_id: {}", card_type_id);
 }
