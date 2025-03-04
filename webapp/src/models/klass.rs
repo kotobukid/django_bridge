@@ -19,7 +19,7 @@ fn create_klass_source_from_str(s: &str) -> (String, Option<String>, Option<Stri
     let parts: Vec<&str> = s.split('：').collect();
 
     // 大カテゴリー（必須）
-    let cat1 = match parts.get(0) {
+    let cat1 = match parts.first() {
         Some(main_category) => main_category.to_string(),
         None => String::new(), // または適切なエラーハンドリング
     };
@@ -29,7 +29,7 @@ fn create_klass_source_from_str(s: &str) -> (String, Option<String>, Option<Stri
         // 小カテゴリーを「/」で分割
         let sub_parts: Vec<&str> = sub_categories.split('/').collect();
 
-        match (sub_parts.get(0), sub_parts.get(1)) {
+        match (sub_parts.first(), sub_parts.get(1)) {
             (Some(sub1), Some(sub2)) => {
                 (Some(sub1.trim().to_string()), Some(sub2.trim().to_string()))
             }

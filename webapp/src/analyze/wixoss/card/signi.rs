@@ -2,6 +2,7 @@ use crate::analyze::wixoss::card::CardType;
 use crate::analyze::wixoss::color::Colors;
 use crate::analyze::wixoss::feature::CardFeature;
 use crate::analyze::wixoss::format::Format;
+use crate::analyze::wixoss::timing::TimingList;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, parse_card_skill, parse_format, parse_story, Card, OptionString,
     Skills, WixossCard,
@@ -9,8 +10,6 @@ use crate::analyze::wixoss::{
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-use crate::analyze::wixoss::timing::TimingList;
-use crate::models::klass::create_klass;
 
 #[derive(Debug)]
 pub struct Signi {
@@ -37,7 +36,6 @@ pub struct Signi {
 
 impl From<Signi> for Card {
     fn from(val: Signi) -> Self {
-        let klass_id = val.klass.clone();
         Card {
             no: val.no.clone(),
             name: val.name.clone(),

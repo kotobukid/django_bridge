@@ -1,5 +1,4 @@
 use crate::gen::django_models::{CreateKlass, KlassDb, WixCardKlassRel};
-use sqlx::encode::IsNull::No;
 use sqlx::{Pool, Postgres};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -88,7 +87,7 @@ impl KlassRelRepository {
         .fetch_all(&*self.db)
         .await?;
 
-        Ok(res.len() > 0)
+        Ok(res.is_empty())
     }
 
     async fn create_klass(&mut self, klass: CreateKlass) -> Result<i64, sqlx::Error> {
@@ -124,7 +123,7 @@ impl KlassRelRepository {
         .fetch_all(&*self.db)
         .await?;
 
-        Ok(found.len() > 0)
+        Ok(found.is_empty())
     }
 
     pub async fn save(&self, item: WixCardKlassRel) {
@@ -141,7 +140,6 @@ impl KlassRelRepository {
                 .bind(item.klass_id)
                 .fetch_all(&*self.db)
                 .await;
-                ()
             }
             _ => (),
         }

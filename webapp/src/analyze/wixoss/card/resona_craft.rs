@@ -41,7 +41,7 @@ impl From<ResonaCraft> for Card {
             pronounce: val.pronounce.clone(),
             artist: val.artist.clone(),
             card_type: val.card_type.clone(),
-            klass: val.klass.clone(),
+            klass: val.klass,
             color: val.color.clone(),
             level: val.level.clone(),
             cost: val.cost.clone(),

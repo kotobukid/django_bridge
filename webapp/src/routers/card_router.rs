@@ -1,4 +1,4 @@
-use crate::repositories::{CardRepository, OnlyCardName};
+use crate::repositories::CardRepository;
 use crate::state::AppState;
 use axum::extract::State;
 use axum::http::StatusCode;

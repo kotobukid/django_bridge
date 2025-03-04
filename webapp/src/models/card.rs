@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 // 再エクスポート
 pub use crate::gen::django_models::{CardDb, CreateCard};
@@ -18,4 +17,3 @@ impl Card {
         self.name.to_string()
     }
 }
-

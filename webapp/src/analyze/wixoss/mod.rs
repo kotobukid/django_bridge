@@ -57,10 +57,9 @@ impl OptionString {
     }
 
     pub fn to_option_integer(&self) -> Option<i32> {
-        match &self.value {
-            Some(v) => Some(v.parse::<i32>().map_err(|_| ()).unwrap_or(-1)),
-            None => None,
-        }
+        self.value
+            .as_ref()
+            .map(|v| v.parse::<i32>().map_err(|_| ()).unwrap_or(-1))
     }
 }
 
@@ -138,13 +137,6 @@ impl CardSkill {
             Self::Normal(s)
         }
     }
-
-    fn to_string(&self) -> String {
-        match self {
-            CardSkill::Normal(text) => format!("{}{}", SKILL_PREFIX_NORMAL, text),
-            CardSkill::LifeBurst(text) => format!("{}{}", SKILL_PREFIX_LB, text),
-        }
-    }
 }
 
 impl Serialize for CardSkill {
@@ -159,8 +151,8 @@ impl Serialize for CardSkill {
 impl Display for CardSkill {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CardSkill::Normal(s) => write!(f, "{}", s),
-            CardSkill::LifeBurst(s) => write!(f, "{}", s),
+            CardSkill::Normal(text) => write!(f, "{}{}", SKILL_PREFIX_NORMAL, text),
+            CardSkill::LifeBurst(text) => write!(f, "{}{}", SKILL_PREFIX_LB, text),
         }
     }
 }
@@ -273,51 +265,50 @@ pub struct Card {
     features: HashSet<CardFeature>,
 }
 
-impl Into<CreateCard> for Card {
-    fn into(self) -> CreateCard {
-        let burst = self.burst();
-        let normal_skills = self.skill.get_normal_skills();
-        let life_burst_skills = self.skill.get_life_burst_skills();
-        let card_number = self.no;
-
+impl From<Card> for CreateCard {
+    fn from(val: Card) -> Self {
+        let burst = val.burst();
+        let normal_skills = val.skill.get_normal_skills();
+        let life_burst_skills = val.skill.get_life_burst_skills();
+        let card_number = val.no;
         CreateCard {
-            name: self.name,
+            name: val.name,
             code: card_number.clone(),
-            pronunciation: self.pronounce,
-            color: self.color.to_bitset(),
-            power: self.power.value,
-            cost: self.cost.value,
-            level: self.level.to_option_integer(),
-            limit: match self.card_type {
-                CardType::Lrig => self.limit.to_option_integer(),
-                CardType::LrigAssist => self.limit.to_option_integer(),
-                _ => None,
-            },
-            limit_ex: match self.card_type {
-                CardType::Signi => self.limit.to_option_integer(),
-                CardType::Resona => self.limit.to_option_integer(),
-                CardType::ResonaCraft => self.limit.to_option_integer(),
-                _ => None,
-            },
+            pronunciation: val.pronounce,
+            color: val.color.to_bitset(),
+            power: val.power.value,
             has_burst: burst,
-            skill_text: Some(normal_skills.join("\n")),
+            cost: val.cost.value,
+            level: val.level.to_option_integer(),
+            limit: match val.card_type {
+                CardType::Lrig => val.limit.to_option_integer(),
+                CardType::LrigAssist => val.limit.to_option_integer(),
+                _ => None,
+            },
+            limit_ex: match val.card_type {
+                CardType::Signi => val.limit.to_option_integer(),
+                CardType::Resona => val.limit.to_option_integer(),
+                CardType::ResonaCraft => val.limit.to_option_integer(),
+                _ => None,
+            },
             burst_text: Some(life_burst_skills.join("\n")),
-            format: match self.format {
+            format: match val.format {
                 Format::AllStar => 111_i32,
                 Format::KeySelection => 11_i32,
-                Format::DivaSelection => 1_i32,
+                Format::DivaSelection => 11_i32,
             },
-            story: self.story.value,
-            rarity: Some(self.rarity),
-            timing: Some(self.time.to_bitset()),
-            url: Some(format!("https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no={}", card_number)),
+            story: val.story.value,
+            rarity: Some(val.rarity),
+            timing: Some(val.time.to_bitset()),
+            url: None,
+            skill_text: Some(normal_skills.join("\n")),
         }
     }
 }
 
 impl Display for Card {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let k = self.klass.unwrap_or_else(|| 0);
+        let k = self.klass.unwrap_or(0);
         write!(
             f,
             "{} {} {} {} {} {} {} {} {} {} {} {} {} {} {} {}\n{}\n{}",
