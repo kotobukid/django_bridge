@@ -57,7 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     try_mkdir(Path::new("./text_cache")).unwrap();
 
     // let product_type = ProductType::Starter(String::from("WDA-F03"));
-    let product_type = ProductType::Booster(String::from("WXDi-P11"));
+    let product_type = ProductType::Booster(String::from("WXDi-P16"));
     // let product_type = ProductType::Booster(String::from("WX24-P3"));
 
     cache_product_index(&product_type, 1).await.unwrap();

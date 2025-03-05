@@ -13,7 +13,7 @@ use crate::features;
 
 pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceRelay, Resona, ResonaCraft, Signi, Spell,
-    SpellCraft, SigniCraft
+    SpellCraft, SigniCraft, PieceCraft,
 };
 use crate::analyze::wixoss::timing::TimingList;
 use crate::models::card::CreateCard;
@@ -369,6 +369,7 @@ impl Card {
             CardType::SpellCraft => Some(SpellCraft::from_source(text.to_owned()).into()),
             CardType::Piece => Some(Piece::from_source(text.to_owned()).into()),
             CardType::PieceRelay => Some(PieceRelay::from_source(text.to_owned()).into()),
+            CardType::PieceCraft => Some(PieceCraft::from_source(text.to_owned()).into()),
             CardType::Token => Some(Token::from_source(text.to_owned()).into()),
             _ => None,
         }

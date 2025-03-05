@@ -11,6 +11,7 @@ mod signi;
 mod signi_craft;
 mod spell;
 mod spell_craft;
+mod piece_craft;
 
 pub use arts::*;
 pub use arts_craft::*;
@@ -19,6 +20,7 @@ pub use lrig::*;
 pub use lrig_assist::*;
 pub use piece::*;
 pub use piece_relay::*;
+pub use piece_craft::*;
 pub use resona::*;
 pub use resona_craft::*;
 pub use signi::*;
