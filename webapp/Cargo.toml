@@ -25,3 +25,4 @@ scraper = "0.23.1"
 async-recursion = "1.1.1"
 regex = "1.9.6"
 url = "2.5.4"
+serde_json = { workspace = true }

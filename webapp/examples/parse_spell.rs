@@ -1,4 +1,4 @@
-use webapp::analyze::wixoss::{card::CardType, Card, card::Spell, WixossCard};
+use webapp::analyze::wixoss::{Card, card::Spell, WixossCard};
 
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;

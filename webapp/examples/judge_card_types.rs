@@ -1,4 +1,4 @@
-use webapp::analyze::wixoss::{card::Signi, Card, WixossCard};
+use webapp::analyze::wixoss::Card;
 
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
@@ -7,10 +7,8 @@ use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::gen::django_models::WixCardKlassRel;
 use webapp::models::card::CreateCard;
-use webapp::models::klass::create_klass;
-use webapp::repositories::{CardRepository, CardTypeRepository, KlassRelRepository};
+use webapp::repositories::{CardRepository, CardTypeRepository};
 
 async fn create_db() -> Pool<Postgres> {
     from_filename("../.env").ok();
@@ -36,6 +34,7 @@ async fn create_db() -> Pool<Postgres> {
     pool
 }
 
+#[allow(dead_code)]
 async fn db(
     pool: Arc<Pool<Postgres>>,
     item: CreateCard,

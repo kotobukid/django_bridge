@@ -383,7 +383,7 @@ impl Card {
 
     pub fn burst(&self) -> i32 {
         if self.card_type == CardType::Signi || self.card_type == CardType::Spell {
-            match self.skill.get_life_burst_skills().len() > 0 {
+            match self.skill.get_life_burst_skills().is_empty() {
                 true => 1,
                 false => 2,
             }

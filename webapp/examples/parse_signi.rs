@@ -169,7 +169,7 @@ async fn main() -> Result<(), sqlx::Error> {
     let mut klass_rel_repo: KlassRelRepository = KlassRelRepository::new(pool.clone());
     klass_rel_repo.create_cache().await;
 
-    let mut signi = Signi::from_source(source);
+    let signi = Signi::from_source(source);
 
     // println!("{:?}", signi);
 
@@ -181,7 +181,7 @@ async fn main() -> Result<(), sqlx::Error> {
         None => klass_rel_repo.create_klass_if_not_exists(klass).await?,
     };
 
-    let mut card: Card = signi.into();
+    let card: Card = signi.into();
 
     let cc: CreateCard = card.into();
 

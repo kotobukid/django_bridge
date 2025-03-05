@@ -20,7 +20,7 @@ impl ProductRepository {
         }
     }
 
-    pub async fn create_cache(&mut self) -> () {
+    pub async fn create_cache(&mut self) {
         sqlx::query_as::<_, ProductDb>(
             "SELECT id, name, product_code, url, product_type, sort_asc FROM wix_product",
         )
