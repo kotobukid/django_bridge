@@ -33,11 +33,10 @@ impl CardTypeRepository {
     }
 
     pub async fn find_by_code(&self, code: &str) -> Result<i64, sqlx::Error> {
-        let cardtype: CardTypeDb =
-            sqlx::query_as::<_, CardTypeDb>("SELECT id FROM wix_cardtype WHERE code = $1;")
-                .bind(code)
-                .fetch_one(&*self.db)
-                .await?;
-        Ok(cardtype.id)
+        let id: i64 = sqlx::query_scalar("SELECT id FROM wix_cardtype WHERE code = $1;")
+            .bind(code)
+            .fetch_one(&*self.db)
+            .await?;
+        Ok(id)
     }
 }
