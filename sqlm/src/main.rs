@@ -45,8 +45,8 @@ async fn main() -> Result<(), sqlx::Error> {
     let app_state = AppState { db_pool: pool };
 
     let app = Router::new()
-        .nest("/card/", card_router)
-        .nest("/product/", product_router)
+        // .nest("/card/", card_router)
+        // .nest("/product/", product_router)
         .nest("/admin_operation/", a_routers.0)
         .nest("/admin_proxy/", a_routers.1)
         .nest("/a_static/", a_routers.2)
