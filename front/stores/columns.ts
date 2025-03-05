@@ -85,4 +85,7 @@ const useColumnStore = defineStore('column', {
 });
 
 
-export {useColumnStore};
+export {
+    type Column,
+    useColumnStore
+};
