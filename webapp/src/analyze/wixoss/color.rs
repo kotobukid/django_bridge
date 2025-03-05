@@ -227,6 +227,7 @@ mod tests {
     #[test]
     fn test_convert_cost() {
         let cases = vec![
+            ("《無》×０", Ok("l0".to_string())),
             ("《白》×３《無》×１", Ok("w3l1".to_string())),
             ("《青》×２《赤》×１", Ok("u2r1".to_string())),
             ("《黒》×４《緑》×２", Ok("k4g2".to_string())),
