@@ -6,14 +6,14 @@ pub mod format;
 mod timing;
 
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
-use crate::analyze::wixoss::color::Colors;
+use crate::analyze::wixoss::color::{convert_cost, Colors};
 use crate::analyze::wixoss::feature::CardFeature;
 use crate::analyze::wixoss::format::Format;
 use crate::features;
 
 pub use crate::analyze::wixoss::card::{
-    Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceRelay, Resona, ResonaCraft, Signi, Spell,
-    SpellCraft, SigniCraft, PieceCraft,
+    Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceCraft, PieceRelay, Resona, ResonaCraft,
+    Signi, SigniCraft, Spell, SpellCraft,
 };
 use crate::analyze::wixoss::timing::TimingList;
 use crate::models::card::CreateCard;
@@ -271,6 +271,7 @@ impl From<Card> for CreateCard {
         let normal_skills = val.skill.get_normal_skills();
         let life_burst_skills = val.skill.get_life_burst_skills();
         let card_number = val.no;
+        let cost = convert_cost(&val.cost.value.unwrap_or("".to_string())).unwrap_or_default();
         CreateCard {
             name: val.name,
             code: card_number.clone(),
@@ -278,7 +279,7 @@ impl From<Card> for CreateCard {
             color: val.color.to_bitset(),
             power: val.power.value,
             has_burst: burst,
-            cost: val.cost.value,
+            cost: Some(cost),
             level: val.level.to_option_integer(),
             limit: match val.card_type {
                 CardType::Lrig => val.limit.to_option_integer(),
@@ -301,8 +302,8 @@ impl From<Card> for CreateCard {
             story: val.story.value,
             rarity: Some(val.rarity),
             timing: Some(val.time.to_bitset()),
-            card_type: 0,   // default
-            product: 0,     // default
+            card_type: 0, // default
+            product: 0,   // default
             url: None,
             skill_text: Some(normal_skills.join("\n")),
         }

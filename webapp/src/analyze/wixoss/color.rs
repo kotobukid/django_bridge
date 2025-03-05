@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
 
@@ -128,5 +129,121 @@ impl From<String> for Colors {
                 .map(|s| Color::from(s.to_string().as_str()))
                 .collect(),
         )
+    }
+}
+
+pub fn convert_cost(cost_string: &str) -> Result<String, String> {
+    // 色とその対応関係を定義
+    let color_source = [
+        ('w', "白"),
+        ('u', "青"),
+        ('r', "赤"),
+        ('k', "黒"),
+        ('g', "緑"),
+        ('l', "無"),
+        ('x', "?"),
+    ];
+
+    let mut natural_to_internal = HashMap::new();
+    for (internal, natural) in &color_source {
+        natural_to_internal.insert(*natural, *internal);
+    }
+
+    // 全角数字から半角数字への変換テーブル
+    let full_to_half_digits = [
+        ('０', '0'),
+        ('１', '1'),
+        ('２', '2'),
+        ('３', '3'),
+        ('４', '4'),
+        ('５', '5'),
+        ('６', '6'),
+        ('７', '7'),
+        ('８', '8'),
+        ('９', '9'),
+    ];
+
+    let mut digit_map = HashMap::new();
+    for (full, half) in full_to_half_digits {
+        digit_map.insert(full, half);
+    }
+
+    // 全角数字を半角数字に置換
+    let normalized_input: String = cost_string
+        .chars()
+        .map(|c| *digit_map.get(&c).unwrap_or(&c)) // 全角なら対応する半角に、対応がなければそのまま
+        .collect();
+
+    let mut result = String::new();
+    let mut chars = normalized_input.chars().peekable();
+
+    while let Some(c) = chars.next() {
+        if c == '《' {
+            // 色の開始を検知 (例: "白")
+            let mut color = String::new();
+            while let Some(&next_c) = chars.peek() {
+                if next_c == '》' {
+                    chars.next(); // '》' を消費
+                    break;
+                }
+                color.push(next_c);
+                chars.next();
+            }
+
+            // 対応する内部表記に変換
+            let internal = natural_to_internal.get(color.as_str())
+                .ok_or_else(|| format!("Unexpected color '{}'", color))?;
+
+            // 次が "×" か確認
+            if chars.next() != Some('×') {
+                return Err("Invalid input, expected '×' after color".to_string());
+            }
+
+            // 数量を取得
+            let mut count = String::new();
+            while let Some(&next_c) = chars.peek() {
+                if next_c.is_ascii_digit() {
+                    count.push(next_c);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+
+            let count: usize = count.parse().map_err(|_| "Failed to parse count".to_string())?;
+            result.push(*internal);
+            result.push_str(&count.to_string());
+        }
+    }
+
+    Ok(result)
+}
+
+// テスト
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_convert_cost() {
+        let cases = vec![
+            ("《白》×３《無》×１", Ok("w3l1".to_string())),
+            ("《青》×２《赤》×１", Ok("u2r1".to_string())),
+            ("《黒》×４《緑》×２", Ok("k4g2".to_string())),
+            ("《無》×５", Ok("l5".to_string())),
+            ("《白》×１《青》×１《赤》×１", Ok("w1u1r1".to_string())),
+            ("《黄》×1", Err("Unexpected color '黄'".to_string())),
+            // ascii混在
+            ("《白》×3《無》×１", Ok("w3l1".to_string())),
+            ("《青》×２《赤》×1", Ok("u2r1".to_string())),
+            ("《黒》×4《緑》×２", Ok("k4g2".to_string())),
+            ("《無》×5", Ok("l5".to_string())),
+            ("《白》×1《青》×１《赤》×１", Ok("w1u1r1".to_string())),
+            ("《黄》×１", Err("Unexpected color '黄'".to_string())),
+        ];
+
+        for (input, expected) in cases {
+            assert_eq!(convert_cost(input), expected);
+        }
     }
 }
