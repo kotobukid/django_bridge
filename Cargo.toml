@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "datapack",
     "sqlm",
     "syncdb",
     "webapp"

@@ -21,3 +21,16 @@ description = "Run npm run generate in the ./front Nuxt.js project"
 cwd = "./front"
 command = "npm"
 args = ["run", "generate"]
+
+[tasks.wasm]
+description = "build wasm by wasm-pack(debug build)"
+cwd = "./datapack"
+command = "wasm-pack"
+args = ["build", "--target", "web", "--out-dir", "../front/public/pkg"]
+
+[tasks.wasm-release]
+description = "build wasm by wasm-pack(release build)"
+cwd = "./datapack"
+command = "wasm-pack"
+args = ["build", "--release", "--target", "web", "--out-dir", "../front/public/pkg"]
+

@@ -3,3 +3,8 @@ GET http://localhost/product/api/list.json
 
 ###
 GET http://localhost:3001/product/api/list.json
+
+
+
+### check mime type
+GET http://localhost:3001/pkg/datapack_bg.wasm
