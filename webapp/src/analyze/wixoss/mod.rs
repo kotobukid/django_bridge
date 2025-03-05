@@ -287,6 +287,7 @@ impl From<Card> for CreateCard {
             },
             limit_ex: match val.card_type {
                 CardType::Signi => val.limit.to_option_integer(),
+                CardType::SigniCraft => val.limit.to_option_integer(),
                 CardType::Resona => val.limit.to_option_integer(),
                 CardType::ResonaCraft => val.limit.to_option_integer(),
                 _ => None,
@@ -300,6 +301,7 @@ impl From<Card> for CreateCard {
             story: val.story.value,
             rarity: Some(val.rarity),
             timing: Some(val.time.to_bitset()),
+            card_type: 0,   // default
             url: None,
             skill_text: Some(normal_skills.join("\n")),
         }

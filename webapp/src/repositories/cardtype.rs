@@ -1,6 +1,6 @@
-use std::collections::HashMap;
 use crate::models::cardtype::CardTypeDb;
 use sqlx::{Pool, Postgres};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 pub struct CardTypeRepository {

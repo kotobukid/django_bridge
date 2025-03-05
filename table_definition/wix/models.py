@@ -121,7 +121,7 @@ class Card(models.Model):
     product = models.ForeignKey(
         Product, on_delete=models.CASCADE, null=True, blank=True
     )
-    card_type = models.ForeignKey(CardType, on_delete=models.CASCADE, null=True, blank=True)
+    card_type = models.IntegerField(verbose_name="カード種類", null=False, blank=False, default=0)
     power = models.CharField(verbose_name="パワー", max_length=5, null=True, blank=True)
     has_burst = models.BooleanField(verbose_name="バースト有無", default=False)
     skill_text = models.TextField(verbose_name="テキスト", null=True, blank=True)

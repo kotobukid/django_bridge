@@ -44,6 +44,7 @@ pub enum CardType {
     SpellCraft,
     Piece,
     PieceRelay,
+    PieceCraft,
     Token,
     Unknown,
 }
@@ -65,6 +66,7 @@ impl Display for CardType {
             CardType::SpellCraft => "スペル(クラフト)",
             CardType::Piece => "ピース",
             CardType::PieceRelay => "ピース(リレー)",
+            CardType::PieceCraft => "ピース(クラフト)",
             CardType::Token => "トークン",
             _ => "不明",
         };
@@ -72,9 +74,40 @@ impl Display for CardType {
     }
 }
 
+impl CardType {
+    pub fn code(&self) -> &str {
+        match &self {
+            CardType::Lrig => "lrig",
+            CardType::LrigAssist => "lrig_assist",
+            CardType::Arts => "arts",
+            CardType::Key => "key",
+            CardType::Signi => "signi",
+            CardType::Spell => "spell",
+            CardType::SpellCraft => "spell_craft",
+            CardType::Resona => "resona",
+            CardType::SigniCraft => "signi_craft",
+            CardType::ArtsCraft => "arts_craft",
+            CardType::ResonaCraft => "resona_craft",
+            CardType::Piece => "piece",
+            CardType::PieceRelay => "piece_relay",
+            CardType::PieceCraft => "piece_craft",
+            CardType::Token => "token",
+            _ => "token",
+        }
+    }
+}
+
+fn remove_tag_and_br(text: &str) -> String {
+    text.replace("<br>", "")
+        .replace("<br/>", "")
+        .replace("<br />", "")
+        .replace("\n", "")
+}
+
 pub fn detect_card_type(text: &str) -> CardType {
+    let text = remove_tag_and_br(text);
     #[allow(unreachable_patterns)]
-    match text {
+    match text.as_str() {
         "ルリグ" => CardType::Lrig,
         "アシストルリグ" => CardType::LrigAssist,
         "アーツ" => CardType::Arts,
@@ -82,12 +115,13 @@ pub fn detect_card_type(text: &str) -> CardType {
         "シグニ" => CardType::Signi,
         "スペル" => CardType::Spell,
         "レゾナ" => CardType::Resona,
-        "シグニ<br>\nクラフト" => CardType::SigniCraft,
-        "アーツ<br />\nクラフト" => CardType::ArtsCraft,
-        "シグニ<br>\nレゾナ<br>\nクラフト" => CardType::ResonaCraft,
-        "スペル<br />\nクラフト" => CardType::SpellCraft,
+        "シグニクラフト" => CardType::SigniCraft,
+        "アーツクラフト" => CardType::ArtsCraft,
+        "シグニレゾナクラフト" => CardType::ResonaCraft,
+        "スペルクラフト" => CardType::SpellCraft,
         "ピース" => CardType::Piece,
-        "ピース<br />\nリレー" => CardType::PieceRelay,
+        "ピースリレー" => CardType::PieceRelay,
+        "ピースクラフト" => CardType::PieceCraft,
         "コイン" => CardType::Token,
         "トークン" => CardType::Token,
         _ => CardType::Unknown,

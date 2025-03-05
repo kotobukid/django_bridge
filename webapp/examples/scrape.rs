@@ -52,8 +52,6 @@ async fn db(
     Ok(card_repo.upsert(item).await?)
 }
 
-
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     try_mkdir(Path::new("./text_cache")).unwrap();
@@ -70,15 +68,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut card_type_repo = CardTypeRepository::new(pool.clone());
     let _ = card_type_repo.create_cache().await;
 
-
-
     if let Ok(links) = links {
         for link in links {
             let pool = pool.clone();
             let card_no = extract_card_no(&link).unwrap();
 
             let dir = Path::new("./text_cache/single");
-            let cq: CardQuery = CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
+            let cq: CardQuery =
+                CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
 
             let text = if cq.check_cache_file_exists() {
                 println!("cache exists {card_no}");
@@ -97,15 +94,20 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     println!("{:?}", c);
                     match c {
                         Some(card) => {
-                            let cc: CreateCard = card.into();
+                            let ct = &card.card_type.code();
+                            let card_type_id = card_type_repo.find_by_code(ct).await;
+                            let card_type_id = card_type_id.unwrap_or(0);
+
+                            let mut cc: CreateCard = card.into();
+                            cc.card_type = card_type_id.to_string().parse::<i32>().unwrap();
 
                             db(pool, cc).await?;
-                        },
+                        }
                         None => {
                             eprintln!("card parse error[skip]: {}", card_no);
                         }
                     }
-                },
+                }
                 None => {
                     panic!("download error");
                 }

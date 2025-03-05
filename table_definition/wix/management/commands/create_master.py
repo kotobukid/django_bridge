@@ -58,6 +58,8 @@ def update_card_type():
         ('signi_craft', 'クラフトシグニ', 9),
         ('spell_craft', 'クラフトスペル', 10),
         ('piece_relay', 'リレーピース', 11),
+        ('piece_craft', 'クラフトピース', 12),
+        ('resona_craft', 'クラフトレゾナ', 13),
         ('token', 'トークン', 100),
         ('coin', 'コイン', 101),
     )
