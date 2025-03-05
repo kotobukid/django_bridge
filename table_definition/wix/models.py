@@ -118,9 +118,7 @@ class Card(models.Model):
     limit = models.IntegerField(verbose_name="リミット", null=True, blank=True)
     limit_ex = models.IntegerField(verbose_name="リミット消費", null=True, blank=True)
     klass = models.ManyToManyField(verbose_name="種族", to=Klass, blank=True)
-    product = models.ForeignKey(
-        Product, on_delete=models.CASCADE, null=True, blank=True
-    )
+    product = models.IntegerField(verbose_name="収録商品", null=False, blank=False, default=0)
     card_type = models.IntegerField(verbose_name="カード種類", null=False, blank=False, default=0)
     power = models.CharField(verbose_name="パワー", max_length=5, null=True, blank=True)
     has_burst = models.IntegerField(verbose_name="バースト有無", null=False, blank=False, default=0)  # バーストあり1，なし2、無関係0

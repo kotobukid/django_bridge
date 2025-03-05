@@ -302,6 +302,7 @@ impl From<Card> for CreateCard {
             rarity: Some(val.rarity),
             timing: Some(val.time.to_bitset()),
             card_type: 0,   // default
+            product: 0,     // default
             url: None,
             skill_text: Some(normal_skills.join("\n")),
         }

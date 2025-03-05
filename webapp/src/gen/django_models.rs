@@ -16,6 +16,7 @@ pub struct CardDb {
     pub level: Option<i32>,
     pub limit: Option<i32>,
     pub limit_ex: Option<i32>,
+    pub product: i32,
     pub card_type: i32,
     /// Max length: 5
     pub power: Option<String>,
@@ -46,6 +47,7 @@ pub struct CreateCard {
     pub level: Option<i32>,
     pub limit: Option<i32>,
     pub limit_ex: Option<i32>,
+    pub product: i32,
     pub card_type: i32,
     /// Max length: 5
     pub power: Option<String>,

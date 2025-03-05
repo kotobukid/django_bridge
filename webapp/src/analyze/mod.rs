@@ -39,6 +39,15 @@ impl ProductType {
             ProductType::SpecialCard => String::from("special"),
         }
     }
+
+    pub fn code(&self) -> String {
+        match self {
+            ProductType::Booster(code) => code.into(),
+            ProductType::Starter(code) => code.into(),
+            ProductType::PromotionCard => "promotion".into(),
+            ProductType::SpecialCard => "special".into(),
+        }
+    }
 }
 
 impl SearchQuery {

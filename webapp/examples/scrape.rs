@@ -7,7 +7,7 @@ use webapp::analyze::{
     cache_product_index, collect_card_detail_links, try_mkdir, CardQuery, ProductType,
 };
 
-use webapp::analyze::wixoss::{card::Signi, Card, WixossCard};
+use webapp::analyze::wixoss::Card;
 
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
@@ -15,10 +15,8 @@ use sqlx::{Pool, Postgres};
 use std::env;
 
 use std::sync::Arc;
-use webapp::gen::django_models::WixCardKlassRel;
 use webapp::models::card::CreateCard;
-use webapp::models::klass::create_klass;
-use webapp::repositories::{CardRepository, CardTypeRepository, KlassRelRepository};
+use webapp::repositories::{CardRepository, CardTypeRepository};
 
 async fn create_db() -> Pool<Postgres> {
     from_filename("../.env").ok();
@@ -56,9 +54,8 @@ async fn db(
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     try_mkdir(Path::new("./text_cache")).unwrap();
 
-    // let product_type = ProductType::Starter(String::from("WDA-F03"));
-    let product_type = ProductType::Booster(String::from("WXDi-P16"));
-    // let product_type = ProductType::Booster(String::from("WX24-P3"));
+    // let product_type = ProductType::Booster(String::from("WXDi-P15"));
+    let product_type = ProductType::Booster(String::from("WXDi-D09"));
 
     cache_product_index(&product_type, 1).await.unwrap();
 
@@ -67,6 +64,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let pool = Arc::new(create_db().await);
     let mut card_type_repo = CardTypeRepository::new(pool.clone());
     let _ = card_type_repo.create_cache().await;
+
+    let mut product_repo = webapp::repositories::ProductRepository::new(pool.clone());
+    product_repo.create_cache().await;
 
     if let Ok(links) = links {
         for link in links {
@@ -98,8 +98,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let card_type_id = card_type_repo.find_by_code(ct).await;
                             let card_type_id = card_type_id.unwrap_or(0);
 
+                            let product_id = product_repo
+                                .get_id_by_code(&product_type.code())
+                                .await
+                                .unwrap_or(0);
                             let mut cc: CreateCard = card.into();
                             cc.card_type = card_type_id.to_string().parse::<i32>().unwrap();
+                            cc.product = product_id.to_string().parse::<i32>().unwrap();
 
                             db(pool, cc).await?;
                         }
