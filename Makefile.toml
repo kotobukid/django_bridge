@@ -23,14 +23,40 @@ command = "npm"
 args = ["run", "generate"]
 
 [tasks.wasm]
-description = "build wasm by wasm-pack(debug build)"
-cwd = "./datapack"
-command = "wasm-pack"
-args = ["build", "--target", "web", "--out-dir", "../front/public/pkg"]
-
-[tasks.wasm-release]
-description = "build wasm by wasm-pack(release build)"
-cwd = "./datapack"
-command = "wasm-pack"
-args = ["build", "--release", "--target", "web", "--out-dir", "../front/public/pkg"]
-
+#description = "build wasm by wasm-pack (debug build) and organize files"
+#script = [
+#    "mkdir -p ./front/static/pkg",
+#    "cd datapack && wasm-pack build --target web --out-dir ../front/public/pkg",
+#    "mv ./front/public/pkg/datapack.d.ts ./front/static/pkg/datapack.d.ts",
+#    "mv ./front/public/pkg/datapack.js ./front/static/pkg/datapack.js",
+#    "mv ./front/public/pkg/datapack_bg.wasm.d.ts ./front/static/pkg/datapack_bg.wasm.d.ts",
+#    "mv ./front/public/pkg/package.json ./front/static/pkg/package.json"
+#]
+#
+#[tasks.wasm2]
+#description = "build wasm by wasm-pack (debug build) and organize files"
+#script = '''
+#bash -c "
+#mkdir -p ./front/static/pkg
+#cd datapack
+#wasm-pack build --target web --out-dir ../front/public/pkg
+#cd ..
+#mv ./front/public/pkg/datapack.d.ts ./front/static/pkg/datapack.d.ts
+#mv ./front/public/pkg/datapack.js ./front/static/pkg/datapack.js
+#mv ./front/public/pkg/datapack_bg.wasm.d.ts ./front/static/pkg/datapack_bg.wasm.d.ts
+#mv ./front/public/pkg/package.json ./front/static/pkg/package.json
+#"
+#'''
+#
+#
+#[tasks.wasm3]
+description = "build wasm by wasm-pack (debug build) and organize files"
+script = '''
+mkdir front\\static\\pkg >nul 2>&1
+cd datapack && wasm-pack build --target web --out-dir ..\\front\\public\\pkg && cd ..
+move /Y front\\public\\pkg\\datapack.d.ts front\\static\\pkg\\datapack.d.ts
+move /Y front\\public\\pkg\\datapack.js front\\static\\pkg\\datapack.js
+move /Y front\\public\\pkg\\datapack_bg.wasm.d.ts front\\static\\pkg\\datapack_bg.wasm.d.ts
+move /Y front\\public\\pkg\\package.json front\\static\\pkg\\package.json
+copy /Y front\\public\\pkg\\.gitignore front\\static\\pkg\\.gitignore
+'''

@@ -8,11 +8,12 @@ const message = ref('default');
 const runWasm = async () => {
   try {
     // Wasmパッケージを動的にインポート
-    const { default: init, greet } = await import('/static/pkg/datapack.js');
+    const { default: init, greet, say_goodbye } = await import('/static/pkg/datapack.js');
 
     // 初期化を呼び出し (WasmファイルのURLを暗黙的に指定)
     await init('/pkg/datapack_bg.wasm');
 
+    console.log(say_goodbye())
 
     // Wasm関数を実行 (例: greet)
     message.value = greet('Nuxt');
