@@ -1,5 +1,5 @@
-import {defineStore, StoreDefinition} from "pinia";
-import type {CardDataClient} from '../../ex/types/card';
+import {defineStore, type StoreDefinition} from "pinia";
+import type {CardDataClient} from '../types/card';
 import axios, {type AxiosResponse} from "axios";
 
 type State = {

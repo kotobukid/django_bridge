@@ -1,8 +1,8 @@
-import type {CardDataClient} from "../ex/types/card";
-import {Format, Story} from "../ex/types/card";
-import {FORMAT} from "../ex/constants";
+import type {Format, Story, CardDataClient} from "./types/card";
+import {FORMAT} from "./constants";
 
 const create_default_card_data_client = () => {
+    // @ts-ignore
     const cdc: CardDataClient = {
         slug: '',
         name: '',

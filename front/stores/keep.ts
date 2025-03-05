@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import type {CardDataClient, Deck} from '../../ex/types/card';
+import type {CardDataClient, Deck} from '../types/card';
 import axios, {type AxiosResponse} from 'axios';
 
 type KeptCard = {

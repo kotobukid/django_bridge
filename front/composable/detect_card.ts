@@ -1,4 +1,4 @@
-import type {CardDataClient} from '../../ex/types/card';
+import type {CardDataClient} from '../types/card';
 import {useCardStore} from "../stores/cards";
 
 export default function useDetectCard() {

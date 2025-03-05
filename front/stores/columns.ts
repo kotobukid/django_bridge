@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import type {CardDataClient} from '../../ex/types/card'
+import type {CardDataClient} from '../types/card'
 
 type Column = {
     label: string,

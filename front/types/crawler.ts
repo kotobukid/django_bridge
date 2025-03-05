@@ -27,6 +27,6 @@ type SendRequestAndCacheOption<T> = {
 }
 
 export {
-    SearchCondition,
-    SendRequestAndCacheOption
+    type SearchCondition,
+    type SendRequestAndCacheOption
 };

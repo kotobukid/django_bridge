@@ -1,6 +1,6 @@
 import {defineStore} from "pinia";
 import axios, {type AxiosResponse} from "axios";
-import {type User} from "../../ex/types/app"
+import {type User} from "../types/app"
 
 type State = {
     is_admin: boolean,
