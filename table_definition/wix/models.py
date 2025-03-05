@@ -123,7 +123,7 @@ class Card(models.Model):
     )
     card_type = models.IntegerField(verbose_name="カード種類", null=False, blank=False, default=0)
     power = models.CharField(verbose_name="パワー", max_length=5, null=True, blank=True)
-    has_burst = models.BooleanField(verbose_name="バースト有無", default=False)
+    has_burst = models.IntegerField(verbose_name="バースト有無", null=False, blank=False, default=0)  # バーストあり1，なし2、無関係0
     skill_text = models.TextField(verbose_name="テキスト", null=True, blank=True)
     burst_text = models.TextField(verbose_name="テキスト(バースト)", null=True, blank=True)
     format = models.IntegerField(verbose_name="フォーマット", null=False, blank=False, default=0, choices=(

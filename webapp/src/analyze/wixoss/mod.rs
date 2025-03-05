@@ -380,8 +380,15 @@ impl Card {
         self.features.contains(&card_feature)
     }
 
-    pub fn burst(&self) -> bool {
-        self.features.contains(&CardFeature::LifeBurst)
+    pub fn burst(&self) -> i32 {
+        if self.card_type == CardType::Signi || self.card_type == CardType::Spell {
+            match self.skill.get_life_burst_skills().len() > 0 {
+                true => 1,
+                false => 2,
+            }
+        } else {
+            0
+        }
     }
 
     pub fn get_skill_texts(&self) -> (Vec<CardSkill>, Vec<CardSkill>) {

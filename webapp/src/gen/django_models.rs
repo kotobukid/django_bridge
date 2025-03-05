@@ -19,7 +19,7 @@ pub struct CardDb {
     pub card_type: i32,
     /// Max length: 5
     pub power: Option<String>,
-    pub has_burst: bool,
+    pub has_burst: i32,
     pub skill_text: Option<String>,
     pub burst_text: Option<String>,
     pub format: i32,
@@ -49,7 +49,7 @@ pub struct CreateCard {
     pub card_type: i32,
     /// Max length: 5
     pub power: Option<String>,
-    pub has_burst: bool,
+    pub has_burst: i32,
     pub skill_text: Option<String>,
     pub burst_text: Option<String>,
     pub format: i32,
