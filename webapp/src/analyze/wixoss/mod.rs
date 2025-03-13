@@ -801,6 +801,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             "*MULTI ENER*",
             features![CardFeature::MultiEner],
         ),
+        (
+            r"（エナコストを支払う際、このカードは.+１つとして支払える）",
+            false,
+            "*DUAL COLOR ENER*",
+            features![CardFeature::DualColorEner],
+        ),
         (r"チャーム", false, "*CHARM*", features![CardFeature::Charm]),
         (
             r"ダブルクラッシュ",
@@ -914,6 +920,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::EraseSkill],
         ),
         (
+            r"それを《サーバント　ＺＥＲＯ》にする",
+            false,
+            "*ERASE SKILL / SERVANT ZERO*",
+            features![CardFeature::EraseSkill],
+        ),
+        (
             r"アタックできない",
             false,
             "*NON ATTACKABLE*",
@@ -950,7 +962,19 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::PowerUp],
         ),
         (
+            r"このシグニのパワーは＋",
+            false,
+            "*POWER UP*",
+            features![CardFeature::PowerUp],
+        ),
+        (
             r"(シグニ|それ)のパワーを－",
+            false,
+            "*POWER DOWN*",
+            features![CardFeature::PowerDown],
+        ),
+        (
+            r"(シグニ|それ)のパワーをこの方法で.+－",
             false,
             "*POWER DOWN*",
             features![CardFeature::PowerDown],
@@ -992,10 +1016,22 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::Salvage],
         ),
         (
+            r"スペル.+枚をコストを支払わずに使用する",
+            false,
+            "*FREE SPELL*",
+            features![CardFeature::FreeSpell],
+        ),
+        (
             r"このシグニがアタックしたとき.+バニッシュする",
             false,
             "*BANISH ON ATTACK*",
             features![CardFeature::BanishOnAttack],
+        ),
+        (
+            r"ルリグデッキに加える。（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）",
+            false,
+            "*CRAFT RESONA*",
+            features![CardFeature::Craft],
         ),
     ];
 

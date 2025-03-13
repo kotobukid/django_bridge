@@ -101,6 +101,9 @@ pub enum CardFeature {
     SalvageSpell,
     BanishOnAttack,
     Shoot,
+    LimitSigni,
+    FreeSpell,
+    DualColorEner,
 }
 
 // CardFeature に対応する FeatureTag を取得する
@@ -115,6 +118,7 @@ impl CardFeature {
             | CardFeature::Damage
             | CardFeature::Penetrate    // ガード不可
             | CardFeature::UnGuardable    // ガード不可  todo　確認
+            | CardFeature::LimitSigni
                 => FeatureTag::Lethal,
 
             // Offensive
@@ -171,6 +175,8 @@ impl CardFeature {
             | CardFeature::BottomCheck
             | CardFeature::TopCheck
             | CardFeature::Charge
+            | CardFeature::FreeSpell
+            | CardFeature::DualColorEner
                 => FeatureTag::Enhance,
 
             CardFeature::Acce
@@ -269,6 +275,9 @@ impl Display for CardFeature {
             CardFeature::SalvageSpell => "スペル回収",
             CardFeature::BanishOnAttack => "アタック時バニッシュ",
             CardFeature::Shoot => "シュート",
+            CardFeature::LimitSigni => "配置禁止",
+            CardFeature::FreeSpell => "スペル割引",
+            CardFeature::DualColorEner => "多色エナ",
             // _ => "未処理フィーチャー",
         };
         write!(f, "{}", label)
@@ -352,6 +361,9 @@ impl CardFeature {
             CardFeature::SalvageSpell => (0, 1 << 4),
             CardFeature::BanishOnAttack => (0, 1 << 5),
             CardFeature::Shoot => (0, 1 << 6),
+            CardFeature::LimitSigni => (0, 1 << 7),
+            CardFeature::FreeSpell => (0, 1 << 8),
+            CardFeature::DualColorEner => (0, 1 << 9),
         }
     }
 }
