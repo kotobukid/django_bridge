@@ -1,6 +1,18 @@
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
 
+// 大分類を表す FeatureTag
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum FeatureTag {
+    Lethal,     // 最後の1点を取れる
+    Offensive,  // 攻撃系
+    Disturb,    // 妨害系
+    Endure,     // 防御系
+    Enhance,    // 潤滑系
+    Others,     // その他
+}
+
+
 #[macro_export]
 macro_rules! features {
         ($($feature:expr),* $(,)?) => {
@@ -37,7 +49,7 @@ pub enum CardFeature {
     Charge,
     EnerAttack,
     Trash,
-    Ener,
+    Ener,   // エナ送り
     PowerUp,
     PowerDown,
     Bounce,
@@ -90,6 +102,99 @@ pub enum CardFeature {
     BanishOnAttack,
     Shoot,
 }
+
+// CardFeature に対応する FeatureTag を取得する
+impl CardFeature {
+    pub fn tag(&self) -> FeatureTag {
+        match self {
+            // Lethal
+            CardFeature::AdditionalAttack
+            | CardFeature::Assassin
+            | CardFeature::BanishOnAttack
+            | CardFeature::SLancer
+            | CardFeature::Damage
+            | CardFeature::Penetrate    // ガード不可
+            | CardFeature::UnGuardable    // ガード不可  todo　確認
+                => FeatureTag::Lethal,
+
+            // Offensive
+            CardFeature::DoubleCrush
+            | CardFeature::TripleCrush
+            | CardFeature::Lancer
+            | CardFeature::LifeCrush
+            | CardFeature::LifeTrash
+            | CardFeature::Banish
+            | CardFeature::DeckBounce
+            | CardFeature::Bounce
+            | CardFeature::PowerDown
+            | CardFeature::Ener
+            | CardFeature::Trash
+            | CardFeature::Up
+                => FeatureTag::Offensive,
+
+            // Disturb
+            CardFeature::EnerAttack
+            | CardFeature::Shoot
+            | CardFeature::EraseSkill
+            | CardFeature::Position
+            | CardFeature::Drop
+            | CardFeature::Freeze
+            | CardFeature::RandomDiscard
+            | CardFeature::DiscardOpponent
+                => FeatureTag::Disturb,
+
+            // Endure
+            CardFeature::Guard
+            | CardFeature::Invulnerable
+            | CardFeature::Shadow
+            | CardFeature::NonAttackable
+            | CardFeature::Down
+            | CardFeature::OnGuard
+            | CardFeature::Barrier
+            | CardFeature::Untouchable
+            | CardFeature::CancelDamage
+            | CardFeature::Vanilla
+            | CardFeature::AddLife
+            | CardFeature::AttackNoEffect
+            | CardFeature::PowerUp
+                => FeatureTag::Endure,
+
+            // Enhance
+            CardFeature::LifeBurst
+            | CardFeature::Draw
+            | CardFeature::Salvage
+            | CardFeature::SalvageSpell
+            | CardFeature::Reanimate
+            | CardFeature::SeekTop
+            | CardFeature::Recollect
+            | CardFeature::MultiEner
+            | CardFeature::BottomCheck
+            | CardFeature::TopCheck
+            | CardFeature::Charge
+                => FeatureTag::Enhance,
+
+            CardFeature::Acce
+            | CardFeature::Rise
+            | CardFeature::Craft
+            | CardFeature::Charm
+            | CardFeature::LrigTrash
+            | CardFeature::OnLifeCrush
+            | CardFeature::OnBurst
+            | CardFeature::Exceed
+            | CardFeature::OnExceed
+            | CardFeature::Awake
+            | CardFeature::OnTouch
+            | CardFeature::OnBanish
+            | CardFeature::OnArts
+            | CardFeature::OnPiece
+            | CardFeature::OnSpell
+            | CardFeature::OnRefresh
+            | CardFeature::OnDrop
+                => FeatureTag::Others,
+        }
+    }
+}
+
 
 impl Display for CardFeature {
     #[allow(unreachable_patterns)]
@@ -165,7 +270,7 @@ impl Display for CardFeature {
             CardFeature::SalvageSpell => "スペル回収",
             CardFeature::BanishOnAttack => "アタック時バニッシュ",
             CardFeature::Shoot => "シュート",
-            _ => "未処理フィーチャー",
+            // _ => "未処理フィーチャー",
         };
         write!(f, "{}", label)
     }
