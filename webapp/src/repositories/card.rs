@@ -75,7 +75,9 @@ impl CardRepository {
                 url = $16,
                 timing = $17,
                 card_type = $18,
-                product = $19
+                product = $19,
+                feature_bits1 = $20,
+                feature_bits2 = $21
             WHERE code = $2
             RETURNING *"#,
             )
@@ -98,6 +100,8 @@ impl CardRepository {
             .bind(source.timing)
             .bind(source.card_type)
             .bind(source.product)
+            .bind(source.feature_bits1)
+            .bind(source.feature_bits2)
             .fetch_one(&*self.db_connector)
             .await?
         } else {
@@ -106,10 +110,10 @@ impl CardRepository {
                 r#"INSERT INTO wix_card (
                 name, code, pronunciation, color, cost, level, "limit",
                 limit_ex, power, has_burst, skill_text, burst_text,
-                format, story, rarity, url, timing, card_type, product
+                format, story, rarity, url, timing, card_type, product, feature_bits1, feature_bits2
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-                $12, $13, $14, $15, $16, $17, $18, $19
+                $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
             ) RETURNING *"#,
             )
             .bind(source.name)
@@ -131,6 +135,8 @@ impl CardRepository {
             .bind(source.timing)
             .bind(source.card_type)
             .bind(source.product)
+            .bind(source.feature_bits1)
+            .bind(source.feature_bits2)
             .fetch_one(&*self.db_connector)
             .await?
         };

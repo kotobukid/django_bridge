@@ -140,6 +140,9 @@ class Card(models.Model):
                           null=True, blank=True
                           )
 
+    feature_bits1 = models.BigIntegerField(verbose_name="効果1群", null=False, blank=False, default=0)
+    feature_bits2 = models.BigIntegerField(verbose_name="効果2群", null=False, blank=False, default=0)
+
     def __str__(self):
         return self.name
 

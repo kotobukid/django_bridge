@@ -1,11 +1,11 @@
 use crate::analyze::wixoss::card::CardType;
 use crate::analyze::wixoss::color::Colors;
-use crate::analyze::wixoss::feature::CardFeature;
+use crate::analyze::wixoss::feature::{CardFeature, HashSetToBits};
 use crate::analyze::wixoss::format::Format;
 use crate::analyze::wixoss::timing::TimingList;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story,
-    split_by_break, Card, OptionString, Skills, WixossCard,
+    split_by_break, Card, OptionString, Skills, WixossCard
 };
 use scraper::{Html, Selector};
 use std::collections::HashSet;
@@ -31,6 +31,8 @@ pub struct Arts {
     rarity: String,
     skill: Skills,
     features: HashSet<CardFeature>,
+    feature_bits1: i64,
+    feature_bits2: i64
 }
 
 impl From<Arts> for Card {
@@ -54,6 +56,8 @@ impl From<Arts> for Card {
             rarity: val.rarity.clone(),
             skill: val.skill.clone(),
             features: val.features.clone(),
+            feature_bits1: val.feature_bits1,
+            feature_bits2: val.feature_bits2,
         }
     }
 }
@@ -101,6 +105,8 @@ impl WixossCard for Arts {
 
         let (skill, features) = parse_card_skill(card_skills.clone());
 
+        let feature_bits = features.to_bits();
+
         Self {
             no: card_no,
             name: card_name.0,
@@ -116,6 +122,8 @@ impl WixossCard for Arts {
             rarity: card_rarity,
             skill,
             features,
+            feature_bits1: feature_bits.0,
+            feature_bits2: feature_bits.1,
         }
     }
 }

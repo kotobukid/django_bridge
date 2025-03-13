@@ -1,17 +1,17 @@
 use serde::Serialize;
+use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 
 // 大分類を表す FeatureTag
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FeatureTag {
-    Lethal,     // 最後の1点を取れる
-    Offensive,  // 攻撃系
-    Disturb,    // 妨害系
-    Endure,     // 防御系
-    Enhance,    // 潤滑系
-    Others,     // その他
+    Lethal,    // 最後の1点を取れる
+    Offensive, // 攻撃系
+    Disturb,   // 妨害系
+    Endure,    // 防御系
+    Enhance,   // 潤滑系
+    Others,    // その他
 }
-
 
 #[macro_export]
 macro_rules! features {
@@ -49,7 +49,7 @@ pub enum CardFeature {
     Charge,
     EnerAttack,
     Trash,
-    Ener,   // エナ送り
+    Ener, // エナ送り
     PowerUp,
     PowerDown,
     Bounce,
@@ -195,7 +195,6 @@ impl CardFeature {
     }
 }
 
-
 impl Display for CardFeature {
     #[allow(unreachable_patterns)]
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -277,9 +276,9 @@ impl Display for CardFeature {
 }
 
 impl CardFeature {
-    pub fn to_bit(&self) -> (u64, u64) {
+    pub fn to_bit(&self) -> (i64, i64) {
         match self {
-            CardFeature::DoubleCrush => (1_u64, 0),
+            CardFeature::DoubleCrush => (1_i64, 0),
             CardFeature::TripleCrush => (1 << 1, 0),
             CardFeature::DiscardOpponent => (1 << 2, 0),
             CardFeature::RandomDiscard => (1 << 3, 0),
@@ -344,8 +343,9 @@ impl CardFeature {
             CardFeature::Recollect => (1 << 60, 0),
             CardFeature::SeekTop => (1 << 61, 0),
             CardFeature::EraseSkill => (1 << 62, 0),
-            CardFeature::CancelDamage => (1 << 63, 0),
 
+            // i64 なので63ビット使用可能、0から62で63個
+            CardFeature::CancelDamage => (0, 1_i64 << 0),
             CardFeature::Reanimate => (0, 1 << 1),
             CardFeature::AdditionalAttack => (0, 1 << 2),
             CardFeature::UnGuardable => (0, 1 << 3),
@@ -353,5 +353,21 @@ impl CardFeature {
             CardFeature::BanishOnAttack => (0, 1 << 5),
             CardFeature::Shoot => (0, 1 << 6),
         }
+    }
+}
+
+pub trait HashSetToBits {
+    fn to_bits(&self) -> (i64, i64);
+}
+
+impl HashSetToBits for HashSet<CardFeature> {
+    fn to_bits(&self) -> (i64, i64) {
+        let mut bits = (0, 0);
+        for feature in self {
+            let (bit1, bit2) = feature.to_bit();
+            bits.0 |= bit1;
+            bits.1 |= bit2;
+        }
+        bits
     }
 }

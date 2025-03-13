@@ -263,6 +263,8 @@ pub struct Card {
     rarity: String,
     skill: Skills,
     features: HashSet<CardFeature>,
+    feature_bits1: i64,
+    feature_bits2: i64,
 }
 
 impl From<Card> for CreateCard {
@@ -306,6 +308,8 @@ impl From<Card> for CreateCard {
             product: 0,   // default
             url: None,
             skill_text: Some(normal_skills.join("\n")),
+            feature_bits1: val.feature_bits1,
+            feature_bits2: val.feature_bits2,
         }
     }
 }
@@ -492,6 +496,8 @@ pub struct Token {
     rarity: String,
     skill: Skills,
     features: HashSet<CardFeature>,
+    feature_bits1: i64,
+    feature_bits2: i64,
 }
 
 impl From<Token> for Card {
@@ -515,6 +521,8 @@ impl From<Token> for Card {
             rarity: val.rarity.clone(),
             skill: val.skill.clone(),
             features: val.features.clone(),
+            feature_bits1: val.feature_bits1,
+            feature_bits2: val.feature_bits2,
         }
     }
 }
@@ -580,6 +588,8 @@ impl WixossCard for Token {
             rarity: card_rarity,
             skill,
             features,
+            feature_bits1: 0,   // todo
+            feature_bits2: 0,
         }
     }
 }

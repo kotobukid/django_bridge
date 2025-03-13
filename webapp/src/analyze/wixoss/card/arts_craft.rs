@@ -31,6 +31,8 @@ pub struct ArtsCraft {
     rarity: String,
     skill: Skills,
     features: HashSet<CardFeature>,
+    feature_bits1: i64,
+    feature_bits2: i64,
 }
 
 impl From<ArtsCraft> for Card {
@@ -54,6 +56,8 @@ impl From<ArtsCraft> for Card {
             rarity: val.rarity.clone(),
             skill: val.skill.clone(),
             features: val.features.clone(),
+            feature_bits1: val.feature_bits1,
+            feature_bits2: val.feature_bits2,
         }
     }
 }
@@ -116,6 +120,8 @@ impl WixossCard for ArtsCraft {
             rarity: card_rarity,
             skill,
             features,
+            feature_bits1: 0,   // todo
+            feature_bits2: 0,
         }
     }
 }

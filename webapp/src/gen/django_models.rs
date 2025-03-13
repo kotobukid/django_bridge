@@ -30,6 +30,8 @@ pub struct CardDb {
     pub rarity: Option<String>,
     pub timing: Option<i32>,
     pub url: Option<String>,
+    pub feature_bits1: i64,
+    pub feature_bits2: i64,
 }
 
 #[allow(dead_code)]
@@ -61,6 +63,8 @@ pub struct CreateCard {
     pub rarity: Option<String>,
     pub timing: Option<i32>,
     pub url: Option<String>,
+    pub feature_bits1: i64,
+    pub feature_bits2: i64,
 }
 
 #[allow(dead_code)]
