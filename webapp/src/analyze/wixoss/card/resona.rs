@@ -1,6 +1,6 @@
 use crate::analyze::wixoss::card::CardType;
 use crate::analyze::wixoss::color::Colors;
-use crate::analyze::wixoss::feature::CardFeature;
+use crate::analyze::wixoss::feature::{CardFeature, HashSetToBits};
 use crate::analyze::wixoss::format::Format;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story,
@@ -104,6 +104,7 @@ impl WixossCard for Resona {
         }
 
         let (skill, features) = parse_card_skill(card_skills.clone());
+        let feature_bits = features.to_bits();
 
         // todo: 出現条件とタイミングがSkillにあるので詳細にパースする必要あり
 
@@ -127,8 +128,8 @@ impl WixossCard for Resona {
             rarity: card_rarity,
             skill,
             features,
-            feature_bits1: 0,   // todo
-            feature_bits2: 0,
+            feature_bits1: feature_bits.0,
+            feature_bits2: feature_bits.1,
         }
     }
 }
