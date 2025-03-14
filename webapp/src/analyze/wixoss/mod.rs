@@ -1152,6 +1152,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             "*PREVENT GROW COST*",
             features![CardFeature::PreventGrowCost],
         ),
+        (
+            any_num!["シグニを", "枚まで対象とし、それを場に出す"],
+            true,
+            "*PUT BLOCKER*",
+            features![CardFeature::PutSigniDefense, CardFeature::PutSigniOffense,],
+        ),
     ];
 
     let replaced_text = remove_patterns.iter().fold(text, |current_text, pat| {
