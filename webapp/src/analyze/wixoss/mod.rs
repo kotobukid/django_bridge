@@ -889,6 +889,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::Banish],
         ),
         (
+            r"シグニ.+エナゾーンに置",
+            false,
+            "*ENER*",
+            features![CardFeature::Ener],
+        ),
+        (
             r"凍結する",
             false,
             "*FREEZE*",
