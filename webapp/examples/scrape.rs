@@ -14,6 +14,7 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::env;
 
+use clap::Parser;
 use std::sync::Arc;
 use webapp::models::card::CreateCard;
 use webapp::repositories::{CardRepository, CardTypeRepository};
@@ -50,13 +51,28 @@ async fn db(
     Ok(card_repo.upsert(item).await?)
 }
 
+#[derive(Parser, Debug)]
+struct Args {
+    product_type: String, // `#[clap(short,` long)]    を付けなければ位置指定となる
+    code: String,
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
+    let product_code = args.code;
+
     try_mkdir(Path::new("./text_cache")).unwrap();
 
-    // let product_type = ProductType::Booster(String::from("WXDi-P15"));
-    // let product_type = ProductType::Booster(String::from("WXDi-P11"));
-    let product_type = ProductType::Booster(String::from("WXDi-D09"));
+    let product_type = match args.product_type.to_ascii_lowercase().as_str() {
+        "starter" => ProductType::Starter(product_code),
+        "booster" => ProductType::Booster(product_code),
+        _ => {
+            panic!("invalid product type");
+        }
+    };
+
+    // let product_type = ProductType::Starter(String::from("WXDi-D09"));
     // let product_type = ProductType::Booster(String::from("WX24-P4"));
 
     cache_product_index(&product_type, 1).await.unwrap();
