@@ -588,7 +588,7 @@ impl WixossCard for Token {
             rarity: card_rarity,
             skill,
             features,
-            feature_bits1: 0,   // todo
+            feature_bits1: 0,
             feature_bits2: 0,
         }
     }
