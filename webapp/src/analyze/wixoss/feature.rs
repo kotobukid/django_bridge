@@ -104,6 +104,11 @@ pub enum CardFeature {
     LimitSigni,
     FreeSpell,
     DualColorEner,
+    GainCoin,
+    BetCoin,
+    HandCost,     // 自分自身が捨てる
+    AssistCost,   // アシストをダウン
+    Inherit,      // ルリグトラッシュのルリグを継承
 }
 
 // CardFeature に対応する FeatureTag を取得する
@@ -177,6 +182,9 @@ impl CardFeature {
             | CardFeature::Charge
             | CardFeature::FreeSpell
             | CardFeature::DualColorEner
+            | CardFeature::GainCoin
+            | CardFeature::BetCoin
+            | CardFeature::AssistCost
                 => FeatureTag::Enhance,
 
             CardFeature::Acce
@@ -196,6 +204,8 @@ impl CardFeature {
             | CardFeature::OnSpell
             | CardFeature::OnRefresh
             | CardFeature::OnDrop
+            | CardFeature::HandCost
+            | CardFeature::Inherit
                 => FeatureTag::Others,
         }
     }
@@ -278,6 +288,11 @@ impl Display for CardFeature {
             CardFeature::LimitSigni => "配置禁止",
             CardFeature::FreeSpell => "スペル割引",
             CardFeature::DualColorEner => "多色エナ",
+            CardFeature::GainCoin => "コイン獲得",
+            CardFeature::BetCoin => "ベット",
+            CardFeature::HandCost => "手札コスト",
+            CardFeature::AssistCost => "アシストダウン",
+            CardFeature::Inherit => "ルリグ能力継承",
             // _ => "未処理フィーチャー",
         };
         write!(f, "{}", label)
@@ -364,6 +379,11 @@ impl CardFeature {
             CardFeature::LimitSigni => (0, 1 << 7),
             CardFeature::FreeSpell => (0, 1 << 8),
             CardFeature::DualColorEner => (0, 1 << 9),
+            CardFeature::GainCoin => (0, 1 << 10),
+            CardFeature::BetCoin => (0, 1 << 11),
+            CardFeature::HandCost => (0, 1 << 12),
+            CardFeature::AssistCost => (0, 1 << 13),
+            CardFeature::Inherit => (0, 1 << 14),
         }
     }
 }

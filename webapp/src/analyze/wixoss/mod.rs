@@ -755,9 +755,21 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![],
         ),
         (
+            r"（ゲームを開始する際に、センタールリグでないルリグを表向きにしても《コインアイコン》を得られない）",
+            true,
+            "*GAIN NO COINS*",
+            features![],
+        ),
+        (
+            r"《コインアイコン》を得る",
+            true,
+            "*GAIN COINS*",
+            features![CardFeature::GainCoin],
+        ),
+        (
             r"ガードアイコン",
             true,
-            "ガード",
+            "*GUARD*",
             features![CardFeature::Guard],
         ),
         (
@@ -797,7 +809,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::BottomCheck],
         ),
         (
-            r"それをトラッシュに置",
+            r"(それ|シグニ)をトラッシュに置",
             false,
             "*TRASH*",
             features![CardFeature::Trash],
@@ -805,13 +817,13 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
         (
             r"シグニバリア",
             false,
-            "*BARRIER*",
+            "*BARRIER SIGNI*",
             features![CardFeature::Barrier],
         ),
         (
             r"ルリグバリア",
             false,
-            "*BARRIER*",
+            "*BARRIER LRIG*",
             features![CardFeature::Barrier],
         ),
         // (r"がアタックしたとき", false, "*ON ATTACK*", features![CardFeature::OnAttack]),
@@ -835,7 +847,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
         ),
         (
             r"（エナコストを支払う際、このカードは.+１つとして支払える）",
-            false,
+            true,
             "*DUAL COLOR ENER*",
             features![CardFeature::DualColorEner],
         ),
@@ -1020,7 +1032,13 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::PowerUp],
         ),
         (
-            r"(シグニ|それ)のパワーを－",
+            r"(シグニ|それ|それら)のパワーを＋",
+            false,
+            "*POWER UP*",
+            features![CardFeature::PowerUp],
+        ),
+        (
+            r"(シグニ|それ|それら)のパワーを－",
             false,
             "*POWER DOWN*",
             features![CardFeature::PowerDown],
@@ -1102,6 +1120,18 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             false,
             "*HAND COST*",
             features![CardFeature::HandCost],
+        ),
+        (
+            r"アップ状態のルリグを好きな数ダウンする",
+            false,
+            "*ASSIST COST*",
+            features![CardFeature::AssistCost],
+        ),
+        (
+            r"このルリグはあなたのルリグトラッシュにあるレベル３の＜.+＞と同じカード名としても扱い、そのルリグの【自】能力を得る。",
+            true,
+            "*Inherit*",
+            features![CardFeature::Inherit],
         ),
     ];
 
