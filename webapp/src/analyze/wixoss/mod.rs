@@ -877,6 +877,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::SLancer],
         ),
         (
+            any_num!["対戦相手のシグニ", "体を対象とし、それをゲームから除外する"],
+            false,
+            "*REMOVE SIGNI*",
+            features![CardFeature::RemoveSigni],
+        ),
+        (
             r"バニッシュ",
             false,
             "*BANISH*",

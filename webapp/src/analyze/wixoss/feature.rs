@@ -42,7 +42,7 @@ pub enum CardFeature {
     OnRefresh,
     Lancer,
     SLancer,
-    Penetrate,
+    RemoveSigni,
     NonAttackable,
     Down,
     Up,
@@ -121,7 +121,7 @@ impl CardFeature {
             | CardFeature::BanishOnAttack
             | CardFeature::SLancer
             | CardFeature::Damage
-            | CardFeature::Penetrate    // ガード不可
+            | CardFeature::RemoveSigni    // ガード不可
             | CardFeature::UnGuardable    // ガード不可  todo　確認
             | CardFeature::LimitSigni
                 => FeatureTag::Lethal,
@@ -227,7 +227,7 @@ impl Display for CardFeature {
             CardFeature::OnRefresh => "リフレッシュ時",
             CardFeature::Lancer => "ランサー",
             CardFeature::SLancer => "Sランサー",
-            CardFeature::Penetrate => "ガード不可",
+            CardFeature::RemoveSigni => "シグニ除外",
             CardFeature::NonAttackable => "アタック不可",
             CardFeature::Down => "ダウン",
             CardFeature::Up => "アップ",
@@ -315,7 +315,7 @@ impl CardFeature {
             CardFeature::OnRefresh => (1 << 9, 0),
             CardFeature::Lancer => (1 << 10, 0),
             CardFeature::SLancer => (1 << 11, 0),
-            CardFeature::Penetrate => (1 << 12, 0),
+            CardFeature::RemoveSigni => (1 << 12, 0),
             CardFeature::NonAttackable => (1 << 13, 0),
             CardFeature::Down => (1 << 14, 0),
             CardFeature::Up => (1 << 15, 0),
