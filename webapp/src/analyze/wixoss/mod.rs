@@ -1069,7 +1069,8 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
         ),
         (
             any_num![
-                "あなたのトラッシュから.?シグニ",
+                // あなたのトラッシュから黒のシグニ１枚を対象とし、それを場に出す  // TODO
+                "あなたのトラッシュから(シグニ|.+のシグニ)",
                 "枚を対象とし、それを場に出"
             ],
             false,
