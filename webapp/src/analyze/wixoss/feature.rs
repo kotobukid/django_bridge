@@ -37,7 +37,6 @@ pub enum CardFeature {
     Assassin,
     Freeze,
     Drop,
-    // DeckAttack,
     OnDrop,
     OnRefresh,
     Lancer,
@@ -81,7 +80,6 @@ pub enum CardFeature {
     Position,
     Vanilla,
     Untouchable,
-    // アークゲイン
     TopCheck,
     BottomCheck,
     Barrier,
@@ -106,9 +104,9 @@ pub enum CardFeature {
     DualColorEner,
     GainCoin,
     BetCoin,
-    HandCost,     // 自分自身が捨てる
-    AssistCost,   // アシストをダウン
-    Inherit,      // ルリグトラッシュのルリグを継承
+    HandCost,   // 自分自身が捨てる
+    AssistCost, // アシストをダウン
+    Inherit,    // ルリグトラッシュのルリグを継承
 }
 
 // CardFeature に対応する FeatureTag を取得する
@@ -121,10 +119,9 @@ impl CardFeature {
             | CardFeature::BanishOnAttack
             | CardFeature::SLancer
             | CardFeature::Damage
-            | CardFeature::RemoveSigni    // ガード不可
-            | CardFeature::UnGuardable    // ガード不可  todo　確認
-            | CardFeature::LimitSigni
-                => FeatureTag::Lethal,
+            | CardFeature::RemoveSigni
+            | CardFeature::UnGuardable
+            | CardFeature::LimitSigni => FeatureTag::Lethal,
 
             // Offensive
             CardFeature::DoubleCrush
@@ -138,8 +135,7 @@ impl CardFeature {
             | CardFeature::PowerDown
             | CardFeature::Ener
             | CardFeature::Trash
-            | CardFeature::Up
-                => FeatureTag::Offensive,
+            | CardFeature::Up => FeatureTag::Offensive,
 
             // Disturb
             CardFeature::EnerAttack
@@ -149,8 +145,7 @@ impl CardFeature {
             | CardFeature::Drop
             | CardFeature::Freeze
             | CardFeature::RandomDiscard
-            | CardFeature::DiscardOpponent
-                => FeatureTag::Disturb,
+            | CardFeature::DiscardOpponent => FeatureTag::Disturb,
 
             // Endure
             CardFeature::Guard
@@ -165,8 +160,7 @@ impl CardFeature {
             | CardFeature::Vanilla
             | CardFeature::AddLife
             | CardFeature::AttackNoEffect
-            | CardFeature::PowerUp
-                => FeatureTag::Endure,
+            | CardFeature::PowerUp => FeatureTag::Endure,
 
             // Enhance
             CardFeature::LifeBurst
@@ -184,8 +178,7 @@ impl CardFeature {
             | CardFeature::DualColorEner
             | CardFeature::GainCoin
             | CardFeature::BetCoin
-            | CardFeature::AssistCost
-                => FeatureTag::Enhance,
+            | CardFeature::AssistCost => FeatureTag::Enhance,
 
             CardFeature::Acce
             | CardFeature::Rise
@@ -205,8 +198,7 @@ impl CardFeature {
             | CardFeature::OnRefresh
             | CardFeature::OnDrop
             | CardFeature::HandCost
-            | CardFeature::Inherit
-                => FeatureTag::Others,
+            | CardFeature::Inherit => FeatureTag::Others,
         }
     }
 }
@@ -222,7 +214,7 @@ impl Display for CardFeature {
             CardFeature::Draw => "ドロー",
             CardFeature::Assassin => "アサシン",
             CardFeature::Freeze => "凍結",
-            CardFeature::Drop => "デッキドロップ", // DeckAttack,
+            CardFeature::Drop => "デッキドロップ",
             CardFeature::OnDrop => "デッキドロップ時",
             CardFeature::OnRefresh => "リフレッシュ時",
             CardFeature::Lancer => "ランサー",
@@ -300,91 +292,95 @@ impl Display for CardFeature {
 }
 
 impl CardFeature {
+    // (bits1, bits2)
     pub fn to_bit(&self) -> (i64, i64) {
-        match self {
-            CardFeature::DoubleCrush => (1_i64, 0),
-            CardFeature::TripleCrush => (1 << 1, 0),
-            CardFeature::DiscardOpponent => (1 << 2, 0),
-            CardFeature::RandomDiscard => (1 << 3, 0),
-            CardFeature::Draw => (1 << 4, 0),
-            CardFeature::Assassin => (1 << 5, 0),
-            CardFeature::Freeze => (1 << 6, 0),
-            CardFeature::Drop => (1 << 7, 0),
-            // CardFeature::// DeckAttack => (1 << , 0),
-            CardFeature::OnDrop => (1 << 8, 0),
-            CardFeature::OnRefresh => (1 << 9, 0),
-            CardFeature::Lancer => (1 << 10, 0),
-            CardFeature::SLancer => (1 << 11, 0),
-            CardFeature::RemoveSigni => (1 << 12, 0),
-            CardFeature::NonAttackable => (1 << 13, 0),
-            CardFeature::Down => (1 << 14, 0),
-            CardFeature::Up => (1 << 15, 0),
-            CardFeature::Charge => (1 << 16, 0),
-            CardFeature::EnerAttack => (1 << 17, 0),
-            CardFeature::Trash => (1 << 18, 0),
-            CardFeature::Ener => (1 << 19, 0),
-            CardFeature::PowerUp => (1 << 20, 0),
-            CardFeature::PowerDown => (1 << 21, 0),
-            CardFeature::Bounce => (1 << 22, 0),
-            CardFeature::DeckBounce => (1 << 23, 0),
-            CardFeature::Salvage => (1 << 24, 0),
-            CardFeature::LifeBurst => (1 << 25, 0),
-            CardFeature::Shadow => (1 << 26, 0),
-            CardFeature::Invulnerable => (1 << 27, 0),
-            CardFeature::OnSpell => (1 << 28, 0),
-            CardFeature::OnArts => (1 << 29, 0),
-            CardFeature::OnPiece => (1 << 30, 0),
-            CardFeature::OnBanish => (1 << 31, 0),
-            CardFeature::Banish => (1 << 32, 0),
-            CardFeature::Guard => (1 << 33, 0),
-            CardFeature::OnGuard => (1 << 34, 0),
-            CardFeature::AttackNoEffect => (1 << 35, 0),
-            // CardFeature::OnAttack => (1 << 36, 0),
-            // CardFeature::OnAttackStart => (1 << 37, 0),
-            CardFeature::OnTouch => (1 << 38, 0),
-            CardFeature::Awake => (1 << 39, 0),
-            CardFeature::Exceed => (1 << 40, 0),
-            CardFeature::OnExceed => (1 << 41, 0),
-            CardFeature::AddLife => (1 << 42, 0),
-            CardFeature::OnBurst => (1 << 43, 0),
-            CardFeature::LifeTrash => (1 << 44, 0),
-            CardFeature::LifeCrush => (1 << 45, 0),
-            CardFeature::Damage => (1 << 46, 0),
-            CardFeature::OnLifeCrush => (1 << 47, 0),
-            CardFeature::Position => (1 << 48, 0),
-            CardFeature::Vanilla => (1 << 49, 0),
-            CardFeature::Untouchable => (1 << 50, 0),
-            // CardFeature::// アークゲイ => (1 << , 0),
-            CardFeature::TopCheck => (1 << 51, 0),
-            CardFeature::BottomCheck => (1 << 52, 0),
-            CardFeature::Barrier => (1 << 53, 0),
-            CardFeature::MultiEner => (1 << 54, 0),
-            CardFeature::LrigTrash => (1 << 55, 0),
-            CardFeature::Charm => (1 << 56, 0),
-            CardFeature::Craft => (1 << 57, 0),
-            CardFeature::Acce => (1 << 58, 0),
-            CardFeature::Rise => (1 << 59, 0),
-            CardFeature::Recollect => (1 << 60, 0),
-            CardFeature::SeekTop => (1 << 61, 0),
-            CardFeature::EraseSkill => (1 << 62, 0),
+        let bit1: i64 = match self {
+            CardFeature::DoubleCrush => 1_i64,
+            CardFeature::TripleCrush => 1 << 1,
+            CardFeature::DiscardOpponent => 1 << 2,
+            CardFeature::RandomDiscard => 1 << 3,
+            CardFeature::Draw => 1 << 4,
+            CardFeature::Assassin => 1 << 5,
+            CardFeature::Freeze => 1 << 6,
+            CardFeature::Drop => 1 << 7,
+            CardFeature::OnDrop => 1 << 8,
+            CardFeature::OnRefresh => 1 << 9,
+            CardFeature::Lancer => 1 << 10,
+            CardFeature::SLancer => 1 << 11,
+            CardFeature::RemoveSigni => 1 << 12,
+            CardFeature::NonAttackable => 1 << 13,
+            CardFeature::Down => 1 << 14,
+            CardFeature::Up => 1 << 15,
+            CardFeature::Charge => 1 << 16,
+            CardFeature::EnerAttack => 1 << 17,
+            CardFeature::Trash => 1 << 18,
+            CardFeature::Ener => 1 << 19,
+            CardFeature::PowerUp => 1 << 20,
+            CardFeature::PowerDown => 1 << 21,
+            CardFeature::Bounce => 1 << 22,
+            CardFeature::DeckBounce => 1 << 23,
+            CardFeature::Salvage => 1 << 24,
+            CardFeature::LifeBurst => 1 << 25,
+            CardFeature::Shadow => 1 << 26,
+            CardFeature::Invulnerable => 1 << 27,
+            CardFeature::OnSpell => 1 << 28,
+            CardFeature::OnArts => 1 << 29,
+            CardFeature::OnPiece => 1 << 30,
+            CardFeature::OnBanish => 1 << 31,
+            CardFeature::Banish => 1 << 32,
+            CardFeature::Guard => 1 << 33,
+            CardFeature::OnGuard => 1 << 34,
+            CardFeature::AttackNoEffect => 1 << 35,
+            // 36,
+            // 37,
+            CardFeature::OnTouch => 1 << 38,
+            CardFeature::Awake => 1 << 39,
+            CardFeature::Exceed => 1 << 40,
+            CardFeature::OnExceed => 1 << 41,
+            CardFeature::AddLife => 1 << 42,
+            CardFeature::OnBurst => 1 << 43,
+            CardFeature::LifeTrash => 1 << 44,
+            CardFeature::LifeCrush => 1 << 45,
+            CardFeature::Damage => 1 << 46,
+            CardFeature::OnLifeCrush => 1 << 47,
+            CardFeature::Position => 1 << 48,
+            CardFeature::Vanilla => 1 << 49,
+            CardFeature::Untouchable => 1 << 50,
+            CardFeature::TopCheck => 1 << 51,
+            CardFeature::BottomCheck => 1 << 52,
+            CardFeature::Barrier => 1 << 53,
+            CardFeature::MultiEner => 1 << 54,
+            CardFeature::LrigTrash => 1 << 55,
+            CardFeature::Charm => 1 << 56,
+            CardFeature::Craft => 1 << 57,
+            CardFeature::Acce => 1 << 58,
+            CardFeature::Rise => 1 << 59,
+            CardFeature::Recollect => 1 << 60,
+            CardFeature::SeekTop => 1 << 61,
+            CardFeature::EraseSkill => 1 << 62,
+            _ => 0_i64,
+        };
+        // i64 なので63ビット使用可能、0から62で63個
+        let bit2: i64 = match self {
+            CardFeature::CancelDamage => 1_i64 << 0,
+            CardFeature::Reanimate => 1 << 1,
+            CardFeature::AdditionalAttack => 1 << 2,
+            CardFeature::UnGuardable => 1 << 3,
+            CardFeature::SalvageSpell => 1 << 4,
+            CardFeature::BanishOnAttack => 1 << 5,
+            CardFeature::Shoot => 1 << 6,
+            CardFeature::LimitSigni => 1 << 7,
+            CardFeature::FreeSpell => 1 << 8,
+            CardFeature::DualColorEner => 1 << 9,
+            CardFeature::GainCoin => 1 << 10,
+            CardFeature::BetCoin => 1 << 11,
+            CardFeature::HandCost => 1 << 12,
+            CardFeature::AssistCost => 1 << 13,
+            CardFeature::Inherit => 1 << 14,
+            _ => 0_i64,
+        };
 
-            // i64 なので63ビット使用可能、0から62で63個
-            CardFeature::CancelDamage => (0, 1_i64 << 0),
-            CardFeature::Reanimate => (0, 1 << 1),
-            CardFeature::AdditionalAttack => (0, 1 << 2),
-            CardFeature::UnGuardable => (0, 1 << 3),
-            CardFeature::SalvageSpell => (0, 1 << 4),
-            CardFeature::BanishOnAttack => (0, 1 << 5),
-            CardFeature::Shoot => (0, 1 << 6),
-            CardFeature::LimitSigni => (0, 1 << 7),
-            CardFeature::FreeSpell => (0, 1 << 8),
-            CardFeature::DualColorEner => (0, 1 << 9),
-            CardFeature::GainCoin => (0, 1 << 10),
-            CardFeature::BetCoin => (0, 1 << 11),
-            CardFeature::HandCost => (0, 1 << 12),
-            CardFeature::AssistCost => (0, 1 << 13),
-            CardFeature::Inherit => (0, 1 << 14),
-        }
+        (bit1, bit2)
     }
 }
 
