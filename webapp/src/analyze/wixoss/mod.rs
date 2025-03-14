@@ -635,11 +635,28 @@ fn wrap_by_gainskill(html: String) -> String {
     replaced
 }
 
+// const ANY_NUM: &str = r"[（\u{FF10}-\u{FF19}）]";
+macro_rules! any_num {
+    // 引数が1つの場合: 頭に連結するケース
+    ($pattern:expr) => {
+        concat!(r"[（\u{FF10}-\u{FF19}）]+", $pattern) // rawリテラル対応
+    };
+
+    // 引数が2つの場合: "ANY_NUM" を指定したリテラルで挟む
+    ($pattern_head:expr, $pattern_tail:expr) => {{
+        concat!(
+            concat![$pattern_head, r"[（\u{FF10}-\u{FF19}）]+"],
+            $pattern_tail
+        )
+    }};
+}
+
 fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
     let text = replace_img_with_alt(text);
 
     let mut features: Vec<CardFeature> = Vec::new();
 
+    // pattern, execute_replace, tokens_appear, features_detected
     let remove_patterns: Vec<(&str, bool, &str, HashSet<CardFeature>)> = vec![
         (r"『", true, "", features![]), // アクセのみ？
         (r"』", true, "", features![]), // アクセのみ？
@@ -687,8 +704,17 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::Acce],
         ),
         (
-            r"（あなたのルリグの下からカードを合計４枚ルリグトラッシュに置く）",
+            any_num![
+                "（あなたのルリグの下からカードを合計",
+                "枚ルリグトラッシュに置く）"
+            ],
             true,
+            "*EXCEED*",
+            features![CardFeature::Exceed],
+        ),
+        (
+            any_num!["エクシード", ""],
+            false,
             "*EXCEED*",
             features![CardFeature::Exceed],
         ),
@@ -756,6 +782,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             r"エナチャージ",
             false,
             "*CHARGE*",
+            features![CardFeature::Charge],
+        ),
+        (
+            any_num!["カードを", "枚までエナゾーンに置"],
+            false,
+            "*CHARGE MANUALLY*",
             features![CardFeature::Charge],
         ),
         (
@@ -845,13 +877,25 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::Freeze],
         ),
         (
-            r"対戦相手のシグニを[（\u{FF10}-\u{FF19}）]+体まで対象とし、それらを手札に戻",
+            any_num![
+                "対戦相手のシグニ",
+                "体(まで|を)対象とし、(それら|それ)を手札に戻"
+            ],
+            true,
+            "*BOUNCE*",
+            features![CardFeature::Bounce],
+        ),
+        (
+            any_num![
+                "対戦相手のパワー",
+                "体(まで|を)対象とし、(それら|それ)を手札に戻"
+            ],
             false,
             "*BOUNCE*",
             features![CardFeature::Bounce],
         ),
         (
-            r"対戦相手のシグニ[（\u{FF10}-\u{FF19}）]+体を対象とし、それを手札に戻",
+            any_num!["対戦相手のシグニ", "体を対象とし、それを手札に戻"],
             false,
             "BOUNCE",
             features![CardFeature::Bounce],
@@ -864,7 +908,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::LifeTrash],
         ),
         (
-            r"エナゾーンからカード[（\u{FF10}-\u{FF19}）]+枚を.+トラッシュに置",
+            any_num!["エナゾーンからカード", "枚(を|選び).+トラッシュに置"],
             false,
             "*ENER ATTACK*",
             features![CardFeature::EnerAttack],
@@ -912,7 +956,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             "*RECOLLECT*",
             features![CardFeature::Recollect],
         ),
-        (r"枚見", false, "*SEEK*", features![CardFeature::SeekTop]),
+        (
+            any_num![r"", "枚見"],
+            false,
+            "*SEEK*",
+            features![CardFeature::SeekTop],
+        ),
         (
             r"能力を失う",
             false,
@@ -932,19 +981,22 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::NonAttackable],
         ),
         (
-            r"カードを[（\u{FF10}-\u{FF19}）]+枚引",
+            any_num!["カードを", "枚引"],
             false,
             "*DRAW*",
             features![CardFeature::Draw],
         ),
         (
-            r"デッキの上からカードを[（\u{FF10}-\u{FF19}）]+枚トラッシュに置",
+            any_num!["デッキの上からカードを", "枚トラッシュに置"],
             false,
             "*DROP*",
             features![CardFeature::Drop],
         ),
         (
-            r"対戦相手のエナゾーンからカードを[（\u{FF10}-\u{FF19}）]+枚まで対象とし、それらを手札に戻",
+            any_num![
+                "対戦相手のエナゾーンからカードを",
+                "枚まで対象とし、それらを手札に戻"
+            ],
             false,
             "*ENER ATTACK*",
             features![CardFeature::EnerAttack],
@@ -992,6 +1044,15 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::Reanimate],
         ),
         (
+            any_num![
+                "あなたのトラッシュから.?シグニ",
+                "枚を対象とし、それを場に出"
+            ],
+            false,
+            "*REANIMATE*",
+            features![CardFeature::Reanimate],
+        ),
+        (
             r"このルリグをアップし",
             false,
             "*ADDITIONAL ATTACK*",
@@ -1004,19 +1065,22 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::UnGuardable],
         ),
         (
-            r"スペル[（\u{FF10}-\u{FF19}）]+枚を.+手札に加え",
+            any_num!["スペル", "枚を.+手札に加え"],
             false,
             "*SALVAGE SPELL*",
             features![CardFeature::SalvageSpell],
         ),
         (
-            r"シグニ[（\u{FF10}-\u{FF19}）]+枚を.+手札に加え",
+            any_num![
+                "(シグニ|シグニを|シグニをそれぞれ)",
+                "枚(を|まで).+手札に加え"
+            ],
             false,
             "*SALVAGE SIGNI*",
             features![CardFeature::Salvage],
         ),
         (
-            r"スペル.+枚をコストを支払わずに使用する",
+            any_num!["スペル", "枚をコストを支払わずに使用する"],
             false,
             "*FREE SPELL*",
             features![CardFeature::FreeSpell],
@@ -1032,6 +1096,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             false,
             "*CRAFT RESONA*",
             features![CardFeature::Craft],
+        ),
+        (
+            any_num!["手札を", "枚捨ててもよい"],
+            false,
+            "*HAND COST*",
+            features![CardFeature::HandCost],
         ),
     ];
 
