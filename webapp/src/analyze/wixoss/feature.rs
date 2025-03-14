@@ -107,6 +107,7 @@ pub enum CardFeature {
     HandCost,   // 自分自身が捨てる
     AssistCost, // アシストをダウン
     Inherit,    // ルリグトラッシュのルリグを継承
+    PreventGrowCost,
 }
 
 // CardFeature に対応する FeatureTag を取得する
@@ -178,7 +179,8 @@ impl CardFeature {
             | CardFeature::DualColorEner
             | CardFeature::GainCoin
             | CardFeature::BetCoin
-            | CardFeature::AssistCost => FeatureTag::Enhance,
+            | CardFeature::AssistCost
+            | CardFeature::PreventGrowCost => FeatureTag::Enhance,
 
             CardFeature::Acce
             | CardFeature::Rise
@@ -285,6 +287,7 @@ impl Display for CardFeature {
             CardFeature::HandCost => "手札コスト",
             CardFeature::AssistCost => "アシストダウン",
             CardFeature::Inherit => "ルリグ能力継承",
+            CardFeature::PreventGrowCost => "グロウコスト軽減",
             // _ => "未処理フィーチャー",
         };
         write!(f, "{}", label)
@@ -362,23 +365,6 @@ impl CardFeature {
             _ => NO_FEATURE_FOUND_SHIFT,
         };
         // i64 なので63ビット使用可能、0から62で63個
-        let bit2: i64 = match self {
-            CardFeature::CancelDamage => 1_i64 << 0,
-            CardFeature::Reanimate => 1 << 1,
-            CardFeature::AdditionalAttack => 1 << 2,
-            CardFeature::UnGuardable => 1 << 3,
-            CardFeature::SalvageSpell => 1 << 4,
-            CardFeature::BanishOnAttack => 1 << 5,
-            CardFeature::Shoot => 1 << 6,
-            CardFeature::LimitSigni => 1 << 7,
-            CardFeature::FreeSpell => 1 << 8,
-            CardFeature::DualColorEner => 1 << 9,
-            CardFeature::GainCoin => 1 << 10,
-            CardFeature::BetCoin => 1 << 11,
-            CardFeature::HandCost => 1 << 12,
-            CardFeature::AssistCost => 1 << 13,
-            CardFeature::Inherit => 1 << 14,
-            _ => 0_i64,
         let bit2: i64 = 1_i64 << match self {
             CardFeature::CancelDamage => 1,
             CardFeature::Reanimate => 2,
@@ -395,6 +381,7 @@ impl CardFeature {
             CardFeature::HandCost => 13,
             CardFeature::AssistCost => 14,
             CardFeature::Inherit => 15,
+            CardFeature::PreventGrowCost => 16,
             _ => NO_FEATURE_FOUND_SHIFT,
         };
 

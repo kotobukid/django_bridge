@@ -1140,6 +1140,12 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             "*Inherit*",
             features![CardFeature::Inherit],
         ),
+        (
+            r"グロウするためのコスト",
+            true,
+            "*PREVENT GROW COST*",
+            features![CardFeature::PreventGrowCost],
+        ),
     ];
 
     let replaced_text = remove_patterns.iter().fold(text, |current_text, pat| {
