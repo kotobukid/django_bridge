@@ -673,6 +673,18 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::Damage],
         ),
         (
+            r"（アタックによるダメージでライフクロスを２枚クラッシュする）",
+            true,
+            "*DOUBLE CRUSH*",
+            features![],
+        ),
+        (
+            r"（【アサシン】を持つシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える。【ダブルクラッシュ】を持つシグニがアタックによってダメージを与えた場合ライフクロスを１枚ではなく２枚クラッシュする）",
+            true,
+            "*DOUBLE CRUSH && ASSASSIN*",
+            features![],
+        ),
+        (
             r"（【ランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスを１枚クラッシュする）",
             true,
             "",
@@ -761,6 +773,18 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![],
         ),
         (
+            r"（コストの合計とは、カードの左上のエナコストの数字の合計である。例えばコストが《白×1》《無×1》の場合、コストの合計は２である）",
+            true,
+            "*TOTAL COST*",
+            features![],
+        ),
+        (
+            r"（【アサシン】を持つシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える）",
+            true,
+            "*(ASSASSIN)*",
+            features![],
+        ),
+        (
             r"《コインアイコン》を得る",
             false,
             "*GAIN COINS*",
@@ -779,7 +803,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
             features![CardFeature::DiscardOpponent],
         ),
         (
-            r"見ないで選び、捨てさせる。",
+            r"見ないで選び、捨てさせる。",   // todo 確認
             false,
             "*RANDOM HAND DESTRUCTION*",
             features![CardFeature::RandomDiscard],
