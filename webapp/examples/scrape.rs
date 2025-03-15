@@ -109,7 +109,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Some(text) => {
                     // let t = Card::detect_card_type(text.as_str());
                     let c = Card::card_from_html(text.as_str());
-                    println!("{:?}", c);
+                    // println!("{:?}", c);
                     match c {
                         Some(card) => {
                             let ct = &card.card_type.code();

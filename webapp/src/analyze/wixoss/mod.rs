@@ -762,7 +762,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
         ),
         (
             r"《コインアイコン》を得る",
-            true,
+            false,
             "*GAIN COINS*",
             features![CardFeature::GainCoin],
         ),
@@ -905,7 +905,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
                 "対戦相手のシグニ",
                 "体(まで|を)対象とし、(それら|それ)を手札に戻"
             ],
-            true,
+            false,
             "*BOUNCE*",
             features![CardFeature::Bounce],
         ),
