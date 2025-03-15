@@ -22,7 +22,7 @@ pub fn create_product_router(pool: Arc<Pool<Postgres>>) -> Router<AppState> {
 
     Router::new()
         .route("/", get(product_list))
-        .route("/api/list.json", get(product_list_json))
+        .route("/list.json", get(product_list_json))
         .with_state(state)
 }
 

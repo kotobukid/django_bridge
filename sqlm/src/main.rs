@@ -7,6 +7,7 @@ use tower_http::services::ServeDir;
 
 use std::sync::Arc;
 use std::time::Duration;
+use axum::routing::get;
 use webapp::routers::{
     admin_process::create_admin_portal_router, card_router::create_card_router,
     product_router::create_product_router,
@@ -41,12 +42,17 @@ async fn main() -> Result<(), sqlx::Error> {
     let a_routers = create_admin_portal_router();
     let card_router = create_card_router(pool.clone());
     let product_router = create_product_router(pool.clone());
+    let api_router = Router::new()
+        .nest("/card/", card_router)
+        .nest("/product/", product_router);
 
     let app_state = AppState { db_pool: pool };
 
     let app = Router::new()
+        // .route("/hello", get(hello_handler))
         // .nest("/card/", card_router)
         // .nest("/product/", product_router)
+        .nest("/api/", api_router)
         .nest("/admin_operation/", a_routers.0)
         .nest("/admin_proxy/", a_routers.1)
         .nest("/a_static/", a_routers.2)
@@ -61,4 +67,9 @@ async fn main() -> Result<(), sqlx::Error> {
     axum::serve(listener, app).await?;
 
     Ok(())
+}
+
+#[allow(dead_code)]
+async fn hello_handler() -> &'static str {
+    "Hello World"
 }

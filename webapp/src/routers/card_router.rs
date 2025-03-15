@@ -24,7 +24,7 @@ pub fn create_card_router(pool: Arc<Pool<Postgres>>) -> Router<AppState> {
 
     Router::new()
         .route("/", get(card_list))
-        .route("/api/list.json", get(card_list_json))
+        .route("/list.json", get(card_list_json))
         .with_state(state)
 }
 
