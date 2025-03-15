@@ -89,10 +89,37 @@ type Deck = {
     created_at: Date
 }
 
+
+type CardData2 = {
+    burst_text: string,
+    card_type: number,
+    code: string,
+    color: number,
+    cost: string,
+    feature_bits1: number,
+    feature_bits2: number,
+    format: number,
+    has_burst: 0 | 1,
+    id: number,
+    level?: number,
+    limit?: number,
+    limit_ex?: string,
+    name: string,
+    power?: string
+    product: number,
+    pronunciation: string,
+    rarity: string,
+    skill_text: string,
+    story?: string,
+    timing?: number
+    url?: string
+}
+
 export type {
     Story,
     Format,
     CardData,
+    CardData2,
     CardDataClient,
     CardDataCompact,
     EPS,

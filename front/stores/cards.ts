@@ -23,6 +23,7 @@ type Getter = {
 }
 
 type Actions = {
+    fetch(): Promise<void>,
     install_worker(worker: Worker): Promise<void>,
     initialize_cards(payload: CardDataClient[], format: 1 | 2 | 3): void,
     set_cards(payload: CardDataClient[]): void,
@@ -54,6 +55,14 @@ const useCardStore: StoreDefinition<"card", State, Getter, Actions> = defineStor
         };
     },
     actions: {
+        fetch(): Promise<void> {
+            return new Promise(resolve => {
+                axios.get("/api/card/list.json").then((res: AxiosResponse<{cards: any[]}>) => {
+                    console.log(res.data.cards)
+                    resolve();
+                })
+            })
+        },
         install_worker(worker: Worker): Promise<void> {
             return new Promise((resolve): void => {
                 worker.onmessage = (event: MessageEvent<{ type: string, payload: CardDataClient[] }>): void => {

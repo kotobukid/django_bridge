@@ -18,6 +18,15 @@ from wix_card
 where (feature_bits1 & (1 << 20)) <> 0
 order by feature_bits1 ASC;
 
+-- RANDOM DISCARD(bits1, 4)(16) color4: blue
+select id, name, code, feature_bits1 as f1, feature_bits2 as f2, skill_text, burst_text
+from wix_card
+where
+    (feature_bits1 & 16) <> 0
+and (color & 4) <> 0
+and id = 1262
+order by feature_bits1 ASC;
+
 -- DECK BOUNCE(24) & POWER DOWN(22)
 select id, name, code, feature_bits1 as f1, feature_bits2 as f2, skill_text, burst_text
 from wix_card

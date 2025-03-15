@@ -1,5 +1,20 @@
 <script setup lang="ts">
 import {ref} from 'vue';
+import {useCardStore} from "~/stores/card_js";
+
+const card_store = useCardStore();
+
+const color_bits = computed(() => {
+  let flag = 0;
+  if (white.value) flag |= 2;
+  if (blue.value) flag |= 4;
+  if (black.value) flag |= 16;
+  if (red.value) flag |= 8;
+  if (green.value) flag |= 32;
+  if (colorless.value) flag |= 64;
+
+  return flag;
+});
 
 // 表示用のメッセージ
 const message = ref('default');
@@ -8,7 +23,7 @@ const message = ref('default');
 const runWasm = async () => {
   try {
     // Wasmパッケージを動的にインポート
-    const { default: init, greet, say_goodbye } = await import('/static/pkg/datapack.js');
+    const {default: init, greet, say_goodbye} = await import('/static/pkg/datapack.js');
 
     // 初期化を呼び出し (WasmファイルのURLを暗黙的に指定)
     await init('/pkg/datapack_bg.wasm');
@@ -25,14 +40,125 @@ const runWasm = async () => {
 
 onMounted(runWasm);
 
+const f1 = computed(() => {
+  return card_store.f_bits1;
+})
+const f2 = computed(() => {
+  return card_store.f_bits2;
+})
+
+
+type ColorName = 'white' | 'blue' | 'black' | 'red' | 'green' | 'colorless';
+const white = ref(false);
+const blue = ref(false);
+const black = ref(false);
+const red = ref(false);
+const green = ref(false);
+const colorless = ref(false);
+
+const toggle_color = (color: ColorName) => {
+  switch (color) {
+    case 'white':
+      white.value = !white.value;
+      break;
+    case 'blue':
+      blue.value = !blue.value;
+      break;
+    case 'black':
+      black.value = !black.value;
+      break;
+    case 'red':
+      red.value = !red.value;
+      break;
+    case 'green':
+      green.value = !green.value;
+      break;
+    case 'colorless':
+      colorless.value = !colorless.value;
+      break;
+    default:
+      break;
+  }
+}
 </script>
 
 <template lang="pug">
   span {{ message }}
   .frame
     NavBar
+    ColorSelector(
+      :white="white"
+      :blue="blue"
+      :black="black"
+      :red="red"
+      :green="green"
+      :colorless="colorless"
+      @toggle-color="toggle_color"
+    )
+    v-btn(@click="card_store.set_f2(4); card_store.set_f1(0)") トラッシュ場出し
+    v-btn(@click="card_store.set_f2(8); card_store.set_f1(0)") 追加攻撃
+    v-btn(@click="card_store.set_f1(8); card_store.set_f2(0)") ハンデス
+    v-btn(@click="card_store.set_f1(16); card_store.set_f2(0)") ランダムハンデス
+    hr
+    span.count [ {{ card_store.cards_filtered.length }} items ]
+    span.color_bits {{ color_bits }}
+    hr
+    input.feature(type="number" v-model="f1" placeholder="feature bits 1")
+    input.feature(type="number" v-model="f2" placeholder="feature bits 2")
+    button.reset(@click="card_store.set_f1(0); card_store.set_f2(0)") [reset]
+    hr
+    table
+      colgroup
+        col(style="width: 200px;")
+        col(style="width: 400px;")
+        col(style="width: 32px;")
+        col(style="width: 1400px;")
+      thead
+        tr
+          th CODE
+          th NAME
+          th COLOR
+          th Skill
+      tbody
+        tr(v-for="card in card_store.cards_filtered" :key="card.id")
+          td {{ card.code }}
+          td {{ card.name }}
+          td.center {{ card.color }}
+          td.skill
+            .normal {{ card.skill_text }}
+            .burst {{ card.burst_text }}
 </template>
 
 <style scoped lang="less">
 @import "../assets/style/basic.less";
+
+table {
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 3px;
+  border: 1px solid black;
+}
+
+td.skill {
+  .burst {
+    color: white;
+    background-color: black;
+  }
+}
+
+span.count {
+  display: inline-block;
+  width: 160px;
+  margin-right: 10px;
+}
+
+input.feature {
+  width: 140px;
+  border: 1px solid black;
+  padding: 2px;
+  font-size: 1.2rem;
+}
 </style>
