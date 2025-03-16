@@ -5,4 +5,4 @@ Cargo.lock
 **/*.pyc
 vm/.vagrant
 .env
-datapack/out
+datapack/src/gen/cards.rs
