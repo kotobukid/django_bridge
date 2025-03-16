@@ -26,10 +26,10 @@ impl Card {
         self.name.to_string()
     }
 
-
     pub fn rust_code_head() -> &'static str {
         r###"struct CardStatic {"###
     }
+
     pub fn to_rust_code(&self) -> String {
         let cost_ = self.cost.clone().unwrap_or("".into());
         let level_: String = to_value!(self.level.clone(), "".into());
@@ -50,7 +50,7 @@ impl Card {
             pronunciation = self.pronunciation,
             color = self.color,
             cost = cost_,
-            level =level_,
+            level = level_,
             limit = limit_,
             limit_ex = limit_ex_,
             power = power_,

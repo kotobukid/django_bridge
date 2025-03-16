@@ -1,8 +1,8 @@
 mod gen;
 
+use serde::Serialize;
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
-use serde::Serialize;
 
 #[wasm_bindgen]
 pub fn greet(name: &str) -> String {
@@ -22,100 +22,104 @@ struct CardCompact(
         &'static str, // pronunciation
         u32,          // color
         &'static str, // cost
-        &'static str,  // level
+        &'static str, // level
         &'static str, // limit
         &'static str, // limit_ex
-        &'static str,  // power
+        &'static str, // power
         u8,           // has_burst
         &'static str, // skill_text
         &'static str, // burst_text
-        u8,             // format
+        u8,           // format
         &'static str, // story
         &'static str, // rarity
         &'static str, // url
-        u8, // card_type
-        u8, // product
-        u8, // timing
-        i64, // feature_bits1
-        i64, // feature_bits2
+        u8,           // card_type
+        u8,           // product
+        u8,           // timing
+        i64,          // feature_bits1
+        i64,          // feature_bits2
     ),
 );
 
 #[wasm_bindgen]
 #[derive(Serialize)]
 pub struct CardExport {
-    id: i32,          // id
-    name: String, // name
-    code: String, // code
+    id: i32,               // id
+    name: String,          // name
+    code: String,          // code
     pronunciation: String, // pronunciation
-    color: u32,          // color
-    cost: String, // cost
-    level: String,  // level
-    limit: String, // limit
-    limit_ex: String, // limit_ex
-    power: String,  // power
-    has_burst: u8,           // has_burst
-    skill_text: String, // skill_text
-    burst_text: String, // burst_text
-    format: u8,             // format
-    story: String, // story
-    rarity: String, // rarity
-    url: String, // url
-    card_type: u8, // card_type
-    product: u8, // product
-    timing: u8, // timing
-    // i64, // feature_bits1
-    // i64, // feature_bits2
+    color: u32,            // color
+    cost: String,          // cost
+    level: String,         // level
+    limit: String,         // limit
+    limit_ex: String,      // limit_ex
+    power: String,         // power
+    has_burst: u8,         // has_burst
+    skill_text: String,    // skill_text
+    burst_text: String,    // burst_text
+    format: u8,            // format
+    story: String,         // story
+    rarity: String,        // rarity
+    url: String,           // url
+    card_type: u8,         // card_type
+    product: u8,           // product
+    timing: u8,            // timing
+                           // i64, // feature_bits1
+                           // i64, // feature_bits2
 }
 
-impl From<&(
-    i32,          // id
-    &'static str, // name
-    &'static str, // code
-    &'static str, // pronunciation
-    u32,          // color
-    &'static str, // cost
-    &'static str,  // level
-    &'static str, // limit
-    &'static str, // limit_ex
-    &'static str,  // power
-    u8,           // has_burst
-    &'static str, // skill_text
-    &'static str, // burst_text
-    u8,             // format
-    &'static str, // story
-    &'static str, // rarity
-    &'static str, // url
-    u8, // card_type
-    u8, // product
-    u8, // timing
-    i64, // feature_bits1
-    i64, // feature_bits2
-)> for CardExport {
-    fn from(v: &(
+impl
+    From<&(
         i32,          // id
         &'static str, // name
         &'static str, // code
         &'static str, // pronunciation
         u32,          // color
         &'static str, // cost
-        &'static str,  // level
+        &'static str, // level
         &'static str, // limit
         &'static str, // limit_ex
-        &'static str,  // power
+        &'static str, // power
         u8,           // has_burst
         &'static str, // skill_text
         &'static str, // burst_text
-        u8,             // format
+        u8,           // format
         &'static str, // story
         &'static str, // rarity
         &'static str, // url
-        u8, // card_type
-        u8, // product
-        u8, // timing
-        i64, // feature_bits1
-        i64, // feature_bits2
-    )) -> Self {
+        u8,           // card_type
+        u8,           // product
+        u8,           // timing
+        i64,          // feature_bits1
+        i64,          // feature_bits2
+    )> for CardExport
+{
+    fn from(
+        v: &(
+            i32,          // id
+            &'static str, // name
+            &'static str, // code
+            &'static str, // pronunciation
+            u32,          // color
+            &'static str, // cost
+            &'static str, // level
+            &'static str, // limit
+            &'static str, // limit_ex
+            &'static str, // power
+            u8,           // has_burst
+            &'static str, // skill_text
+            &'static str, // burst_text
+            u8,           // format
+            &'static str, // story
+            &'static str, // rarity
+            &'static str, // url
+            u8,           // card_type
+            u8,           // product
+            u8,           // timing
+            i64,          // feature_bits1
+            i64,          // feature_bits2
+        ),
+    ) -> Self {
         // let v = v.0;
         CardExport {
             id: v.0,
@@ -154,22 +158,22 @@ impl Display for CardCompact {
             c.3,    // pron
             c.4,    // color
             c.5,    // cost
-            c.6,  // level
+            c.6,    // level
             c.7,    // limit
             c.8,    // limit_ex
             c.9,    // power
-            c.10,    // has_burst
-            c.11,    // skill_text
-            c.12,    // burst_text
-            c.13,    // format
-            c.14,    // story
-            c.15,    // rarity
-            c.16,    // url
-            c.17,    // card_type
-            c.18,    // product
-            c.19,    // timing
-            c.20,    // feature_bits1
-            c.21,    // feature_bits2
+            c.10,   // has_burst
+            c.11,   // skill_text
+            c.12,   // burst_text
+            c.13,   // format
+            c.14,   // story
+            c.15,   // rarity
+            c.16,   // url
+            c.17,   // card_type
+            c.18,   // product
+            c.19,   // timing
+            c.20,   // feature_bits1
+            c.21,   // feature_bits2
         )
     }
 }
@@ -183,7 +187,8 @@ pub fn get_by_id(id: i32) -> String {
 
 #[wasm_bindgen]
 pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> JsValue {
-    let cards: Vec<CardExport> = gen::cards::CARD_LIST.iter()
+    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+        .iter()
         .filter(|c| {
             let feature_bits1 = c.20;
             let feature_bits2 = c.21;
@@ -201,8 +206,5 @@ pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> JsValue {
         })
         .map(|c| CardExport::from(c))
         .collect();
-    // JsValue::from_serde(&cards).unwrap()
     serde_wasm_bindgen::to_value(&cards).unwrap()
-
-
 }

@@ -185,6 +185,7 @@ pub trait StaticCodeGenerator {
     fn headline(length: i32) -> String;
     fn tail() -> &'static str;
 }
+
 impl StaticCodeGenerator for CardRepository {
     async fn code(&self) -> String {
         let lines = self.get_all_as_code().await;
