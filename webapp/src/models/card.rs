@@ -40,9 +40,10 @@ impl Card {
         let burst_text_: String = self.burst_text.clone().unwrap_or("".into());
         let story_: String = self.story.clone().unwrap_or("".into());
         let rarity_: String = self.rarity.clone().unwrap_or("".into());
+        let url_: String = self.url.clone().unwrap_or("".into());
 
         format!(
-            r###"({id}_i32,"{name}","{code}","{pronunciation}",{color}_u32,"{cost}","{level}","{limit}","{limit_ex}","{power}",{has_burst}_u8,"{skill_text}","{burst_text}",{format}_u8,"{story}","{rarity}"),"###,
+            r###"({id}_i32,"{name}","{code}","{pronunciation}",{color}_u32,"{cost}","{level}","{limit}","{limit_ex}","{power}",{has_burst}_u8,"{skill_text}","{burst_text}",{format}_u8,"{story}","{rarity}","{url}",{card_type}_u8,{product}_u8),"###,
             id = self.id,
             name = self.name,
             code = self.code,
@@ -58,7 +59,10 @@ impl Card {
             burst_text = burst_text_,
             format = self.format,
             story = story_,
-            rarity = rarity_
+            rarity = rarity_,
+            url = url_,
+            card_type = self.card_type,
+            product = self.product
         )
     }
 }

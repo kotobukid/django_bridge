@@ -31,6 +31,9 @@ struct CardCompact(
         u8,             // format
         &'static str, // story
         &'static str, // rarity
+        &'static str, // url
+        u8, // card_type
+        u8, // product
     ),
 );
 
@@ -39,7 +42,7 @@ impl Display for CardCompact {
         let c = self.0;
         write!(
             f,
-            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}",
+            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}",
             c.0,    // id
             c.1,    // name
             c.2,    // code
@@ -55,7 +58,10 @@ impl Display for CardCompact {
             c.12,    // burst_text
             c.13,    // format
             c.14,    // story
-            c.15    // rarity
+            c.15,    // rarity
+            c.16,    // url
+            c.17,    // card_type
+            c.18,    // product
         )
     }
 }
