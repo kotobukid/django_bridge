@@ -178,6 +178,49 @@ impl ICardRepository for CardRepository {
     // }
 }
 
+pub trait StaticCodeGenerator {
+    async fn code(&self) -> String;
+    async fn get_all_as_code(&self) -> Vec<String>;
+
+    fn headline(length: i32) -> String;
+    fn tail() -> &'static str;
+}
+impl StaticCodeGenerator for CardRepository {
+    async fn code(&self) -> String {
+        let lines = self.get_all_as_code().await;
+        format!(
+            "{}{}{}",
+            CardRepository::headline(lines.len() as i32),
+            lines.join("\n"),
+            CardRepository::tail()
+        )
+    }
+
+    async fn get_all_as_code(&self) -> Vec<String> {
+        let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card")
+            .fetch_all(&*self.db_connector)
+            .await
+            .unwrap(); // エラー処理は適宜修正してください
+
+        cards
+            .into_iter()
+            .map(Card::from)
+            .map(|c| c.to_rust_code())
+            .collect()
+    }
+
+    fn headline(length: i32) -> String {
+        format!(
+            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str);pub const CARD_LIST: &[CardStatic; {}] = &[",
+            length
+        )
+    }
+
+    fn tail() -> &'static str {
+        "];"
+    }
+}
+
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
 pub struct OnlyCardName {
     pub name: String,

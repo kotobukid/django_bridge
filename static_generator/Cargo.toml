@@ -1,0 +1,10 @@
+[package]
+name = "static_generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sqlx = { workspace = true }
+tokio = { workspace = true }
+dotenvy = { workspace = true }
+webapp = { path = "../webapp" }

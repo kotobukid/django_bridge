@@ -1,14 +1,13 @@
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
-use std::{env, fs};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::repositories::CardRepository;
-use webapp::routers::card_router::CardListJson;
+use std::{env, fs};
+use webapp::repositories::{CardRepository, StaticCodeGenerator};
 
 #[tokio::main]
 async fn main() {
@@ -35,11 +34,9 @@ async fn main() {
 
     let pool = Arc::new(pool);
 
-    let card_router = CardRepository::new(pool.clone());
+    let card_repo = CardRepository::new(pool.clone());
 
-    let cards = card_router.get_all_as_card().await;
-    let cards: CardListJson = CardListJson::new(cards);
-    write_to_file("out/gen.cards.json", cards.to_json().as_str());
+    write_to_file("../datapack/src/gen/cards.rs", card_repo.code().await.as_str());
     println!("extract")
 }
 

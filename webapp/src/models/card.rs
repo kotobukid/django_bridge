@@ -12,8 +12,53 @@ impl Display for Card {
     }
 }
 
+macro_rules! to_value {
+    ($x:expr) => {
+        $x.clone().to_string()
+    };
+    ($x:expr, $y:expr) => {
+        $y
+    };
+}
+
 impl Card {
     pub fn to_custom_string(&self) -> String {
         self.name.to_string()
+    }
+
+
+    pub fn rust_code_head() -> &'static str {
+        r###"struct CardStatic {"###
+    }
+    pub fn to_rust_code(&self) -> String {
+        let cost_ = self.cost.clone().unwrap_or("".into());
+        let level_: String = to_value!(self.level.clone(), "".into());
+        let limit_: String = to_value!(self.limit.clone(), "".into());
+        let limit_ex_: String = to_value!(self.limit_ex.clone(), "".into());
+        let power_: String = to_value!(self.power.clone(), "".into());
+        let skill_text_: String = self.skill_text.clone().unwrap_or("".into());
+        let burst_text_: String = self.burst_text.clone().unwrap_or("".into());
+        let story_: String = self.story.clone().unwrap_or("".into());
+        let rarity_: String = self.rarity.clone().unwrap_or("".into());
+
+        format!(
+            r###"({id}_i32,"{name}","{code}","{pronunciation}",{color}_u32,"{cost}","{level}","{limit}","{limit_ex}","{power}",{has_burst}_u8,"{skill_text}","{burst_text}",{format}_u8,"{story}","{rarity}"),"###,
+            id = self.id,
+            name = self.name,
+            code = self.code,
+            pronunciation = self.pronunciation,
+            color = self.color,
+            cost = cost_,
+            level =level_,
+            limit = limit_,
+            limit_ex = limit_ex_,
+            power = power_,
+            has_burst = self.has_burst,
+            skill_text = skill_text_,
+            burst_text = burst_text_,
+            format = self.format,
+            story = story_,
+            rarity = rarity_
+        )
     }
 }
