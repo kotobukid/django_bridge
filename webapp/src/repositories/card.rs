@@ -211,7 +211,7 @@ impl StaticCodeGenerator for CardRepository {
 
     fn headline(length: i32) -> String {
         format!(
-            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, &'static str, u8, u8);pub const CARD_LIST: &[CardStatic; {}] = &[",
+            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, &'static str, u8, u8, u8, i64, i64);pub const CARD_LIST: &[CardStatic; {}] = &[",
             length
         )
     }

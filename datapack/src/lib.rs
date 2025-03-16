@@ -34,6 +34,9 @@ struct CardCompact(
         &'static str, // url
         u8, // card_type
         u8, // product
+        u8, // timing
+        i64, // feature_bits1
+        i64, // feature_bits2
     ),
 );
 
@@ -42,7 +45,7 @@ impl Display for CardCompact {
         let c = self.0;
         write!(
             f,
-            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}",
+            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n",
             c.0,    // id
             c.1,    // name
             c.2,    // code
@@ -62,6 +65,9 @@ impl Display for CardCompact {
             c.16,    // url
             c.17,    // card_type
             c.18,    // product
+            c.19,    // timing
+            c.20,    // feature_bits1
+            c.21,    // feature_bits2
         )
     }
 }
