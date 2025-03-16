@@ -5,3 +5,4 @@ Cargo.lock
 **/*.pyc
 vm/.vagrant
 .env
+datapack/out

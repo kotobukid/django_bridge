@@ -6,8 +6,16 @@ edition = "2021"
 [lib]
 crate-type = ["cdylib"]
 
+[[bin]]
+name = "extract"
+path = "src/extract.rs"
+
 [dependencies]
 wasm-bindgen = "0.2"
+webapp = { path = "../webapp" }
+sqlx = { workspace = true }
+tokio = { workspace = true }
+dotenvy = { workspace = true }
 
 [profile.release]
 lto = "fat"              # リンク時の最適化を有効（ファイルをさらに小さく）

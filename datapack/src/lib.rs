@@ -1,3 +1,5 @@
+mod extract;
+
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]

@@ -42,8 +42,18 @@ async fn card_list(State(state): State<RouterState>) -> impl IntoResponse {
 }
 
 #[derive(Serialize)]
-struct CardListJson {
+pub struct CardListJson {
     cards: Vec<Card>,
+}
+
+impl CardListJson {
+    pub fn new(cards: Vec<Card>) -> Self {
+        Self { cards }
+    }
+
+    pub fn to_json(&self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
 }
 async fn card_list_json(
     State(state): State<RouterState>,

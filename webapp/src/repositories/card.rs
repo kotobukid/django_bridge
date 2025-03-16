@@ -143,6 +143,16 @@ impl CardRepository {
 
         Ok(card.into())
     }
+    pub fn get_all_as_card<'a>(&'a self) -> Pin<Box<dyn Future<Output = Vec<Card>> + Send + 'a>> {
+        Box::pin(async move {
+            let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card")
+                .fetch_all(&*self.db_connector)
+                .await
+                .unwrap();
+
+            cards.into_iter().map(Card::from).collect()
+        })
+    }
 }
 
 impl ICardRepository for CardRepository {
