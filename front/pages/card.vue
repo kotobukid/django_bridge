@@ -19,21 +19,32 @@ const color_bits = computed(() => {
 // 表示用のメッセージ
 const message = ref('default');
 
-let print_detail = (id: number) => {};
-
+let print_detail = (id: number) => {
+};
+let fetch_cards = async (bit1: string, bit2: string) => {
+}
+const fetch_cards_ = async () => {
+    await fetch_cards(`${f1.value}`, `${f2.value}`);
+}
 // Wasm 実行
 const runWasm = async () => {
   try {
     // Wasmパッケージを動的にインポート
-    const {default: init, greet, say_goodbye, get_by_id} = await import('/static/pkg/datapack.js');
+    const {default: init, greet, say_goodbye, get_by_id, fetch_by_f_bits} = await import('/static/pkg/datapack.js');
 
     // 初期化を呼び出し (WasmファイルのURLを暗黙的に指定)
     await init('/pkg/datapack_bg.wasm');
 
     console.log(say_goodbye())
+
     print_detail = (id) => {
       console.log(get_by_id(id));
     };
+
+    fetch_cards = async (bit1: string, bit2: string) => {
+      let cards = fetch_by_f_bits(BigInt(bit1), BigInt(bit2));
+      console.log(cards)
+    }
 
     // Wasm関数を実行 (例: greet)
     message.value = greet('Nuxt');
@@ -110,6 +121,7 @@ const toggle_color = (color: ColorName) => {
     hr
     input.feature(type="number" v-model="f1" placeholder="feature bits 1")
     input.feature(type="number" v-model="f2" placeholder="feature bits 2")
+    button.reset(@click="fetch_cards_") [fetch]
     button.reset(@click="card_store.set_f1(0); card_store.set_f2(0)") [reset]
     hr
     table
