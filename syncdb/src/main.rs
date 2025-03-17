@@ -479,6 +479,7 @@ fn get_output_dir() -> PathBuf {
     PathBuf::from(manifest_dir)
         .parent() // マニフェストディレクトリの親に移動
         .expect("Failed to get parent directory")
+        .join("shared") // webappディレクトリに移動
         .join("webapp") // webappディレクトリに移動
         .join("src")
         .join("gen")

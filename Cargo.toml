@@ -1,7 +1,7 @@
 [workspace]
 members = [
     "datapack",
-    "sqlm", "static_generator",
+    "server", "static_generator",
     "syncdb",
     "shared/webapp"
 ]
