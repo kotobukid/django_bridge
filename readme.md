@@ -191,4 +191,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 This project includes code from the following third-party sources:
 
-- `sqlm/src/tokiort.rs`: Copied from [hyper](https://github.com/hyperium/hyper) project (MIT License)
+- `shared/webapp/src/tokiort.rs`: Copied from [hyper](https://github.com/hyperium/hyper) project (MIT License)
