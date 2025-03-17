@@ -127,6 +127,11 @@ pub enum CardFeature {
     PreventGrowCost,
     PutSigniDefense,
     PutSigniOffense,
+    Harmony,
+    MagicBox,
+    Virus,
+
+    // team/non dream piece
 }
 
 // CardFeature に対応する FeatureTag を取得する
@@ -166,7 +171,8 @@ impl CardFeature {
             | CardFeature::Drop
             | CardFeature::Freeze
             | CardFeature::RandomDiscard
-            | CardFeature::DiscardOpponent => FeatureTag::Disturb,
+            | CardFeature::DiscardOpponent
+            | CardFeature::Virus => FeatureTag::Disturb,
 
             // Endure
             CardFeature::Guard
@@ -221,7 +227,10 @@ impl CardFeature {
             | CardFeature::OnRefresh
             | CardFeature::OnDrop
             | CardFeature::HandCost
-            | CardFeature::Inherit => FeatureTag::Others,
+            | CardFeature::Harmony
+            | CardFeature::Inherit
+            | CardFeature::MagicBox
+            => FeatureTag::Others,
         }
     }
 }
@@ -311,6 +320,9 @@ impl Display for CardFeature {
             CardFeature::PreventGrowCost => "グロウコスト軽減",
             CardFeature::PutSigniDefense => "ブロッカー場出し",
             CardFeature::PutSigniOffense => "シグニ場出し",
+            CardFeature::Harmony => "ハーモニー",
+            CardFeature::MagicBox => "マジックボックス",
+            CardFeature::Virus => "ウィルス",
             // _ => "未処理フィーチャー",
         };
         write!(f, "{}", label)
@@ -409,6 +421,9 @@ impl CardFeature {
                 CardFeature::PreventGrowCost => 16,
                 CardFeature::PutSigniDefense => 17,
                 CardFeature::PutSigniOffense => 18, // 手作業マークが必要そう
+                CardFeature::Harmony => 19,
+                CardFeature::MagicBox => 20,
+                CardFeature::Virus => 21,
                 _ => NO_FEATURE_FOUND_SHIFT,
             };
 

@@ -49,6 +49,30 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             features_detected: features![],
         },
         RemovePattern {
+            pattern: r"（このシグニが場に出たとき、あなたのアップ状態の.?をダウンしないかぎり、これをダウンする）".into(),
+            do_replace: true,
+            replace_to: "*HARMONY*",
+            features_detected: features![],
+        },
+        RemovePattern {
+            pattern: r"【ハーモニー】".into(),
+            do_replace: false,
+            replace_to: "",
+            features_detected: features![CardFeature::Harmony],
+        },
+        RemovePattern {
+            pattern: r"【ウィルス】".into(),
+            do_replace: false,
+            replace_to: "",
+            features_detected: features![CardFeature::Virus],
+        },
+        RemovePattern {
+            pattern: r" （【ウィルス】と同じシグニゾーンにあるシグニは感染状態である）".into(),
+            do_replace: true,
+            replace_to: "*VIRUS*",
+            features_detected: features![CardFeature::Virus],
+        },
+        RemovePattern {
             pattern:  r"（【アサシン】を持つシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える。【ダブルクラッシュ】を持つシグニがアタックによってダメージを与えた場合ライフクロスを１枚ではなく２枚クラッシュする）".into(),
             do_replace: true,
             replace_to: "*DOUBLE CRUSH && ASSASSIN*",
@@ -77,6 +101,18 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             do_replace: true,
             replace_to: "",
             features_detected: features![CardFeature::Craft],
+        },
+        RemovePattern {
+            pattern: r"（【マジックボックス】はシグニゾーン１つにつき１つまで裏向きで設置できる）".into(),
+            do_replace: true,
+            replace_to: "*MAGIC BOX*",
+            features_detected: features![],
+        },
+        RemovePattern {
+            pattern: r"（【マジックボックス】はシグニゾーン１つにつき１つまで裏向きで設置できる。すでに【マジックボックス】のあるシグニゾーンに設置する場合、元からある【マジックボックス】をトラッシュに置いてから設置する）".into(),
+            do_replace: false,
+            replace_to: "*MAGIC BOX ON BOX*",
+            features_detected: features![],
         },
         RemovePattern {
             pattern: r"アクセ".into(),
@@ -274,6 +310,12 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             do_replace: false,
             replace_to: "*S LANCER*",
             features_detected: features![CardFeature::SLancer],
+        },
+        RemovePattern {
+            pattern: r"【マジックボックス】".into(),
+            do_replace: false,
+            replace_to: "*MAGIC BOX*",
+            features_detected: features![CardFeature::MagicBox],
         },
         RemovePattern {
             pattern: any_num!["対戦相手のシグニ", "体を対象とし、それをゲームから除外する"].into(),
