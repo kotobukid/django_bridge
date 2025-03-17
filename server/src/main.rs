@@ -7,6 +7,7 @@ use tower_http::services::ServeDir;
 
 use std::sync::Arc;
 use std::time::Duration;
+#[allow(unused_imports)]
 use axum::routing::get;
 use webapp::routers::{
     admin_process::create_admin_portal_router, card_router::create_card_router,

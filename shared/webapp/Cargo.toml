@@ -3,10 +3,6 @@ name = "webapp"
 version = "0.1.0"
 edition = "2021"
 
-[[bin]]
-name = "extract"
-path = "src/extract.rs"
-
 [dependencies]
 sqlx = { workspace = true }
 tokio = { workspace = true }
