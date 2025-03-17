@@ -1,5 +1,4 @@
-#[macro_use]
-pub mod feature;
+
 pub mod card;
 pub mod color;
 pub mod format;
@@ -7,9 +6,8 @@ mod timing;
 
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
 use crate::analyze::wixoss::color::{convert_cost, Colors};
-use crate::analyze::wixoss::feature::CardFeature;
 use crate::analyze::wixoss::format::Format;
-use crate::features;
+use feature::features;
 
 pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceCraft, PieceRelay, Resona, ResonaCraft,
@@ -23,6 +21,7 @@ use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
+use feature::feature::CardFeature;
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;

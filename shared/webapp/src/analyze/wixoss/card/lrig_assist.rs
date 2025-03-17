@@ -1,6 +1,6 @@
 use crate::analyze::wixoss::card::CardType;
 use crate::analyze::wixoss::color::Colors;
-use crate::analyze::wixoss::feature::{CardFeature, HashSetToBits};
+use feature::feature::{CardFeature, HashSetToBits};
 use crate::analyze::wixoss::format::Format;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story,

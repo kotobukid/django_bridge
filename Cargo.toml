@@ -4,8 +4,8 @@ members = [
     "server", "static_generator",
     "syncdb",
     "shared/webapp",
-    "shared/models"
-]
+    "shared/models",
+    "shared/feature"]
 
 resolver = "2"
 
