@@ -27,6 +27,23 @@ macro_rules! features {
         };
     }
 
+// const ANY_NUM: &str = r"[（\u{FF10}-\u{FF19}）]";
+#[macro_export]
+macro_rules! any_num {
+    // 引数が1つの場合: 頭に連結するケース
+    ($pattern:expr) => {
+        concat!(r"[（\u{FF10}-\u{FF19}）]+", $pattern) // rawリテラル対応
+    };
+
+    // 引数が2つの場合: "ANY_NUM" を指定したリテラルで挟む
+    ($pattern_head:expr, $pattern_tail:expr) => {{
+        concat!(
+            concat![$pattern_head, r"[（\u{FF10}-\u{FF19}）]+"],
+            $pattern_tail
+        )
+    }};
+}
+
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
 pub enum CardFeature {
     DoubleCrush,
