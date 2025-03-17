@@ -61,7 +61,7 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             features_detected: features![],
         },
         RemovePattern {
-            pattern: r"（このシグニが場に出たとき、あなたのアップ状態の.?をダウンしないかぎり、これをダウンする）".into(),
+            pattern: r"（このシグニが場に出たとき、あなたのアップ状態の.+をダウンしないかぎり、これをダウンする）".into(),
             do_replace: true,
             replace_to: "*HARMONY*",
             features_detected: features![],
@@ -142,6 +142,12 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             pattern: r"（【チャーム】は裏向きでシグニに付き、１体に１枚までしか付けられない）".into(),
             do_replace: true,
             replace_to: "*CHARM*",
+            features_detected: features![],
+        },
+        RemovePattern {
+            pattern: r"（【ソウル】はシグニに１枚まで付き、そのシグニが場を離れるとルリグトラッシュに置かれる）".into(),
+            do_replace: true,
+            replace_to: "*SOUL*",
             features_detected: features![],
         },
         RemovePattern {
@@ -328,7 +334,7 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             features_detected: features![],
         },
         RemovePattern {
-            pattern: r"（コストのない【出】能力は発動しないことを選べない。.?）".into(),
+            pattern: r"（コストのない【出】能力は発動しないことを選べない。.+）".into(),
             do_replace: true,
             replace_to: "*MUST APPLY CIP*",
             features_detected: features![],
@@ -406,7 +412,7 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             features_detected: features![],
         },
         RemovePattern {
-            pattern: r" （クラフトであるシグニは場を離れるとゲームから除外される）".into(),
+            pattern: r"（クラフトであるシグニは場を離れるとゲームから除外される）".into(),
             do_replace: true,
             replace_to: "*CRAFT SIGNI REMOVED ON LEAVE*",
             features_detected: features![],

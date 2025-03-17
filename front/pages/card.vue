@@ -115,6 +115,7 @@ const toggle_color = (color: ColorName) => {
     v-btn(@click="card_store.set_f2(8); card_store.set_f1(0)") 追加攻撃
     v-btn(@click="card_store.set_f1(8); card_store.set_f2(0)") ハンデス
     v-btn(@click="card_store.set_f1(16); card_store.set_f2(0)") ランダムハンデス
+    v-btn(@click="card_store.set_f1(0); card_store.set_f2(524288)") ハーモニー
     hr
     span.count [ {{ card_store.cards_filtered.length }} items ]
     span.color_bits {{ color_bits }}
