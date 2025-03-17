@@ -1,4 +1,4 @@
-use crate::gen::django_models::{CreateKlass, KlassDb, WixCardKlassRel};
+use models::gen::django_models::{CreateKlass, KlassDb, WixCardKlassRel};
 use sqlx::{Pool, Postgres};
 use std::collections::HashMap;
 use std::sync::Arc;

@@ -16,7 +16,7 @@ use std::env;
 
 use clap::Parser;
 use std::sync::Arc;
-use webapp::models::card::CreateCard;
+use models::card::CreateCard;
 use webapp::repositories::{CardRepository, CardTypeRepository};
 
 async fn create_db() -> Pool<Postgres> {
@@ -46,7 +46,7 @@ async fn create_db() -> Pool<Postgres> {
 async fn db(
     pool: Arc<Pool<Postgres>>,
     item: CreateCard,
-) -> Result<webapp::models::card::Card, sqlx::Error> {
+) -> Result<models::card::Card, sqlx::Error> {
     let card_repo = CardRepository::new(pool.clone());
     Ok(card_repo.upsert(item).await?)
 }

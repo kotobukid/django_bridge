@@ -16,7 +16,7 @@ pub use crate::analyze::wixoss::card::{
     Signi, SigniCraft, Spell, SpellCraft,
 };
 use crate::analyze::wixoss::timing::TimingList;
-use crate::models::card::CreateCard;
+use models::card::CreateCard;
 use regex::Regex;
 use scraper::{Html, Selector};
 use serde::ser::SerializeSeq;

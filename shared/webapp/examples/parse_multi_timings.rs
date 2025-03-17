@@ -7,7 +7,7 @@ use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::models::card::CreateCard;
+use models::card::CreateCard;
 use webapp::repositories::CardRepository;
 
 async fn db(item: CreateCard) -> Result<(), sqlx::Error> {

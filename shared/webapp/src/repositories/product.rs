@@ -1,4 +1,4 @@
-use crate::models::product::{Product, ProductDb};
+use models::product::{Product, ProductDb};
 use sqlx::{Pool, Postgres};
 use std::collections::HashMap;
 use std::future::Future;

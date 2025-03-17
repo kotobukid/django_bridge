@@ -3,7 +3,8 @@ members = [
     "datapack",
     "server", "static_generator",
     "syncdb",
-    "shared/webapp"
+    "shared/webapp",
+    "shared/models"
 ]
 
 resolver = "2"

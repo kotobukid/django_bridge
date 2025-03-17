@@ -1,3 +1,4 @@
+pub mod gen;
 pub mod card;
 pub mod product;
 pub mod klass;

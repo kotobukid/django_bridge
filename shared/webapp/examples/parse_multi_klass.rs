@@ -7,9 +7,9 @@ use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
-use webapp::gen::django_models::WixCardKlassRel;
-use webapp::models::card::CreateCard;
-use webapp::models::klass::create_klass;
+use gen::django_models::WixCardKlassRel;
+use models::card::CreateCard;
+use models::klass::create_klass;
 use webapp::repositories::{CardRepository, KlassRelRepository};
 
 async fn create_db() -> Pool<Postgres> {
@@ -39,7 +39,7 @@ async fn create_db() -> Pool<Postgres> {
 async fn db(
     pool: Arc<Pool<Postgres>>,
     item: CreateCard,
-) -> Result<webapp::models::card::Card, sqlx::Error> {
+) -> Result<models::card::Card, sqlx::Error> {
     let card_repo = CardRepository::new(pool.clone());
     Ok(card_repo.upsert(item).await?)
 }
@@ -200,7 +200,7 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let cc: CreateCard = card.into();
 
-    let created_card: webapp::models::card::Card = db(pool, cc).await?;
+    let created_card: models::card::Card = db(pool, cc).await?;
 
     let rel: WixCardKlassRel = WixCardKlassRel {
         id: -1,
