@@ -10,8 +10,10 @@ crate-type = ["cdylib"]
 wasm-bindgen = { version = "0.2", features = ["serde-serialize"] }
 serde = { workspace = true }
 serde-wasm-bindgen = "0.6.5"
-feature = { path = "../shared/feature" }
 web-sys = "0.3.77"
+
+feature = { path = "../shared/feature" }
+color = { path = "../shared/color" }
 
 [profile.release]
 lto = "fat"              # リンク時の最適化を有効（ファイルをさらに小さく）

@@ -1,11 +1,10 @@
 
 pub mod card;
-pub mod color;
 pub mod format;
 mod timing;
 
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
-use crate::analyze::wixoss::color::{convert_cost, Colors};
+use color::{convert_cost, Colors};
 use crate::analyze::wixoss::format::Format;
 use feature::{create_remove_patterns, RemovePattern};
 

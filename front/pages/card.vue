@@ -21,16 +21,19 @@ const message = ref('');
 
 let print_detail = (id: number) => {
 };
-let fetch_cards = async (bit1: string, bit2: string) => {
-}
+let fetch_cards = async (bit1: string, bit2: string) => {};
 const fetch_cards_ = async () => {
   await fetch_cards(`${f1.value}`, `${f2.value}`);
-}
+};
 
 let apply_bits = (a: [number, number]) => {
   // card_store.set_f1(bit1);
   //   card_store.set_f2(bit2);
-}
+};
+
+// let gradient = (bits: number) => {return "";};
+const gradient = ref<(bits: number) => string>(() => '');
+
 // Wasm 実行
 const runWasm = async () => {
   try {
@@ -39,7 +42,8 @@ const runWasm = async () => {
       default: init, greet, say_goodbye, get_by_id,
       fetch_by_f_bits,
       fetch_by_f_shifts,
-      feature_conditions
+      feature_conditions,
+      bits_to_gradient,
     } = await import('/static/pkg/datapack.js');
 
     // 初期化を呼び出し (WasmファイルのURLを暗黙的に指定)
@@ -57,11 +61,16 @@ const runWasm = async () => {
     };
 
     apply_bits = (shifts: [number, number]) => {
-
       let cards = fetch_by_f_shifts(shifts[0], shifts[1]);
       card_store.set_cards(cards);
-    }
+    };
 
+    gradient.value = (bits: number) => {
+      const style = bits_to_gradient(bits);
+      return style;
+    };
+
+    console.log(bits_to_gradient(34));
     conditions.value = feature_conditions();
 
     // Wasm関数を実行 (例: greet)
@@ -136,20 +145,17 @@ const toggle_color = (color: ColorName) => {
       colgroup
         col(style="width: 200px;")
         col(style="width: 400px;")
-        col(style="width: 32px;")
         col(style="width: 1400px;")
       thead
         tr
           th CODE
           th NAME
-          th COLOR
           th Skill
       tbody
         tr(v-for="card in card_store.cards_filtered" :key="card.id")
           td
             a(:href="`https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=${card.code}`" target="_blank") {{ card.code }}
-          td {{ card.name }}
-          td.center {{ card.color }}
+          td.name(:style="`text-shadow: #fff 1px 1px 4px; ${gradient(card.color)}`") {{ card.name }}
           td.skill
             SoftWrap.normal(:text="card.skill_text")
             SoftWrap.burst(:text="card.burst_text")
@@ -173,6 +179,10 @@ th {
 td {
   padding: 3px;
   border: 1px solid black;
+}
+
+td.name {
+  font-weight: bolder;
 }
 
 td.skill {

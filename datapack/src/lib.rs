@@ -1,5 +1,6 @@
 mod gen;
 
+use color;
 use feature::feature::export_features;
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
@@ -243,4 +244,10 @@ pub fn fetch_by_f_shifts(shift1: isize, shift2: isize) -> JsValue {
 pub fn feature_conditions() -> JsValue {
     let data = export_features();
     serde_wasm_bindgen::to_value(&data).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn bits_to_gradient(bits: i32) -> JsValue {
+    let style = color::Colors::bits_to_gradient(bits);
+    serde_wasm_bindgen::to_value(&style).unwrap()
 }

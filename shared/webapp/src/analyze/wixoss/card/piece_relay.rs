@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use scraper::{Html, Selector};
 use crate::analyze::wixoss::card::CardType;
-use crate::analyze::wixoss::color::Colors;
+use color::Colors;
 use crate::analyze::wixoss::format::Format;
 use crate::analyze::wixoss::{element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story, split_by_break, Card, OptionString, Skills, WixossCard};
 use feature::feature::{CardFeature, HashSetToBits};

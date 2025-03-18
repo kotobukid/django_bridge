@@ -55,25 +55,38 @@ impl From<&str> for Color {
 
 impl Color {
     #[allow(dead_code)]
-    pub fn to_bit(&self) -> u64 {
+    pub fn to_bit(&self) -> i32 {
         match self {
-            Color::White => 1_u64 << 1, // 2
+            Color::White => 1_i32 << 1, // 2
             Color::Blue => 1 << 2,      // 4
             Color::Red => 1 << 3,       // 8
             Color::Black => 1 << 4,     // 16
             Color::Green => 1 << 5,     // 32
             Color::Colorless => 1 << 6, // 64
             Color::Unknown => 1 << 7,   // 128
-                                         // Color::White && Color::Red -> 10
+            // Color::White && Color::Red -> 10
+        }
+    }
+
+    // 指定した `Color` を CSS のカラーコードに変換する関数
+    pub fn to_css_color_code(&self) -> &'static str {
+        match self {
+            Color::White => "#fff1b4",
+            Color::Blue => "#b4ceff",
+            Color::Red => "#ffb4b4",
+            Color::Black => "#9263f9",
+            Color::Green => "#ccffb4",
+            Color::Colorless => "#cfcfcf",
+            _ => "#ffffff", // デフォルト色
         }
     }
 }
 
 #[allow(dead_code)]
-pub fn from_bits(bits: u64) -> Vec<Color> {
+pub fn from_bits(bits: i32) -> Vec<Color> {
     let mut colors = Vec::new();
 
-    if bits & 1_u64 << 1 != 0 {
+    if bits & 1_i32 << 1 != 0 {
         colors.push(Color::White);
     }
 
@@ -113,11 +126,47 @@ impl Display for Colors {
 
 impl Colors {
     pub fn to_bitset(&self) -> i32 {
-        let mut bits = 0_u64;
+        let mut bits = 0_i32;
         for c in &self.0 {
             bits |= c.to_bit();
         }
         bits.to_string().parse::<i32>().unwrap()
+    }
+
+    /// 与えられたビットセット (i32) から CSSグラデーション定義を生成するメソッド
+    pub fn bits_to_gradient(bits: i32) -> String {
+        // ビットセットから有効な色を取得
+        let colors = from_bits(bits);
+
+        if colors.is_empty() {
+            return "".to_string(); // 空の場合
+        }
+
+        if colors.len() == 1 {
+            return format!("background-color: {};", colors.first().unwrap().to_css_color_code());
+        }
+
+        let offset: usize = 10; // グラデーションの両端の余白
+        let width_1 = if colors.len() > 1 {
+            (100 - (offset * 2)) / (colors.len() - 1)
+        } else {
+            100 // 1色のみの場合
+        };
+
+        // 各色のグラデーションコードを生成
+        let gradient_code: String = colors
+            .iter()
+            .enumerate()
+            .map(|(i, color)| {
+                let color_code = color.to_css_color_code();
+                format!("{} {}%", color_code, i * width_1 + offset)
+            })
+            .collect::<Vec<String>>()
+            .join(",");
+
+        let result = format!("background: linear-gradient(to right, {});", gradient_code);
+
+        result
     }
 }
 

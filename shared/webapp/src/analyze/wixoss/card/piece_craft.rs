@@ -1,5 +1,5 @@
 use crate::analyze::wixoss::card::CardType;
-use crate::analyze::wixoss::color::Colors;
+use color::Colors;
 use feature::feature::{CardFeature, HashSetToBits};
 use crate::analyze::wixoss::format::Format;
 use crate::analyze::wixoss::{
