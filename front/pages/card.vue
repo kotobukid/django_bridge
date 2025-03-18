@@ -24,7 +24,7 @@ let print_detail = (id: number) => {
 let fetch_cards = async (bit1: string, bit2: string) => {
 }
 const fetch_cards_ = async () => {
-    await fetch_cards(`${f1.value}`, `${f2.value}`);
+  await fetch_cards(`${f1.value}`, `${f2.value}`);
 }
 
 let apply_bits = (a: [number, number]) => {
@@ -35,7 +35,8 @@ let apply_bits = (a: [number, number]) => {
 const runWasm = async () => {
   try {
     // Wasmパッケージを動的にインポート
-    const {default: init, greet, say_goodbye, get_by_id,
+    const {
+      default: init, greet, say_goodbye, get_by_id,
       fetch_by_f_bits,
       fetch_by_f_shifts,
       feature_conditions
@@ -146,7 +147,7 @@ const toggle_color = (color: ColorName) => {
       tbody
         tr(v-for="card in card_store.cards_filtered" :key="card.id")
           td
-            a(href="#" @click.prevent="print_detail(card.id)") {{ card.code }}
+            a(:href="`https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=${card.code}`" target="_blank") {{ card.code }}
           td {{ card.name }}
           td.center {{ card.color }}
           td.skill
