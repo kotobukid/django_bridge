@@ -1,5 +1,6 @@
 mod gen;
 
+use feature::feature::export_features;
 use serde::Serialize;
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
@@ -207,4 +208,39 @@ pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> JsValue {
         .map(|c| CardExport::from(c))
         .collect();
     serde_wasm_bindgen::to_value(&cards).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn fetch_by_f_shifts(shift1: isize, shift2: isize) -> JsValue {
+    let bits1 = 1_i64 << shift1;
+    let bits2 = 1_i64 << shift2;
+
+    // web_sys::console::log_1(&format!("bits1: {}, bits2: {}", bits1, bits2).into());
+
+    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+        .iter()
+        .filter(|c| {
+            let feature_bits1 = c.20;
+            let feature_bits2 = c.21;
+
+            // 条件関数の確定
+            if bits1 == 0 && bits2 == 0 {
+                true
+            } else if bits2 == 0 || bits2 == 1 {
+                (feature_bits1 & bits1) != 0
+            } else if bits1 == 0 || bits1 == 1 {
+                (feature_bits2 & bits2) != 0
+            } else {
+                (feature_bits1 & bits1) == bits1 && (feature_bits2 & bits2) == bits2
+            }
+        })
+        .map(|c| CardExport::from(c))
+        .collect();
+    serde_wasm_bindgen::to_value(&cards).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn feature_conditions() -> JsValue {
+    let data = export_features();
+    serde_wasm_bindgen::to_value(&data).unwrap()
 }

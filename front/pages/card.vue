@@ -26,11 +26,20 @@ let fetch_cards = async (bit1: string, bit2: string) => {
 const fetch_cards_ = async () => {
     await fetch_cards(`${f1.value}`, `${f2.value}`);
 }
+
+let apply_bits = (a: [number, number]) => {
+  // card_store.set_f1(bit1);
+  //   card_store.set_f2(bit2);
+}
 // Wasm 実行
 const runWasm = async () => {
   try {
     // Wasmパッケージを動的にインポート
-    const {default: init, greet, say_goodbye, get_by_id, fetch_by_f_bits} = await import('/static/pkg/datapack.js');
+    const {default: init, greet, say_goodbye, get_by_id,
+      fetch_by_f_bits,
+      fetch_by_f_shifts,
+      feature_conditions
+    } = await import('/static/pkg/datapack.js');
 
     // 初期化を呼び出し (WasmファイルのURLを暗黙的に指定)
     await init('/pkg/datapack_bg.wasm');
@@ -44,7 +53,15 @@ const runWasm = async () => {
     fetch_cards = async (bit1: string, bit2: string) => {
       let cards = fetch_by_f_bits(BigInt(bit1), BigInt(bit2));
       console.log(cards)
+    };
+
+    apply_bits = (shifts: [number, number]) => {
+
+      let cards = fetch_by_f_shifts(shifts[0], shifts[1]);
+      console.log(cards)
     }
+
+    conditions.value = feature_conditions();
 
     // Wasm関数を実行 (例: greet)
     message.value = greet('Nuxt');
@@ -63,6 +80,7 @@ const f2 = computed(() => {
   return card_store.f_bits2;
 })
 
+const conditions = ref({});
 
 type ColorName = 'white' | 'blue' | 'black' | 'red' | 'green' | 'colorless';
 const white = ref(false);
@@ -111,6 +129,7 @@ const toggle_color = (color: ColorName) => {
       :colorless="colorless"
       @toggle-color="toggle_color"
     )
+    FeatureConditions(:conditions="conditions" @emit-bits="apply_bits")
     v-btn(@click="card_store.set_f2(4); card_store.set_f1(0)") トラッシュ場出し
     v-btn(@click="card_store.set_f2(8); card_store.set_f1(0)") 追加攻撃
     v-btn(@click="card_store.set_f1(8); card_store.set_f2(0)") ハンデス

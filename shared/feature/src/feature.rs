@@ -1,16 +1,87 @@
-use serde::Serialize;
-use std::collections::HashSet;
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 use std::fmt::{Display, Formatter};
 
+macro_rules! define_features {
+    (
+        $(
+            $feature:ident => { tag: $tag:ident, bit_shift: ($shift1:expr, $shift2:expr), label: $label:expr },
+        )*
+    ) => {
+        // 1. CardFeature enumの定義
+        #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+        pub enum CardFeature {
+            $($feature),*
+        }
+
+        // 2. 各フィーチャのタグを返す関数
+        impl CardFeature {
+            pub fn tag(&self) -> FeatureTag {
+                match self {
+                    $(
+                        CardFeature::$feature => FeatureTag::$tag,
+                    )*
+                }
+            }
+
+            // 3. 各フィーチャのビットシフト値を返す関数
+            pub fn to_bit(&self) -> (i64, i64) {
+                match self {
+                    $(
+                        CardFeature::$feature => ($shift1, $shift2),
+                    )*
+                }
+            }
+
+            fn create_vec() -> Vec<CardFeature> {
+                    vec![
+                        $(
+                            CardFeature::$feature,
+                        )*
+                    ]
+                }
+            }
+
+        // 3. 各フィーチャの文字列表現を返す関数
+        impl Display for CardFeature {
+            #[allow(unreachable_patterns)]
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                let label = match self {
+                    $(
+                    CardFeature::$feature => $label,
+                    )*
+                };
+                write!(f, "{}", label)
+            }
+        }
+    };
+}
+
 // 大分類を表す FeatureTag
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FeatureTag {
     Lethal,    // 最後の1点を取れる
     Offensive, // 攻撃系
     Disturb,   // 妨害系
     Endure,    // 防御系
-    Enhance,   // 潤滑系
+    Enhance,   // 資源系
+    Unique,    // 固有系
     Others,    // その他
+}
+
+impl Display for FeatureTag {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let label = match self {
+            FeatureTag::Lethal => "リーサル",
+            FeatureTag::Offensive => "攻撃系",
+            FeatureTag::Disturb => "妨害系",
+            FeatureTag::Endure => "防御系",
+            FeatureTag::Enhance => "資源系",
+            FeatureTag::Unique => "固有系",
+            FeatureTag::Others => "その他",
+        };
+        write!(f, "{}", label)
+    }
 }
 
 #[macro_export]
@@ -44,391 +115,92 @@ macro_rules! any_num {
     }};
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
-pub enum CardFeature {
-    DoubleCrush,
-    TripleCrush,
-    DiscardOpponent,
-    RandomDiscard,
-    Draw,
-    Assassin,
-    Freeze,
-    Drop,
-    OnDrop,
-    OnRefresh,
-    Lancer,
-    SLancer,
-    RemoveSigni,
-    NonAttackable,
-    Down,
-    Up,
-    Charge,
-    EnerAttack,
-    Trash,
-    Ener, // エナ送り
-    PowerUp,
-    PowerDown,
-    Bounce,
-    DeckBounce,
-    Salvage,
-    LifeBurst,
-    Shadow,
-    Invulnerable,
-    OnSpell,
-    OnArts,
-    OnPiece,
-    OnBanish,
-    Banish,
-    Guard,
-    OnGuard,
-    AttackNoEffect,
-    // OnAttack,
-    // OnAttackStart,
-    OnTouch,
-    Awake,
-    Exceed,
-    OnExceed,
-    AddLife,
-    OnBurst,
-    LifeTrash,
-    LifeCrush,
-    Damage,
-    OnLifeCrush,
-    Position,
-    Vanilla,
-    Untouchable,
-    TopCheck,
-    BottomCheck,
-    Barrier,
-    MultiEner,
-    LrigTrash,
-    Charm,
-    Craft,
-    Acce,
-    Rise,
-    Recollect,
-    SeekTop,
-    EraseSkill,
-    CancelDamage,
-    Reanimate,
-    AdditionalAttack,
-    UnGuardable,
-    SalvageSpell,
-    BanishOnAttack,
-    Shoot,
-    LimitSigni,
-    FreeSpell,
-    DualColorEner,
-    GainCoin,
-    BetCoin,
-    HandCost,   // 自分自身が捨てる
-    AssistCost, // アシストをダウン
-    Inherit,    // ルリグトラッシュのルリグを継承
-    PreventGrowCost,
-    PutSigniDefense,
-    PutSigniOffense,
-    Harmony,
-    MagicBox,
-    Virus,
-
-    // team/non dream piece
-}
-
-// CardFeature に対応する FeatureTag を取得する
-impl CardFeature {
-    pub fn tag(&self) -> FeatureTag {
-        match self {
-            // Lethal
-            CardFeature::AdditionalAttack
-            | CardFeature::Assassin
-            | CardFeature::BanishOnAttack
-            | CardFeature::SLancer
-            | CardFeature::Damage
-            | CardFeature::RemoveSigni
-            | CardFeature::UnGuardable
-            | CardFeature::LimitSigni => FeatureTag::Lethal,
-
-            // Offensive
-            CardFeature::DoubleCrush
-            | CardFeature::TripleCrush
-            | CardFeature::Lancer
-            | CardFeature::LifeCrush
-            | CardFeature::LifeTrash
-            | CardFeature::Banish
-            | CardFeature::DeckBounce
-            | CardFeature::Bounce
-            | CardFeature::PowerDown
-            | CardFeature::Ener
-            | CardFeature::Trash
-            | CardFeature::Up
-            | CardFeature::PutSigniOffense => FeatureTag::Offensive,
-
-            // Disturb
-            CardFeature::EnerAttack
-            | CardFeature::Shoot
-            | CardFeature::EraseSkill
-            | CardFeature::Position
-            | CardFeature::Drop
-            | CardFeature::Freeze
-            | CardFeature::RandomDiscard
-            | CardFeature::DiscardOpponent
-            | CardFeature::Virus => FeatureTag::Disturb,
-
-            // Endure
-            CardFeature::Guard
-            | CardFeature::Invulnerable
-            | CardFeature::Shadow
-            | CardFeature::NonAttackable
-            | CardFeature::Down
-            | CardFeature::OnGuard
-            | CardFeature::Barrier
-            | CardFeature::Untouchable
-            | CardFeature::CancelDamage
-            | CardFeature::Vanilla
-            | CardFeature::AddLife
-            | CardFeature::AttackNoEffect
-            | CardFeature::PowerUp
-            | CardFeature::PutSigniDefense => FeatureTag::Endure,
-
-            // Enhance
-            CardFeature::LifeBurst
-            | CardFeature::Draw
-            | CardFeature::Salvage
-            | CardFeature::SalvageSpell
-            | CardFeature::Reanimate
-            | CardFeature::SeekTop
-            | CardFeature::Recollect
-            | CardFeature::MultiEner
-            | CardFeature::BottomCheck
-            | CardFeature::TopCheck
-            | CardFeature::Charge
-            | CardFeature::FreeSpell
-            | CardFeature::DualColorEner
-            | CardFeature::GainCoin
-            | CardFeature::BetCoin
-            | CardFeature::AssistCost
-            | CardFeature::PreventGrowCost => FeatureTag::Enhance,
-
-            CardFeature::Acce
-            | CardFeature::Rise
-            | CardFeature::Craft
-            | CardFeature::Charm
-            | CardFeature::LrigTrash
-            | CardFeature::OnLifeCrush
-            | CardFeature::OnBurst
-            | CardFeature::Exceed
-            | CardFeature::OnExceed
-            | CardFeature::Awake
-            | CardFeature::OnTouch
-            | CardFeature::OnBanish
-            | CardFeature::OnArts
-            | CardFeature::OnPiece
-            | CardFeature::OnSpell
-            | CardFeature::OnRefresh
-            | CardFeature::OnDrop
-            | CardFeature::HandCost
-            | CardFeature::Harmony
-            | CardFeature::Inherit
-            | CardFeature::MagicBox
-            => FeatureTag::Others,
-        }
-    }
-}
-
-impl Display for CardFeature {
-    #[allow(unreachable_patterns)]
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let label = match self {
-            CardFeature::DoubleCrush => "ダブルクラッシュ",
-            CardFeature::TripleCrush => "トリプルクラッシュ",
-            CardFeature::DiscardOpponent => "手札破壊",
-            CardFeature::RandomDiscard => "ランダム手札破壊",
-            CardFeature::Draw => "ドロー",
-            CardFeature::Assassin => "アサシン",
-            CardFeature::Freeze => "凍結",
-            CardFeature::Drop => "デッキドロップ",
-            CardFeature::OnDrop => "デッキドロップ時",
-            CardFeature::OnRefresh => "リフレッシュ時",
-            CardFeature::Lancer => "ランサー",
-            CardFeature::SLancer => "Sランサー",
-            CardFeature::RemoveSigni => "シグニ除外",
-            CardFeature::NonAttackable => "アタック不可",
-            CardFeature::Down => "ダウン",
-            CardFeature::Up => "アップ",
-            CardFeature::Charge => "エナチャージ",
-            CardFeature::EnerAttack => "エナ破壊",
-            CardFeature::Trash => "トラッシュ送り",
-            CardFeature::Ener => "エナ送り",
-            CardFeature::PowerUp => "パワーアップ",
-            CardFeature::PowerDown => "パワーダウン",
-            CardFeature::Bounce => "バウンス",
-            CardFeature::DeckBounce => "デッキバウンス",
-            CardFeature::Salvage => "回収",
-            CardFeature::LifeBurst => "ライフバースト",
-            CardFeature::Shadow => "シャドウ",
-            CardFeature::Invulnerable => "バニッシュされない",
-            CardFeature::OnSpell => "スペル使用時",
-            CardFeature::OnArts => "アーツ使用時",
-            CardFeature::OnPiece => "ピース使用時",
-            CardFeature::OnBanish => "バニッシュした時",
-            CardFeature::Banish => "バニッシュ",
-            CardFeature::Guard => "ガード",
-            CardFeature::OnGuard => "ガードした時",
-            CardFeature::AttackNoEffect => "アタック無効",
-            // CardFeature::OnAttack => "アタック時",
-            // CardFeature::OnAttackStart => "アタック開始時",
-            CardFeature::OnTouch => "対象になった時",
-            CardFeature::Awake => "覚醒",
-            CardFeature::Exceed => "エクシード",
-            CardFeature::OnExceed => "エクシードした時",
-            CardFeature::AddLife => "ライフクロス追加",
-            CardFeature::OnBurst => "ライフバースト発動時",
-            CardFeature::LifeTrash => "ライフクロストラッシュ送り",
-            CardFeature::LifeCrush => "クラッシュ",
-            CardFeature::Damage => "ダメージ",
-            CardFeature::OnLifeCrush => "クラッシュ時",
-            CardFeature::Position => "シグニゾーン移動",
-            CardFeature::Vanilla => "能力を持たない",
-            CardFeature::Untouchable => "効果を受けない", // アークゲイン
-            CardFeature::TopCheck => "トップ確認",
-            CardFeature::BottomCheck => "ボトム確認",
-            CardFeature::Barrier => "バリア獲得",
-            CardFeature::MultiEner => "マルチエナ",
-            CardFeature::LrigTrash => "ルリグトラッシュ",
-            CardFeature::Charm => "チャーム",
-            CardFeature::Craft => "クラフト",
-            CardFeature::Acce => "アクセ",
-            CardFeature::Rise => "ライズ",
-            CardFeature::Recollect => "リコレクト",
-            CardFeature::SeekTop => "シーク",
-            CardFeature::EraseSkill => "能力消去",
-            CardFeature::CancelDamage => "ダメージ無効",
-            CardFeature::Reanimate => "トラッシュ場出し",
-            CardFeature::AdditionalAttack => "追加アタック",
-            CardFeature::UnGuardable => "ガード不可",
-            CardFeature::SalvageSpell => "スペル回収",
-            CardFeature::BanishOnAttack => "アタック時バニッシュ",
-            CardFeature::Shoot => "シュート",
-            CardFeature::LimitSigni => "配置禁止",
-            CardFeature::FreeSpell => "スペル割引",
-            CardFeature::DualColorEner => "多色エナ",
-            CardFeature::GainCoin => "コイン獲得",
-            CardFeature::BetCoin => "ベット",
-            CardFeature::HandCost => "手札コスト",
-            CardFeature::AssistCost => "アシストダウン",
-            CardFeature::Inherit => "ルリグ能力継承",
-            CardFeature::PreventGrowCost => "グロウコスト軽減",
-            CardFeature::PutSigniDefense => "ブロッカー場出し",
-            CardFeature::PutSigniOffense => "シグニ場出し",
-            CardFeature::Harmony => "ハーモニー",
-            CardFeature::MagicBox => "マジックボックス",
-            CardFeature::Virus => "ウィルス",
-            // _ => "未処理フィーチャー",
-        };
-        write!(f, "{}", label)
-    }
-}
-
-const NO_FEATURE_FOUND_SHIFT: i64 = 0_i64;
-
-impl CardFeature {
-    // (bits1, bits2)
-    pub fn to_bit(&self) -> (i64, i64) {
-        let bit1: i64 = 1_i64
-            << match self {
-                CardFeature::DoubleCrush => 1,
-                CardFeature::TripleCrush => 2,
-                CardFeature::DiscardOpponent => 3,
-                CardFeature::RandomDiscard => 4,
-                CardFeature::Draw => 5,
-                CardFeature::Assassin => 6,
-                CardFeature::Freeze => 7,
-                CardFeature::Drop => 8,
-                CardFeature::OnDrop => 9,
-                CardFeature::OnRefresh => 10,
-                CardFeature::Lancer => 11,
-                CardFeature::SLancer => 12,
-                CardFeature::RemoveSigni => 13,
-                CardFeature::NonAttackable => 14,
-                CardFeature::Down => 15,
-                CardFeature::Up => 16,
-                CardFeature::Charge => 17,
-                CardFeature::EnerAttack => 18,
-                CardFeature::Trash => 19,
-                CardFeature::Ener => 20,
-                CardFeature::PowerUp => 21,
-                CardFeature::PowerDown => 22,
-                CardFeature::Bounce => 23,
-                CardFeature::DeckBounce => 24,
-                CardFeature::Salvage => 25,
-                CardFeature::LifeBurst => 26,
-                CardFeature::Shadow => 27,
-                CardFeature::Invulnerable => 28,
-                CardFeature::OnSpell => 29,
-                CardFeature::OnArts => 31,
-                CardFeature::OnPiece => 31,
-                CardFeature::OnBanish => 32,
-                CardFeature::Banish => 33,
-                CardFeature::Guard => 34,
-                CardFeature::OnGuard => 35,
-                CardFeature::AttackNoEffect => 36,
-                // 37,
-                CardFeature::OnTouch => 38,
-                CardFeature::Awake => 39,
-                CardFeature::Exceed => 40,
-                CardFeature::OnExceed => 41,
-                CardFeature::AddLife => 42,
-                CardFeature::OnBurst => 43,
-                CardFeature::LifeTrash => 44,
-                CardFeature::LifeCrush => 45,
-                CardFeature::Damage => 46,
-                CardFeature::OnLifeCrush => 47,
-                CardFeature::Position => 48,
-                CardFeature::Vanilla => 49,
-                CardFeature::Untouchable => 50,
-                CardFeature::TopCheck => 51,
-                CardFeature::BottomCheck => 52,
-                CardFeature::Barrier => 53,
-                CardFeature::MultiEner => 54,
-                CardFeature::LrigTrash => 55,
-                CardFeature::Charm => 56,
-                CardFeature::Craft => 57,
-                CardFeature::Acce => 58,
-                CardFeature::Rise => 59,
-                CardFeature::Recollect => 60,
-                CardFeature::SeekTop => 61,
-                CardFeature::EraseSkill => 62,
-                _ => NO_FEATURE_FOUND_SHIFT,
-            };
-        // i64 なので63ビット使用可能、0から62で63個
-        let bit2: i64 = 1_i64
-            << match self {
-                CardFeature::CancelDamage => 1,
-                CardFeature::Reanimate => 2,
-                CardFeature::AdditionalAttack => 3,
-                CardFeature::UnGuardable => 4,
-                CardFeature::SalvageSpell => 5,
-                CardFeature::BanishOnAttack => 6,
-                CardFeature::Shoot => 7,
-                CardFeature::LimitSigni => 8,
-                CardFeature::FreeSpell => 9,
-                CardFeature::DualColorEner => 10,
-                CardFeature::GainCoin => 11,
-                CardFeature::BetCoin => 12,
-                CardFeature::HandCost => 13,
-                CardFeature::AssistCost => 14,
-                CardFeature::Inherit => 15,
-                CardFeature::PreventGrowCost => 16,
-                CardFeature::PutSigniDefense => 17,
-                CardFeature::PutSigniOffense => 18, // 手作業マークが必要そう
-                CardFeature::Harmony => 19,
-                CardFeature::MagicBox => 20,
-                CardFeature::Virus => 21,
-                _ => NO_FEATURE_FOUND_SHIFT,
-            };
-
-        (bit1, bit2)
-    }
+define_features! {
+    DoubleCrush => { tag: Offensive, bit_shift: (1, 0), label: "ダブルクラッシュ" },
+    TripleCrush => { tag: Offensive, bit_shift: (2, 0), label: "トリプルクラッシュ" },
+    DiscardOpponent => { tag: Disturb, bit_shift: (3, 0), label: "セルフハンデス" },
+    RandomDiscard => { tag: Disturb, bit_shift: (4, 0), label: "ランダムハンデス" },
+    Draw => { tag: Enhance, bit_shift: (5, 0), label: "ドロー" },
+    Assassin => { tag: Lethal, bit_shift: (6, 0), label: "アサシン" },
+    Freeze => { tag: Disturb, bit_shift: (7, 0), label: "凍結" },
+    Drop => { tag: Offensive, bit_shift: (8, 0), label: "デッキ落下" },
+    OnDrop => { tag: Offensive, bit_shift: (9, 0), label: "デッキ落下時" },
+    OnRefresh => { tag: Offensive, bit_shift: (10, 0), label: "リフレッシュ時" },
+    Lancer => { tag: Offensive, bit_shift: (11, 0), label: "ランサー" },
+    SLancer => { tag: Lethal, bit_shift: (12, 0), label: "Sランサー" },
+    RemoveSigni => { tag: Offensive, bit_shift: (13, 0), label: "シグニ除外" },
+    NonAttackable => { tag: Endure, bit_shift: (14, 0), label: "アタック不可" },
+    Down => { tag: Endure, bit_shift: (15, 0), label: "ダウン" },
+    Up => { tag: Offensive, bit_shift: (16, 0), label: "アップ" },
+    Charge => { tag: Enhance, bit_shift: (17, 0), label: "エナチャージ" },
+    EnerAttack => { tag: Disturb, bit_shift: (18, 0), label: "エナ破壊" },
+    Trash => { tag: Offensive, bit_shift: (19, 0), label: "トラッシュ送り" },
+    Ener => { tag: Offensive, bit_shift: (20, 0), label: "エナ送り" }, // エナ送り
+    PowerUp => { tag: Endure, bit_shift: (21, 0), label: "パワーアップ" },
+    PowerDown => { tag: Offensive, bit_shift: (22, 0), label: "パワーダウン" },
+    Bounce => { tag: Offensive, bit_shift: (23, 0), label: "バウンス" },
+    DeckBounce => { tag: Offensive, bit_shift: (24, 0), label: "デッキバウンス" },
+    Salvage => { tag: Enhance, bit_shift: (25, 0), label: "トラッシュ回収" },
+    LifeBurst => { tag: Endure, bit_shift: (26, 0), label: "ライフバースト" },
+    Shadow => { tag: Endure, bit_shift: (27, 0), label: "シャドウ" },
+    Invulnerable => { tag: Endure, bit_shift: (28, 0), label: "バニッシュ耐性" },
+    OnSpell => { tag: Others, bit_shift: (29, 0), label: "スペル使用時" },
+    OnArts => { tag: Others, bit_shift: (31, 0), label: "アーツ使用時" },
+    OnPiece => { tag: Others, bit_shift: (31, 0), label: "ピース使用時" },
+    OnBanish => { tag: Endure, bit_shift: (32, 0), label: "被バニッシュ時" },
+    Banish => { tag: Offensive, bit_shift: (33, 0), label: "バニッシュ" },
+    Guard => { tag: Endure, bit_shift: (34, 0), label: "ガード" },
+    OnGuard => { tag: Enhance, bit_shift: (35, 0), label: "ガード時" },
+    AttackNoEffect => { tag: Endure, bit_shift: (36, 0), label: "アタック無効" },
+    // OnAttack => { tag: Others, bit_shift: (2, 0), label: "アタック時" },
+    // OnAttackStart => { tag: Others, bit_shift: (2, 0), label: "アタック開始時" },
+    OnTouch => { tag: Others, bit_shift: (37, 0), label: "被対象時" },
+    Awake => { tag: Others, bit_shift: (38, 0), label: "覚醒" },
+    Exceed => { tag: Enhance, bit_shift: (39, 0), label: "エクシード" },
+    OnExceed => { tag: Others, bit_shift: (40, 0), label: "エクシード時" },
+    AddLife => { tag: Endure, bit_shift: (41, 0), label: "ライフクロス追加" },
+    OnBurst => { tag: Others, bit_shift: (42, 0), label: "バースト時" },
+    LifeTrash => { tag: Offensive, bit_shift: (43, 0), label: "ライフクロス焼却" },
+    LifeCrush => { tag: Offensive, bit_shift: (44, 0), label: "クラッシュ" },
+    Damage => { tag: Lethal, bit_shift: (45, 0), label: "ダメージ" },
+    OnLifeCrush => { tag: Others, bit_shift: (46, 0), label: "クラッシュ時" },
+    Position => { tag: Disturb, bit_shift: (47, 0), label: "シグニゾーン移動" },
+    Vanilla => { tag: Endure, bit_shift: (48, 0), label: "バニラ" },
+    Untouchable => { tag: Others, bit_shift: (49, 0), label: "不可触" },    //アークゲイン
+    TopCheck => { tag: Enhance, bit_shift: (50, 0), label: "デッキトップ確認" },
+    BottomCheck => { tag: Enhance, bit_shift: (51, 0), label: "デッキボトム確認" },
+    Barrier => { tag: Endure, bit_shift: (52, 0), label: "バリア" },
+    MultiEner => { tag: Enhance, bit_shift: (53, 0), label: "マルチエナ" },
+    LrigTrash => { tag: Enhance, bit_shift: (54, 0), label: "ルリグトラッシュ参照" },
+    Charm => { tag: Unique, bit_shift: (55, 0), label: "チャーム" },
+    Craft => { tag: Unique, bit_shift: (56, 0), label: "クラフト" },
+    Acce => { tag: Unique, bit_shift: (57, 0), label: "アクセ" },
+    Rise => { tag: Unique, bit_shift: (58, 0), label: "ライズ" },
+    Recollect => { tag: Enhance, bit_shift: (59, 0), label: "リコレクト" },
+    SeekTop => { tag: Enhance, bit_shift: (60, 0), label: "トップ引き込み" },
+    EraseSkill => { tag: Others, bit_shift: (61, 0), label: "能力消去" },
+    CancelDamage => { tag: Endure, bit_shift: (0, 1), label: "ダメージ無効" },
+    Reanimate => { tag: Endure, bit_shift: (0, 2), label: "トラッシュ場出し" },
+    AdditionalAttack => { tag: Lethal, bit_shift: (0, 3), label: "追加アタック" },
+    UnGuardable => { tag: Lethal, bit_shift: (0, 4), label: "ガード不可" },
+    SalvageSpell => { tag: Enhance, bit_shift: (0, 5), label: "スペル回収" },
+    BanishOnAttack => { tag: Lethal, bit_shift: (0, 6), label: "アタック時バニッシュ" },
+    Shoot => { tag: Disturb, bit_shift: (0, 7), label: "シュート" },
+    LimitSigni => { tag: Lethal, bit_shift: (0, 8), label: "シグニゾーン制限" },
+    FreeSpell => { tag: Enhance, bit_shift: (0, 9), label: "スペルコスト軽減" },
+    DualColorEner => { tag: Enhance, bit_shift: (0, 10), label: "複数色エナ" },
+    GainCoin => { tag: Unique, bit_shift: (0, 11), label: "コイン獲得" },
+    BetCoin => { tag: Others, bit_shift: (0, 12), label: "ベット" },
+    HandCost => { tag: Enhance, bit_shift: (0, 13), label: "手札コスト" },   // 自分自身が捨てる
+    AssistCost => { tag: Enhance, bit_shift: (0, 14), label: "アシストダウンコスト" }, // アシストをダウン
+    Inherit => { tag: Others, bit_shift: (0, 15), label: "Lv3継承" },    // ルリグトラッシュのルリグを継承
+    PreventGrowCost => { tag: Enhance, bit_shift: (0, 16), label: "グロウコスト軽減" },
+    PutSigniDefense => { tag: Endure, bit_shift: (0, 17), label: "ブロッカー場出し" },
+    PutSigniOffense => { tag: Offensive, bit_shift: (0, 18), label: "アタッカー場出し" },
+    Harmony => { tag: Unique, bit_shift: (0, 19), label: "ハーモニー" },
+    MagicBox => { tag: Unique, bit_shift: (0, 20), label: "マジックボックス" },
+    Virus => { tag: Unique, bit_shift: (0, 21), label: "ウィルス" },
+    AtrsSpell => { tag: Enhance, bit_shift: (0, 22), label: "アーツコスト軽減" },
 }
 
 pub trait HashSetToBits {
@@ -445,4 +217,46 @@ impl HashSetToBits for HashSet<CardFeature> {
         }
         bits
     }
+}
+
+// ユーザーが見る形式のデータを定義
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExportedCardFeature {
+    pub name: String,          // Feature名（例: "DoubleCrush"）
+    pub bit_shift: (i64, i64), // ビットシフト値
+    pub tag: FeatureTag,       // タグカテゴリ
+}
+
+// タグとその機能群をマッピング
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExportedFeatureGroup {
+    pub tag_name: String,                   // タグ名（例: "Lethal"）
+    pub features: Vec<ExportedCardFeature>, // 該当する機能のリスト
+}
+// Export用の方法を実装
+impl CardFeature {
+    pub fn export(&self) -> ExportedCardFeature {
+        ExportedCardFeature {
+            name: format!("{:?}", self), // Enum名を文字列化
+            bit_shift: self.to_bit(),    // to_bit の結果を使用
+            tag: self.tag(),             // タグカテゴリを取得
+        }
+    }
+}
+pub fn export_features() -> HashMap<String, Vec<ExportedCardFeature>> {
+    let mut feature_map: HashMap<String, Vec<ExportedCardFeature>> = HashMap::new();
+
+    let all_features = CardFeature::create_vec();
+
+    // 分類して値をマッピング
+    for feature in all_features.into_iter() {
+        let exported = feature.export();
+
+        feature_map
+            .entry(exported.tag.to_string()) // タグごとに分類
+            .or_insert_with(Vec::new)
+            .push(exported);
+    }
+
+    feature_map
 }
