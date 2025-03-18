@@ -17,7 +17,7 @@ const color_bits = computed(() => {
 });
 
 // 表示用のメッセージ
-const message = ref('default');
+const message = ref('');
 
 let print_detail = (id: number) => {
 };
@@ -117,7 +117,6 @@ const toggle_color = (color: ColorName) => {
 </script>
 
 <template lang="pug">
-  span {{ message }}
   .frame
     NavBar
     ColorSelector(
@@ -131,10 +130,7 @@ const toggle_color = (color: ColorName) => {
     )
     FeatureConditions(:conditions="conditions" @emit-bits="apply_bits")
     span.count [ {{ card_store.cards_filtered.length }} items ]
-    span.color_bits {{ color_bits }}
-    hr
-    input.feature(type="number" v-model="f1" placeholder="feature bits 1")
-    input.feature(type="number" v-model="f2" placeholder="feature bits 2")
+    //span.color_bits {{ color_bits }}
     hr
     table
       colgroup
@@ -167,7 +163,14 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th {
+  padding: 3px;
+  border: 1px solid black;
+  background-color: #2b2b2b;
+  color: white;
+}
+
+td {
   padding: 3px;
   border: 1px solid black;
 }
