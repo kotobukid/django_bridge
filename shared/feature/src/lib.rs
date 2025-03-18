@@ -852,7 +852,7 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             features_detected: features![CardFeature::AssistCost],
         },
         RemovePattern {
-            pattern: r"このルリグはあなたのルリグトラッシュにあるレベル３の＜.+＞と同じカード名としても扱い、そのルリグの【自】能力を得る。".into(),
+            pattern: r"このルリグはあなたのルリグトラッシュにあるレベル３の＜.+＞と同じカード名としても扱い、そのルリグの【(自|常)】能力を得る。".into(),
             do_replace: true,
             replace_to: "*Inherit*",
             features_detected: features![CardFeature::Inherit],
