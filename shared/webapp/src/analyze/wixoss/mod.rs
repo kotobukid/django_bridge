@@ -6,7 +6,7 @@ mod timing;
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
 use color::{convert_cost, Colors};
 use crate::analyze::wixoss::format::Format;
-use feature::{create_remove_patterns, RemovePattern};
+use feature::{create_detect_patterns, DetectPattern};
 
 pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceCraft, PieceRelay, Resona, ResonaCraft,
@@ -638,7 +638,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
 
     let mut features: Vec<CardFeature> = Vec::new();
 
-    let remove_patterns: Vec<RemovePattern> = create_remove_patterns();
+    let remove_patterns: Vec<DetectPattern> = create_detect_patterns();
 
     let replaced_text = remove_patterns.iter().fold(text, |current_text, pat| {
         let re = Regex::new(pat.pattern.as_str()).unwrap();

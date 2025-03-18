@@ -3,226 +3,226 @@ use std::collections::HashSet;
 
 pub mod feature;
 
-pub struct RemovePattern<'a> {
+pub struct DetectPattern<'a> {
     pub pattern: String,
     pub do_replace: bool,
     pub replace_to: &'a str,
     pub features_detected: HashSet<CardFeature>,
 }
 
-pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
+pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
     vec![
-        RemovePattern {
+        DetectPattern {
             pattern: r"『".to_string(),
             do_replace: true,
             replace_to: "",
             features_detected: features![],
         },
-        RemovePattern {  // アクセのみ？
+        DetectPattern {  // アクセのみ？
             pattern: r"『".into(),
             do_replace: true,
             replace_to: "",
             features_detected: features![]
         },
-        RemovePattern { // アクセのみ？
+        DetectPattern { // アクセのみ？
             pattern: r"』".into(),
             do_replace: true,
             replace_to:"",
             features_detected: features![]
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ライフバースト：".into(),
             do_replace: true,
             replace_to: "LB:",
             features_detected: features![CardFeature::LifeBurst],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（対戦相手のライフクロスが１枚以上ある場合、ライフクロス１枚をクラッシュし、０枚の場合、あなたはゲームに勝利する）".into(),
             do_replace: true,
             replace_to: "*DAMAGE",
             features_detected: features![CardFeature::Damage],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（パワーが０以下のシグニはルールによってバニッシュされる）".into(),
             do_replace: true,
             replace_to: "*RULE BANISH POWER ZERO*",
             features_detected: features![CardFeature::PowerDown],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（アタックによるダメージでライフクロスを２枚クラッシュする）".into(),
             do_replace: true,
             replace_to: "*DOUBLE CRUSH*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（２枚以下の場合、それらをすべて選ぶ）".into(),
             do_replace: true,
             replace_to: "*TARGET ALL OVER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（このシグニが場に出たとき、あなたのアップ状態の.+をダウンしないかぎり、これをダウンする）".into(),
             do_replace: true,
             replace_to: "*HARMONY*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"【ハーモニー】".into(),
             do_replace: false,
             replace_to: "",
             features_detected: features![CardFeature::Harmony],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"【ウィルス】".into(),
             do_replace: false,
             replace_to: "",
             features_detected: features![CardFeature::Virus],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r" （【ウィルス】と同じシグニゾーンにあるシグニは感染状態である）".into(),
             do_replace: true,
             replace_to: "*VIRUS*",
             features_detected: features![CardFeature::Virus],
         },
-        RemovePattern {
+        DetectPattern {
             pattern:  r"（【アサシン】を持つシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える。【ダブルクラッシュ】を持つシグニがアタックによってダメージを与えた場合ライフクロスを１枚ではなく２枚クラッシュする）".into(),
             do_replace: true,
             replace_to: "*DOUBLE CRUSH && ASSASSIN*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【ランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスを１枚クラッシュする）".into(),
             do_replace: true,
             replace_to: "*LANCER*",
             features_detected: features![CardFeature::Lancer],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【Ｓランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスがある場合はそれを１枚クラッシュする。無い場合は対戦相手にダメージを与える）".into(),
             do_replace: true,
             replace_to: "*S LANCER*",
             features_detected: features![CardFeature::SLancer],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（このクラフトは効果以外によっては場に出せない）".into(),
             do_replace: true,
             replace_to: "*NO STANDARD PUT*",
             features_detected: features![CardFeature::Craft],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（このスペルはあなたのメインフェイズにルリグデッキから使用できる）".into(),
             do_replace: true,
             replace_to: "*SPELL CRAFT*",
             features_detected: features![CardFeature::Craft],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（クラフトであるスペルは、使用後にゲームから除外される）".into(),
             do_replace: true,
             replace_to: "*SPELL CRAFT GOES REMOVED*",
             features_detected: features![CardFeature::Craft],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（《ガードアイコン》を持つシグニは【ガード】を得る）".into(),
             do_replace: true,
             replace_to: "*GUARD*",
             features_detected: features![CardFeature::Guard],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（複数の【出】能力は好きな順番で発動できる）".into(),
             do_replace: true,
             replace_to: "*MULTIPLE CIP*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（この条件を満たさなければ場に出せない）".into(),
             do_replace: true,
             replace_to: "*RISE LIMITATION*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【チャーム】は裏向きでシグニに付き、１体に１枚までしか付けられない）".into(),
             do_replace: true,
             replace_to: "*CHARM*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【ソウル】はシグニに１枚まで付き、そのシグニが場を離れるとルリグトラッシュに置かれる）".into(),
             do_replace: true,
             replace_to: "*SOUL*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【チャーム】や【アクセ】、【ソウル】はシグニに付く）".into(),
             do_replace: true,
             replace_to: "*CHARM/ACCE/SOUL BELONGS TO SIGNI*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["（デッキが", "枚以下の場合は置き換えられない）"].into(),
             do_replace: true,
             replace_to: "*FEATURE LIMIT DECK DROP*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（このカードを手札から捨てることで、ルリグのアタックによるダメージを一度防ぐ）".into(),
             do_replace: true,
             replace_to: "*GUARD*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（シグニの下に置かれたカードは、そのシグニが場を離れるとルールによってトラッシュに置かれる）".into(),
             do_replace: true,
             replace_to: "*GO TO TRASH TOGETHER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（この能力はこのカードがトラッシュにある場合にしか使用できない）".into(),
             do_replace: true,
             replace_to: "*ONLY AVAILABLE IN TRASH*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（あなたの場に＜.+＞のルリグ３体がいるなら【チーム自】が有効になる）".into(),
             do_replace: true,
             replace_to: "*TEAM SKILL*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（このスペルを使用する際、使用コストとして追加で.+を支払ってもよい）".into(),
             do_replace: true,
             replace_to: "*BET*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【マジックボックス】はシグニゾーン１つにつき１つまで裏向きで設置できる）".into(),
             do_replace: true,
             replace_to: "*MAGIC BOX*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【マジックボックス】はシグニゾーン１つにつき１つまで裏向きで設置できる。すでに【マジックボックス】のあるシグニゾーンに設置する場合、元からある【マジックボックス】をトラッシュに置いてから設置する）".into(),
             do_replace: false,
             replace_to: "*MAGIC BOX ON BOX*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"アクセ".into(),
             do_replace: false,
             replace_to: "*ACCE*",
             features_detected: features![CardFeature::Acce]
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【アクセ】はシグニ１体に１枚までしか付けられない。このクラフトが付いているシグニが場を離れるとこのクラフトはゲームから除外される）".into(),
             do_replace: true,
             replace_to: "*ACCE*",
             features_detected: features![CardFeature::Acce],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（シグニのパワーを計算する場合、先に基本パワーを適用してプラスやマイナスをする）".into(),
             do_replace: true,
             replace_to: "*CALC ORDER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num![
                 "（あなたのルリグの下からカードを合計",
                 "枚ルリグトラッシュに置く）"
@@ -231,423 +231,423 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             replace_to: "*EXCEED*",
             features_detected: features![CardFeature::Exceed],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["エクシード", ""].into(),
             do_replace: false,
             replace_to: "*EXCEED*",
             features_detected: features![CardFeature::Exceed],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（ピースはあなたの場にルリグが３体いないと使用できない）".into(),
             do_replace: true,
             replace_to: "*COMMON PIECE*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【チーム】または【ドリームチーム】を持つピースはルリグデッキに(合計|合計で)１枚までしか入れられない）".into(),
             do_replace: true,
             replace_to: "*TEAM PIECE*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（あなたの場にいるルリグ３体がこの条件を満たす）".into(),
             do_replace: true,
             replace_to: "*TEAM*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（シグニは覚醒すると場にあるかぎり覚醒状態になる）".into(),
             do_replace: true,
             replace_to: "*AWAKE*",
             features_detected: features![CardFeature::Awake],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（この能力はこのシグニが場にある場合にしか使用できない）".into(),
             do_replace: true,
             replace_to: "*AVAILABLE ONLY IN BATTLEFIELD*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（グロウしても新しいセンタールリグは能力を得たままである）".into(),
             do_replace: true,
             replace_to: "*IN GAME AVAILABLE*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（凍結された(ルリグ|シグニ)は次の自分のアップフェイズにアップしない）".into(),
             do_replace: true,
             replace_to: "*FROZEN*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（凍結されたルリグとシグニは次の自分のアップフェイズにアップしない）".into(),
             do_replace: true,
             replace_to: "*FROZEN*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（フェゾーネマジックは５種類ある）".into(),
             do_replace: true,
             replace_to: "*FESONE MAGIC*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【出】能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい）".into(),
             do_replace: true,
             replace_to: "*CIP COST*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（ゲームを開始する際に、このルリグを表向きにしたとき、このルリグがセンタールリグであるなら、[《コインアイコン》]+を得る）".into(),
             do_replace: true,
             replace_to: "*GAIN COINS ON START*",
             features_detected: features![CardFeature::GainCoin],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（右下に【コイン】を持つルリグがグロウしたとき、それと同じ枚数の[《コインアイコン》]+を得る）".into(),
             do_replace: true,
             replace_to: "*GAIN COINS ON GROW*",
             features_detected: features![CardFeature::GainCoin],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（ゲームを開始する際に、センタールリグでないルリグを表向きにしても《コインアイコン》を得られない）".into(),
             do_replace: true,
             replace_to: "*GAIN NO COINS*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（プレイヤーが保持できる《コインアイコン》の上限は５枚である）".into(),
             do_replace: true,
             replace_to: "*COIN LIMIT*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（すでに場に３体以上ある場合は２体になるようにシグニをトラッシュに置く）".into(),
             do_replace: true,
             replace_to: "*SIGNI ZONE RESTRICTION*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（コストの合計とは、カードの左上のエナコストの数字の合計である。例えばコストが《白×1》《無×1》の場合、コストの合計は２である）".into(),
             do_replace: true,
             replace_to: "*TOTAL COST*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（コストのない【出】能力は発動しないことを選べない。.+）".into(),
             do_replace: true,
             replace_to: "*MUST APPLY CIP*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（コストのない【出】能力は発動しないことを選べない。ライフクロスが１枚の場合その１枚をトラッシュに置く）".into(),
             do_replace: true,
             replace_to: "*MUST APPLY CIP*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【アサシン】を持つシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える）".into(),
             do_replace: true,
             replace_to: "*ASSASSIN*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【アサシン】を持つシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える。【ランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスを１枚クラッシュする）".into(),
             do_replace: true,
             replace_to: "*ASSASSIN OR LANCER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（このシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える）".into(),
             do_replace: true,
             replace_to: "*SELF ASSASSIN*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（表記されているパワーとは、元々それに印刷されている値である）".into(),
             do_replace: true,
             replace_to: "*BASIC POWER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（あなたが次にルリグからダメージを受ける場合、代わりに【ルリグバリア】１つを消費し、そのダメージを受けない）".into(),
             do_replace: true,
             replace_to: "*LRIG BARRIER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（あなたが次にシグニからダメージを受ける場合、代わりに【シグニバリア】１つを消費し、そのダメージを受けない）".into(),
             do_replace: true,
             replace_to: "*SIGNI BARRIER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（あなたが次にシグニからダメージを受ける場合、代わりに【シグニバリア】１つを消費し、そのダメージを受けない。あなたが次にルリグからダメージを受ける場合、代わりに【ルリグバリア】１つを消費し、そのダメージを受けない）".into(),
             do_replace: true,
             replace_to: "*LRIG/SIGNI BARRIER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（(この|それらの)シグニは.+によって対象にされない）".into(),
             do_replace: true,
             replace_to: "*SHADOW*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ルリグデッキに加える。（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）".into(),
             do_replace: false,
             replace_to: "*CRAFT RESONA*",
             features_detected: features![CardFeature::Craft],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）".into(),
             do_replace: true,
             replace_to: "*RANDOM RESONA MUST BE EXPOSED*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（レゾナでありクラフトであるシグニはリムーブできず場を離れるとゲームから除外される）".into(),
             do_replace: true,
             replace_to: "*RESONA CANT BE REMOVED*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（クラフトであるシグニは場を離れるとゲームから除外される）".into(),
             do_replace: true,
             replace_to: "*CRAFT SIGNI REMOVED ON LEAVE*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（このクラフトの上にあるシグニが場を離れるとこのクラフトはゲームから除外される）".into(),
             do_replace: true,
             replace_to: "*TORAMARU GIMMICK*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（チェックゾーンにあるカードはターン終了時にトラッシュに置かれる）".into(),
             do_replace: true,
             replace_to: "*CHECK ZONE*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（あなたの場にいるルリグが１体で、そのルリグがレベル３以上であるかぎり、そのルリグのリミットを＋２する）".into(),
             do_replace: true,
             replace_to: "*LIMIT UPPER EFFECTS*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（【リミットアッパー】はあなたのルリグゾーンに１つまでしか置けない）".into(),
             do_replace: true,
             replace_to: "*ONLY ONE LIMIT UPPER*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（あなたのデッキの一番上のカードをエナゾーンに置く）".into(),
             do_replace: true,
             replace_to: "*ENER CHARGE*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"《コインアイコン》を得る".into(),
             do_replace: false,
             replace_to: "*GAIN COINS*",
             features_detected: features![CardFeature::GainCoin],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ガードアイコン".into(),
             do_replace: true,
             replace_to: "*GUARD*",
             features_detected: features![CardFeature::Guard],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"捨てさせる。".into(),
             do_replace: false,
             replace_to: "*HAND DESTRUCTION*",
             features_detected: features![CardFeature::DiscardOpponent],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"見ないで選び、捨てさせる。".into(),
             do_replace: false,
             replace_to: "*RANDOM HAND DESTRUCTION*",
             features_detected: features![CardFeature::RandomDiscard],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ダウンする。".into(),
             do_replace: false,
             replace_to: "*DOWN*",
             features_detected: features![CardFeature::Down],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"エナチャージ".into(),
             do_replace: false,
             replace_to: "*CHARGE*",
             features_detected: features![CardFeature::Charge],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["カードを", "枚までエナゾーンに置"].into(),
             do_replace: false,
             replace_to: "*CHARGE MANUALLY*",
             features_detected: features![CardFeature::Charge],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"残りを好きな順番でデッキの一番下に置く".into(),
             do_replace: false,
             replace_to: "*BOTTOM CHECK*",
             features_detected: features![CardFeature::BottomCheck],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"(それ|シグニ)をトラッシュに置".into(),
             do_replace: false,
             replace_to: "*TRASH*",
             features_detected: features![CardFeature::Trash],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"シグニバリア".into(),
             do_replace: false,
             replace_to: "*BARRIER SIGNI*",
             features_detected: features![CardFeature::Barrier],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ルリグバリア".into(),
             do_replace: false,
             replace_to: "*BARRIER LRIG*",
             features_detected: features![CardFeature::Barrier],
         },
         // (r"がアタックしたとき", do_remove: false, "*ON ATTACK*", features_detected: features![CardFeature::OnAttack]),
-        RemovePattern {
+        DetectPattern {
             pattern: r"アサシン".into(),
             do_replace: false,
             replace_to: "*ASSASSIN*",
             features_detected: features![CardFeature::Assassin],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"シャドウ".into(),
             do_replace: false,
             replace_to: "*SHADOW*",
             features_detected: features![CardFeature::Shadow],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"【マルチエナ】".into(),
             do_replace: false,
             replace_to: "*MULTI ENER*",
             features_detected: features![CardFeature::MultiEner],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（エナコストを支払う際、このカードは好きな色１つとして支払える）".into(),
             do_replace: true,
             replace_to: "*ALL COLORED ENER*",
             features_detected: features![CardFeature::DualColorEner],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（エナコストを支払う際、このカードは.+１つとして支払える）".into(),
             do_replace: true,
             replace_to: "*DUAL COLORED ENER*",
             features_detected: features![CardFeature::DualColorEner],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"（対戦相手のシグニが【シュート】を持つシグニとのバトルによってバニッシュされる場合、エナゾーンに置かれる代わりにトラッシュに置かれる）".into(),
             do_replace: true,
             replace_to: "*SHOOT*",
             features_detected: features![CardFeature::DualColorEner],
         },
-        RemovePattern {pattern: r"チャーム".into(), do_replace: false, replace_to: "*CHARM*", features_detected: features![CardFeature::Charm]},
-        RemovePattern {
+        DetectPattern {pattern: r"チャーム".into(), do_replace: false, replace_to: "*CHARM*", features_detected: features![CardFeature::Charm]},
+        DetectPattern {
             pattern: r"ダブルクラッシュ".into(),
             do_replace: false,
             replace_to: "*DOUBLE CRUSH*",
             features_detected: features![CardFeature::DoubleCrush],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"トリプルクラッシュ".into(),
             do_replace: false,
             replace_to: "*TRIPLE CRUSH*",
             features_detected: features![CardFeature::TripleCrush],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"【シュート】".into(),
             do_replace: false,
             replace_to: "*SHOOT*",
             features_detected: features![CardFeature::Shoot],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"【ライズ】あなたの".into(),
             do_replace: false,
             replace_to: "RISE",
             features_detected: features![CardFeature::Rise],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ベット―".into(),
             do_replace: false,
             replace_to: "BET",
             features_detected: features![CardFeature::BetCoin],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"Sランサー".into(),
             do_replace: false,
             replace_to: "*S LANCER*",
             features_detected: features![CardFeature::SLancer],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"Ｓランサー".into(),
             do_replace: false,
             replace_to: "*S LANCER*",
             features_detected: features![CardFeature::SLancer],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"【マジックボックス】".into(),
             do_replace: false,
             replace_to: "*MAGIC BOX*",
             features_detected: features![CardFeature::MagicBox],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["対戦相手のシグニ", "体を対象とし、それをゲームから除外する"].into(),
             do_replace: false,
             replace_to: "*REMOVE SIGNI*",
             features_detected: features![CardFeature::RemoveSigni],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"バニッシュ".into(),
             do_replace: false,
             replace_to: "*BANISH*",
             features_detected: features![CardFeature::Banish],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"シグニ.+エナゾーンに置".into(),
             do_replace: false,
             replace_to: "*ENER*",
             features_detected: features![CardFeature::Ener],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"シグニをアップ".into(),
             do_replace: false,
             replace_to: "*UP*",
             features_detected: features![CardFeature::Up],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["シグニ", "体を対象とし、(それ|それら)をアップ"].into(),
             do_replace: false,
             replace_to: "*UP*",
             features_detected: features![CardFeature::Up],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"凍結する".into(),
             do_replace: false,
             replace_to: "*FREEZE*",
             features_detected: features![CardFeature::Freeze],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"それらの場所を入れ替え".into(),
             do_replace: false,
             replace_to: "*POSITION*",
             features_detected: features![CardFeature::Position],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"場に出すことができない".into(),
             do_replace: false,
             replace_to: "*LIMIT SIGNI*",
             features_detected: features![CardFeature::LimitSigni],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num![
                 "対戦相手のシグニ",
                 "体(まで|を)対象とし、(それら|それ)を手札に戻"
@@ -656,7 +656,7 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             replace_to: "*BOUNCE*",
             features_detected: features![CardFeature::Bounce],
         },
-        RemovePattern {
+        DetectPattern {
            pattern:  any_num![
                 "対戦相手のパワー",
                 "体(まで|を)対象とし、(それら|それ)を手札に戻"
@@ -665,117 +665,117 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             replace_to: "*BOUNCE*",
             features_detected: features![CardFeature::Bounce],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["対戦相手のシグニ", "体を対象とし、それを手札に戻"].into(),
             do_replace: false,
             replace_to: "BOUNCE",
             features_detected: features![CardFeature::Bounce],
         },
         // (    pattern: r"手札に加え", do_remove: false, "*SALVAGE*", features_detected: features![CardFeature::Salvage]),
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["ライフクロス", "枚をトラッシュに置"].into(),
             do_replace: false,
             replace_to: "*LIFE TRASH*",
             features_detected: features![CardFeature::LifeTrash],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["エナゾーンからカード", "枚(を|選び).+トラッシュに置"].into(),
             do_replace: false,
             replace_to: "*ENER ATTACK*",
             features_detected: features![CardFeature::EnerAttack],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ルリグトラッシュに置".into(),
             do_replace: false,
             replace_to: "*LRIG TRASH*",
             features_detected: features![CardFeature::LrigTrash],
         },
         // (pattern: r"アタックフェイズ開始時", do_remove: false, "*ON ATTACK START*", features_detected: features![CardFeature::OnAttackStart]),
-        RemovePattern {
+        DetectPattern {
             pattern: r"ライフクロスに加える".into(),
             do_replace: false,
             replace_to: "*ADD LIFE*",
             features_detected: features![CardFeature::AddLife],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ランサー".into(),
             do_replace: false,
             replace_to: "*LANCER*",
             features_detected: features![CardFeature::Lancer],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ライフクロスを１枚クラッシュする".into(),
             do_replace: false,
             replace_to: "*CRUSH*",
             features_detected: features![CardFeature::LifeCrush],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"対戦相手のライフクロス１枚をクラッシュする。".into(),
             do_replace: false,
             replace_to: "*CRUSH*",
             features_detected: features![CardFeature::LifeCrush],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"対戦相手にダメージを与える。".into(),
             do_replace: false,
             replace_to: "*DAMAGE*",
             features_detected: features![CardFeature::Damage],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"リコレクトアイコン".into(),
             do_replace: false,
             replace_to: "*RECOLLECT*",
             features_detected: features![CardFeature::Recollect],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: "（あなたのルリグトラッシュに[（\u{FF10}-\u{FF19}）]枚以上のアーツがあるかぎり《リコレクトアイコン》［[（\u{FF10}-\u{FF19}）]枚以上］に続く文章が有効になる）".into(),
             do_replace: true,
             replace_to: "*RECOLLECT*",
             features_detected: features![],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num![r"", "枚見"].into(),
             do_replace: false,
             replace_to: "*SEEK*",
             features_detected: features![CardFeature::SeekTop],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"デッキの一番上に(戻|置)".into(),
             do_replace: false,
             replace_to: "TOP",
             features_detected: features![CardFeature::TopSet],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"能力を失う".into(),
             do_replace: false,
             replace_to: "*ERASE SKILL*",
             features_detected: features![CardFeature::EraseSkill],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"それを《サーバント　ＺＥＲＯ》にする".into(),
             do_replace: false,
             replace_to: "*ERASE SKILL / SERVANT ZERO*",
             features_detected: features![CardFeature::EraseSkill],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"アタックできない".into(),
             do_replace: false,
             replace_to: "*NON ATTACKABLE*",
             features_detected: features![CardFeature::NonAttackable],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["カードを", "枚引"].into(),
             do_replace: false,
             replace_to: "*DRAW*",
             features_detected: features![CardFeature::Draw],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["デッキの上からカードを", "枚トラッシュに置"].into(),
             do_replace: false,
             replace_to: "*DROP*",
             features_detected: features![CardFeature::Drop],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num![
                 "対戦相手のエナゾーンからカードを",
                 "枚まで対象とし、それらを手札に戻"
@@ -784,55 +784,55 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             replace_to: "*ENER ATTACK*",
             features_detected: features![CardFeature::EnerAttack],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"デッキの一番下に置".into(),
             do_replace: false,
             replace_to: "*DECK BOUNCE*",
             features_detected: features![CardFeature::DeckBounce],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"シグニのパワーを＋".into(),
             do_replace: false,
             replace_to: "*POWER UP*",
             features_detected: features![CardFeature::PowerUp],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"このシグニのパワーは＋".into(),
             do_replace: false,
             replace_to: "*POWER UP*",
             features_detected: features![CardFeature::PowerUp],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"(シグニ|それ|それら)のパワーを＋".into(),
             do_replace: false,
             replace_to: "*POWER UP*",
             features_detected: features![CardFeature::PowerUp],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"(シグニ|それ|それら)のパワーを－".into(),
             do_replace: false,
             replace_to: "*POWER DOWN*",
             features_detected: features![CardFeature::PowerDown],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"(シグニ|それ)のパワーをこの方法で.+－".into(),
             do_replace: false,
             replace_to: "*POWER DOWN*",
             features_detected: features![CardFeature::PowerDown],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"ダメージを受けない".into(),
             do_replace: false,
             replace_to: "*CANCEL DAMAGE*",
             features_detected: features![CardFeature::CancelDamage],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"トラッシュからシグニ.+場に出".into(),
             do_replace: false,
             replace_to: "*REANIMATE*",
             features_detected: features![CardFeature::Reanimate],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num![
             // あなたのトラッシュから黒のシグニ１枚を対象とし、それを場に出す  // TODO
                 "あなたのトラッシュから(シグニ|.+のシグニ)",
@@ -842,25 +842,25 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             replace_to: "*REANIMATE*",
             features_detected: features![CardFeature::Reanimate],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"このルリグをアップし".into(),
             do_replace: false,
             replace_to: "*ADDITIONAL ATTACK*",
             features_detected: features![CardFeature::AdditionalAttack],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"対戦相手は【ガード】ができない".into(),
             do_replace: false,
             replace_to: "*UNGUARDABLE*",
             features_detected: features![CardFeature::UnGuardable],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["スペル", "枚を.+手札に加え"].into(),
             do_replace: false,
             replace_to: "*SALVAGE SPELL*",
             features_detected: features![CardFeature::SalvageSpell],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num![
                 "(シグニ|シグニを|シグニをそれぞれ)",
                 "枚(を|まで).+手札に加え"
@@ -869,73 +869,73 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             replace_to: "SALVAGE SIGNI",
             features_detected: features![CardFeature::Salvage],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["スペル", "枚をコストを支払わずに使用する"].into(),
             do_replace: false,
             replace_to: "FREE SPELL",
             features_detected: features![CardFeature::FreeSpell],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"このアーツの使用コストは.+減る".into(),
             do_replace: false,
             replace_to: "FREE ARTS",
             features_detected: features![CardFeature::FreeArts],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"このシグニがアタックしたとき.+バニッシュする".into(),
             do_replace: false,
             replace_to: "BANISH ON ATTACK",
             features_detected: features![CardFeature::BanishOnAttack],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"アタックを無効に".into(),    // todo: 攻防あり
             do_replace: false,
             replace_to: "ATTACK NO EFFECT",
             features_detected: features![CardFeature::AttackNoEffect],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"バニッシュされない".into(),
             do_replace: false,
             replace_to: "INVULNERABLE",
             features_detected: features![CardFeature::Invulnerable],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"バニッシュされたとき".into(),
             do_replace: false,
             replace_to: "ON BANISH",
             features_detected: features![CardFeature::OnBanish],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["手札を", "枚捨ててもよい"].into(),
             do_replace: false,
             replace_to: "*HAND COST*",
             features_detected: features![CardFeature::HandCost],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"アップ状態のルリグを好きな数ダウンする".into(),
             do_replace: false,
             replace_to: "*ASSIST COST*",
             features_detected: features![CardFeature::RligDownCost],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["アップ状態のルリグ", "体をダウンしてもよい"].into(),
             do_replace: false,
             replace_to: "*ASSIST COST*",
             features_detected: features![CardFeature::RligDownCost],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"このルリグはあなたのルリグトラッシュにあるレベル３の＜.+＞と同じカード名としても扱い、そのルリグの【(自|常)】能力を得る。".into(),
             do_replace: false,
             replace_to: "*Inherit*",
             features_detected: features![CardFeature::Inherit],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: r"グロウするためのコスト".into(),
             do_replace: true,
             replace_to: "*PREVENT GROW COST*",
             features_detected: features![CardFeature::PreventGrowCost],
         },
-        RemovePattern {
+        DetectPattern {
             pattern: any_num!["シグニを", "枚まで対象とし、それを場に出す"].into(),
             do_replace: false,
             replace_to: "*PUT BLOCKER*",
