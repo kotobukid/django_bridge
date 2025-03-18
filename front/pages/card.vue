@@ -131,7 +131,6 @@ const toggle_color = (color: ColorName) => {
     FeatureConditions(:conditions="conditions" @emit-bits="apply_bits")
     span.count [ {{ card_store.cards_filtered.length }} items ]
     //span.color_bits {{ color_bits }}
-    hr
     table
       colgroup
         col(style="width: 200px;")
@@ -151,8 +150,8 @@ const toggle_color = (color: ColorName) => {
           td {{ card.name }}
           td.center {{ card.color }}
           td.skill
-            .normal {{ card.skill_text }}
-            .burst {{ card.burst_text }}
+            SoftWrap.normal(:text="card.skill_text")
+            SoftWrap.burst(:text="card.burst_text")
 </template>
 
 <style scoped lang="less">
@@ -165,7 +164,7 @@ table {
 
 th {
   padding: 3px;
-  border: 1px solid black;
+  border: 1px solid #ffffff;
   background-color: #2b2b2b;
   color: white;
 }
