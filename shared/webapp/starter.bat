@@ -1,14 +1,14 @@
-cargo run --example scrape starter WXDi-D01
-cargo run --example scrape starter WXDi-D02
-cargo run --example scrape starter WXDi-D03
-cargo run --example scrape starter WXDi-D04
-cargo run --example scrape starter WXDi-D05
-cargo run --example scrape starter WXDi-D06
-cargo run --example scrape starter WXDi-D07
-cargo run --example scrape starter WXDi-D08
-cargo run --example scrape starter WXDi-D09
-cargo run --example scrape starter WX24-D1
-cargo run --example scrape starter WX24-D2
-cargo run --example scrape starter WX24-D3
-cargo run --example scrape starter WX24-D4
-cargo run --example scrape starter WX24-D5
+cargo run --release --example scrape starter WXDi-D01
+cargo run --release --example scrape starter WXDi-D02
+cargo run --release --example scrape starter WXDi-D03
+cargo run --release --example scrape starter WXDi-D04
+cargo run --release --example scrape starter WXDi-D05
+cargo run --release --example scrape starter WXDi-D06
+cargo run --release --example scrape starter WXDi-D07
+cargo run --release --example scrape starter WXDi-D08
+cargo run --release --example scrape starter WXDi-D09
+cargo run --release --example scrape starter WX24-D1
+cargo run --release --example scrape starter WX24-D2
+cargo run --release --example scrape starter WX24-D3
+cargo run --release --example scrape starter WX24-D4
+cargo run --release --example scrape starter WX24-D5
