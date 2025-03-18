@@ -570,6 +570,18 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             features_detected: features![CardFeature::Shoot],
         },
         RemovePattern {
+            pattern: r"【ライズ】あなたの".into(),
+            do_replace: false,
+            replace_to: "RISE",
+            features_detected: features![CardFeature::Rise],
+        },
+        RemovePattern {
+            pattern: r"ベット―".into(),
+            do_replace: false,
+            replace_to: "BET",
+            features_detected: features![CardFeature::BetCoin],
+        },
+        RemovePattern {
             pattern: r"Sランサー".into(),
             do_replace: false,
             replace_to: "*S LANCER*",
@@ -606,10 +618,34 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             features_detected: features![CardFeature::Ener],
         },
         RemovePattern {
+            pattern: r"シグニをアップ".into(),
+            do_replace: false,
+            replace_to: "*UP*",
+            features_detected: features![CardFeature::Up],
+        },
+        RemovePattern {
+            pattern: any_num!["シグニ", "体を対象とし、(それ|それら)をアップ"].into(),
+            do_replace: false,
+            replace_to: "*UP*",
+            features_detected: features![CardFeature::Up],
+        },
+        RemovePattern {
             pattern: r"凍結する".into(),
             do_replace: false,
             replace_to: "*FREEZE*",
             features_detected: features![CardFeature::Freeze],
+        },
+        RemovePattern {
+            pattern: r"それらの場所を入れ替え".into(),
+            do_replace: false,
+            replace_to: "*POSITION*",
+            features_detected: features![CardFeature::Position],
+        },
+        RemovePattern {
+            pattern: r"場に出すことができない".into(),
+            do_replace: false,
+            replace_to: "*LIMIT SIGNI*",
+            features_detected: features![CardFeature::LimitSigni],
         },
         RemovePattern {
             pattern: any_num![
@@ -702,6 +738,12 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             do_replace: false,
             replace_to: "*SEEK*",
             features_detected: features![CardFeature::SeekTop],
+        },
+        RemovePattern {
+            pattern: r"デッキの一番上に(戻|置)".into(),
+            do_replace: false,
+            replace_to: "TOP",
+            features_detected: features![CardFeature::TopSet],
         },
         RemovePattern {
             pattern: r"能力を失う".into(),
@@ -824,20 +866,44 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
                 "枚(を|まで).+手札に加え"
             ].into(),
             do_replace: false,
-            replace_to: "*SALVAGE SIGNI*",
+            replace_to: "SALVAGE SIGNI",
             features_detected: features![CardFeature::Salvage],
         },
         RemovePattern {
             pattern: any_num!["スペル", "枚をコストを支払わずに使用する"].into(),
             do_replace: false,
-            replace_to: "*FREE SPELL*",
+            replace_to: "FREE SPELL",
             features_detected: features![CardFeature::FreeSpell],
+        },
+        RemovePattern {
+            pattern: r"このアーツの使用コストは.+減る".into(),
+            do_replace: false,
+            replace_to: "FREE ARTS",
+            features_detected: features![CardFeature::FreeArts],
         },
         RemovePattern {
             pattern: r"このシグニがアタックしたとき.+バニッシュする".into(),
             do_replace: false,
-            replace_to: "*BANISH ON ATTACK*",
+            replace_to: "BANISH ON ATTACK",
             features_detected: features![CardFeature::BanishOnAttack],
+        },
+        RemovePattern {
+            pattern: r"アタックを無効に".into(),    // todo: 攻防あり
+            do_replace: false,
+            replace_to: "ATTACK NO EFFECT",
+            features_detected: features![CardFeature::AttackNoEffect],
+        },
+        RemovePattern {
+            pattern: r"バニッシュされない".into(),
+            do_replace: false,
+            replace_to: "INVULNERABLE",
+            features_detected: features![CardFeature::Invulnerable],
+        },
+        RemovePattern {
+            pattern: r"バニッシュされたとき".into(),
+            do_replace: false,
+            replace_to: "ON BANISH",
+            features_detected: features![CardFeature::OnBanish],
         },
         RemovePattern {
             pattern: any_num!["手札を", "枚捨ててもよい"].into(),
@@ -849,11 +915,17 @@ pub fn create_remove_patterns<'a>() -> Vec<RemovePattern<'a>> {
             pattern: r"アップ状態のルリグを好きな数ダウンする".into(),
             do_replace: false,
             replace_to: "*ASSIST COST*",
-            features_detected: features![CardFeature::AssistCost],
+            features_detected: features![CardFeature::RligDownCost],
+        },
+        RemovePattern {
+            pattern: any_num!["アップ状態のルリグ", "体をダウンしてもよい"].into(),
+            do_replace: false,
+            replace_to: "*ASSIST COST*",
+            features_detected: features![CardFeature::RligDownCost],
         },
         RemovePattern {
             pattern: r"このルリグはあなたのルリグトラッシュにあるレベル３の＜.+＞と同じカード名としても扱い、そのルリグの【(自|常)】能力を得る。".into(),
-            do_replace: true,
+            do_replace: false,
             replace_to: "*Inherit*",
             features_detected: features![CardFeature::Inherit],
         },

@@ -131,7 +131,7 @@ define_features! {
     RemoveSigni => { tag: Offensive, bit_shift: (13, 0), label: "シグニ除外" },
     NonAttackable => { tag: Endure, bit_shift: (14, 0), label: "アタック不可" },
     Down => { tag: Endure, bit_shift: (15, 0), label: "ダウン" },
-    Up => { tag: Offensive, bit_shift: (16, 0), label: "アップ" },
+    Up => { tag: Offensive, bit_shift: (16, 0), label: "シグニアップ" },
     Charge => { tag: Enhance, bit_shift: (17, 0), label: "エナチャージ" },
     EnerAttack => { tag: Disturb, bit_shift: (18, 0), label: "エナ破壊" },
     Trash => { tag: Offensive, bit_shift: (19, 0), label: "トラッシュ送り" },
@@ -167,8 +167,8 @@ define_features! {
     Position => { tag: Disturb, bit_shift: (47, 0), label: "シグニゾーン移動" },
     Vanilla => { tag: Endure, bit_shift: (48, 0), label: "バニラ" },
     Untouchable => { tag: Others, bit_shift: (49, 0), label: "不可触" },    //アークゲイン
-    TopCheck => { tag: Enhance, bit_shift: (50, 0), label: "デッキトップ確認" },
-    BottomCheck => { tag: Enhance, bit_shift: (51, 0), label: "デッキボトム確認" },
+    TopSet => { tag: Enhance, bit_shift: (50, 0), label: "トップ操作" },
+    BottomCheck => { tag: Enhance, bit_shift: (51, 0), label: "ボトム操作" },
     Barrier => { tag: Endure, bit_shift: (52, 0), label: "バリア" },
     MultiEner => { tag: Enhance, bit_shift: (53, 0), label: "マルチエナ" },
     LrigTrash => { tag: Enhance, bit_shift: (54, 0), label: "ルリグトラッシュ参照" },
@@ -192,7 +192,7 @@ define_features! {
     GainCoin => { tag: Unique, bit_shift: (0, 11), label: "コイン獲得" },
     BetCoin => { tag: Others, bit_shift: (0, 12), label: "ベット" },
     HandCost => { tag: Enhance, bit_shift: (0, 13), label: "手札コスト" },   // 自分自身が捨てる
-    AssistCost => { tag: Enhance, bit_shift: (0, 14), label: "アシストダウンコスト" }, // アシストをダウン
+    RligDownCost => { tag: Enhance, bit_shift: (0, 14), label: "ルリグダウンコスト" }, // ルリグをダウン
     Inherit => { tag: Others, bit_shift: (0, 15), label: "Lv3継承" },    // ルリグトラッシュのルリグを継承
     PreventGrowCost => { tag: Enhance, bit_shift: (0, 16), label: "グロウコスト軽減" },
     PutSigniDefense => { tag: Endure, bit_shift: (0, 17), label: "ブロッカー場出し" },
@@ -200,7 +200,7 @@ define_features! {
     Harmony => { tag: Unique, bit_shift: (0, 19), label: "ハーモニー" },
     MagicBox => { tag: Unique, bit_shift: (0, 20), label: "マジックボックス" },
     Virus => { tag: Unique, bit_shift: (0, 21), label: "ウィルス" },
-    AtrsSpell => { tag: Enhance, bit_shift: (0, 22), label: "アーツコスト軽減" },
+    FreeArts => { tag: Enhance, bit_shift: (0, 22), label: "アーツコスト軽減" },
 }
 
 pub trait HashSetToBits {
