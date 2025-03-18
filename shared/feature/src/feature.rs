@@ -72,13 +72,13 @@ pub enum FeatureTag {
 impl Display for FeatureTag {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let label = match self {
-            FeatureTag::Lethal => "リーサル",
-            FeatureTag::Offensive => "攻撃系",
-            FeatureTag::Disturb => "妨害系",
-            FeatureTag::Endure => "防御系",
-            FeatureTag::Enhance => "資源系",
-            FeatureTag::Unique => "固有系",
-            FeatureTag::Others => "その他",
+            FeatureTag::Lethal => "01リーサル",
+            FeatureTag::Offensive => "02攻撃系",
+            FeatureTag::Disturb => "04妨害系",
+            FeatureTag::Endure => "03防御系",
+            FeatureTag::Enhance => "05資源系",
+            FeatureTag::Unique => "06固有系",
+            FeatureTag::Others => "07その他",
         };
         write!(f, "{}", label)
     }
