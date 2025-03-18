@@ -25,6 +25,7 @@ type Getter = {
 }
 
 type Actions = {
+    set_cards(payload: CardData2[]): void,
     fetch(): Promise<void>,
     set_f1(f: number): void,
     set_f2(f: number): void,
@@ -48,6 +49,9 @@ const useCardStore: StoreDefinition<"card", State, Getter, Actions> = defineStor
         };
     },
     actions: {
+        set_cards(payload: CardData2[]): void {
+            this.cards = payload;
+        },
         fetch(): Promise<void> {
             return new Promise(resolve => {
                 axios.get("/api/card/list.json").then((res: AxiosResponse<{ cards: CardData2[] }>) => {

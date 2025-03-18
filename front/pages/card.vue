@@ -58,7 +58,7 @@ const runWasm = async () => {
     apply_bits = (shifts: [number, number]) => {
 
       let cards = fetch_by_f_shifts(shifts[0], shifts[1]);
-      console.log(cards)
+      card_store.set_cards(cards);
     }
 
     conditions.value = feature_conditions();
@@ -80,7 +80,7 @@ const f2 = computed(() => {
   return card_store.f_bits2;
 })
 
-const conditions = ref({});
+const conditions = ref(new Map());
 
 type ColorName = 'white' | 'blue' | 'black' | 'red' | 'green' | 'colorless';
 const white = ref(false);
@@ -130,19 +130,11 @@ const toggle_color = (color: ColorName) => {
       @toggle-color="toggle_color"
     )
     FeatureConditions(:conditions="conditions" @emit-bits="apply_bits")
-    v-btn(@click="card_store.set_f2(4); card_store.set_f1(0)") トラッシュ場出し
-    v-btn(@click="card_store.set_f2(8); card_store.set_f1(0)") 追加攻撃
-    v-btn(@click="card_store.set_f1(8); card_store.set_f2(0)") ハンデス
-    v-btn(@click="card_store.set_f1(16); card_store.set_f2(0)") ランダムハンデス
-    v-btn(@click="card_store.set_f1(0); card_store.set_f2(524288)") ハーモニー
-    hr
     span.count [ {{ card_store.cards_filtered.length }} items ]
     span.color_bits {{ color_bits }}
     hr
     input.feature(type="number" v-model="f1" placeholder="feature bits 1")
     input.feature(type="number" v-model="f2" placeholder="feature bits 2")
-    button.reset(@click="fetch_cards_") [fetch]
-    button.reset(@click="card_store.set_f1(0); card_store.set_f2(0)") [reset]
     hr
     table
       colgroup

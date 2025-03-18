@@ -1,12 +1,15 @@
-<template lang="pug">
-  v-app
-    NuxtPage
+<template>
+  <v-app>
+    <Suspense>
+      <template #default>
+        <NuxtPage />
+      </template>
+      <template #fallback>
+        <span>loading...</span>
+      </template>
+    </Suspense>
+  </v-app>
+
 </template>
-
 <script setup lang="ts">
-import {useCardStore} from "~/stores/card_js";
-const card_store = useCardStore();
-card_store.fetch();
-
-provide('card_store', card_store);
 </script>

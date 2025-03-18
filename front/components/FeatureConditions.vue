@@ -1,17 +1,10 @@
 <template lang="pug">
-  div(v-for="(features, index) in props.conditions" :key="tag")
-    span {{ index }}
-    div.a(v-for="feature in features" :key="feature.name")
-      v-btn.b(v-for="f in feature" @click="emits('emit-bits', f.bit_shift)")
-        label {{ f.tag }}
-        span /
-        label {{ f.name }}
-        span /
-        span.c(v-text="f.bit_shift")
+  div(v-for="key_name in props.conditions.keys()" :key="tag")
+    span {{ key_name }}
+    button.small-button.condition(v-for="feature in props.conditions.get(key_name)" :key="feature.name" @click="emits('emit-bits', feature.bit_shift)") {{ feature.name }}
 </template>
 
 <script lang="ts" setup>
-import {ref} from "vue";
 
 const props = defineProps({
   conditions: {
@@ -27,15 +20,20 @@ const emits = defineEmits<{
 </script>
 
 <style scoped lang="less">
-.a {
-  color: black;
+.condition {
+  margin-right: 1rem;
+  margin-bottom: 0.5rem;
 }
-
-.b {
-  color: blue;
-}
-
-.c {
-  color: red
+.small-button {
+  cursor: pointer;
+  &:hover {
+    background-color: #aaaaff;
+  }
+  &:before {
+    content: "[";
+  }
+  &:after {
+    content: "]";
+  }
 }
 </style>

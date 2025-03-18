@@ -25,7 +25,7 @@ macro_rules! define_features {
             }
 
             // 3. 各フィーチャのビットシフト値を返す関数
-            pub fn to_bit(&self) -> (i64, i64) {
+            pub fn to_bit_shifts(&self) -> (i64, i64) {
                 match self {
                     $(
                         CardFeature::$feature => ($shift1, $shift2),
@@ -42,7 +42,7 @@ macro_rules! define_features {
                 }
             }
 
-        // 3. 各フィーチャの文字列表現を返す関数
+        // 各フィーチャの文字列表現を返す関数
         impl Display for CardFeature {
             #[allow(unreachable_patterns)]
             fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -211,9 +211,9 @@ impl HashSetToBits for HashSet<CardFeature> {
     fn to_bits(&self) -> (i64, i64) {
         let mut bits = (0, 0);
         for feature in self {
-            let (bit1, bit2) = feature.to_bit();
-            bits.0 |= bit1;
-            bits.1 |= bit2;
+            let (shift1, shift2) = feature.to_bit_shifts();
+            bits.0 |= 1_i64 << shift1;
+            bits.1 |= 1_i64 << shift2;
         }
         bits
     }
@@ -237,8 +237,8 @@ pub struct ExportedFeatureGroup {
 impl CardFeature {
     pub fn export(&self) -> ExportedCardFeature {
         ExportedCardFeature {
-            name: format!("{:?}", self), // Enum名を文字列化
-            bit_shift: self.to_bit(),    // to_bit の結果を使用
+            name: format!("{}", self), // Enum名を文字列化
+            bit_shift: self.to_bit_shifts(),    // to_bit_shift の結果を使用
             tag: self.tag(),             // タグカテゴリを取得
         }
     }
