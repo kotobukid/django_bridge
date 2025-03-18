@@ -143,9 +143,9 @@ const toggle_color = (color: ColorName) => {
     //span.color_bits {{ color_bits }}
     table
       colgroup
-        col(style="width: 200px;")
+        col(style="width: 150px;")
         col(style="width: 400px;")
-        col(style="width: 1400px;")
+        col(style="width: 1450px;")
       thead
         tr
           th CODE
