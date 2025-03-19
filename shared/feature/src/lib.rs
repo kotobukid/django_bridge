@@ -566,8 +566,14 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
         DetectPattern {
             pattern: r"【シュート】".into(),
             do_replace: false,
-            replace_to: "*SHOOT*",
-            features_detected: features![CardFeature::Shoot],
+            replace_to: "*SHOOT LIKE*",
+            features_detected: features![CardFeature::ShootLike],
+        },
+        DetectPattern {
+            pattern: r"エナゾーンに置かれる代わりに(トラッシュ|手札|デッキの一番下)".into(),
+            do_replace: false,
+            replace_to: "*SHOOT LIKE*",
+            features_detected: features![CardFeature::ShootLike],
         },
         DetectPattern {
             pattern: r"【ライズ】あなたの".into(),
