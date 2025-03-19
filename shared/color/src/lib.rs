@@ -142,15 +142,11 @@ impl Colors {
             return "".to_string(); // 空の場合
         }
 
-        if colors.len() == 1 {
-            return format!("background-color: {};", colors.first().unwrap().to_css_color_code());
-        }
-
         let offset: usize = 10; // グラデーションの両端の余白
         let width_1 = if colors.len() > 1 {
             (100 - (offset * 2)) / (colors.len() - 1)
         } else {
-            100 // 1色のみの場合
+            return format!("background-color: {};", colors.first().unwrap().to_css_color_code());
         };
 
         // 各色のグラデーションコードを生成
