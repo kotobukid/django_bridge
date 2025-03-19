@@ -144,7 +144,7 @@ define_features! {
     LifeBurst => { tag: Endure, bit_shift: (26, 0), label: "ライフバースト" },
     Shadow => { tag: Endure, bit_shift: (27, 0), label: "シャドウ" },
     Invulnerable => { tag: Endure, bit_shift: (28, 0), label: "バニッシュ耐性" },
-    OnSpell => { tag: Others, bit_shift: (29, 0), label: "スペル使用時" },
+    OnSpell => { tag: Others, bit_shift: (29, 0), label: "スペル参照" },
     OnArts => { tag: Others, bit_shift: (31, 0), label: "アーツ使用時" },
     OnPiece => { tag: Others, bit_shift: (31, 0), label: "ピース使用時" },
     OnBanish => { tag: Endure, bit_shift: (32, 0), label: "被バニッシュ時" },

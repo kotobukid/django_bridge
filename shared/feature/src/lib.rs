@@ -1043,5 +1043,35 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             replace_to: "*PUT BLOCKER*",
             features_detected: features![CardFeature::PutSigniDefense, CardFeature::PutSigniOffense,],
         },
+        DetectPattern {
+            pattern: any_num!["あなたのトラッシュにスペルが", "枚以上あるかぎり"].into(),
+            do_replace: false,
+            replace_to: "*ON SPELL*",
+            features_detected: features![CardFeature::OnSpell],
+        },
+        DetectPattern {
+            pattern: r"(あなた|いずれかのプレイヤー)がスペルを使用したとき、".into(),
+            do_replace: true,
+            replace_to: "ON SPELL",
+            features_detected: features![CardFeature::OnSpell],
+        },
+        DetectPattern {
+            pattern: r"このターン、(あなたが次に|次にあなたが)スペルを使用する場合".into(),
+            do_replace: true,
+            replace_to: "ON SPELL",
+            features_detected: features![CardFeature::OnSpell],
+        },
+        DetectPattern {
+            pattern: r"このターンに(あなた|対戦相手)がスペルを使用していた場合、".into(),
+            do_replace: true,
+            replace_to: "ON SPELL",
+            features_detected: features![CardFeature::OnSpell],
+        },
+        DetectPattern {
+            pattern: r"《ディソナアイコン》のスペルを使用したとき、".into(),
+            do_replace: true,
+            replace_to: "ON SPELL",
+            features_detected: features![CardFeature::OnSpell],
+        },
     ]
 }
