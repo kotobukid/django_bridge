@@ -466,6 +466,12 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             features_detected: features![CardFeature::DiscardOpponent],
         },
         DetectPattern {
+            pattern: r"各プレイヤーは手札をすべてエナゾーンに置".into(),
+            do_replace: false,
+            replace_to: "*HAND DESTRUCTION*",
+            features_detected: features![CardFeature::DiscardOpponent, CardFeature::RandomDiscard],
+        },
+        DetectPattern {
             pattern: r"見ないで選び、捨てさせる。".into(),
             do_replace: false,
             replace_to: "*RANDOM HAND DESTRUCTION*",
@@ -547,8 +553,8 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
         DetectPattern {
             pattern: r"（対戦相手のシグニが【シュート】を持つシグニとのバトルによってバニッシュされる場合、エナゾーンに置かれる代わりにトラッシュに置かれる）".into(),
             do_replace: true,
-            replace_to: "*SHOOT*",
-            features_detected: features![CardFeature::DualColorEner],
+            replace_to: "*SHOOT LIKE*",
+            features_detected: features![],
         },
         DetectPattern {pattern: r"チャーム".into(), do_replace: false, replace_to: "*CHARM*", features_detected: features![CardFeature::Charm]},
         DetectPattern {
@@ -588,16 +594,22 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             features_detected: features![CardFeature::BetCoin],
         },
         DetectPattern {
+            pattern: r"コインアイコン》：".into(),
+            do_replace: false,
+            replace_to: "BET",
+            features_detected: features![CardFeature::BetCoin],
+        },
+        DetectPattern {
             pattern: r"Sランサー".into(),
             do_replace: false,
             replace_to: "*S LANCER*",
-            features_detected: features![CardFeature::SLancer],
+            features_detected: features![CardFeature::SLancer, CardFeature::Lancer],
         },
         DetectPattern {
             pattern: r"Ｓランサー".into(),
             do_replace: false,
             replace_to: "*S LANCER*",
-            features_detected: features![CardFeature::SLancer],
+            features_detected: features![CardFeature::SLancer, CardFeature::Lancer],
         },
         DetectPattern {
             pattern: r"【マジックボックス】".into(),
@@ -776,6 +788,18 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             features_detected: features![CardFeature::Damage],
         },
         DetectPattern {
+            pattern: r"クラッシュしたとき、".into(),
+            do_replace: false,
+            replace_to: "*ON CRUSH*",
+            features_detected: features![CardFeature::OnLifeCrush],
+        },
+        DetectPattern {
+            pattern: r"クラッシュされ(る場合|たとき|るかトラッシュ|ていた場合)、".into(),
+            do_replace: false,
+            replace_to: "*ON CRUSH*",
+            features_detected: features![CardFeature::OnLifeCrush],
+        },
+        DetectPattern {
             pattern: r"リコレクトアイコン".into(),
             do_replace: false,
             replace_to: "*RECOLLECT*",
@@ -800,7 +824,19 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             features_detected: features![CardFeature::TopSet],
         },
         DetectPattern {
-            pattern: r"能力を失う".into(),
+            pattern: r"のシグニは能力を失う".into(),
+            do_replace: false,
+            replace_to: "*ERASE SKILL*",
+            features_detected: features![CardFeature::EraseSkill],
+        },
+        DetectPattern {
+            pattern: r"それは能力を失う".into(),
+            do_replace: false,
+            replace_to: "*ERASE SKILL*",
+            features_detected: features![CardFeature::EraseSkill],
+        },
+        DetectPattern {
+            pattern: any_num!["シグニを", "体(まで|を)対象とし、ターン終了時まで、それは能力を失う"].into(),
             do_replace: false,
             replace_to: "*ERASE SKILL*",
             features_detected: features![CardFeature::EraseSkill],
@@ -897,7 +933,7 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             features_detected: features![CardFeature::Reanimate],
         },
         DetectPattern {
-            pattern: r"このルリグをアップし".into(),
+            pattern: r"(この|その)ルリグをアップし".into(),
             do_replace: false,
             replace_to: "*ADDITIONAL ATTACK*",
             features_detected: features![CardFeature::AdditionalAttack],
@@ -960,13 +996,25 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             features_detected: features![CardFeature::OnBanish],
         },
         DetectPattern {
+            pattern: r"(ライフバーストを使用することを選んだ場合|ライフバーストの能力化効果の対象になったとき|ライフバーストアイコン》を持っているか、|ライフバーストアイコン》を持つ場合、|ライフバーストが発動する場合、|ライフバーストは発動しない)".into(),
+            do_replace: false,
+            replace_to: "ON BURST",
+            features_detected: features![CardFeature::OnBurst],
+        },
+        DetectPattern {
+            pattern: r"(エクシードのコストとして|あなたがエクシードのコストを支払ったとき、)".into(),
+            do_replace: false,
+            replace_to: "ON EXCEED",
+            features_detected: features![CardFeature::OnExceed],
+        },
+        DetectPattern {
             pattern: any_num!["手札を", "枚捨ててもよい"].into(),
             do_replace: false,
             replace_to: "*HAND COST*",
             features_detected: features![CardFeature::HandCost],
         },
         DetectPattern {
-            pattern: r"アップ状態のルリグを好きな数ダウンする".into(),
+            pattern: r"アップ状態のルリグ(を好きな数|１体を)ダウンする".into(),
             do_replace: false,
             replace_to: "*ASSIST COST*",
             features_detected: features![CardFeature::RligDownCost],
