@@ -117,8 +117,8 @@ macro_rules! any_num {
 
 define_features! {
     DoubleCrush => { tag: Offensive, bit_shift: (1, 0), label: "ダブルクラッシュ" },
-    TripleCrush => { tag: Offensive, bit_shift: (2, 0), label: "トリプルクラッシュ" },
-    DiscardOpponent => { tag: Disturb, bit_shift: (3, 0), label: "セルフハンデス" },
+    // TripleCrush => { tag: Offensive, bit_shift: (2, 0), label: "トリプルクラッシュ" },
+    DiscardOpponent => { tag: Disturb, bit_shift: (3, 0), label: "ハンデス" },
     RandomDiscard => { tag: Disturb, bit_shift: (4, 0), label: "ランダムハンデス" },
     Draw => { tag: Enhance, bit_shift: (5, 0), label: "ドロー" },
     Assassin => { tag: Lethal, bit_shift: (6, 0), label: "アサシン" },
@@ -166,11 +166,11 @@ define_features! {
     OnLifeCrush => { tag: Others, bit_shift: (46, 0), label: "クラッシュ時" },
     Position => { tag: Disturb, bit_shift: (47, 0), label: "シグニゾーン移動" },
     Vanilla => { tag: Endure, bit_shift: (48, 0), label: "バニラ" },
-    Untouchable => { tag: Others, bit_shift: (49, 0), label: "不可触" },    //アークゲイン
+    // Untouchable => { tag: Others, bit_shift: (49, 0), label: "不可触" },    //旧アークゲイン
     TopSet => { tag: Enhance, bit_shift: (50, 0), label: "トップ操作" },
     BottomCheck => { tag: Enhance, bit_shift: (51, 0), label: "ボトム操作" },
     Barrier => { tag: Endure, bit_shift: (52, 0), label: "バリア" },
-    MultiEner => { tag: Enhance, bit_shift: (53, 0), label: "マルチエナ" },
+    // MultiEner => { tag: Enhance, bit_shift: (53, 0), label: "マルチエナ" },
     LrigTrash => { tag: Enhance, bit_shift: (54, 0), label: "ルリグトラッシュ参照" },
     Charm => { tag: Unique, bit_shift: (55, 0), label: "チャーム" },
     Craft => { tag: Unique, bit_shift: (56, 0), label: "クラフト" },

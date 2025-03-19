@@ -530,7 +530,7 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             pattern: r"【マルチエナ】".into(),
             do_replace: false,
             replace_to: "*MULTI ENER*",
-            features_detected: features![CardFeature::MultiEner],
+            features_detected: features![CardFeature::DualColorEner],
         },
         DetectPattern {
             pattern: r"（エナコストを支払う際、このカードは好きな色１つとして支払える）".into(),
@@ -561,7 +561,7 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             pattern: r"トリプルクラッシュ".into(),
             do_replace: false,
             replace_to: "*TRIPLE CRUSH*",
-            features_detected: features![CardFeature::TripleCrush],
+            features_detected: features![CardFeature::DoubleCrush], // ダブクラと統合
         },
         DetectPattern {
             pattern: r"【シュート】".into(),
