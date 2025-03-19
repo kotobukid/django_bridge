@@ -1,6 +1,21 @@
 [config]
 default_to_workspace = false
 
+[tasks.server]
+description = "Run Axum server"
+script = [
+    "cd server",
+    "cargo run --release"
+]
+
+[tasks.static]
+description = "Generate Rust data code"
+script = [
+    "cd static_generator",
+    "cargo run --release"
+]
+
+
 [tasks.manage]
 description = "Run Django manage.py commands from the Rust project root"
 args = ["./table_definition/manage.py", "${@}"]
