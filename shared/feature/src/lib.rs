@@ -612,10 +612,58 @@ pub fn create_detect_patterns<'a>() -> Vec<DetectPattern<'a>> {
             features_detected: features![CardFeature::Banish],
         },
         DetectPattern {
-            pattern: r"シグニ.+エナゾーンに置".into(),
+            pattern: r"シグニ.+エナゾーンに置".into(),    //todo: 対戦相手の
             do_replace: false,
-            replace_to: "*ENER*",
-            features_detected: features![CardFeature::Ener],
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: r"対戦相手は自分の.?シグニ１体を選びエナゾーンに置".into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: r"対戦相手のパワー.+以下のシグニ１体を対象とし、それをエナゾーンに置".into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: any_num!["対戦相手のシグニを", "体(まで|を)対象とし、(それら|それ)をエナゾーンに置"].into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: r"対戦相手のすべてのシグニをエナゾーンに置".into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: any_num!["対戦相手の.+のシグニ", "体を対象とし、それをエナゾーンに置"].into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: r"支払ってもよい。そうした場合、(それ|それら)をエナゾーンに置".into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: r"支払っても良い。そうした場合、対戦相手は自分のシグニ１体を選びエナゾーンに置".into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
+        },
+        DetectPattern {
+            pattern: r"対戦相手のシグニ１体を対象とし、それとこのシグニをエナゾーンに".into(),
+            do_replace: false,
+            replace_to: "*ENER OFFENSIVE*",
+            features_detected: features![CardFeature::EnerOffensive],
         },
         DetectPattern {
             pattern: r"シグニをアップ".into(),

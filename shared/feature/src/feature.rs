@@ -135,7 +135,7 @@ define_features! {
     Charge => { tag: Enhance, bit_shift: (17, 0), label: "エナチャージ" },
     EnerAttack => { tag: Disturb, bit_shift: (18, 0), label: "エナ破壊" },
     Trash => { tag: Offensive, bit_shift: (19, 0), label: "トラッシュ送り" },
-    Ener => { tag: Offensive, bit_shift: (20, 0), label: "エナ送り" }, // エナ送り
+    EnerOffensive => { tag: Offensive, bit_shift: (20, 0), label: "エナ送り" }, // エナ送り
     PowerUp => { tag: Endure, bit_shift: (21, 0), label: "パワーアップ" },
     PowerDown => { tag: Offensive, bit_shift: (22, 0), label: "パワーダウン" },
     Bounce => { tag: Offensive, bit_shift: (23, 0), label: "バウンス" },
