@@ -638,10 +638,10 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
 
     let mut features: Vec<CardFeature> = Vec::new();
 
-    let remove_patterns: Vec<DetectPattern> = create_detect_patterns();
+    let detect_patterns = &create_detect_patterns();
 
-    let replaced_text = remove_patterns.iter().fold(text, |current_text, pat| {
-        let re = Regex::new(pat.pattern.as_str()).unwrap();
+    let replaced_text = detect_patterns.into_iter().fold(text, |current_text: String, pat: &DetectPattern| {
+        let re = &pat.pattern_r;
 
         if re.is_match(&current_text) {
             features.extend(pat.features_detected.iter().cloned());
@@ -650,7 +650,7 @@ fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
         if pat.do_replace {
             re.replace_all(&current_text, pat.replace_to).to_string()
         } else {
-            current_text
+            String::from(current_text)
         }
     });
 
