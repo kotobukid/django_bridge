@@ -1,3 +1,4 @@
+use futures::future::join_all;
 use rand::Rng;
 use serde_qs as qs;
 use std::path::Path;
@@ -15,8 +16,10 @@ use sqlx::{Pool, Postgres};
 use std::env;
 
 use clap::Parser;
-use std::sync::Arc;
 use models::card::CreateCard;
+use rayon::iter::ParallelIterator;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use webapp::repositories::{CardRepository, CardTypeRepository};
 
 async fn create_db() -> Pool<Postgres> {
@@ -72,71 +75,83 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    // let product_type = ProductType::Starter(String::from("WXDi-D09"));
-    // let product_type = ProductType::Booster(String::from("WX24-P4"));
-
     cache_product_index(&product_type, 1).await.unwrap();
 
     let links = collect_card_detail_links(&product_type).await;
 
     let pool = Arc::new(create_db().await);
-    let mut card_type_repo = CardTypeRepository::new(pool.clone());
-    let _ = card_type_repo.create_cache().await;
 
-    let mut product_repo = webapp::repositories::ProductRepository::new(pool.clone());
-    product_repo.create_cache().await;
+    let card_type_repo = Arc::new(Mutex::new(CardTypeRepository::new(pool.clone())));
+    let product_repo = Arc::new(Mutex::new(webapp::repositories::ProductRepository::new(
+        pool.clone(),
+    )));
 
     if let Ok(links) = links {
-        for link in links {
-            let pool = pool.clone();
-            let card_no = extract_card_no(&link).unwrap();
+        let tasks: Vec<_> = links
+            .iter()
+            .map(|link| {
+                let link = link.clone();
+                let pool = pool.clone();
+                let product_type = product_type.clone();
+                let card_type_repo = Arc::clone(&card_type_repo);
+                let product_repo = Arc::clone(&product_repo);
 
-            let dir = Path::new("./text_cache/single");
-            let cq: CardQuery =
-                CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
+                tokio::spawn(async move {
+                    let card_no = extract_card_no(&link).unwrap();
+                    let dir = Path::new("./text_cache/single");
+                    let cq: CardQuery =
+                        CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
 
-            let text = if cq.check_cache_file_exists() {
-                println!("cache exists {card_no}");
-                cq.get_cache_text()
-            } else {
-                println!("cache not found. downloading {card_no}");
-                // ランダムな待機時間（1000ms-3000ms）を生成
-                let wait_time = rand::rng().random_range(1000..=3000);
-                sleep(Duration::from_millis(wait_time)).await;
+                    let text = if cq.check_cache_file_exists() {
+                        println!("cache exists for {card_no}");
+                        cq.get_cache_text()
+                    } else {
+                        println!("cache not found. downloading {card_no}");
 
-                cq.download_card_detail().await
-            };
-            match text {
-                Some(text) => {
-                    // let t = Card::detect_card_type(text.as_str());
-                    let c = Card::card_from_html(text.as_str());
-                    // println!("{:?}", c);
-                    match c {
-                        Some(card) => {
-                            let ct = &card.card_type.code();
-                            let card_type_id = card_type_repo.find_by_code(ct).await;
-                            let card_type_id = card_type_id.unwrap_or(0);
+                        // ランダムな待機時間（1000ms-3000ms）を生成
+                        let wait_time = rand::thread_rng().gen_range(1000..=3000);
+                        sleep(Duration::from_millis(wait_time)).await;
 
-                            let product_id = product_repo
-                                .get_id_by_code(&product_type.code())
-                                .await
-                                .unwrap_or(0);
-                            let mut cc: CreateCard = card.into();
-                            cc.card_type = card_type_id.to_string().parse::<i32>().unwrap();
-                            cc.product = product_id.to_string().parse::<i32>().unwrap();
+                        cq.download_card_detail().await
+                    };
 
-                            db(pool, cc).await?;
+                    match text {
+                        Some(text) => {
+                            let c = Card::card_from_html(text.as_str());
+                            match c {
+                                Some(card) => {
+                                    let ct = &card.card_type.code();
+
+                                    let card_type_id = card_type_repo
+                                        .lock()
+                                        .await
+                                        .find_by_code(ct)
+                                        .await
+                                        .unwrap_or(0);
+
+                                    let product_id = product_repo
+                                        .lock()
+                                        .await
+                                        .get_id_by_code(&product_type.code())
+                                        .await
+                                        .unwrap_or(0);
+
+                                    let mut cc: CreateCard = card.into();
+                                    cc.card_type = card_type_id.to_string().parse::<i32>().unwrap();
+                                    cc.product = product_id.to_string().parse::<i32>().unwrap();
+
+                                    db(pool, cc).await.unwrap();
+                                }
+                                None => eprintln!("card parse error[skip]: {}", card_no),
+                            }
                         }
-                        None => {
-                            eprintln!("card parse error[skip]: {}", card_no);
-                        }
+                        None => eprintln!("download error"),
                     }
-                }
-                None => {
-                    panic!("download error");
-                }
-            }
-        }
+                })
+            })
+            .collect();
+
+        join_all(tasks).await;
     }
 
     Ok(())

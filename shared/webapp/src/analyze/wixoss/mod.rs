@@ -1,18 +1,18 @@
-
 pub mod card;
 pub mod format;
 mod timing;
 
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
-use color::{convert_cost, Colors};
 use crate::analyze::wixoss::format::Format;
-use feature::{create_detect_patterns, DetectPattern};
+use color::{convert_cost, Colors};
+use feature::{create_detect_patterns, DetectPattern, ReplacePattern};
 
 pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceCraft, PieceRelay, Resona, ResonaCraft,
     Signi, SigniCraft, Spell, SpellCraft,
 };
 use crate::analyze::wixoss::timing::TimingList;
+use feature::feature::CardFeature;
 use models::card::CreateCard;
 use regex::Regex;
 use scraper::{Html, Selector};
@@ -20,7 +20,7 @@ use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-use feature::feature::CardFeature;
+use rayon::prelude::*;
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;
@@ -401,9 +401,8 @@ impl Card {
 
         for skill in self.skill.value.iter() {
             let skill_text = skill.to_string();
-            let (skill_text, features) = rule_explain_to_feature(skill_text);
-            let mut features_detected = HashSet::new();
-            features_detected.extend(features);
+            let (skill_text, features_detected) = rule_explain_to_feature(skill_text);
+
             if self.features.contains(&CardFeature::LifeBurst) {
                 if features_detected.contains(&CardFeature::LifeBurst) {
                     burst_texts.push(CardSkill::LifeBurst(skill_text));
@@ -633,26 +632,47 @@ fn wrap_by_gainskill(html: String) -> String {
     replaced
 }
 
-fn rule_explain_to_feature(text: String) -> (String, Vec<CardFeature>) {
+fn rule_explain_to_feature(text: String) -> (String, HashSet<CardFeature>) {
     let text = replace_img_with_alt(text);
 
-    let mut features: Vec<CardFeature> = Vec::new();
+    let mut features: HashSet<CardFeature> = HashSet::new();
 
-    let detect_patterns = &create_detect_patterns();
+    let (replace_patterns, detect_patterns) = &create_detect_patterns();
 
-    let replaced_text = detect_patterns.into_iter().fold(text, |current_text: String, pat: &DetectPattern| {
-        let re = &pat.pattern_r;
+    let replaced_text =
+        replace_patterns
+            .into_iter()
+            .fold(text, |current_text: String, pat: &ReplacePattern| {
+                let re = &pat.pattern_r;
 
-        if re.is_match(&current_text) {
-            features.extend(pat.features_detected.iter().cloned());
-        }
+                if re.is_match(&current_text) {
+                    features.extend(pat.features_detected.iter().cloned());
+                }
 
-        if pat.do_replace {
-            re.replace_all(&current_text, pat.replace_to).to_string()
-        } else {
-            String::from(current_text)
-        }
-    });
+                let replaced = re.replace_all(&current_text, pat.replace_to).to_string();
+                replaced
+            });
+
+    // detect_patternsの並列処理結果をHashSetとして収集
+    let detected_features: HashSet<CardFeature> = detect_patterns
+        .par_iter()
+        .filter_map(|pat: &DetectPattern| {
+            let re = &pat.pattern_r;
+
+            // 正規表現に一致した場合のみ
+            if re.is_match(&replaced_text) {
+                Some(pat.features_detected.iter().cloned().collect::<HashSet<CardFeature>>())
+            } else {
+                None
+            }
+        })
+        .reduce(HashSet::new, |mut acc, detected| {
+            acc.extend(detected); // 各スレッドの結果を統合
+            acc
+        });
+
+    // 最終的にfeaturesと並列で検出したdetected_featuresを統合
+    features.extend(detected_features);
 
     (replaced_text, features)
 }
