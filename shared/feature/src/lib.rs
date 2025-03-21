@@ -54,7 +54,7 @@ macro_rules! detect_pattern {
 }
 
 const PATTERNS_AMOUNT_R: usize = 68;
-const PATTERNS_AMOUNT_D: usize = 115;
+const PATTERNS_AMOUNT_D: usize = 119;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -394,6 +394,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::RandomDiscard
         ],
         detect_pattern![r"見ないで選び、捨てさせる。", CardFeature::RandomDiscard],
+        detect_pattern![r"対象になったとき", CardFeature::OnTouch],
         detect_pattern![r"ダウンする。", CardFeature::Down],
         detect_pattern![r"エナチャージ", CardFeature::Charge],
         detect_pattern![
@@ -663,6 +664,18 @@ pub fn create_detect_patterns() -> (
         detect_pattern![
             r"《ディソナアイコン》のスペルを使用したとき、",
             CardFeature::OnSpell
+        ],
+        detect_pattern![
+            r"のアーツを使用していた場合",
+            CardFeature::OnArts
+        ],
+        detect_pattern![
+            r"あなたのルリグトラッシュにあるアーツ１枚につき",
+            CardFeature::OnArts
+        ],
+        detect_pattern![
+            r"このアーツを使用する際、あなたのルリグデッキから.のアーツ１枚をルリグトラッシュに置いてもよい。",
+            CardFeature::OnArts
         ],
     ];
 
