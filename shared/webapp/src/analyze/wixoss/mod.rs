@@ -401,13 +401,13 @@ impl Card {
 
         for skill in self.skill.value.iter() {
             let skill_text = skill.to_string();
-            let (skill_text, features_detected) = rule_explain_to_feature(skill_text);
+            let (skill_text_replaced, features_detected) = rule_explain_to_feature(skill_text);
 
             if self.features.contains(&CardFeature::LifeBurst) {
                 if features_detected.contains(&CardFeature::LifeBurst) {
-                    burst_texts.push(CardSkill::LifeBurst(skill_text));
+                    burst_texts.push(CardSkill::LifeBurst(skill_text_replaced));
                 } else {
-                    skill_texts.push(CardSkill::Normal(skill_text));
+                    skill_texts.push(CardSkill::Normal(skill_text_replaced));
                 }
             }
         }
@@ -460,9 +460,9 @@ fn parse_card_skill(source: Vec<String>) -> (Skills, HashSet<CardFeature>) {
             .split('\n')
             .map(|line| line.trim().to_string())
             .map(|line| {
-                let (l, features_detected) = rule_explain_to_feature(line);
+                let (line_replaced, features_detected) = rule_explain_to_feature(line);
                 features.extend(features_detected);
-                l
+                line_replaced
             })
             .filter(|line| !line.is_empty()) // 空の行を除去
             .collect();

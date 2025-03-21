@@ -53,8 +53,8 @@ macro_rules! detect_pattern {
     };
 }
 
-const PATTERNS_AMOUNT_R: usize = 67;
-const PATTERNS_AMOUNT_D: usize = 113;
+const PATTERNS_AMOUNT_R: usize = 68;
+const PATTERNS_AMOUNT_D: usize = 115;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -127,10 +127,17 @@ pub fn create_detect_patterns() -> (
         replace_pattern![
             r"（このスペルはあなたのメインフェイズにルリグデッキから使用できる）",
             "*SPELL CRAFT*",
+            CardFeature::Craft
         ],
         replace_pattern![
             r"（クラフトであるスペルは、使用後にゲームから除外される）",
             "*SPELL CRAFT GOES REMOVED*",
+            CardFeature::Craft
+        ],
+        replace_pattern![
+            r"（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）",
+            "*RESONA CRAFT REMOVED*",
+            CardFeature::Craft
         ],
         replace_pattern![
             r"（《ガードアイコン》を持つシグニは【ガード】を得る）",
@@ -237,7 +244,8 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"（フェゾーネマジックは５種類ある）",
-            "*FESONE MAGIC*"
+            "*FESONE MAGIC*",
+            CardFeature::Craft
         ],
         replace_pattern![
             r"（【出】能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい）",
@@ -301,19 +309,23 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）",
-            "*RANDOM RESONA MUST BE EXPOSED*"
+            "*RANDOM RESONA MUST BE EXPOSED*",
+            CardFeature::Craft
         ],
         replace_pattern![
             r"（レゾナでありクラフトであるシグニはリムーブできず場を離れるとゲームから除外される）",
-            "*RESONA CANT BE REMOVED*"
+            "*RESONA CANT BE REMOVED*",
+            CardFeature::Craft
         ],
         replace_pattern![
             r"（クラフトであるシグニは場を離れるとゲームから除外される）",
-            "*CRAFT SIGNI REMOVED ON LEAVE*"
+            "*CRAFT SIGNI REMOVED ON LEAVE*",
+            CardFeature::Craft
         ],
         replace_pattern![
             r"（このクラフトの上にあるシグニが場を離れるとこのクラフトはゲームから除外される）",
-            "*TORAMARU GIMMICK*"
+            "*TORAMARU GIMMICK*",
+            CardFeature::Craft
         ],
         replace_pattern![
             r"（チェックゾーンにあるカードはターン終了時にトラッシュに置かれる）",
@@ -461,12 +473,20 @@ pub fn create_detect_patterns() -> (
             CardFeature::EnerOffensive
         ],
         detect_pattern![
+            r"フェゾーネマジックのクラフトから2種類を1枚ずつ公開しルリグデッキに加える",
+            CardFeature::Craft
+        ],
+        detect_pattern![
             r"支払っても良い。そうした場合、対戦相手は自分のシグニ１体を選びエナゾーンに置",
             CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"対戦相手のシグニ１体を対象とし、それとこのシグニをエナゾーンに",
             CardFeature::EnerOffensive
+        ],
+        detect_pattern![
+            r"クラフトの《",
+            CardFeature::Craft
         ],
         detect_pattern![r"シグニをアップ", CardFeature::Up],
         detect_pattern![

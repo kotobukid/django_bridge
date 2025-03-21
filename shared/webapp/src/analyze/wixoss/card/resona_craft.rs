@@ -103,7 +103,8 @@ impl WixossCard for ResonaCraft {
             card_skills.push(element.inner_html());
         }
 
-        let (skill, features) = parse_card_skill(card_skills.clone());
+        let (skill, mut features) = parse_card_skill(card_skills.clone());
+        features.extend(vec![CardFeature::Craft]);
         let feature_bits = features.to_bits();
 
         // todo: 出現条件とタイミングがSkillにあるので詳細にパースする必要あり
