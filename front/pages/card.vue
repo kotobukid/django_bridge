@@ -21,7 +21,8 @@ const message = ref('');
 
 let print_detail = (id: number) => {
 };
-let fetch_cards = async (bit1: string, bit2: string) => {};
+let fetch_cards = async (bit1: string, bit2: string) => {
+};
 const fetch_cards_ = async () => {
   await fetch_cards(`${f1.value}`, `${f2.value}`);
 };
@@ -155,7 +156,10 @@ const toggle_color = (color: ColorName) => {
         tr(v-for="card in card_store.cards_filtered" :key="card.id")
           td
             a(:href="`https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=${card.code}`" target="_blank") {{ card.code }}
-          td.name(:style="`text-shadow: #fff 1px 1px 4px; ${gradient(card.color)}`") {{ card.name }}
+          td.name(
+            :style="`text-shadow: #fff 1px 1px 4px; ${gradient(card.color)}`"
+            @click="print_detail(card.id)"
+          ) {{ card.name }}
           td.skill
             SoftWrap.normal(:text="card.skill_text")
             SoftWrap.burst(:text="card.burst_text")

@@ -33,6 +33,7 @@ pub struct Lrig {
     features: HashSet<CardFeature>,
     feature_bits1: i64,
     feature_bits2: i64,
+    ex1: OptionString,
 }
 
 impl From<Lrig> for Card {
@@ -58,6 +59,7 @@ impl From<Lrig> for Card {
             features: val.features.clone(),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
+            ex1: val.ex1.clone(),
         }
     }
 }
@@ -108,13 +110,14 @@ impl WixossCard for Lrig {
 
         let (skill, mut features) = parse_card_skill(card_skills.clone());
 
-        match coin {
-            Some("-") => {}
-            Some(_) => {
+        let ex1 = match coin {
+            Some("-") => "".to_string(),
+            Some(coins) => {
                 features.extend(vec![CardFeature::GainCoin]);
+                coins.to_string()
             }
-            None => {}
-        }
+            None => "".to_string(),
+        };
 
         let feature_bits = features.to_bits();
 
@@ -138,6 +141,7 @@ impl WixossCard for Lrig {
             features,
             feature_bits1: feature_bits.0,
             feature_bits2: feature_bits.1,
+            ex1: OptionString::from_string(serialize_ex1_to_coin(ex1)),
         }
     }
 }
@@ -171,4 +175,8 @@ impl Display for Lrig {
         )?;
         write!(f, "")
     }
+}
+
+fn serialize_ex1_to_coin(coin: String) -> String {
+    format!("coin:[{}]", coin)
 }

@@ -62,6 +62,7 @@ impl From<SigniCraft> for Card {
             features: val.features.clone(),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
+            ex1: OptionString::empty(),
         }
     }
 }

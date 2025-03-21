@@ -40,6 +40,7 @@ struct CardCompact(
         u8,           // timing
         i64,          // feature_bits1
         i64,          // feature_bits2
+        &'static str, // ex1
     ),
 );
 
@@ -68,6 +69,7 @@ pub struct CardExport {
     timing: u8,            // timing
                            // i64, // feature_bits1
                            // i64, // feature_bits2
+    ex1: String,
 }
 
 impl
@@ -94,6 +96,7 @@ impl
         u8,           // timing
         i64,          // feature_bits1
         i64,          // feature_bits2
+        &'static str, // ex1
     )> for CardExport
 {
     fn from(
@@ -120,6 +123,7 @@ impl
             u8,           // timing
             i64,          // feature_bits1
             i64,          // feature_bits2
+            &'static str, // ex1
         ),
     ) -> Self {
         // let v = v.0;
@@ -144,6 +148,7 @@ impl
             card_type: v.17,
             product: v.18,
             timing: v.19,
+            ex1: v.22.to_string(),
         }
     }
 }
@@ -153,7 +158,7 @@ impl Display for CardCompact {
         let c = self.0;
         write!(
             f,
-            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n",
+            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n ex1: {}\n",
             c.0,    // id
             c.1,    // name
             c.2,    // code
@@ -176,6 +181,7 @@ impl Display for CardCompact {
             c.19,   // timing
             c.20,   // feature_bits1
             c.21,   // feature_bits2
+            c.22,   // ex1
         )
     }
 }

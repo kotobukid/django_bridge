@@ -33,6 +33,7 @@ pub struct ArtsCraft {
     features: HashSet<CardFeature>,
     feature_bits1: i64,
     feature_bits2: i64,
+    ex1: OptionString,
 }
 
 impl From<ArtsCraft> for Card {
@@ -58,6 +59,7 @@ impl From<ArtsCraft> for Card {
             features: val.features.clone(),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
+            ex1: val.ex1.clone(),
         }
     }
 }
@@ -124,6 +126,7 @@ impl WixossCard for ArtsCraft {
             features,
             feature_bits1: feature_bits.0,
             feature_bits2: feature_bits.1,
+            ex1: OptionString::empty(),
         }
     }
 }

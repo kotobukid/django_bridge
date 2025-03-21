@@ -41,9 +41,10 @@ impl Card {
         let story_: String = self.story.clone().unwrap_or("".into());
         let rarity_: String = self.rarity.clone().unwrap_or("".into());
         let url_: String = self.url.clone().unwrap_or("".into());
+        let ex1_: String = self.ex1.clone().unwrap_or("".into());
 
         format!(
-            r###"({id}_i32,"{name}","{code}","{pronunciation}",{color}_u32,"{cost}","{level}","{limit}","{limit_ex}","{power}",{has_burst}_u8,"{skill_text}","{burst_text}",{format}_u8,"{story}","{rarity}","{url}",{card_type}_u8,{product}_u8,{timing}_u8,{feature_bits1}_i64,{feature_bits2}_i64),"###,
+            r###"({id}_i32,"{name}","{code}","{pronunciation}",{color}_u32,"{cost}","{level}","{limit}","{limit_ex}","{power}",{has_burst}_u8,"{skill_text}","{burst_text}",{format}_u8,"{story}","{rarity}","{url}",{card_type}_u8,{product}_u8,{timing}_u8,{feature_bits1}_i64,{feature_bits2}_i64, "{ex1}"),"###,
             id = self.id,
             name = self.name,
             code = self.code,
@@ -66,6 +67,7 @@ impl Card {
             timing = self.timing.unwrap_or(0),
             feature_bits1 = self.feature_bits1,
             feature_bits2 = self.feature_bits2,
+            ex1 = ex1_,
         )
     }
 }

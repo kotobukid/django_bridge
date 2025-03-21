@@ -77,7 +77,8 @@ impl CardRepository {
                 card_type = $18,
                 product = $19,
                 feature_bits1 = $20,
-                feature_bits2 = $21
+                feature_bits2 = $21,
+                ex1 = $22
             WHERE code = $2
             RETURNING *"#,
             )
@@ -102,6 +103,7 @@ impl CardRepository {
             .bind(source.product)
             .bind(source.feature_bits1)
             .bind(source.feature_bits2)
+            .bind(source.ex1)
             .fetch_one(&*self.db_connector)
             .await?
         } else {
@@ -113,7 +115,7 @@ impl CardRepository {
                 format, story, rarity, url, timing, card_type, product, feature_bits1, feature_bits2
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
-                $12, $13, $14, $15, $16, $17, $18, $19, $20, $21
+                $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
             ) RETURNING *"#,
             )
             .bind(source.name)
@@ -137,6 +139,7 @@ impl CardRepository {
             .bind(source.product)
             .bind(source.feature_bits1)
             .bind(source.feature_bits2)
+            .bind(source.ex1)
             .fetch_one(&*self.db_connector)
             .await?
         };
@@ -212,7 +215,7 @@ impl StaticCodeGenerator for CardRepository {
 
     fn headline(length: i32) -> String {
         format!(
-            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, &'static str, u8, u8, u8, i64, i64);pub const CARD_LIST: &[CardStatic; {}] = &[",
+            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, &'static str, u8, u8, u8, i64, i64, &'static str);pub const CARD_LIST: &[CardStatic; {}] = &[",
             length
         )
     }

@@ -32,6 +32,8 @@ pub struct CardDb {
     pub url: Option<String>,
     pub feature_bits1: i64,
     pub feature_bits2: i64,
+    /// Max length: 256
+    pub ex1: Option<String>,
 }
 
 #[allow(dead_code)]
@@ -65,6 +67,8 @@ pub struct CreateCard {
     pub url: Option<String>,
     pub feature_bits1: i64,
     pub feature_bits2: i64,
+    /// Max length: 256
+    pub ex1: Option<String>,
 }
 
 #[allow(dead_code)]

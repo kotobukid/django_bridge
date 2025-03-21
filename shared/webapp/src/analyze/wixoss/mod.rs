@@ -263,6 +263,7 @@ pub struct Card {
     features: HashSet<CardFeature>,
     feature_bits1: i64,
     feature_bits2: i64,
+    ex1: OptionString
 }
 
 impl From<Card> for CreateCard {
@@ -308,6 +309,7 @@ impl From<Card> for CreateCard {
             skill_text: Some(normal_skills.join("\n")),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
+            ex1: val.ex1.value
         }
     }
 }
@@ -495,6 +497,7 @@ pub struct Token {
     features: HashSet<CardFeature>,
     feature_bits1: i64,
     feature_bits2: i64,
+    ex1: OptionString
 }
 
 impl From<Token> for Card {
@@ -520,6 +523,7 @@ impl From<Token> for Card {
             features: val.features.clone(),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
+            ex1: val.ex1.clone(),
         }
     }
 }
@@ -587,6 +591,7 @@ impl WixossCard for Token {
             features,
             feature_bits1: 0,
             feature_bits2: 0,
+            ex1: OptionString::empty()
         }
     }
 }

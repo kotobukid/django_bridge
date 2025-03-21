@@ -34,6 +34,7 @@ pub struct Signi {
     features: HashSet<CardFeature>,
     feature_bits1: i64,
     feature_bits2: i64,
+    ex1: OptionString,
 }
 
 impl From<Signi> for Card {
@@ -62,6 +63,7 @@ impl From<Signi> for Card {
             features: val.features.clone(),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
+            ex1: val.ex1.clone(),
         }
     }
 }
@@ -132,6 +134,7 @@ impl WixossCard for Signi {
             features,
             feature_bits1: feature_bits.0,
             feature_bits2: feature_bits.1,
+            ex1: OptionString::empty(),
         }
     }
 }
