@@ -54,7 +54,7 @@ macro_rules! detect_pattern {
 }
 
 const PATTERNS_AMOUNT_R: usize = 68;
-const PATTERNS_AMOUNT_D: usize = 123;
+const PATTERNS_AMOUNT_D: usize = 124;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -619,7 +619,11 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"バニッシュされない", CardFeature::Invulnerable],
         detect_pattern![r"バニッシュされたとき", CardFeature::OnBanish],
         detect_pattern![
-            r"(ライフバーストを使用することを選んだ場合|ライフバーストの能力化効果の対象になったとき|ライフバーストアイコン》を持っているか、|ライフバーストアイコン》を持つ場合、|ライフバーストが発動する場合、|ライフバーストは発動しない)",
+            r"(ライフバーストを使用することを選んだ場合|ライフバーストの能力化効果の対象になったとき|ライフバースト】を持っているか|ライフバースト】を持つ場合|ライフバーストが発動する場合|ライフバーストは発動しない)",
+            CardFeature::OnBurst
+        ],
+        detect_pattern![
+            r"(置かれたライフクロスは|あなたのライフクロスとチェックゾーンにある【ライフバースト】を持たないカードは|ライフバースト】を持つカードを好きな枚数公開|ライフバーストの能力か効果の対象になったとき)",
             CardFeature::OnBurst
         ],
         detect_pattern![

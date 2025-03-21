@@ -159,7 +159,7 @@ define_features! {
     Exceed => { tag: Enhance, bit_shift: (39, 0), label: "エクシード" },
     OnExceed => { tag: Others, bit_shift: (40, 0), label: "エクシード時" },
     AddLife => { tag: Endure, bit_shift: (41, 0), label: "ライフクロス追加" },
-    OnBurst => { tag: Others, bit_shift: (42, 0), label: "バースト時" },
+    OnBurst => { tag: Others, bit_shift: (42, 0), label: "バースト参照" },
     LifeTrash => { tag: Offensive, bit_shift: (43, 0), label: "ライフトラッシュ" },
     LifeCrush => { tag: Offensive, bit_shift: (44, 0), label: "ライフクラッシュ" },
     Damage => { tag: Lethal, bit_shift: (45, 0), label: "ダメージ" },
