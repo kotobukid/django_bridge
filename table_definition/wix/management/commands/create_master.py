@@ -307,10 +307,10 @@ def update_timing():
         else:
             if t_ex[0].name != timing[1] or t_ex[0].sort_asc != timing[2]:
                 target_timing = Timing.objects.get(code=timing[0])
-                target_timing[0].name = timing[1]
-                target_timing[0].bit = timing[2]
-                target_timing[0].sort_asc = timing[3]
-                target_timing[0].save()
+                target_timing.name = timing[1]
+                target_timing.bit = timing[2]
+                target_timing.sort_asc = timing[3]
+                target_timing.save()
     print('timing update complete.')
 
 
