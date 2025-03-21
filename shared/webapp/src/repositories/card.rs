@@ -112,7 +112,7 @@ impl CardRepository {
                 r#"INSERT INTO wix_card (
                 name, code, pronunciation, color, cost, level, "limit",
                 limit_ex, power, has_burst, skill_text, burst_text,
-                format, story, rarity, url, timing, card_type, product, feature_bits1, feature_bits2
+                format, story, rarity, url, timing, card_type, product, feature_bits1, feature_bits2, ex1
             ) VALUES (
                 $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
                 $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22
