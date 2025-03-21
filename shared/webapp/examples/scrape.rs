@@ -17,7 +17,6 @@ use std::env;
 
 use clap::Parser;
 use models::card::CreateCard;
-use rayon::iter::ParallelIterator;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use webapp::repositories::{CardRepository, CardTypeRepository};
@@ -109,7 +108,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         println!("cache not found. downloading {card_no}");
 
                         // ランダムな待機時間（1000ms-3000ms）を生成
-                        let wait_time = rand::thread_rng().gen_range(1000..=3000);
+                        let wait_time = rand::rng().random_range(1000..=3000);
                         sleep(Duration::from_millis(wait_time)).await;
 
                         cq.download_card_detail().await
