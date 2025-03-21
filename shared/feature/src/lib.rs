@@ -54,7 +54,7 @@ macro_rules! detect_pattern {
 }
 
 const PATTERNS_AMOUNT_R: usize = 68;
-const PATTERNS_AMOUNT_D: usize = 119;
+const PATTERNS_AMOUNT_D: usize = 123;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -675,6 +675,26 @@ pub fn create_detect_patterns() -> (
         ],
         detect_pattern![
             r"このアーツを使用する際、あなたのルリグデッキから.のアーツ１枚をルリグトラッシュに置いてもよい。",
+            CardFeature::OnArts
+        ],
+        detect_pattern![
+            r"このゲームの間にあなたがリレーピースを使用している",
+            CardFeature::OnArts
+        ],
+        detect_pattern![
+            r"あなたのルリグデッキにあるピース１枚をゲームから除外する",
+            CardFeature::OnArts
+        ],
+        detect_pattern![
+            r"ピースを使用する際、カットインして使用できる",
+            CardFeature::OnArts
+        ],
+        // detect_pattern![ // 同上・特定の1枚のみに同時に存在する条件
+        //     r"対戦相手のピース１枚を対象とし",
+        //     CardFeature::OnArts
+        // ],
+        detect_pattern![
+            r"このターンにあなたがピースを使用していた場合",
             CardFeature::OnArts
         ],
     ];
