@@ -56,19 +56,36 @@ async fn db(
 #[derive(Parser, Debug)]
 struct Args {
     product_type: String, // `#[clap(short,` long)]    を付けなければ位置指定となる
-    code: String,
+    code: Option<String>,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    let product_code = args.code;
+    let product_code = args.code.unwrap_or_else(|| "".to_string());
 
     try_mkdir(Path::new("./text_cache")).unwrap();
 
     let product_type = match args.product_type.to_ascii_lowercase().as_str() {
-        "starter" => ProductType::Starter(product_code),
-        "booster" => ProductType::Booster(product_code),
+        "starter" => {
+            if product_code.as_str() == "" {
+                panic!("product code is required when parsing starter");
+            }
+            ProductType::Starter(product_code)
+        },
+        "booster" => {
+            if product_code.as_str() == "" {
+                panic!("product code is required when parsing booster");
+            }
+            ProductType::Booster(product_code)
+        },
+        "sp" => {
+            if product_code.as_str() == "" {
+                panic!("product code is required when parsing special cards");
+            }
+            ProductType::SpecialCard(product_code)
+        },
+        "pr" => ProductType::PromotionCard,
         _ => {
             panic!("invalid product type");
         }

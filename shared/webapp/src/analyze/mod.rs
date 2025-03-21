@@ -20,6 +20,8 @@ pub struct SearchQuery {
     card_kind: String,
     rarelity: String,
     tab_item: String,
+    support_formats: String,
+    keyword_target: String,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -27,7 +29,7 @@ pub enum ProductType {
     Booster(String),
     Starter(String),
     PromotionCard,
-    SpecialCard,
+    SpecialCard(String),
 }
 
 impl ProductType {
@@ -36,7 +38,7 @@ impl ProductType {
             ProductType::Booster(product_no) => format!("booster/{}", product_no),
             ProductType::Starter(product_no) => format!("starter/{}", product_no),
             ProductType::PromotionCard => String::from("promotion"),
-            ProductType::SpecialCard => String::from("special"),
+            ProductType::SpecialCard(product_no) => format!("special/{}", product_no),
         }
     }
 
@@ -45,21 +47,34 @@ impl ProductType {
             ProductType::Booster(code) => code.into(),
             ProductType::Starter(code) => code.into(),
             ProductType::PromotionCard => "promotion".into(),
-            ProductType::SpecialCard => "special".into(),
+            ProductType::SpecialCard(code) => code.into(),
         }
     }
+
 }
 
 impl SearchQuery {
     fn new(product_type: &ProductType, card_page: i32) -> SearchQuery {
+        let keyword = match product_type {
+            ProductType::SpecialCard(product_no) => product_no.clone(),
+            _ => "".into(),
+        };
+
+        // let product_type = match product_type {
+        //     ProductType::SpecialCard(_) => "".to_string(),
+        //     _ => product_type.clone(),
+        // };
+
         SearchQuery {
             search: "1".into(),
-            keyword: "".into(),
+            keyword: keyword.clone(),
             product_type: product_type.clone(),
             card_page: card_page.to_string(),
             card_kind: "".into(),
             rarelity: "".into(),
             tab_item: "".into(),
+            support_formats: "2".into(),
+            keyword_target: "カードNo,カード名,カードタイプ,テキスト,イラストレーター,フレーバー".into(),
         }
     }
 
@@ -67,8 +82,8 @@ impl SearchQuery {
         match &self.product_type {
             ProductType::Booster(_product_no) => "booster".into(),
             ProductType::Starter(_product_no) => "starter".into(),
-            ProductType::PromotionCard => "-".into(),
-            ProductType::SpecialCard => "-".into(),
+            ProductType::PromotionCard => "promotion_card".into(),
+            ProductType::SpecialCard(_product_no) => "special_card".into(),
         }
     }
 
@@ -79,7 +94,8 @@ impl SearchQuery {
             ProductType::Booster(product_no) => product_no,
             ProductType::Starter(product_no) => product_no,
             ProductType::PromotionCard => &empty_product_no,
-            ProductType::SpecialCard => &empty_product_no,
+            ProductType::SpecialCard(_) => &empty_product_no,
+            // ProductType::SpecialCard(product_no) => product_no,
         };
 
         HashMap::from_iter(vec![
@@ -91,19 +107,32 @@ impl SearchQuery {
             ("card_kind".into(), self.card_kind.clone()),
             ("rarelity".into(), self.rarelity.clone()),
             ("tab_item".into(), self.tab_item.clone()),
+            ("support_formats".into(), self.support_formats.clone()),
+            ("keyword_target".into(), self.keyword_target.clone()),
         ])
     }
 
     fn to_filename(&self) -> String {
-        format!(
-            "{}/p{}.html",
-            &self.product_type.get_path_relative(),
-            &self.card_page
-        )
+        match &self.product_type {
+            ProductType::Booster(product_no)
+            | ProductType::Starter(product_no)=> {
+                format!("{}-{}.html", product_no, self.card_page)
+            }
+            ProductType::SpecialCard(_product_no) => {
+                println!("AAA {:?}", self);
+                let p = format!("{}-{}.html", self.keyword, self.card_page);
+                println!("BBB {}", p);
+                p
+            }
+            ProductType::PromotionCard => {
+                format!("promotion/p{}.html", self.card_page)
+            }
+        }
     }
 
     fn cache_check(&self, dir: String) -> Result<String, std::io::Error> {
         let path: PathBuf = PathBuf::from(format!("{}/{}", dir, &self.to_filename()));
+        println!("PATH: {:?}", path);
         if path.exists() {
             println!("cache found");
             let mut file: File = File::open(&path)?;
@@ -283,18 +312,25 @@ impl CardQuery {
         Self {
             card_no,
             card: "card_detail".into(),
-            cache_dir
+            cache_dir,
         }
     }
 
     pub fn check_cache_file_exists(&self) -> bool {
-        let cache_file: PathBuf =
-            PathBuf::from(format!("{}/{}", &self.cache_dir.display().to_string(), self.get_relative_filename()));
+        let cache_file: PathBuf = PathBuf::from(format!(
+            "{}/{}",
+            &self.cache_dir.display().to_string(),
+            self.get_relative_filename()
+        ));
         cache_file.exists()
     }
 
     pub fn get_cache_text(&self) -> Option<String> {
-        let cache_file: PathBuf = PathBuf::from(format!("{}/{}", &self.cache_dir.display().to_string(), self.get_relative_filename()));
+        let cache_file: PathBuf = PathBuf::from(format!(
+            "{}/{}",
+            &self.cache_dir.display().to_string(),
+            self.get_relative_filename()
+        ));
         if cache_file.exists() {
             let mut file: File = File::open(&cache_file).expect("cache file open error");
             let mut contents = String::new();
@@ -315,8 +351,11 @@ impl CardQuery {
     }
 
     pub async fn download_card_detail(&self) -> Option<String> {
-        let cache_file: PathBuf =
-            PathBuf::from(format!("{}/{}", &self.cache_dir.display().to_string(), self.get_relative_filename()));
+        let cache_file: PathBuf = PathBuf::from(format!(
+            "{}/{}",
+            &self.cache_dir.display().to_string(),
+            self.get_relative_filename()
+        ));
 
         // println!("{:?}", cache_file);
         if cache_file.exists() {
@@ -328,7 +367,7 @@ impl CardQuery {
                 _ => None,
             }
         } else {
-                        // "https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=WX24-P3-001"
+            // "https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=WX24-P3-001"
             let url = "https://www.takaratomy.co.jp/products/wixoss/card_list.php";
 
             let form: HashMap<String, String> = self.to_hashmap();
