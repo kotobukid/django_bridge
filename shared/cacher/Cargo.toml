@@ -1,0 +1,17 @@
+[package]
+name = "cacher"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+webapp = { path = "../webapp" }
+models = { path = "../models" }
+tokio = { workspace = true }
+futures = "0.3.31"
+rand = "0.8.5"
+sqlx = "0.8.3"
+clap = { version = "4.5.32", features = ["derive"] }
+url = "2.5.4"
+serde_qs = "0.13.0"
+dotenvy = { workspace = true }
+reqwest = { version = "0.12.12", features = ["cookies", "multipart"] }

@@ -8,7 +8,7 @@ class Product(models.Model):
     product_type = models.CharField(
         verbose_name="商品タイプ",
         max_length=2, null=False, blank=False,
-        choices=[("bo", "ブースター"), ("st", "スターター"), ("pr", "プロモーション")]
+        choices=[("bo", "ブースター"), ("st", "スターター"), ("pr", "プロモーション"), ("sp", "スペシャル")]
     )
     sort_asc = models.IntegerField(verbose_name="ソート順(昇順)", null=False, blank=False, default=0)
 
