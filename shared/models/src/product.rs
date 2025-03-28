@@ -8,7 +8,7 @@ impl Product {
         let sub_dir = match &self.product_type.as_ref() {
             &"bo" => &self.product_code,
             &"st" => &self.product_code,
-            &"sp" => &self.name,
+            &"sp" => &self.product_code,
             &"pr" => "",
             _ => ""
         };

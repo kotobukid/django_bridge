@@ -25,13 +25,14 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::env;
 use std::fmt::Display;
-use std::fs::File;
 // use std::future::Future;
 use std::io::Read;
 // use std::pin::Pin;
 use std::sync::Arc;
 // use tokio::sync::Mutex;
 // use webapp::repositories::{CardRepository, CardTypeRepository};
+use std::fs;
+use std::fs::{File, ReadDir};
 
 #[derive(Clone, Debug)]
 pub struct SearchQuery {
@@ -51,13 +52,24 @@ impl SearchQuery {
     fn to_filename(&self) -> String {
         match self.product_type.as_str() {
             "booster" | "starter" => {
-                format!("{}/page_{}.html", self.product_no, self.card_page)
+                format!(
+                    "{}/page_{:03}.html",
+                    self.product_no,
+                    self.card_page.parse::<i32>().unwrap()
+                )
             }
             "special_card" => {
-                format!("{}/page_{}.html", self.keyword, self.card_page)
+                format!(
+                    "{}/page_{:03}.html",
+                    self.keyword,
+                    self.card_page.parse::<i32>().unwrap()
+                )
             }
             "promotion_card" => {
-                format!("promotion/page_{}.html", self.card_page)
+                format!(
+                    "promotion/page_{:03}.html",
+                    self.card_page.parse::<i32>().unwrap()
+                )
             }
             _ => {
                 panic!("unknown product type")
@@ -130,22 +142,17 @@ impl ProductCacher {
 
     fn get_cache_dir_path(&self, cache_root: PathBuf) -> PathBuf {
         let p_type = &self.product.product_type.as_str();
+        let mut b = PathBuf::from(cache_root.clone());
 
         let sub_path = match *p_type {
-            "bo" => {
-                format!("booster/{}", self.product.cache_path())
-            }
-            "st" => {
-                format!("starter/{}", self.product.cache_path())
-            }
-            "sp" => {
-                format!("special/{}", self.product.cache_path())
-            }
-            "pr" => String::from("promotion"),
+            "bo" => b.join(self.product.cache_path()),
+            "st" => b.join(self.product.cache_path()),
+            "sp" => b.join(self.product.cache_path()),
+            "pr" => b.join("promotion"),
             _ => panic!("unknown product type"),
         };
 
-        cache_root.join(sub_path)
+        sub_path
     }
 
     fn to_search_query(&self, card_page: i32) -> SearchQuery {
@@ -215,6 +222,7 @@ impl ProductCacher {
             }
         }
     }
+
     async fn cache_target_page(&self, card_page: i32) -> Result<i32, reqwest::Error> {
         let r = self.root_dir.clone();
 
@@ -278,6 +286,19 @@ impl ProductCacher {
 
         Ok(page_max)
     }
+
+    async fn extract_card_detail_links(&self) -> Vec<String> {
+        let links = Vec::new();
+        let product_index_cache_dir = self.get_cache_dir_path(self.root_dir.clone());
+        let page_caches = fs::read_dir(product_index_cache_dir).unwrap();
+
+        for page_cache in page_caches {
+            println!("page_cache {:?}", page_cache);
+            // todo
+        }
+
+        links
+    }
 }
 
 #[tokio::main]
@@ -286,14 +307,24 @@ async fn main() {
     let product_repo = ProductRepository::new(pool.clone());
 
     let cache_dir_root = PathBuf::new();
-    let cache_dir = cache_dir_root.join("../webapp/text_cache");
+    let cache_dir = cache_dir_root.join("..").join("webapp").join("text_cache");
 
     let products = product_repo.get_all().await.unwrap();
 
-    // 謙虚にシリアルに
-    for product in products {
-        let pc = ProductCacher::new(cache_dir.clone(), product);
+    // ProductCacher を生成
+    let mut product_cachers: Vec<_> = products
+        .into_iter()
+        .map(|product| ProductCacher::new(cache_dir.clone(), product))
+        .collect();
+
+    // キャッシュを直列処理
+    for pc in &product_cachers {
         pc.cache_first_page().await.unwrap();
+    }
+
+    for pc in &product_cachers {
+        let links = pc.extract_card_detail_links().await;
+        println!("links {:?}", links);
     }
 }
 
