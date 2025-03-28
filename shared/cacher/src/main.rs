@@ -1,33 +1,37 @@
-use futures::future::join_all;
+// use futures::future::join_all;
 use models::product::Product;
-use rand::Rng;
-use serde_qs as qs;
+// use rand::Rng;
+// use serde_qs as qs;
 use std::collections::HashMap;
 use std::io::Write;
+#[allow(unused_imports)]
 use std::path::{Path, PathBuf};
+#[allow(unused_imports)]
 use tokio::time::{sleep, Duration};
-use url::Url;
+// use url::Url;
+use futures::future::join_all;
+use tokio::task::JoinHandle;
 use webapp::analyze::{cache_product_index, collect_card_detail_links, try_mkdir, CardQuery};
 use webapp::analyze::{extract_number, find_one, ProductType};
 use webapp::repositories::ProductRepository;
 
-use webapp::analyze::wixoss::Card;
+// use webapp::analyze::wixoss::Card;
 
-use clap::Parser;
+// use clap::Parser;
 use dotenvy::from_filename;
-use models::card::CreateCard;
+// use models::card::CreateCard;
 use reqwest::{Client, Response};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::env;
 use std::fmt::Display;
 use std::fs::File;
-use std::future::Future;
+// use std::future::Future;
 use std::io::Read;
-use std::pin::Pin;
+// use std::pin::Pin;
 use std::sync::Arc;
-use tokio::sync::Mutex;
-use webapp::repositories::{CardRepository, CardTypeRepository};
+// use tokio::sync::Mutex;
+// use webapp::repositories::{CardRepository, CardTypeRepository};
 
 #[derive(Clone, Debug)]
 pub struct SearchQuery {
@@ -46,22 +50,23 @@ pub struct SearchQuery {
 impl SearchQuery {
     fn to_filename(&self) -> String {
         match self.product_type.as_str() {
-            "bo" | "st" => {
-                format!("{}-{}.html", self.product_no, self.card_page)
+            "booster" | "starter" => {
+                format!("{}/page_{}.html", self.product_no, self.card_page)
             }
-            "sp" => {
-                format!("{}-{}.html", self.keyword, self.card_page)
+            "special_card" => {
+                format!("{}/page_{}.html", self.keyword, self.card_page)
             }
-            "pr" => {
-                format!("promotion/p{}.html", self.card_page)
+            "promotion_card" => {
+                format!("promotion/page_{}.html", self.card_page)
             }
-            _ => panic!("unknown product type"),
+            _ => {
+                panic!("unknown product type")
+            }
         }
     }
 
     pub fn check_cache(&self, dir: PathBuf) -> Result<String, std::io::Error> {
         let path = dir.join(self.to_filename());
-        println!("PATH: {:?}", path);
 
         if path.exists() {
             println!("cache found");
@@ -82,9 +87,9 @@ impl SearchQuery {
         let empty_product_no = String::from("");
 
         let product_no = match self.product_type.as_str() {
-            "bo" | "st" => self.product_no.clone(),
-            "pr" => empty_product_no,
-            "sp" => empty_product_no,
+            "booster" | "starter" => self.product_no.clone(),
+            "promotion_card" => empty_product_no,
+            "special_card" => empty_product_no,
             _ => panic!("unknown product type"),
         };
 
@@ -103,7 +108,6 @@ impl SearchQuery {
     }
 }
 
-
 pub struct ProductCacher {
     root_dir: PathBuf,
     product: Product,
@@ -111,7 +115,11 @@ pub struct ProductCacher {
 
 impl Display for ProductCacher {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "ProductCacher {{ root_dir: {:?}, product: {:?} }}", self.root_dir, self.product)
+        write!(
+            f,
+            "ProductCacher {{ root_dir: {:?}, product: {:?} }}",
+            self.root_dir, self.product
+        )
     }
 }
 
@@ -144,7 +152,7 @@ impl ProductCacher {
         match self.product.product_type.as_str() {
             "sp" => SearchQuery {
                 search: "1".into(),
-                keyword: self.product.name.clone(),
+                keyword: self.product.product_code.clone(),
                 product_type: "special_card".into(),
                 product_no: "".into(),
                 card_page: card_page.to_string(),
@@ -190,78 +198,85 @@ impl ProductCacher {
         }
     }
 
-    async fn cache_index<'a>(
-        &'a self,
-        cache_root: &'a PathBuf,
-        card_page: i32,
-    ) -> Pin<Box<dyn Future<Output = Result<(), reqwest::Error>> + '_>>  {
-        Box::pin(async move {
-
-                let r = cache_root.clone();
-                let p_code = self
-                    .get_cache_dir_path(r.clone())
-                    .to_str()
-                    .unwrap().to_string();
-                println!("{} {}", p_code, card_page);
-
-                let url = "https://www.takaratomy.co.jp/products/wixoss/card/card_list.php";
-
-                let search_query = self.to_search_query(card_page);
-
-                let main: Option<String> = match search_query.check_cache(cache_root.clone()) {
-                    Ok(content_) => Some(content_),
-                    _ => {
-                        let form: HashMap<String, String> = search_query.to_hashmap();
-
-                        let client: Client = Client::new();
-                        let res: Response = client
-                            .post(url)
-                            .header(reqwest::header::COOKIE, "wixAge=conf;")
-                            .query(&form)
-                            .send()
-                            .await?;
-
-                        let body: String = res.text().await.unwrap();
-
-                        let cache_filename: PathBuf = r.join(&search_query.to_filename());
-                            // PathBuf::from(format!("./text_cache/{}", &search_query.to_filename()));
-
-                        if let Some(parent_path) = cache_filename.parent() {
-                            try_mkdir(parent_path).unwrap();
-
-                            let content = find_one(&body, ".cardDip".into());
-
-                            if let Some(element) = &content {
-                                let file: Result<File, std::io::Error> = File::create(&cache_filename);
-                                if let Ok(mut file_) = file {
-                                    file_.write_all(element.as_bytes()).unwrap();
-                                }
-                            }
-                            content
-                        } else {
-                            None
-                        }
-                    }
-                };
-
-                if let Some(count) = find_one(&main.unwrap(), "h3 p span".into()) {
-                    let count = extract_number(&count);
-
-                    if let Some(count) = count {
-                        let pages = (count / 21) + 1;
-
-                        if card_page < pages {
-                            Box::pin(self.cache_index(cache_root, card_page + 1))
-                            // cache_product_index(product_type, card_page + 1)
-                                .await;
-                        }
-                    }
-                } else {
-                    println!("not found");
+    async fn cache_first_page(&self) -> Result<(), reqwest::Error> {
+        match self.cache_target_page(1).await {
+            Ok(page_max) => {
+                println!("pages: {}", page_max);
+                for i in 2..=page_max {
+                    self.cache_target_page(i).await?;
+                    sleep(Duration::from_secs(1)).await;
                 }
 
                 Ok(())
-        })
+            }
+            Err(e) => {
+                println!("{:?}", e);
+                Err(e)
+            }
+        }
+    }
+    async fn cache_target_page(&self, card_page: i32) -> Result<i32, reqwest::Error> {
+        let r = self.root_dir.clone();
+
+        let search_query = self.to_search_query(card_page);
+        println!("{:?}", search_query);
+
+        let main_element: Option<String> = match search_query.check_cache(r.clone()) {
+            Ok(content_) => Some(content_),
+            _ => {
+                let form: HashMap<String, String> = search_query.to_hashmap();
+
+                let client: Client = Client::new();
+
+                let url = "https://www.takaratomy.co.jp/products/wixoss/card/card_list.php";
+
+                let res: Response = client
+                    .post(url)
+                    .header(reqwest::header::COOKIE, "wixAge=conf;")
+                    .query(&form)
+                    .send()
+                    .await?;
+
+                let body: String = res.text().await.unwrap();
+
+                let cache_filename: PathBuf = r.join(&search_query.to_filename());
+
+                if let Some(parent_path) = cache_filename.parent() {
+                    try_mkdir(parent_path).unwrap();
+
+                    let content = find_one(&body, ".cardDip".into());
+
+                    if let Some(element) = &content {
+                        let file: Result<File, std::io::Error> = File::create(&cache_filename);
+                        if let Ok(mut file_) = file {
+                            file_.write_all(element.as_bytes()).unwrap();
+                        }
+                    }
+                    content
+                } else {
+                    None
+                }
+            }
+        };
+
+        let mut page_max: i32 = 0;
+
+        if let Some(count) = find_one(&main_element.unwrap(), "h3 p span".into()) {
+            let count = extract_number(&count);
+
+            if let Some(count) = count {
+                page_max = (count / 21) + 1;
+
+                // 再帰を採用しない
+                // if card_page < pages {
+                //     self.cache_target_page(card_page + 1).await?;
+                // }
+            }
+        } else {
+            println!("not found");
+        };
+
+        Ok(page_max)
     }
 }
 
@@ -271,20 +286,15 @@ async fn main() {
     let product_repo = ProductRepository::new(pool.clone());
 
     let cache_dir_root = PathBuf::new();
-    let cache_dir = cache_dir_root.join("../../text_cache");
+    let cache_dir = cache_dir_root.join("../webapp/text_cache");
 
     let products = product_repo.get_all().await.unwrap();
 
-    products
-        .into_iter()
-        .map(|product| ProductCacher::new(cache_dir.clone(), product))
-        .collect::<Vec<_>>()
-        .iter()
-        .for_each(|p_cacher| {
-            println!(
-                "cache product: {}\n", p_cacher
-            );
-        })
+    // 謙虚にシリアルに
+    for product in products {
+        let pc = ProductCacher::new(cache_dir.clone(), product);
+        pc.cache_first_page().await.unwrap();
+    }
 }
 
 async fn create_db() -> Pool<Postgres> {
