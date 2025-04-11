@@ -5,7 +5,7 @@ members = [
     "syncdb",
     "shared/webapp",
     "shared/models",
-    "shared/feature", "shared/color", "shared/cacher"]
+    "shared/feature", "shared/color", "shared/cacher", "shared/injector"]
 
 resolver = "2"
 

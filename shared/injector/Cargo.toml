@@ -1,0 +1,12 @@
+[package]
+name = "injector"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sqlx = { workspace = true }
+tokio = { workspace = true }
+dotenvy = { workspace = true }
+webapp = { path = "../webapp" }
+reqwest = { version = "0.12.15", features = ["json"] }
+futures = "0.3.31"

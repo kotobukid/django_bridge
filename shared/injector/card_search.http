@@ -1,0 +1,31 @@
+### 検索
+GET http://192.168.33.10:9200/card/_search?q=バニッシュ
+
+
+### 登録
+PUT http://192.168.33.10:9200/my_index/_doc/1
+Content-Type: application/json
+
+{
+  "title": "Hello Elasticsearch",
+  "content": "ElasticSearchは全文検索エンジンです。",
+  "tags": [
+    "ElasticSearch"
+  ]
+}
+
+
+
+### 取得
+GET http://192.168.33.10:9200/my_index/_doc/1
+
+
+###　検索
+GET http://192.168.33.10:9200/my_index/_search?q=ElasticSearch
+
+
+### 一覧
+GET http://192.168.33.10:9200/_cat/indices?v
+
+###
+
