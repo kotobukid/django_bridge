@@ -6,3 +6,5 @@ Cargo.lock
 vm/.vagrant
 .env
 datapack/src/gen/cards.rs
+/table_definition/.venv
+/front/bun.lock
