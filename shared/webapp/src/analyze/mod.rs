@@ -116,7 +116,7 @@ impl SearchQuery {
         match &self.product_type {
             ProductType::Booster(product_no)
             | ProductType::Starter(product_no)=> {
-                format!("starter/{}-{}.html", product_no, self.card_page)
+                format!("{}-{}.html", product_no, self.card_page)
             }
             ProductType::SpecialCard(_product_no) => {
                 println!("AAA {:?}", self);
@@ -125,13 +125,19 @@ impl SearchQuery {
                 p
             }
             ProductType::PromotionCard => {
-                format!("promotion/p{}.html", self.card_page)
+                format!("p{}.html", self.card_page)
             }
         }
     }
 
     fn cache_check(&self, dir: String) -> Result<String, std::io::Error> {
-        let path: PathBuf = PathBuf::from(format!("{}/{}/{}", dir, &self.get_product_type(), &self.to_filename()));
+        let product_path = match &self.product_type {
+            ProductType::Booster(product_no) => format!("booster/{}", product_no),
+            ProductType::Starter(product_no) => format!("starter/{}", product_no),
+            ProductType::PromotionCard => String::from("promotion"),
+            ProductType::SpecialCard(product_no) => format!("special/{}", product_no),
+        };
+        let path: PathBuf = PathBuf::from(format!("{}/{}", dir, product_path)).join(&self.to_filename());
         println!("PATH: {:?}", path);
         if path.exists() {
             println!("cache found");
@@ -184,7 +190,8 @@ pub async fn cache_product_index(
             let body: String = res.text().await.unwrap();
 
             let cache_filename: PathBuf =
-                PathBuf::from(format!("./text_cache/{}", &search_query.to_filename()));
+                PathBuf::from(format!("./text_cache/{}", p_no))
+                .join(&search_query.to_filename());
             println!("CFN {:?}", cache_filename);
             if let Some(parent_path) = cache_filename.parent() {
                 try_mkdir(parent_path).unwrap();

@@ -53,22 +53,22 @@ impl SearchQuery {
         match self.product_type.as_str() {
             "booster" | "starter" => {
                 format!(
-                    "{}/page_{:03}.html",
+                    "{}-{}.html",
                     self.product_no,
-                    self.card_page.parse::<i32>().unwrap()
+                    self.card_page
                 )
             }
             "special_card" => {
                 format!(
-                    "{}/page_{:03}.html",
+                    "{}-{}.html",
                     self.keyword,
-                    self.card_page.parse::<i32>().unwrap()
+                    self.card_page
                 )
             }
             "promotion_card" => {
                 format!(
-                    "promotion/page_{:03}.html",
-                    self.card_page.parse::<i32>().unwrap()
+                    "p{}.html",
+                    self.card_page
                 )
             }
             _ => {
@@ -78,7 +78,7 @@ impl SearchQuery {
     }
 
     pub fn check_cache(&self, dir: PathBuf) -> Result<String, std::io::Error> {
-        let path = dir.join(self.to_filename());
+        let path = dir.join(&self.product_type).join(self.to_filename());
 
         if path.exists() {
             println!("cache found");
@@ -144,15 +144,15 @@ impl ProductCacher {
         let p_type = &self.product.product_type.as_str();
         let mut b = PathBuf::from(cache_root.clone());
 
-        let sub_path = match *p_type {
-            "bo" => b.join(self.product.cache_path()),
-            "st" => b.join(self.product.cache_path()),
-            "sp" => b.join(self.product.cache_path()),
-            "pr" => b.join("promotion"),
+        let product_type = match *p_type {
+            "bo" => "booster",
+            "st" => "starter",
+            "sp" => "special_card",
+            "pr" => "promotion_card",
             _ => panic!("unknown product type"),
         };
 
-        sub_path
+        b.join(product_type)
     }
 
     fn to_search_query(&self, card_page: i32) -> SearchQuery {
@@ -247,7 +247,7 @@ impl ProductCacher {
 
                 let body: String = res.text().await.unwrap();
 
-                let cache_filename: PathBuf = r.join(&search_query.to_filename());
+                let cache_filename: PathBuf = r.join(&search_query.product_type).join(&search_query.to_filename());
 
                 if let Some(parent_path) = cache_filename.parent() {
                     try_mkdir(parent_path).unwrap();
