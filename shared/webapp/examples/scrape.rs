@@ -1,4 +1,3 @@
-use futures::future::join_all;
 use rand::Rng;
 use serde_qs as qs;
 use std::path::Path;
@@ -104,71 +103,60 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Ok(links) = links {
         println!("links: {:?}", links);
-        let tasks: Vec<_> = links
-            .iter()
-            .map(|link| {
-                let link = link.clone();
-                let pool = pool.clone();
-                let product_type = product_type.clone();
-                let card_type_repo = Arc::clone(&card_type_repo);
-                let product_repo = Arc::clone(&product_repo);
 
-                tokio::spawn(async move {
-                    let card_no = extract_card_no(&link).unwrap();
-                    let dir = Path::new("./text_cache/single");
-                    let cq: CardQuery =
-                        CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
+        // Process links sequentially instead of in parallel
+        for link in links {
+            let card_no = extract_card_no(&link).unwrap();
+            let dir = Path::new("./text_cache/single");
+            let cq: CardQuery =
+                CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
 
-                    let text = if cq.check_cache_file_exists() {
-                        println!("cache exists for {card_no}");
-                        cq.get_cache_text()
-                    } else {
-                        println!("cache not found. downloading {card_no}");
+            let text = if cq.check_cache_file_exists() {
+                println!("cache exists for {card_no}");
+                cq.get_cache_text()
+            } else {
+                println!("cache not found. downloading {card_no}");
 
-                        // ランダムな待機時間（1000ms-3000ms）を生成
-                        let wait_time = rand::rng().random_range(1000..=3000);
-                        sleep(Duration::from_millis(wait_time)).await;
+                // ランダムな待機時間（1000ms-3000ms）を生成
+                let wait_time = rand::rng().random_range(1000..=3000);
+                sleep(Duration::from_millis(wait_time)).await;
 
-                        cq.download_card_detail().await
-                    };
+                cq.download_card_detail().await
+            };
 
-                    match text {
-                        Some(text) => {
-                            let c = Card::card_from_html(text.as_str());
-                            match c {
-                                Some(card) => {
-                                    let ct = &card.card_type.code();
+            match text {
+                Some(text) => {
+                    let c = Card::card_from_html(text.as_str());
+                    match c {
+                        Some(card) => {
+                            let ct = &card.card_type.code();
 
-                                    let card_type_id = card_type_repo
-                                        .lock()
-                                        .await
-                                        .find_by_code(ct)
-                                        .await
-                                        .unwrap_or(0);
+                            let card_type_id = card_type_repo
+                                .lock()
+                                .await
+                                .find_by_code(ct)
+                                .await
+                                .unwrap_or(0);
 
-                                    let product_id = product_repo
-                                        .lock()
-                                        .await
-                                        .get_id_by_code(&product_type.code())
-                                        .await
-                                        .unwrap_or(0);
+                            let product_id = product_repo
+                                .lock()
+                                .await
+                                .get_id_by_code(&product_type.code())
+                                .await
+                                .unwrap_or(0);
 
-                                    let mut cc: CreateCard = card.into();
-                                    cc.card_type = card_type_id.to_string().parse::<i32>().unwrap();
-                                    cc.product = product_id.to_string().parse::<i32>().unwrap();
+                            let mut cc: CreateCard = card.into();
+                            cc.card_type = card_type_id.to_string().parse::<i32>().unwrap();
+                            cc.product = product_id.to_string().parse::<i32>().unwrap();
 
-                                    db(pool, cc).await.unwrap();
-                                }
-                                None => eprintln!("card parse error[skip]: {}", card_no),
-                            }
+                            db(pool.clone(), cc).await.unwrap();
                         }
-                        None => eprintln!("download error"),
+                        None => eprintln!("card parse error[skip]: {}", card_no),
                     }
-                })
-            })
-            .collect();
-
-        join_all(tasks).await;
+                }
+                None => eprintln!("download error"),
+            }
+        }
     }
 
     Ok(())
