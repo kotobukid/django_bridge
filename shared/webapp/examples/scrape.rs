@@ -103,6 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     )));
 
     if let Ok(links) = links {
+        println!("links: {:?}", links);
         let tasks: Vec<_> = links
             .iter()
             .map(|link| {

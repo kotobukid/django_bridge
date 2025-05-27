@@ -1,10 +1,11 @@
+use std::os::unix::prelude::CommandExt;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
 use rand::prelude::*;
-use std::os::windows::process::CommandExt;
+// use std::os::windows::process::CommandExt;
 use std::process::{Child, Command};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -71,11 +72,13 @@ async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl Into
     #[cfg(windows)]
     command.creation_flags(winapi::um::winbase::CREATE_NEW_PROCESS_GROUP);
     #[cfg(unix)]
-    command.pre_exec(|| {
-        // プロセスグループIDを自分自身に設定
-        let _ = nix::unistd::setsid();
-        Ok(())
-    });
+    unsafe {
+        command.pre_exec(|| {
+            // プロセスグループIDを自分自身に設定
+            let _ = nix::unistd::setsid();
+            Ok(())
+        });        
+    }
 
     match command.spawn() {
         Ok(child) => {

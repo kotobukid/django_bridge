@@ -116,7 +116,7 @@ impl SearchQuery {
         match &self.product_type {
             ProductType::Booster(product_no)
             | ProductType::Starter(product_no)=> {
-                format!("{}-{}.html", product_no, self.card_page)
+                format!("starter/{}-{}.html", product_no, self.card_page)
             }
             ProductType::SpecialCard(_product_no) => {
                 println!("AAA {:?}", self);
@@ -131,7 +131,7 @@ impl SearchQuery {
     }
 
     fn cache_check(&self, dir: String) -> Result<String, std::io::Error> {
-        let path: PathBuf = PathBuf::from(format!("{}/{}", dir, &self.to_filename()));
+        let path: PathBuf = PathBuf::from(format!("{}/{}/{}", dir, &self.get_product_type(), &self.to_filename()));
         println!("PATH: {:?}", path);
         if path.exists() {
             println!("cache found");
@@ -163,7 +163,6 @@ pub async fn cache_product_index(
     card_page: i32,
 ) -> Result<(), reqwest::Error> {
     let p_no = product_type.get_path_relative();
-    println!("{} {}", p_no, card_page);
 
     let url = "https://www.takaratomy.co.jp/products/wixoss/card/card_list.php";
 
@@ -186,7 +185,7 @@ pub async fn cache_product_index(
 
             let cache_filename: PathBuf =
                 PathBuf::from(format!("./text_cache/{}", &search_query.to_filename()));
-
+            println!("CFN {:?}", cache_filename);
             if let Some(parent_path) = cache_filename.parent() {
                 try_mkdir(parent_path).unwrap();
 
@@ -247,6 +246,7 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
 
     match files_result {
         Ok(files) => {
+            println!("{:?}", files);
             let all_text: String = files
                 .into_iter()
                 .map(|f| {
@@ -259,6 +259,7 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
                 .collect::<Vec<_>>()
                 .join("");
 
+            println!("AT {:?}", all_text);
             let parsed_html: Html = Html::parse_document(&all_text);
             let selector: Selector = Selector::parse("a.c-box").unwrap();
             let links: Vec<String> = parsed_html
@@ -266,6 +267,7 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
                 .map(|element| element.value().attr("href").unwrap_or("").to_owned())
                 .filter(|href| !href.is_empty())
                 .collect();
+            println!("LINKS {:?}", links);
             Ok(links)
         }
         Err(err) => {
