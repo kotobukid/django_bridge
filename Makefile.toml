@@ -98,3 +98,10 @@ mv front/public/pkg/datapack_bg.wasm.d.ts front/static/pkg/datapack_bg.wasm.d.ts
 mv front/public/pkg/package.json front/static/pkg/package.json
 cp front/public/pkg/.gitignore front/static/pkg/.gitignore
 '''
+
+# 実行順序
+# shared/webapp scrape
+#static
+#wasm_linux
+#generate
+#server
