@@ -11,6 +11,11 @@ class Command(BaseRunserverCommand):
             type=str,
             help='Set a custom admin URL root for this session.',
         )
+        parser.add_argument(
+            '--csrf-trust-port',
+            type=str,
+            help='Set a custom port number for CSRF trust.',
+        )
 
     def execute(self, *args, **options):
         # --admin-rootオプションを取得して設定に適用
@@ -20,6 +25,14 @@ class Command(BaseRunserverCommand):
             settings.CUSTOM_ADMIN_ROOT = admin_root
         else:
             settings.CUSTOM_ADMIN_ROOT = "admin/"  # デフォルト
+
+        csrf_trust_port = options.get('csrf_trust_port')
+        if csrf_trust_port:
+            print(f"Using custom CSRF trust port: {csrf_trust_port}")
+            settings.CSRF_TRUSTED_ORIGINS += [
+                f"http://localhost:{csrf_trust_port}",
+                f"http://127.0.0.1:{csrf_trust_port}",
+            ]
 
         # 継承元の execute を呼び出して通常のrunserverをスタート
         super().execute(*args, **options)

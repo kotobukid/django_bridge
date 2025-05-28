@@ -19,7 +19,7 @@ use webapp::state::AppState;
 async fn main() -> Result<(), sqlx::Error> {
     from_filename("../.env").ok();
 
-    let web_port = env::var("WEB_PORT").unwrap_or("8000".to_string());
+    let web_port: u16 = env::var("WEB_PORT").unwrap_or("8000".to_string()).parse().unwrap();
     let django_admin_port: u16 = env::var("DJANGO_ADMIN_PORT").unwrap_or("8200".to_string()).parse().unwrap();
 
     let db_url = {
@@ -43,7 +43,7 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let pool = Arc::new(pool);
 
-    let a_routers = create_admin_portal_router(django_admin_port);
+    let a_routers = create_admin_portal_router(django_admin_port, web_port);
     let card_router = create_card_router(pool.clone());
     let product_router = create_product_router(pool.clone());
     let api_router = Router::new()

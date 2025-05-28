@@ -57,10 +57,8 @@ async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> im
 
     // コマンドを設定し、プロセスを起動
     let mut command = Command::new("python");
-    let admin_origin = {
-        let state = router_state;
-        format!("localhost:{}", state.django_admin_port)
-    };
+    let admin_origin = format!("localhost:{}", &router_state.django_admin_port);
+    let axum_web_port = router_state.axum_web_port;
 
     command.args([
         "../table_definition/manage.py", // 適切なmanage.pyへのパス
@@ -68,6 +66,8 @@ async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> im
         "--admin-root",
         &admin_root,
         admin_origin.as_str(),
+        "--csrf-trust-port",
+        axum_web_port.to_string().as_str(),
     ]);
 
     // Windows でプロセスグループを作成（UNIX系でも有効）
@@ -168,14 +168,17 @@ async fn stop_django_server(State(state): State<Arc<RouterState>>) -> impl IntoR
 struct RouterState {
     django_process_handle: Arc<Mutex<Option<Child>>>, // プロセス管理用のデモ的な型
     django_admin_port: u16,
+    axum_web_port: u16,
 }
 
 pub fn create_admin_portal_router(
     django_admin_port: u16,
+    axum_web_port: u16,
 ) -> (Router<AppState>, Router<AppState>, Router<AppState>) {
     let state = Arc::new(RouterState {
         django_process_handle: Arc::new(Mutex::new(None)),
         django_admin_port,
+        axum_web_port,
     });
 
     let operation_router = Router::new()
