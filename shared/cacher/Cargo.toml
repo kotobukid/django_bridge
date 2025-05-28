@@ -8,10 +8,10 @@ webapp = { path = "../webapp" }
 models = { path = "../models" }
 tokio = { workspace = true }
 futures = "0.3.31"
-rand = "0.8.5"
-sqlx = "0.8.3"
-clap = { version = "4.5.32", features = ["derive"] }
+rand = "0.9.1"
+sqlx = "0.8.6"
+clap = { version = "4.5.39", features = ["derive"] }
 url = "2.5.4"
-serde_qs = "0.13.0"
+serde_qs = { workspace = true }
 dotenvy = { workspace = true }
-reqwest = { version = "0.12.12", features = ["cookies", "multipart"] }
+reqwest = { version = "0.12.16", features = ["cookies", "multipart"] }

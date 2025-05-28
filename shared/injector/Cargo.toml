@@ -8,5 +8,5 @@ sqlx = { workspace = true }
 tokio = { workspace = true }
 dotenvy = { workspace = true }
 webapp = { path = "../webapp" }
-reqwest = { version = "0.12.15", features = ["json"] }
+reqwest = { version = "0.12.16", features = ["json"] }
 futures = "0.3.31"
