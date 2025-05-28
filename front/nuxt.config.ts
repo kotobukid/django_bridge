@@ -1,5 +1,7 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import vuetify, {transformAssetUrls} from 'vite-plugin-vuetify';
+const webPort = process.env.WEB_PORT || '80';
+const backend_origin = `http://127.0.0.1:${webPort}`;
 
 const site_name = 'Card Manager';
 
@@ -49,19 +51,19 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/admin_proxy': {
-          target: 'http://127.0.0.1:80',
+          target: backend_origin,
           changeOrigin: true,
         },
         '/a_static': {
-          target: 'http://127.0.0.1:80',
+          target: backend_origin,
           changeOrigin: true,
         },
         '/admin_operation/api': {
-          target: 'http://127.0.0.1:80',
+          target: backend_origin,
           changeOrigin: true,
         },
         '/api': {
-          target: 'http://127.0.0.1:80',
+          target: backend_origin,
           changeOrigin: true,
         },
       },

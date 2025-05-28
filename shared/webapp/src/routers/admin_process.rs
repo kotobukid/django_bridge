@@ -1,11 +1,10 @@
-use std::os::unix::prelude::CommandExt;
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
 use rand::prelude::*;
-// use std::os::windows::process::CommandExt;
+use std::os::unix::prelude::CommandExt;
 use std::process::{Child, Command};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -38,8 +37,8 @@ struct DjangoStartResult {
     entry: Option<String>,
 }
 
-async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl IntoResponse {
-    let process_handle = Arc::clone(&state.django_process_handle); // クローンして取り出す
+async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> impl IntoResponse {
+    let process_handle = Arc::clone(&router_state.django_process_handle); // クローンして取り出す
     let mut handle = process_handle.lock().await;
 
     let rand_string = random_string();
@@ -58,14 +57,17 @@ async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl Into
 
     // コマンドを設定し、プロセスを起動
     let mut command = Command::new("python");
-    let admin_origin = "localhost:8001";
+    let admin_origin = {
+        let state = router_state;
+        format!("localhost:{}", state.django_admin_port)
+    };
 
     command.args([
         "../table_definition/manage.py", // 適切なmanage.pyへのパス
         "run_with_custom_admin",
         "--admin-root",
         &admin_root,
-        admin_origin,
+        admin_origin.as_str(),
     ]);
 
     // Windows でプロセスグループを作成（UNIX系でも有効）
@@ -77,7 +79,7 @@ async fn start_django_server(State(state): State<Arc<RouterState>>) -> impl Into
             // プロセスグループIDを自分自身に設定
             let _ = nix::unistd::setsid();
             Ok(())
-        });        
+        });
     }
 
     match command.spawn() {
@@ -165,11 +167,15 @@ async fn stop_django_server(State(state): State<Arc<RouterState>>) -> impl IntoR
 #[derive(Clone)]
 struct RouterState {
     django_process_handle: Arc<Mutex<Option<Child>>>, // プロセス管理用のデモ的な型
+    django_admin_port: u16,
 }
 
-pub fn create_admin_portal_router() -> (Router<AppState>, Router<AppState>, Router<AppState>) {
+pub fn create_admin_portal_router(
+    django_admin_port: u16,
+) -> (Router<AppState>, Router<AppState>, Router<AppState>) {
     let state = Arc::new(RouterState {
         django_process_handle: Arc::new(Mutex::new(None)),
+        django_admin_port,
     });
 
     let operation_router = Router::new()
@@ -188,11 +194,14 @@ pub fn create_admin_portal_router() -> (Router<AppState>, Router<AppState>, Rout
     (operation_router, proxy_router, admin_static_router)
 }
 
-const PROXY_HOST: &str = "http://127.0.0.1:8001";
-const PROXY_HOST_PORT: &str = "127.0.0.1:8001";
-
-async fn proxy_handler(OriginalUri(uri): OriginalUri, mut req: Request<Body>) -> impl IntoResponse {
-    let target_uri = format!("{}{}", PROXY_HOST, uri);
+async fn proxy_handler(
+    state: State<AppState>,
+    OriginalUri(uri): OriginalUri,
+    mut req: Request<Body>,
+) -> impl IntoResponse {
+    let proxy_host_port = format!("127.0.0.1:{}", state.django_admin_port);
+    let proxy_host = format!("http://{}", proxy_host_port);
+    let target_uri = format!("{}{}", proxy_host, uri);
 
     let url = match Uri::try_from(target_uri) {
         Ok(uri) => uri,
@@ -207,9 +216,9 @@ async fn proxy_handler(OriginalUri(uri): OriginalUri, mut req: Request<Body>) ->
 
     *req.uri_mut() = uri.clone();
 
-    println!("[proxy to] {:?}", url);
+    println!("[proxy to2] {:?}", url);
 
-    match tokio::net::TcpStream::connect(PROXY_HOST_PORT).await {
+    match tokio::net::TcpStream::connect(&proxy_host_port).await {
         Ok(stream) => {
             let io = TokioIo::new(stream); // `TokioIo` を使用
 
@@ -234,7 +243,7 @@ async fn proxy_handler(OriginalUri(uri): OriginalUri, mut req: Request<Body>) ->
             let mut proxied_req_builder = Request::builder()
                 .uri(uri.path_and_query().unwrap().to_string()) // 修正済
                 .method(req.method().clone())
-                .header("Host", PROXY_HOST_PORT);
+                .header("Host", proxy_host_port);
 
             // 元のヘッダーをコピーする際に、Hostヘッダーは除外
             for (key, value) in req.headers() {

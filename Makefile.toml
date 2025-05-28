@@ -1,8 +1,13 @@
 [config]
 default_to_workspace = false
 
+[env]
+BACKEND_PORT = 8002
+DJANGO_ADMIN_PORT = 8003
+
 [tasks.server]
 description = "Run Axum server"
+env = { "WEB_PORT" = "${BACKEND_PORT}", "DJANGO_ADMIN_PORT" = "${DJANGO_ADMIN_PORT}" }
 script = [
     "cd server",
     "cargo run --release"
@@ -14,7 +19,6 @@ script = [
     "cd static_generator",
     "cargo run --release"
 ]
-
 
 [tasks.manage]
 description = "Run Django manage.py commands from the Rust project root"
@@ -36,6 +40,14 @@ description = "Run npm run generate in the ./front Nuxt.js project"
 cwd = "./front"
 command = "npm"
 args = ["run", "generate"]
+#env = { "WEB_PORT" = "8001" }
+
+[tasks.front_server]
+description = "Run npm run dev in the ./front Nuxt.js project"
+cwd = "./front"
+command = "npm"
+args = ["run", "dev"]
+env = { "WEB_PORT" = "${BACKEND_PORT}" }
 
 [tasks.wasm]
 #description = "build wasm by wasm-pack (debug build) and organize files"
@@ -74,4 +86,15 @@ move /Y front\\public\\pkg\\datapack.js front\\static\\pkg\\datapack.js
 move /Y front\\public\\pkg\\datapack_bg.wasm.d.ts front\\static\\pkg\\datapack_bg.wasm.d.ts
 move /Y front\\public\\pkg\\package.json front\\static\\pkg\\package.json
 copy /Y front\\public\\pkg\\.gitignore front\\static\\pkg\\.gitignore
+'''
+[tasks.wasm_linux]
+description = "build wasm by wasm-pack (debug build) and organize files"
+script = '''
+mkdir -p front/static/pkg 2>/dev/null
+cd datapack && wasm-pack build --target web --out-dir ../front/public/pkg && cd ..
+mv front/public/pkg/datapack.d.ts front/static/pkg/datapack.d.ts
+mv front/public/pkg/datapack.js front/static/pkg/datapack.js
+mv front/public/pkg/datapack_bg.wasm.d.ts front/static/pkg/datapack_bg.wasm.d.ts
+mv front/public/pkg/package.json front/static/pkg/package.json
+cp front/public/pkg/.gitignore front/static/pkg/.gitignore
 '''

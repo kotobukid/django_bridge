@@ -19,6 +19,9 @@ use webapp::state::AppState;
 async fn main() -> Result<(), sqlx::Error> {
     from_filename("../.env").ok();
 
+    let web_port = env::var("WEB_PORT").unwrap_or("8000".to_string());
+    let django_admin_port: u16 = env::var("DJANGO_ADMIN_PORT").unwrap_or("8200".to_string()).parse().unwrap();
+
     let db_url = {
         let host = env::var("DB_HOST").expect("DB_HOST not found in .env");
         let port = env::var("DB_PORT").expect("DB_PORT not found in .env");
@@ -40,19 +43,23 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let pool = Arc::new(pool);
 
-    let a_routers = create_admin_portal_router();
+    let a_routers = create_admin_portal_router(django_admin_port);
     let card_router = create_card_router(pool.clone());
     let product_router = create_product_router(pool.clone());
     let api_router = Router::new()
         .nest("/card/", card_router)
         .nest("/product/", product_router);
 
-    let app_state = AppState { db_pool: pool };
+    let app_state = AppState { 
+        db_pool: pool,
+        django_admin_port
+    };
 
     let app = Router::new()
         // .route("/hello", get(hello_handler))
         // .nest("/card/", card_router)
         // .nest("/product/", product_router)
+        .route("/healthz", get(|| async { "OK" }))
         .nest("/api/", api_router)
         .nest("/admin_operation/", a_routers.0)
         .nest("/admin_proxy/", a_routers.1)
@@ -60,11 +67,11 @@ async fn main() -> Result<(), sqlx::Error> {
         .fallback_service(ServeDir::new("../front/dist"))
         .with_state(app_state);
 
-    // run our app with hyper, listening globally on port 3000
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:80")
+    let web_addr = format!("0.0.0.0:{}", web_port);
+    let listener = tokio::net::TcpListener::bind(&web_addr)
         .await
         .expect("Failed to bind port");
-    println!("Server is running on http://localhost:80");
+    println!("Server is running on http://{}", web_addr);
     axum::serve(listener, app).await?;
 
     Ok(())

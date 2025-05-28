@@ -45,7 +45,7 @@ async fn proxy_handler(OriginalUri(uri): OriginalUri, mut req: Request<Body>) ->
 
     *req.uri_mut() = uri.clone();
 
-    println!("[proxy to] {:?}", url);
+    println!("[proxy to1] {:?}", url);
 
     match tokio::net::TcpStream::connect(PROXY_HOST_PORT).await {
         Ok(stream) => {
