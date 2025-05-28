@@ -12,3 +12,4 @@ cargo run --release --example scrape starter WX24-D2
 cargo run --release --example scrape starter WX24-D3
 cargo run --release --example scrape starter WX24-D4
 cargo run --release --example scrape starter WX24-D5
+cargo run --release --example scrape starter WX25-CD1

@@ -21,3 +21,4 @@ cargo run --release --example scrape booster WX24-P1
 cargo run --release --example scrape booster WX24-P2
 cargo run --release --example scrape booster WX24-P3
 cargo run --release --example scrape booster WX24-P4
+cargo run --release --example scrape booster WX25-CP1
