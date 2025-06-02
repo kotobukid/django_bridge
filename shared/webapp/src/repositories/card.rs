@@ -182,8 +182,8 @@ impl ICardRepository for CardRepository {
 }
 
 pub trait StaticCodeGenerator {
-    async fn code(&self) -> String;
-    async fn get_all_as_code(&self) -> Vec<String>;
+    fn code(&self) -> impl std::future::Future<Output = String> + Send;
+    fn get_all_as_code(&self) -> impl std::future::Future<Output = Vec<String>> + Send;
 
     fn headline(length: i32) -> String;
     fn tail() -> &'static str;
