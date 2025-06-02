@@ -1,34 +1,48 @@
 """
-URL configuration for table_definition project.
+Django Bridge - URL設定
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+特殊な用途のため、以下のURL構成になっています：
+1. 動的な管理画面ルート（CUSTOM_ADMIN_ROOTで設定）
+2. ヘルスチェック用エンドポイント（Axumからの監視用）
+3. 静的ファイル配信（本番環境用）
+
+通常のDjangoアプリケーションとは異なり、管理画面とヘルスチェックのみを提供します。
 """
 from django.contrib import admin
 from django.urls import path, re_path
 from django.conf import settings
 from django.views.static import serve
-
 from admin_server.views import health_check_admin
 
-urlpatterns = [
-    # path('admin/', admin.site.urls),
-    path('admin_proxy/health-check', health_check_admin),
-    path(f'{settings.CUSTOM_ADMIN_ROOT}health-check', health_check_admin),
-    path(settings.CUSTOM_ADMIN_ROOT, admin.site.urls),
-]
 
-if not settings.DEBUG:
-    urlpatterns += [
-        re_path(r'^%s(?P<path>.*)$' % settings.STATIC_URL.lstrip('/'), serve, {'document_root': settings.STATIC_ROOT}),
-    ]
+def build_urlpatterns():
+    """
+    動的URL構成の構築
+    CUSTOM_ADMIN_ROOTの値に応じてURL構成を変更
+    """
+    patterns = []
+    
+    # ヘルスチェックエンドポイント
+    # 1. 固定パス（Axumサーバーからの監視用）
+    patterns.append(path('admin_proxy/health-check', health_check_admin, name='health_check_proxy'))
+    
+    # 2. 動的パス（カスタム管理画面ルートに対応）
+    patterns.append(path(f'{settings.CUSTOM_ADMIN_ROOT}health-check', health_check_admin, name='health_check_custom'))
+    
+    # 管理画面（動的ルート）
+    patterns.append(path(settings.CUSTOM_ADMIN_ROOT, admin.site.urls))
+    
+    # 静的ファイル配信（本番環境のみ）
+    if not settings.DEBUG:
+        static_pattern = re_path(
+            r'^%s(?P<path>.*)$' % settings.STATIC_URL.lstrip('/'), 
+            serve, 
+            {'document_root': settings.STATIC_ROOT},
+            name='static_files'
+        )
+        patterns.append(static_pattern)
+    
+    return patterns
+
+
+urlpatterns = build_urlpatterns()
