@@ -1,11 +1,29 @@
+use anyhow::{Context, Result};
 use rustpython_parser::lexer::lex;
 use rustpython_parser::Tok;
 use rustpython_parser_core::mode::Mode;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::{env, fs};
+use thiserror::Error;
+
+#[derive(Error, Debug)]
+pub enum SyncDbError {
+    #[error("Failed to tokenize Python code: {0}")]
+    TokenizationError(String),
+    
+    #[error("IO error: {0}")]
+    IoError(#[from] std::io::Error),
+    
+    #[error("Environment variable not found: {0}")]
+    EnvVarError(#[from] std::env::VarError),
+    
+    #[error("Path error: {0}")]
+    PathError(String),
+}
 
 #[derive(Debug, PartialEq)]
 enum DjangoFieldType {
@@ -50,11 +68,11 @@ fn generate_struct_from_python(
     struct_name: &str,
     python_code: &str,
     crate_requirements: &mut CrateRequirements,
-) -> (String, String, String) {
+) -> Result<(String, String, String)> {
     // トークンを収集
     let tokens = lex(python_code, Mode::Module)
         .collect::<Result<Vec<_>, _>>()
-        .expect("Failed to tokenize Python code");
+        .map_err(|e| SyncDbError::TokenizationError(format!("{:?}", e)))?;
 
     let mut fields_vec: Vec<Fields> = Vec::new();
 
@@ -243,19 +261,9 @@ fn generate_struct_from_python(
         match rust_type {
             DjangoFieldType::Valid(ty) => {
                 // コメント生成（default値とmax_lengthを含める）
-                if fields.default_value.is_some() || fields.max_length.is_some() {
-                    rust_struct.push_str("    /// ");
-                    create_struct.push_str("    /// ");
-                    if let Some(default) = &fields.default_value {
-                        rust_struct.push_str(&format!("Default: {}, ", default));
-                        create_struct.push_str(&format!("Default: {}, ", default));
-                    }
-                    if let Some(length) = &fields.max_length {
-                        rust_struct.push_str(&format!("Max length: {}", length));
-                        create_struct.push_str(&format!("Max length: {}", length));
-                    }
-                    rust_struct.push('\n');
-                    create_struct.push('\n');
+                if let Some(comment) = generate_field_comment(&fields) {
+                    rust_struct.push_str(&format!("    {}\n", comment));
+                    create_struct.push_str(&format!("    {}\n", comment));
                 }
 
                 let ty = if fields.is_nullable {
@@ -302,7 +310,20 @@ fn generate_struct_from_python(
 
     rust_struct.push_str("}\n");
     create_struct.push_str("}\n");
-    (rust_struct, create_struct, intermediate_structs.join("\n"))
+    Ok((rust_struct, create_struct, intermediate_structs.join("\n")))
+}
+
+/// Django model definition to be processed
+struct ModelDefinition {
+    app_name: &'static str,
+    struct_name: &'static str,
+    file_path: &'static str,
+}
+
+impl ModelDefinition {
+    const fn new(app_name: &'static str, struct_name: &'static str, file_path: &'static str) -> Self {
+        Self { app_name, struct_name, file_path }
+    }
 }
 
 fn map_django_field_to_rust_type(field_type: &str) -> DjangoFieldType {
@@ -346,11 +367,30 @@ fn map_django_field_to_rust_type(field_type: &str) -> DjangoFieldType {
     }
 }
 
-fn first_upper(s: &str) -> String {
-    let mut c = s.chars();
-    match c.next() {
-        None => String::new(),
-        Some(f) => f.to_uppercase().collect::<String>() + c.as_str(),
+fn generate_field_comment(fields: &Fields) -> Option<String> {
+    let mut parts = Vec::new();
+    
+    if let Some(default) = &fields.default_value {
+        parts.push(format!("Default: {}", default));
+    }
+    
+    if let Some(length) = &fields.max_length {
+        parts.push(format!("Max length: {}", length));
+    }
+    
+    if parts.is_empty() {
+        None
+    } else {
+        Some(format!("/// {}", parts.join(", ")))
+    }
+}
+
+fn first_upper(s: &str) -> Cow<str> {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => Cow::Borrowed(""),
+        Some(f) if f.is_uppercase() => Cow::Borrowed(s),
+        Some(f) => Cow::Owned(f.to_uppercase().collect::<String>() + chars.as_str()),
     }
 }
 
@@ -491,28 +531,31 @@ impl CrateRequirements {
         Ok(())
     }
 }
-fn get_output_dir() -> PathBuf {
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR").expect("Failed to get CARGO_MANIFEST_DIR");
-    PathBuf::from(manifest_dir)
+fn get_output_dir() -> Result<PathBuf> {
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR")
+        .context("Failed to get CARGO_MANIFEST_DIR")?;
+    
+    Ok(PathBuf::from(manifest_dir)
         .parent() // マニフェストディレクトリの親に移動
-        .expect("Failed to get parent directory")
+        .ok_or_else(|| SyncDbError::PathError("Failed to get parent directory".to_string()))?
         .join("shared") // webappディレクトリに移動
         .join("models") // webappディレクトリに移動
         .join("src")
-        .join("gen")
+        .join("gen"))
 }
 
-fn main() {
-    let out_dir: PathBuf = get_output_dir();
+fn main() -> Result<()> {
+    let out_dir = get_output_dir()?;
     println!("Output directory: {}", out_dir.display());
 
-    fs::create_dir_all(&out_dir).expect("Output directory creation failed");
+    fs::create_dir_all(&out_dir)
+        .context("Output directory creation failed")?;
 
     let models = [
-        ("wix", "Card", "./table_definition/wix/models.py"),
-        ("wix", "CardType", "./table_definition/wix/models.py"),
-        ("wix", "Product", "./table_definition/wix/models.py"),
-        ("wix", "Klass", "./table_definition/wix/models.py"),
+        ModelDefinition::new("wix", "Card", "./table_definition/wix/models.py"),
+        ModelDefinition::new("wix", "CardType", "./table_definition/wix/models.py"),
+        ModelDefinition::new("wix", "Product", "./table_definition/wix/models.py"),
+        ModelDefinition::new("wix", "Klass", "./table_definition/wix/models.py"),
     ];
 
     let dest_path = Path::new(&out_dir).join("django_models.rs");
@@ -535,26 +578,31 @@ fn main() {
     let mut source_hash: HashMap<&str, String> = HashMap::new();
 
     // モデル定義を収集する
-    let struct_defs: Vec<(String, String, String)> = models
-        .iter()
-        .map(|(app_name, struct_name, file_path)| {
-            let python_code = source_hash
-                .entry(file_path) // file_path がキー
-                .or_insert_with(|| {
-                    // キャッシュにない場合、ファイルを読み込む
-                    fs::read_to_string(file_path)
-                        .unwrap_or_else(|err| panic!("Failed to read file {}: {}", file_path, err))
-                });
+    let mut struct_defs = Vec::new();
+    for model in models.iter() {
+        let python_code = if let Some(code) = source_hash.get(model.file_path) {
+            code
+        } else {
+            let code = fs::read_to_string(model.file_path)
+                .with_context(|| format!("Failed to read file {}", model.file_path))?;
+            source_hash.insert(model.file_path, code);
+            source_hash.get(model.file_path).unwrap()
+        };
 
-            // 構造体生成コードと依存クレート解析
-            generate_struct_from_python(app_name, struct_name, python_code, &mut crate_req)
-        })
-        .collect(); // Vec<String> に変換
+        // 構造体生成コードと依存クレート解析
+        let result = generate_struct_from_python(
+            model.app_name, 
+            model.struct_name, 
+            python_code, 
+            &mut crate_req
+        )?;
+        struct_defs.push(result);
+    }
 
     // 必要なuse文を冒頭に書き込み
     crate_req
         .write_use_statements(&mut file)
-        .expect("Failed to write use statements to file");
+        .context("Failed to write use statements to file")?;
 
     // 収集したモデル情報
     file.write_all(
@@ -565,9 +613,10 @@ fn main() {
             .join("\n")
             .as_bytes(),
     )
-    .expect("Failed to write struct definitions to file");
+    .context("Failed to write struct definitions to file")?;
 
     println!("Django model definitions successfully synced to Rust structs!");
+    Ok(())
 }
 
 #[cfg(test)]

@@ -11,6 +11,13 @@ mod tests {
         assert_eq!(first_upper("Hello"), "Hello");
         assert_eq!(first_upper("123"), "123");
         assert_eq!(first_upper("_test"), "_test");
+        
+        // パフォーマンス最適化のテスト - すでに大文字の場合は借用を返す
+        let already_upper = "Hello";
+        match first_upper(already_upper) {
+            std::borrow::Cow::Borrowed(s) => assert_eq!(s, already_upper),
+            std::borrow::Cow::Owned(_) => panic!("Expected borrowed value"),
+        }
     }
 
     #[test]
@@ -191,12 +198,15 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True)
 "#;
 
-        let (db_struct, create_struct, _) = generate_struct_from_python(
+        let result = generate_struct_from_python(
             "myapp",
             "Product",
             python_code,
             &mut crate_requirements,
         );
+
+        assert!(result.is_ok());
+        let (db_struct, create_struct, _) = result.unwrap();
 
         // 基本的な構造体定義が含まれているか確認
         assert!(db_struct.contains("pub struct ProductDb"));
