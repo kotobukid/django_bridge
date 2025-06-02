@@ -21,10 +21,10 @@ const message = ref('');
 
 let print_detail = (id: number) => {
 };
-let fetch_cards = async (bit1: string, bit2: string) => {
+let fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
 };
 const fetch_cards_ = async () => {
-  await fetch_cards(`${f1.value}`, `${f2.value}`);
+  await fetch_cards(`${f1.value}`, `${f2.value}`, color_bits.value);
 };
 
 let apply_bits = (a: [number, number]) => {
@@ -56,13 +56,20 @@ const runWasm = async () => {
       console.log(get_by_id(id));
     };
 
-    fetch_cards = async (bit1: string, bit2: string) => {
+    fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
       let cards = fetch_by_f_bits(BigInt(bit1), BigInt(bit2));
-      console.log(cards)
+      if (color_filter && color_filter > 0) {
+        cards = cards.filter((card: any) => (card.color & color_filter) === color_filter);
+      }
+      card_store.set_cards(cards);
+      console.log(cards);
     };
 
     apply_bits = (shifts: [number, number]) => {
       let cards = fetch_by_f_shifts(shifts[0], shifts[1]);
+      if (color_bits.value > 0) {
+        cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
+      }
       card_store.set_cards(cards);
     };
 
@@ -73,6 +80,9 @@ const runWasm = async () => {
 
     console.log(bits_to_gradient(34));
     conditions.value = feature_conditions();
+
+    // 初期状態で全カードを取得
+    await fetch_cards('0', '0');
 
     // Wasm関数を実行 (例: greet)
     message.value = greet('Nuxt');
@@ -124,6 +134,24 @@ const toggle_color = (color: ColorName) => {
     default:
       break;
   }
+  
+  // カラー選択変更時に自動でフィルタリングを更新
+  if (f1.value > 0 || f2.value > 0) {
+    apply_bits([f1.value, f2.value]);
+  } else {
+    fetch_cards_();
+  }
+}
+
+const clear_color = () => {
+  white.value = false;
+  blue.value = false;
+  black.value = false;
+  red.value = false;
+  green.value = false;
+  colorless.value = false;
+
+  fetch_cards_();
 }
 </script>
 
@@ -138,6 +166,7 @@ const toggle_color = (color: ColorName) => {
       :green="green"
       :colorless="colorless"
       @toggle-color="toggle_color"
+      @clear-color="clear_color"
     )
     FeatureConditions(:conditions="conditions" @emit-bits="apply_bits")
     span.count [ {{ card_store.cards_filtered.length }} items ]
