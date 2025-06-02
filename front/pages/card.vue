@@ -23,13 +23,105 @@ let print_detail = (id: number) => {
 };
 let fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
 };
+let fetch_by_f_bits_fn: any = null;
+let fetch_by_f_shifts_fn: any = null;
 const fetch_cards_ = async () => {
   await fetch_cards(`${f1.value}`, `${f2.value}`, color_bits.value);
 };
 
+const selectedFeatures = ref<Map<string, any>>(new Map());
+
 let apply_bits = (a: [number, number]) => {
   // card_store.set_f1(bit1);
   //   card_store.set_f2(bit2);
+};
+
+const applyFeatureFilter = (feature: any, isAdding: boolean) => {
+  const featureId = `${feature.name}_${feature.bit_shift[0]}_${feature.bit_shift[1]}`;
+  
+  console.log(`=== Feature Filter Applied ===`);
+  console.log(`Feature: ${feature.name}`);
+  console.log(`Action: ${isAdding ? 'ADDING' : 'REMOVING'}`);
+  console.log(`Current selected count BEFORE: ${selectedFeatures.value.size}`);
+  
+  if (isAdding) {
+    selectedFeatures.value.set(featureId, feature);
+  } else {
+    selectedFeatures.value.delete(featureId);
+  }
+  
+  console.log(`Current selected count AFTER: ${selectedFeatures.value.size}`);
+  console.log(`Selected features:`, Array.from(selectedFeatures.value.keys()));
+  
+  // 必ず現在の選択状態に基づいてフィルタリングを実行
+  if (selectedFeatures.value.size > 0) {
+    console.log(`Applying multiple feature filter`);
+    applyMultipleFeatureFilter();
+  } else {
+    console.log(`No features selected, showing all cards with color filter only`);
+    fetch_cards_();
+  }
+  console.log(`=== End Feature Filter ===`);
+};
+
+const applyMultipleFeatureFilter = () => {
+  if (!fetch_by_f_shifts_fn) {
+    console.warn('WASM not initialized yet');
+    return;
+  }
+  
+  console.log(`--- Multiple Feature Filter (AND condition with ID intersection) ---`);
+  console.log(`Selected features count: ${selectedFeatures.value.size}`);
+  
+  if (selectedFeatures.value.size === 0) {
+    console.log(`No features selected, calling fetch_cards_() instead`);
+    fetch_cards_();
+    return;
+  }
+  
+  // 各フィーチャーの結果をIDベースで交差させる
+  let cardIdSets: Set<number>[] = [];
+  
+  for (const feature of selectedFeatures.value.values()) {
+    const [shift1, shift2] = feature.bit_shift;
+    console.log(`Getting cards for feature: ${feature.name}, shifts: [${shift1}, ${shift2}]`);
+    
+    // この特定のフィーチャーを持つカードを取得
+    const featureCards = fetch_by_f_shifts_fn(shift1, shift2);
+    console.log(`Feature ${feature.name} has ${featureCards.length} cards`);
+    
+    // IDのSetを作成
+    const idSet = new Set<number>();
+    featureCards.forEach((card: any) => {
+      idSet.add(card.id);
+    });
+    
+    cardIdSets.push(idSet);
+  }
+  
+  // 全てのSetの交差を計算（AND条件）
+  let intersectionIds = cardIdSets[0];
+  for (let i = 1; i < cardIdSets.length; i++) {
+    intersectionIds = new Set([...intersectionIds].filter(id => cardIdSets[i].has(id)));
+    console.log(`After intersection with feature ${i}: ${intersectionIds.size} cards`);
+  }
+  
+  console.log(`Final intersection: ${intersectionIds.size} card IDs`);
+  
+  // 交差するIDを持つカードのみを取得
+  const allCards = fetch_by_f_bits_fn(0n, 0n);
+  let filteredCards = allCards.filter((card: any) => intersectionIds.has(card.id));
+  
+  // カラーフィルターも適用
+  if (color_bits.value > 0) {
+    const beforeCount = filteredCards.length;
+    filteredCards = filteredCards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
+    console.log(`After color filter: ${filteredCards.length} (was ${beforeCount})`);
+  }
+  
+  console.log(`Final card count (AND condition): ${filteredCards.length}`);
+  card_store.set_cards(filteredCards);
+  console.log(`--- End Multiple Feature Filter ---`);
 };
 
 // let gradient = (bits: number) => {return "";};
@@ -55,6 +147,10 @@ const runWasm = async () => {
     print_detail = (id) => {
       console.log(get_by_id(id));
     };
+
+    // WASM関数への参照を保存
+    fetch_by_f_bits_fn = fetch_by_f_bits;
+    fetch_by_f_shifts_fn = fetch_by_f_shifts;
 
     fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
       let cards = fetch_by_f_bits(BigInt(bit1), BigInt(bit2));
@@ -153,25 +249,39 @@ const clear_color = () => {
 
   fetch_cards_();
 }
+
+const navBarRef = ref();
+
+const clearAllFilters = () => {
+  clear_color();
+  selectedFeatures.value.clear();
+  // 全カードを表示
+  fetch_cards_();
+}
 </script>
 
 <template lang="pug">
   .frame
-    NavBar
-    ColorSelector(
-      :white="white"
-      :blue="blue"
-      :black="black"
-      :red="red"
-      :green="green"
-      :colorless="colorless"
-      @toggle-color="toggle_color"
-      @clear-color="clear_color"
-    )
-    FeatureConditions(:conditions="conditions" @emit-bits="apply_bits")
-    span.count [ {{ card_store.cards_filtered.length }} items ]
-    //span.color_bits {{ color_bits }}
-    table
+    NavBar(ref="navBarRef" :conditions="conditions" :selectedFeatures="selectedFeatures" @emit-bits="apply_bits" @feature-toggle="applyFeatureFilter" @clear-filters="clearAllFilters")
+    .filters-section
+      .filters-header
+        h3.section-title Color Filters
+        button.clear-all-btn(@click="clearAllFilters") Clear All
+      .color-filters
+        ColorSelector(
+          :white="white"
+          :blue="blue"
+          :black="black"
+          :red="red"
+          :green="green"
+          :colorless="colorless"
+          @toggle-color="toggle_color"
+          @clear-color="clear_color"
+        )
+    .results-section
+      .results-header
+        span.count [ {{ card_store.cards_filtered.length }} items ]
+      table
       colgroup
         col(style="width: 150px;")
         col(style="width: 400px;")
@@ -191,27 +301,102 @@ const clear_color = () => {
           ) {{ card.name }}
           td.skill
             SoftWrap.normal(:text="card.skill_text")
-            SoftWrap.burst(:text="card.burst_text")
+            SoftWrap.burst(:text="card.burst_text" v-if="card.has_burst == 2")
 </template>
 
 <style scoped lang="less">
 @import "../assets/style/basic.less";
 
+.frame {
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.filters-section {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.filters-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  margin: 0;
+  color: #495057;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.clear-all-btn {
+  padding: 6px 12px;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  
+  &:hover {
+    background-color: #c82333;
+  }
+}
+
+.color-filters {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.results-section {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.results-header {
+  background-color: #f8f9fa;
+  padding: 12px 16px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.count {
+  font-weight: 500;
+  color: #495057;
+  font-size: 14px;
+}
+
 table {
+  width: 100%;
   table-layout: fixed;
   border-collapse: collapse;
+  margin: 0;
 }
 
 th {
-  padding: 3px;
-  border: 1px solid #ffffff;
-  background-color: #2b2b2b;
+  padding: 12px 8px;
+  border: 1px solid #dee2e6;
+  background-color: #343a40;
   color: white;
+  font-weight: 600;
+  font-size: 14px;
+  text-align: left;
 }
 
 td {
-  padding: 3px;
-  border: 1px solid black;
+  padding: 8px;
+  border: 1px solid #dee2e6;
+  font-size: 13px;
+  vertical-align: top;
 }
 
 td.name {
@@ -222,19 +407,22 @@ td.skill {
   .burst {
     color: white;
     background-color: black;
+    padding: 2px 4px;
+    border-radius: 2px;
+    font-size: 12px;
+  }
+  
+  .normal {
+    line-height: 1.4;
   }
 }
 
-span.count {
-  display: inline-block;
-  width: 160px;
-  margin-right: 10px;
-}
-
-input.feature {
-  width: 140px;
-  border: 1px solid black;
-  padding: 2px;
-  font-size: 1.2rem;
+a {
+  color: #007bff;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
 }
 </style>
