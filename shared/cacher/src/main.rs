@@ -1,4 +1,3 @@
-// use futures::future::join_all;
 use models::product::Product;
 // use rand::Rng;
 // use serde_qs as qs;
@@ -9,10 +8,8 @@ use std::path::{Path, PathBuf};
 #[allow(unused_imports)]
 use tokio::time::{sleep, Duration};
 // use url::Url;
-use futures::future::join_all;
-use tokio::task::JoinHandle;
-use webapp::analyze::{cache_product_index, collect_card_detail_links, try_mkdir, CardQuery};
-use webapp::analyze::{extract_number, find_one, ProductType};
+use webapp::analyze::try_mkdir;
+use webapp::analyze::{extract_number, find_one};
 use webapp::repositories::ProductRepository;
 
 // use webapp::analyze::wixoss::Card;
@@ -32,7 +29,7 @@ use std::sync::Arc;
 // use tokio::sync::Mutex;
 // use webapp::repositories::{CardRepository, CardTypeRepository};
 use std::fs;
-use std::fs::{File, ReadDir};
+use std::fs::File;
 
 #[derive(Clone, Debug)]
 pub struct SearchQuery {
@@ -142,7 +139,7 @@ impl ProductCacher {
 
     fn get_cache_dir_path(&self, cache_root: PathBuf) -> PathBuf {
         let p_type = &self.product.product_type.as_str();
-        let mut b = PathBuf::from(cache_root.clone());
+        let b = PathBuf::from(cache_root.clone());
 
         let product_type = match *p_type {
             "bo" => "booster",
@@ -312,7 +309,7 @@ async fn main() {
     let products = product_repo.get_all().await.unwrap();
 
     // ProductCacher を生成
-    let mut product_cachers: Vec<_> = products
+    let product_cachers: Vec<_> = products
         .into_iter()
         .map(|product| ProductCacher::new(cache_dir.clone(), product))
         .collect();

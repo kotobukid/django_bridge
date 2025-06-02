@@ -7,7 +7,7 @@ use std::env;
 
 use std::sync::Arc;
 use std::time::Duration;
-use gen::django_models::WixCardKlassRel;
+use models::gen::django_models::WixCardKlassRel;
 use models::card::CreateCard;
 use models::klass::create_klass;
 use webapp::repositories::{CardRepository, KlassRelRepository};

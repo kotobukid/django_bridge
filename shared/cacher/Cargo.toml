@@ -7,11 +7,11 @@ edition = "2021"
 webapp = { path = "../webapp" }
 models = { path = "../models" }
 tokio = { workspace = true }
-futures = "0.3.31"
-rand = "0.9.1"
-sqlx = "0.8.6"
-clap = { version = "4.5.39", features = ["derive"] }
-url = "2.5.4"
+futures = { workspace = true }
+rand = { workspace = true }
+sqlx = { workspace = true }
+clap = { workspace = true }
+url = { workspace = true }
 serde_qs = { workspace = true }
 dotenvy = { workspace = true }
-reqwest = { version = "0.12.16", features = ["cookies", "multipart"] }
+reqwest = { workspace = true, features = ["cookies", "multipart"] }

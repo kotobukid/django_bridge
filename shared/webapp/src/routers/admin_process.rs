@@ -3,7 +3,6 @@ use axum::http::StatusCode;
 use axum::response::IntoResponse;
 use axum::routing::post;
 use axum::{Json, Router};
-use rand::prelude::*;
 use std::os::unix::prelude::CommandExt;
 use std::process::{Child, Command};
 use std::sync::Arc;
@@ -22,7 +21,8 @@ use hyper::client::conn::http1;
 use serde::Serialize;
 
 fn random_string() -> String {
-    let mut rng = rand::rng();
+    use rand::Rng;
+    let mut rng = rand::thread_rng();
     let mut arr = [0u8; 10];
     rng.fill(&mut arr);
     arr.iter()
