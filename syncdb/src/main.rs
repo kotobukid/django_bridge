@@ -7,6 +7,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::{env, fs};
 
+#[derive(Debug, PartialEq)]
 enum DjangoFieldType {
     Valid(&'static str),
     Relation(&'static str),
@@ -14,6 +15,7 @@ enum DjangoFieldType {
     ManyToMany,
 }
 
+#[derive(Debug, PartialEq)]
 struct Fields {
     name: String,
     f_type: String,
@@ -213,40 +215,10 @@ fn generate_struct_from_python(
     for fields in &fields_vec {
         update_crate_requirements(crate_requirements, fields.f_type.as_str());
 
-        let rust_type = match fields.f_type.as_str() {
-            "AutoField" => DjangoFieldType::Valid("u32"),
-            "BigAutoField" => DjangoFieldType::Valid("u64"),
-            "BigIntegerField" => DjangoFieldType::Valid("i64"),
-            "BinaryField" => DjangoFieldType::Valid("Vec<u8>"),
-            "BooleanField" => DjangoFieldType::Valid("bool"),
-            "CharField" => DjangoFieldType::Valid("String"),
-            "DateField" => DjangoFieldType::Valid("NaiveDate"),
-            "DateTimeField" => DjangoFieldType::Valid("DateTime<Utc>"),
-            "DecimalField" => DjangoFieldType::Valid("rust_decimal::Decimal"),
-            "DurationField" => DjangoFieldType::Valid("chrono::Duration"),
-            "EmailField" => DjangoFieldType::Valid("String"),
-            "FileField" => DjangoFieldType::Valid("String"), // filepath
-            "FilePathField" => DjangoFieldType::Valid("String"),
-            "FloatField" => DjangoFieldType::Valid("f64"),
-            "GeneratedField" => DjangoFieldType::Valid("String"), // フォールバック
-            "GenericIPAddressField" => DjangoFieldType::Valid("std::net::IpAddr"),
-            "ImageField" => DjangoFieldType::Valid("String"), // FileFieldと同じ扱い
-            "IntegerField" => DjangoFieldType::Valid("i32"),
-            "JSONField" => DjangoFieldType::Valid("Value"),
-            "PositiveBigIntegerField" => DjangoFieldType::Valid("u64"), // 0 to 9223372036854775807
-            "PositiveIntegerField" => DjangoFieldType::Valid("u32"),    // 0 to 2147483647
-            "PositiveSmallIntegerField" => DjangoFieldType::Valid("u16"), // 0 to 32767
-            "SlugField" => DjangoFieldType::Valid("String"),            // ascii only?
-            "SmallAutoField" => DjangoFieldType::Valid("u16"),          //  1 to 32767
-            "SmallIntegerField" => DjangoFieldType::Valid("i16"),       // -32768 to 32767
-            "TextField" => DjangoFieldType::Valid("String"),
-            "TimeField" => DjangoFieldType::Valid("chrono::NaiveTime"),
-            "URLField" => DjangoFieldType::Valid("String"),
-            "UUIDField" => DjangoFieldType::Valid("String"),
-
-            // relationships
-            "ForeignKey" | "OneToOneField" => {
-                // ManyToManyは別処理
+        let rust_type = map_django_field_to_rust_type(fields.f_type.as_str());
+        
+        match &rust_type {
+            DjangoFieldType::Relation(_) => {
                 // リレーションの解析処理で関連モデル名を取得
                 let related_model =
                     analyze_relation_field(fields.tokens.clone(), fields.name.as_str());
@@ -264,12 +236,9 @@ fn generate_struct_from_python(
                         fields.name
                     ));
                 }
-
-                DjangoFieldType::Relation("i64")
             }
-            "ManyToManyField" => DjangoFieldType::ManyToMany,
-            _ => DjangoFieldType::None(fields.f_type.clone()),
-        };
+            _ => {}
+        }
 
         match rust_type {
             DjangoFieldType::Valid(ty) => {
@@ -336,6 +305,47 @@ fn generate_struct_from_python(
     (rust_struct, create_struct, intermediate_structs.join("\n"))
 }
 
+fn map_django_field_to_rust_type(field_type: &str) -> DjangoFieldType {
+    match field_type {
+        "AutoField" => DjangoFieldType::Valid("u32"),
+        "BigAutoField" => DjangoFieldType::Valid("u64"),
+        "BigIntegerField" => DjangoFieldType::Valid("i64"),
+        "BinaryField" => DjangoFieldType::Valid("Vec<u8>"),
+        "BooleanField" => DjangoFieldType::Valid("bool"),
+        "CharField" => DjangoFieldType::Valid("String"),
+        "DateField" => DjangoFieldType::Valid("NaiveDate"),
+        "DateTimeField" => DjangoFieldType::Valid("DateTime<Utc>"),
+        "DecimalField" => DjangoFieldType::Valid("rust_decimal::Decimal"),
+        "DurationField" => DjangoFieldType::Valid("chrono::Duration"),
+        "EmailField" => DjangoFieldType::Valid("String"),
+        "FileField" => DjangoFieldType::Valid("String"), // filepath
+        "FilePathField" => DjangoFieldType::Valid("String"),
+        "FloatField" => DjangoFieldType::Valid("f64"),
+        "GeneratedField" => DjangoFieldType::Valid("String"), // フォールバック
+        "GenericIPAddressField" => DjangoFieldType::Valid("std::net::IpAddr"),
+        "ImageField" => DjangoFieldType::Valid("String"), // FileFieldと同じ扱い
+        "IntegerField" => DjangoFieldType::Valid("i32"),
+        "JSONField" => DjangoFieldType::Valid("Value"),
+        "PositiveBigIntegerField" => DjangoFieldType::Valid("u64"), // 0 to 9223372036854775807
+        "PositiveIntegerField" => DjangoFieldType::Valid("u32"),    // 0 to 2147483647
+        "PositiveSmallIntegerField" => DjangoFieldType::Valid("u16"), // 0 to 32767
+        "SlugField" => DjangoFieldType::Valid("String"),            // ascii only?
+        "SmallAutoField" => DjangoFieldType::Valid("u16"),          //  1 to 32767
+        "SmallIntegerField" => DjangoFieldType::Valid("i16"),       // -32768 to 32767
+        "TextField" => DjangoFieldType::Valid("String"),
+        "TimeField" => DjangoFieldType::Valid("chrono::NaiveTime"),
+        "URLField" => DjangoFieldType::Valid("String"),
+        "UUIDField" => DjangoFieldType::Valid("String"),
+        
+        // relationships
+        "ForeignKey" | "OneToOneField" => DjangoFieldType::Relation("i64"),
+        "ManyToManyField" => DjangoFieldType::ManyToMany,
+        
+        // unknown type
+        unknown => DjangoFieldType::None(unknown.to_string()),
+    }
+}
+
 fn first_upper(s: &str) -> String {
     let mut c = s.chars();
     match c.next() {
@@ -350,9 +360,13 @@ fn analyze_relation_field(
 ) -> Option<String> {
     let mut seen_to_keyword = false;
     let mut related_model = None; // to属性やモデル名を保持する変数
+    let mut in_parentheses = false;
 
     for token in tokens {
         match token {
+            Tok::Lpar => {
+                in_parentheses = true;
+            }
             Tok::Name { name } => {
                 // `to` キーワード引数を検知
                 if seen_to_keyword {
@@ -363,6 +377,9 @@ fn analyze_relation_field(
                 // 名前がリレーション引数として指定されていれば検知
                 if name == "to" {
                     seen_to_keyword = true; // 次のトークンを関連モデル名とみなす
+                } else if in_parentheses && related_model.is_none() {
+                    // ForeignKey(Product) のような直接参照の場合
+                    related_model = Some(name.clone());
                 }
             }
             Tok::String { value, .. } => {
@@ -552,3 +569,7 @@ fn main() {
 
     println!("Django model definitions successfully synced to Rust structs!");
 }
+
+#[cfg(test)]
+#[path = "tests.rs"]
+mod tests;
