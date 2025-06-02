@@ -63,9 +63,32 @@ class Command(BaseRunserverCommand):
         
         settings.CUSTOM_ADMIN_ROOT = admin_root
         
+        # データベースにも保存（Django起動後に設定値を取得可能にする）
+        self._save_admin_root_to_db(admin_root)
+        
         self.stdout.write(
             self.style.SUCCESS(f'✓ Admin root set to: {admin_root}')
         )
+    
+    def _save_admin_root_to_db(self, admin_root):
+        """管理画面ルートをデータベースに保存"""
+        try:
+            # Djangoの初期化が完了してからインポート
+            from admin_server.models import SiteSetting
+            
+            SiteSetting.set_value(
+                key='admin_root',
+                value=admin_root,
+                description='現在設定されている管理画面のルートパス'
+            )
+            
+            self.stdout.write(
+                self.style.SUCCESS(f'✓ Admin root saved to database: {admin_root}')
+            )
+        except Exception as e:
+            self.stdout.write(
+                self.style.WARNING(f'Warning: Could not save admin root to database: {e}')
+            )
     
     def _setup_csrf_trust_port(self, options):
         """CSRF信頼ポートの動的設定"""

@@ -1,10 +1,10 @@
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::post;
+use axum::routing::{post, get};
 use axum::{Json, Router};
 use std::os::unix::prelude::CommandExt;
-use std::process::{Child, Command};
+use std::process::{Child, Command, ExitStatus};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
@@ -35,6 +35,14 @@ fn random_string() -> String {
 struct DjangoStartResult {
     success: bool,
     entry: Option<String>,
+}
+
+#[derive(Serialize)]
+struct DjangoStatusResult {
+    success: bool,
+    is_running: bool,
+    admin_root: Option<String>,
+    error: Option<String>,
 }
 
 async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> impl IntoResponse {
@@ -164,6 +172,85 @@ async fn stop_django_server(State(state): State<Arc<RouterState>>) -> impl IntoR
     }
 }
 
+async fn get_django_status(State(state): State<Arc<RouterState>>) -> impl IntoResponse {
+    let process_handle = Arc::clone(&state.django_process_handle);
+    let handle = process_handle.lock().await;
+    
+    // プロセスが起動しているかチェック
+    let is_running = if let Some(_child) = handle.as_ref() {
+        // プロセスハンドルが存在すれば起動中とみなす
+        // より正確なチェックが必要な場合は、ヘルスチェックエンドポイントを使用
+        true
+    } else {
+        false
+    };
+    
+    if !is_running {
+        return Json(DjangoStatusResult {
+            success: true,
+            is_running: false,
+            admin_root: None,
+            error: None,
+        });
+    }
+    
+    // Djangoが起動している場合、管理画面ルートを取得
+    drop(handle); // lockを早めに解放
+    
+    let mut command = Command::new("python");
+    command.args([
+        "../table_definition/manage.py",
+        "get_admin_root",
+        "--format", "json"
+    ]);
+    
+    match command.output() {
+        Ok(output) => {
+            if output.status.success() {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                
+                // JSONをパース
+                if let Ok(django_result) = serde_json::from_str::<serde_json::Value>(&stdout) {
+                    let admin_root = django_result
+                        .get("admin_root")
+                        .and_then(|v| v.as_str())
+                        .map(|s| s.to_string());
+                    
+                    Json(DjangoStatusResult {
+                        success: true,
+                        is_running: true,
+                        admin_root,
+                        error: None,
+                    })
+                } else {
+                    Json(DjangoStatusResult {
+                        success: false,
+                        is_running: true,
+                        admin_root: None,
+                        error: Some("Failed to parse Django command output".to_string()),
+                    })
+                }
+            } else {
+                let stderr = String::from_utf8_lossy(&output.stderr);
+                Json(DjangoStatusResult {
+                    success: false,
+                    is_running: true,
+                    admin_root: None,
+                    error: Some(format!("Django command failed: {}", stderr)),
+                })
+            }
+        }
+        Err(e) => {
+            Json(DjangoStatusResult {
+                success: false,
+                is_running: true,
+                admin_root: None,
+                error: Some(format!("Failed to execute Django command: {}", e)),
+            })
+        }
+    }
+}
+
 #[derive(Clone)]
 struct RouterState {
     django_process_handle: Arc<Mutex<Option<Child>>>, // プロセス管理用のデモ的な型
@@ -184,6 +271,7 @@ pub fn create_admin_portal_router(
     let operation_router = Router::new()
         .route("/api/start_admin.json", post(start_django_server))
         .route("/api/stop_admin.json", post(stop_django_server))
+        .route("/api/status.json", get(get_django_status))
         .with_state(state);
 
     let proxy_router = Router::new()
