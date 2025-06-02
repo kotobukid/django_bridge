@@ -110,3 +110,22 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
 # Django設定
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ログ設定（開発サーバーの警告を非表示にする）
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'level': 'ERROR',  # WARNING以下を非表示
+        },
+    },
+    'loggers': {
+        'django.server': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}

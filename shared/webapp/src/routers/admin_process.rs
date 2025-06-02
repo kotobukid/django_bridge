@@ -1,11 +1,11 @@
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::IntoResponse;
-use axum::routing::{post, get};
+use axum::routing::{get, post};
 use axum::{Json, Router};
 use std::os::unix::prelude::CommandExt;
-use std::process::{Child, Command, ExitStatus};
-use std::sync::Arc;
+use std::process::{Child, Command};
+use std::sync::{Arc, OnceLock};
 use tokio::sync::Mutex;
 
 use crate::state::AppState;
@@ -45,6 +45,204 @@ struct DjangoStatusResult {
     error: Option<String>,
 }
 
+fn find_working_python() -> Option<String> {
+    use std::env;
+
+    let candidates = vec![
+        // 1. 環境変数で指定されたPython
+        env::var("DJANGO_BRIDGE_PYTHON").ok(),
+        // 2. 現在のPATHに従ってpython実行可能ファイルを探す
+        find_python_in_path(),
+        // 3. 一般的なvenv位置を探す
+        find_python_in_venvs(),
+        // 4. システムのpython3/python
+        Some("python3".to_string()),
+        Some("python".to_string()),
+    ];
+
+    for candidate in candidates.into_iter().flatten() {
+        if test_python_with_django(&candidate) {
+            println!("Found working Python: {}", candidate);
+            return Some(candidate);
+        }
+    }
+
+    None
+}
+
+fn find_python_in_path() -> Option<String> {
+    // which pythonやwhere pythonの結果を使用
+    if let Ok(output) = Command::new("which").arg("python").output() {
+        if output.status.success() {
+            return Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
+        }
+    }
+
+    if let Ok(output) = Command::new("which").arg("python3").output() {
+        if output.status.success() {
+            return Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
+        }
+    }
+
+    None
+}
+
+fn find_python_in_venvs() -> Option<String> {
+    use std::path::Path;
+
+    // 1. poetry環境の検出
+    if let Some(poetry_python) = detect_poetry_python() {
+        return Some(poetry_python);
+    }
+
+    // 2. pipenv環境の検出
+    if let Some(pipenv_python) = detect_pipenv_python() {
+        return Some(pipenv_python);
+    }
+
+    // 3. 一般的なvenv位置をチェック
+    let venv_candidates = vec![
+        "../table_definition/.venv/bin/python",
+        "../table_definition/venv/bin/python",
+        "../.venv/bin/python",
+        "./venv/bin/python",
+        "../venv/bin/python",
+    ];
+
+    for candidate in venv_candidates {
+        if Path::new(candidate).exists() {
+            return Some(candidate.to_string());
+        }
+    }
+
+    None
+}
+
+fn detect_poetry_python() -> Option<String> {
+    use std::path::Path;
+
+    // pyproject.tomlが存在するかチェック
+    if Path::new("../table_definition/pyproject.toml").exists() {
+        if let Ok(output) = Command::new("poetry")
+            .args(["env", "info", "--path"])
+            .current_dir("../table_definition")
+            .output()
+        {
+            if output.status.success() {
+                let venv_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                let python_path = format!("{}/bin/python", venv_path);
+                if Path::new(&python_path).exists() {
+                    return Some(python_path);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn detect_pipenv_python() -> Option<String> {
+    use std::path::Path;
+
+    // Pipfileが存在するかチェック
+    if Path::new("../table_definition/Pipfile").exists() {
+        if let Ok(output) = Command::new("pipenv")
+            .args(["--py"])
+            .current_dir("../table_definition")
+            .output()
+        {
+            if output.status.success() {
+                let python_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                if Path::new(&python_path).exists() {
+                    return Some(python_path);
+                }
+            }
+        }
+    }
+    None
+}
+
+fn test_python_with_django(python_path: &str) -> bool {
+    // 実際にDjangoを使えるかテスト
+    let test_cmd = Command::new(python_path)
+        .args(["-c", "import django; print('Django available')"])
+        .output();
+
+    match test_cmd {
+        Ok(output) => {
+            if output.status.success() {
+                // さらに、manage.pyが動作するかテスト
+                let manage_test = Command::new(python_path)
+                    .args(["../table_definition/manage.py", "--help"])
+                    .output();
+
+                if let Ok(manage_output) = manage_test {
+                    return manage_output.status.success();
+                }
+            }
+        }
+        Err(_) => {}
+    }
+
+    false
+}
+
+// Python検出結果をキャッシュ
+static PYTHON_PATH_CACHE: OnceLock<Option<String>> = OnceLock::new();
+
+fn get_cached_python_path() -> Option<String> {
+    PYTHON_PATH_CACHE
+        .get_or_init(|| {
+            println!("Detecting working Python installation...");
+            find_working_python()
+        })
+        .clone()
+}
+
+fn create_python_command() -> Command {
+    if let Some(python_path) = get_cached_python_path() {
+        println!("Using verified Python: {}", python_path);
+        Command::new(python_path)
+    } else {
+        println!("Warning: No working Python found, using fallback");
+        Command::new("python3")
+    }
+}
+
+fn should_use_gunicorn() -> bool {
+    use std::env;
+
+    // 環境変数でgunicorn使用を指定
+    env::var("DJANGO_BRIDGE_USE_GUNICORN").is_ok()
+}
+
+fn create_gunicorn_command(
+    admin_root: &str,
+    django_admin_port: u16,
+    axum_web_port: u16,
+) -> Command {
+    let mut cmd = Command::new("gunicorn");
+
+    cmd.args([
+        "--config",
+        "../table_definition/gunicorn_config.py",
+        "--bind",
+        &format!("127.0.0.1:{}", django_admin_port),
+        "--workers",
+        "1",
+        "--timeout",
+        "30",
+        "django_bridge_wsgi:application",
+    ]);
+
+    // 環境変数を設定
+    cmd.env("DJANGO_BRIDGE_ADMIN_ROOT", admin_root);
+    cmd.env("DJANGO_ADMIN_PORT", django_admin_port.to_string());
+    cmd.env("AXUM_WEB_PORT", axum_web_port.to_string());
+    cmd.current_dir("../table_definition");
+
+    cmd
+}
+
 async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> impl IntoResponse {
     let process_handle = Arc::clone(&router_state.django_process_handle); // クローンして取り出す
     let mut handle = process_handle.lock().await;
@@ -63,20 +261,26 @@ async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> im
         );
     }
 
-    // コマンドを設定し、プロセスを起動
-    let mut command = Command::new("python");
     let admin_origin = format!("localhost:{}", &router_state.django_admin_port);
     let axum_web_port = router_state.axum_web_port;
 
-    command.args([
-        "../table_definition/manage.py", // 適切なmanage.pyへのパス
-        "run_with_custom_admin",
-        "--admin-root",
-        &admin_root,
-        admin_origin.as_str(),
-        "--csrf-trust-port",
-        axum_web_port.to_string().as_str(),
-    ]);
+    let mut command = if should_use_gunicorn() {
+        println!("Using Gunicorn for Django server");
+        create_gunicorn_command(&admin_root, router_state.django_admin_port, axum_web_port)
+    } else {
+        println!("Using Django development server");
+        let mut cmd = create_python_command();
+        cmd.args([
+            "../table_definition/manage.py",
+            "run_with_custom_admin",
+            "--admin-root",
+            &admin_root,
+            admin_origin.as_str(),
+            "--csrf-trust-port",
+            axum_web_port.to_string().as_str(),
+        ]);
+        cmd
+    };
 
     // Windows でプロセスグループを作成（UNIX系でも有効）
     #[cfg(windows)]
@@ -175,7 +379,7 @@ async fn stop_django_server(State(state): State<Arc<RouterState>>) -> impl IntoR
 async fn get_django_status(State(state): State<Arc<RouterState>>) -> impl IntoResponse {
     let process_handle = Arc::clone(&state.django_process_handle);
     let handle = process_handle.lock().await;
-    
+
     // プロセスが起動しているかチェック
     let is_running = if let Some(_child) = handle.as_ref() {
         // プロセスハンドルが存在すれば起動中とみなす
@@ -184,7 +388,7 @@ async fn get_django_status(State(state): State<Arc<RouterState>>) -> impl IntoRe
     } else {
         false
     };
-    
+
     if !is_running {
         return Json(DjangoStatusResult {
             success: true,
@@ -193,29 +397,30 @@ async fn get_django_status(State(state): State<Arc<RouterState>>) -> impl IntoRe
             error: None,
         });
     }
-    
+
     // Djangoが起動している場合、管理画面ルートを取得
     drop(handle); // lockを早めに解放
-    
-    let mut command = Command::new("python");
+
+    let mut command = create_python_command();
     command.args([
         "../table_definition/manage.py",
         "get_admin_root",
-        "--format", "json"
+        "--format",
+        "json",
     ]);
-    
+
     match command.output() {
         Ok(output) => {
             if output.status.success() {
                 let stdout = String::from_utf8_lossy(&output.stdout);
-                
+
                 // JSONをパース
                 if let Ok(django_result) = serde_json::from_str::<serde_json::Value>(&stdout) {
                     let admin_root = django_result
                         .get("admin_root")
                         .and_then(|v| v.as_str())
                         .map(|s| s.to_string());
-                    
+
                     Json(DjangoStatusResult {
                         success: true,
                         is_running: true,
@@ -240,14 +445,12 @@ async fn get_django_status(State(state): State<Arc<RouterState>>) -> impl IntoRe
                 })
             }
         }
-        Err(e) => {
-            Json(DjangoStatusResult {
-                success: false,
-                is_running: true,
-                admin_root: None,
-                error: Some(format!("Failed to execute Django command: {}", e)),
-            })
-        }
+        Err(e) => Json(DjangoStatusResult {
+            success: false,
+            is_running: true,
+            admin_root: None,
+            error: Some(format!("Failed to execute Django command: {}", e)),
+        }),
     }
 }
 

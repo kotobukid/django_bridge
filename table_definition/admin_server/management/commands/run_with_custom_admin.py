@@ -108,6 +108,13 @@ class Command(BaseRunserverCommand):
     
     def inner_run(self, *args, **options):
         """サーバー起動時の追加情報表示"""
+        import logging
+        import warnings
+        
+        # Django開発サーバーの警告を無効化
+        warnings.filterwarnings('ignore', message='.*development server.*')
+        logging.getLogger('django.server').setLevel(logging.ERROR)
+        
         self.stdout.write("")
         self.stdout.write(self.style.HTTP_INFO("Django Bridge Admin Server"))
         self.stdout.write(self.style.HTTP_INFO("=" * 50))
