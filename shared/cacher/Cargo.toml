@@ -11,7 +11,9 @@ futures = { workspace = true }
 rand = { workspace = true }
 sqlx = { workspace = true }
 clap = { workspace = true }
-url = { workspace = true }
 serde_qs = { workspace = true }
 dotenvy = { workspace = true }
 reqwest = { workspace = true, features = ["cookies", "multipart"] }
+
+[dev-dependencies]
+url = { workspace = true }
