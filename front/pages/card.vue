@@ -25,6 +25,8 @@ let fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
 };
 let fetch_by_f_bits_fn: any = null;
 let fetch_by_f_shifts_fn: any = null;
+let fetch_by_features_and_fn: any = null;
+let fetch_by_combined_bits_fn: any = null;
 const fetch_cards_ = async () => {
   await fetch_cards(`${f1.value}`, `${f2.value}`, color_bits.value);
 };
@@ -65,12 +67,12 @@ const applyFeatureFilter = (feature: any, isAdding: boolean) => {
 };
 
 const applyMultipleFeatureFilter = () => {
-  if (!fetch_by_f_shifts_fn) {
+  if (!fetch_by_features_and_fn || !fetch_by_combined_bits_fn) {
     console.warn('WASM not initialized yet');
     return;
   }
   
-  console.log(`--- Multiple Feature Filter (AND condition with ID intersection) ---`);
+  console.log(`--- Multiple Feature Filter (AND condition) ---`);
   console.log(`Selected features count: ${selectedFeatures.value.size}`);
   
   if (selectedFeatures.value.size === 0) {
@@ -79,48 +81,45 @@ const applyMultipleFeatureFilter = () => {
     return;
   }
   
-  // 各フィーチャーの結果をIDベースで交差させる
-  let cardIdSets: Set<number>[] = [];
-  
-  for (const feature of selectedFeatures.value.values()) {
+  // 新しいWASM関数を使用する方法を選択
+  if (selectedFeatures.value.size === 1) {
+    // 単一フィーチャーの場合は従来の方法
+    const feature = Array.from(selectedFeatures.value.values())[0];
     const [shift1, shift2] = feature.bit_shift;
-    console.log(`Getting cards for feature: ${feature.name}, shifts: [${shift1}, ${shift2}]`);
+    let cards = fetch_by_f_shifts_fn(shift1, shift2);
     
-    // この特定のフィーチャーを持つカードを取得
-    const featureCards = fetch_by_f_shifts_fn(shift1, shift2);
-    console.log(`Feature ${feature.name} has ${featureCards.length} cards`);
+    // カラーフィルターを適用
+    if (color_bits.value > 0) {
+      cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
+    }
     
-    // IDのSetを作成
-    const idSet = new Set<number>();
-    featureCards.forEach((card: any) => {
-      idSet.add(card.id);
-    });
+    console.log(`Single feature result: ${cards.length} cards`);
+    card_store.set_cards(cards);
+  } else {
+    // 複数フィーチャーの場合は新しいAND検索関数を使用
+    const shiftsArray: number[] = [];
     
-    cardIdSets.push(idSet);
+    // 各フィーチャーのshift値を配列に格納
+    for (const feature of selectedFeatures.value.values()) {
+      const [shift1, shift2] = feature.bit_shift;
+      shiftsArray.push(shift1);
+      shiftsArray.push(shift2);
+    }
+    
+    console.log(`Using fetch_by_features_and with shifts:`, shiftsArray);
+    let cards = fetch_by_features_and_fn(shiftsArray);
+    
+    // カラーフィルターを適用
+    if (color_bits.value > 0) {
+      const beforeCount = cards.length;
+      cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
+      console.log(`After color filter: ${cards.length} (was ${beforeCount})`);
+    }
+    
+    console.log(`Final card count (AND condition): ${cards.length}`);
+    card_store.set_cards(cards);
   }
   
-  // 全てのSetの交差を計算（AND条件）
-  let intersectionIds = cardIdSets[0];
-  for (let i = 1; i < cardIdSets.length; i++) {
-    intersectionIds = new Set([...intersectionIds].filter(id => cardIdSets[i].has(id)));
-    console.log(`After intersection with feature ${i}: ${intersectionIds.size} cards`);
-  }
-  
-  console.log(`Final intersection: ${intersectionIds.size} card IDs`);
-  
-  // 交差するIDを持つカードのみを取得
-  const allCards = fetch_by_f_bits_fn(0n, 0n);
-  let filteredCards = allCards.filter((card: any) => intersectionIds.has(card.id));
-  
-  // カラーフィルターも適用
-  if (color_bits.value > 0) {
-    const beforeCount = filteredCards.length;
-    filteredCards = filteredCards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
-    console.log(`After color filter: ${filteredCards.length} (was ${beforeCount})`);
-  }
-  
-  console.log(`Final card count (AND condition): ${filteredCards.length}`);
-  card_store.set_cards(filteredCards);
   console.log(`--- End Multiple Feature Filter ---`);
 };
 
@@ -133,8 +132,11 @@ const runWasm = async () => {
     // Wasmパッケージを動的にインポート
     const {
       default: init, greet, say_goodbye, get_by_id,
-      fetch_by_f_bits,
+
+
       fetch_by_f_shifts,
+      fetch_by_features_and,
+      fetch_by_combined_bits,
       feature_conditions,
       bits_to_gradient,
     } = await import('/static/pkg/datapack.js');
@@ -151,8 +153,11 @@ const runWasm = async () => {
     // WASM関数への参照を保存
     fetch_by_f_bits_fn = fetch_by_f_bits;
     fetch_by_f_shifts_fn = fetch_by_f_shifts;
+    fetch_by_features_and_fn = fetch_by_features_and;
+    fetch_by_combined_bits_fn = fetch_by_combined_bits;
 
     fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
+      debugger
       let cards = fetch_by_f_bits(BigInt(bit1), BigInt(bit2));
       if (color_filter && color_filter > 0) {
         cards = cards.filter((card: any) => (card.color & color_filter) === color_filter);

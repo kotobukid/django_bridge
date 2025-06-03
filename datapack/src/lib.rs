@@ -67,8 +67,8 @@ pub struct CardExport {
     card_type: u8,         // card_type
     product: u8,           // product
     timing: u8,            // timing
-                           // i64, // feature_bits1
-                           // i64, // feature_bits2
+    feature_bits1: i64,    // feature_bits1
+    feature_bits2: i64,    // feature_bits2
     ex1: String,
 }
 
@@ -148,6 +148,8 @@ impl
             card_type: v.17,
             product: v.18,
             timing: v.19,
+            feature_bits1: v.20,
+            feature_bits2: v.21,
             ex1: v.22.to_string(),
         }
     }
@@ -256,4 +258,86 @@ pub fn feature_conditions() -> JsValue {
 pub fn bits_to_gradient(bits: i32) -> JsValue {
     let style = color::Colors::bits_to_gradient(bits);
     serde_wasm_bindgen::to_value(&style).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn fetch_by_features_and(features: &[i32]) -> JsValue {
+    // featuresは [shift1_1, shift2_1, shift1_2, shift2_2, ...] の形式
+    // shift値が-1の場合は無視する
+    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+        .iter()
+        .filter(|c| {
+            let feature_bits1 = c.20;
+            let feature_bits2 = c.21;
+            
+            // 全てのフィーチャーを満たすかチェック（AND条件）
+            for i in (0..features.len()).step_by(2) {
+                if i + 1 >= features.len() {
+                    break;
+                }
+                
+                let shift1 = features[i];
+                let shift2 = features[i + 1];
+                
+                // 両方とも-1の場合はスキップ
+                if shift1 < 0 && shift2 < 0 {
+                    continue;
+                }
+                
+                let bit1 = if shift1 >= 0 { 1_i64 << shift1 } else { 0 };
+                let bit2 = if shift2 >= 0 { 1_i64 << shift2 } else { 0 };
+                
+                let has_feature = if bit1 > 0 && bit2 > 0 {
+                    (feature_bits1 & bit1) != 0 && (feature_bits2 & bit2) != 0
+                } else if bit1 > 0 {
+                    (feature_bits1 & bit1) != 0
+                } else if bit2 > 0 {
+                    (feature_bits2 & bit2) != 0
+                } else {
+                    false
+                };
+                
+                if !has_feature {
+                    return false;
+                }
+            }
+            
+            true
+        })
+        .map(|c| CardExport::from(c))
+        .collect();
+    
+    serde_wasm_bindgen::to_value(&cards).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn fetch_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> JsValue {
+    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+        .iter()
+        .filter(|c| {
+            let feature_bits1 = c.20;
+            let feature_bits2 = c.21;
+            
+            match mode {
+                "and" => {
+                    // AND条件: 指定されたビットが全て立っている
+                    (bit1 == 0 || (feature_bits1 & bit1) == bit1) &&
+                    (bit2 == 0 || (feature_bits2 & bit2) == bit2)
+                },
+                "or" => {
+                    // OR条件: 指定されたビットのいずれかが立っている
+                    if bit1 == 0 && bit2 == 0 {
+                        true
+                    } else {
+                        (bit1 > 0 && (feature_bits1 & bit1) != 0) ||
+                        (bit2 > 0 && (feature_bits2 & bit2) != 0)
+                    }
+                },
+                _ => true
+            }
+        })
+        .map(|c| CardExport::from(c))
+        .collect();
+    
+    serde_wasm_bindgen::to_value(&cards).unwrap()
 }
