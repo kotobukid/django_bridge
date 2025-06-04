@@ -126,6 +126,54 @@ datapack.js (WASM)
 └── feature_conditions() → フィーチャー定義取得
 ```
 
+## WASMアーキテクチャの詳細
+
+### 特殊なデータ管理アプローチ
+このWASMモジュールは、以下の特殊なアーキテクチャを採用している：
+
+1. **データの事前埋め込み**
+   - RDBのすべてのカードデータを、ビルド時にRustコードとして生成
+   - 生成されたコードは`datapack/src/gen/cards.rs`に配置
+   - WASMバイナリにデータが直接含まれるため、実行時のデータベースアクセスが不要
+
+2. **CardExport型の必要性**
+   - `CardExport`構造体は`#[wasm_bindgen]`属性が必要
+   - TypeScriptの型定義（d.ts）に含まれることで、フロントエンドでの型安全性を確保
+   - WASMとJavaScript間のデータ受け渡しインターフェースとして機能
+
+### BigInt使用の必要性
+
+#### JavaScriptの数値制限
+- JavaScriptのNumber型は IEEE 754 倍精度浮動小数点数
+- 安全に扱える整数の最大値は 2^53 - 1 (Number.MAX_SAFE_INTEGER)
+- 53ビットを超える整数は精度が失われる
+
+#### ビットフラグとBigInt
+```javascript
+// NG: 53ビットを超えるとデータが破壊される
+const featureBits = 9007199254740993; // 2^53 + 1
+
+// OK: BigIntを使用
+const featureBits = BigInt("9007199254740993");
+```
+
+#### 実装例
+```javascript
+// ユーザー入力（文字列）からBigIntへの変換
+const userInput = "1234567890123456789";
+const bits1 = BigInt(userInput);
+const bits2 = BigInt("0");
+
+// WASM関数への引き渡し
+const results = datapack.fetch_by_f_bits(bits1, bits2);
+```
+
+### フィーチャービットフラグの構造
+- 各カードは最大128個のフィーチャーフラグを持つ（64bit × 2）
+- `feature_bits1`: 最初の64個のフィーチャー
+- `feature_bits2`: 次の64個のフィーチャー
+- ビット演算により高速な検索が可能
+
 ## 今後の対応方針
 
 ### 1. WASM側修正（推奨）

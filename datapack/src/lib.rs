@@ -72,6 +72,124 @@ pub struct CardExport {
     ex1: String,
 }
 
+#[wasm_bindgen]
+impl CardExport {
+    #[wasm_bindgen(getter)]
+    pub fn id(&self) -> i32 {
+        self.id
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn name(&self) -> String {
+        self.name.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn code(&self) -> String {
+        self.code.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn pronunciation(&self) -> String {
+        self.pronunciation.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn color(&self) -> u32 {
+        self.color
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn cost(&self) -> String {
+        self.cost.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn level(&self) -> String {
+        self.level.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn limit(&self) -> String {
+        self.limit.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn limit_ex(&self) -> String {
+        self.limit_ex.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn power(&self) -> String {
+        self.power.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn has_burst(&self) -> u8 {
+        self.has_burst
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn skill_text(&self) -> String {
+        self.skill_text.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn burst_text(&self) -> String {
+        self.burst_text.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn format(&self) -> u8 {
+        self.format
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn story(&self) -> String {
+        self.story.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn rarity(&self) -> String {
+        self.rarity.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn url(&self) -> String {
+        self.url.clone()
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn card_type(&self) -> u8 {
+        self.card_type
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn product(&self) -> u8 {
+        self.product
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn timing(&self) -> u8 {
+        self.timing
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn feature_bits1(&self) -> i64 {
+        self.feature_bits1
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn feature_bits2(&self) -> i64 {
+        self.feature_bits2
+    }
+
+    #[wasm_bindgen(getter)]
+    pub fn ex1(&self) -> String {
+        self.ex1.clone()
+    }
+}
+
 impl
     From<&(
         i32,          // id
@@ -196,8 +314,8 @@ pub fn get_by_id(id: i32) -> String {
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> JsValue {
-    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> Vec<CardExport> {
+    gen::cards::CARD_LIST
         .iter()
         .filter(|c| {
             let feature_bits1 = c.20;
@@ -215,18 +333,17 @@ pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> JsValue {
             }
         })
         .map(|c| CardExport::from(c))
-        .collect();
-    serde_wasm_bindgen::to_value(&cards).unwrap()
+        .collect()
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_f_shifts(shift1: isize, shift2: isize) -> JsValue {
+pub fn fetch_by_f_shifts(shift1: isize, shift2: isize) -> Vec<CardExport> {
     let bits1 = 1_i64 << shift1;
     let bits2 = 1_i64 << shift2;
 
     // web_sys::console::log_1(&format!("bits1: {}, bits2: {}", bits1, bits2).into());
 
-    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+    gen::cards::CARD_LIST
         .iter()
         .filter(|c| {
             let feature_bits1 = c.20;
@@ -244,8 +361,7 @@ pub fn fetch_by_f_shifts(shift1: isize, shift2: isize) -> JsValue {
             }
         })
         .map(|c| CardExport::from(c))
-        .collect();
-    serde_wasm_bindgen::to_value(&cards).unwrap()
+        .collect()
 }
 
 #[wasm_bindgen]
@@ -261,10 +377,10 @@ pub fn bits_to_gradient(bits: i32) -> JsValue {
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_features_and(features: &[i32]) -> JsValue {
+pub fn fetch_by_features_and(features: &[i32]) -> Vec<CardExport> {
     // featuresは [shift1_1, shift2_1, shift1_2, shift2_2, ...] の形式
     // shift値が-1の場合は無視する
-    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+    gen::cards::CARD_LIST
         .iter()
         .filter(|c| {
             let feature_bits1 = c.20;
@@ -305,14 +421,12 @@ pub fn fetch_by_features_and(features: &[i32]) -> JsValue {
             true
         })
         .map(|c| CardExport::from(c))
-        .collect();
-    
-    serde_wasm_bindgen::to_value(&cards).unwrap()
+        .collect()
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> JsValue {
-    let cards: Vec<CardExport> = gen::cards::CARD_LIST
+pub fn fetch_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> Vec<CardExport> {
+    gen::cards::CARD_LIST
         .iter()
         .filter(|c| {
             let feature_bits1 = c.20;
@@ -337,7 +451,5 @@ pub fn fetch_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> JsValue {
             }
         })
         .map(|c| CardExport::from(c))
-        .collect();
-    
-    serde_wasm_bindgen::to_value(&cards).unwrap()
+        .collect()
 }

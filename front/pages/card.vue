@@ -40,21 +40,21 @@ let apply_bits = (a: [number, number]) => {
 
 const applyFeatureFilter = (feature: any, isAdding: boolean) => {
   const featureId = `${feature.name}_${feature.bit_shift[0]}_${feature.bit_shift[1]}`;
-  
+
   console.log(`=== Feature Filter Applied ===`);
   console.log(`Feature: ${feature.name}`);
   console.log(`Action: ${isAdding ? 'ADDING' : 'REMOVING'}`);
   console.log(`Current selected count BEFORE: ${selectedFeatures.value.size}`);
-  
+
   if (isAdding) {
     selectedFeatures.value.set(featureId, feature);
   } else {
     selectedFeatures.value.delete(featureId);
   }
-  
+
   console.log(`Current selected count AFTER: ${selectedFeatures.value.size}`);
   console.log(`Selected features:`, Array.from(selectedFeatures.value.keys()));
-  
+
   // 必ず現在の選択状態に基づいてフィルタリングを実行
   if (selectedFeatures.value.size > 0) {
     console.log(`Applying multiple feature filter`);
@@ -71,55 +71,55 @@ const applyMultipleFeatureFilter = () => {
     console.warn('WASM not initialized yet');
     return;
   }
-  
+
   console.log(`--- Multiple Feature Filter (AND condition) ---`);
   console.log(`Selected features count: ${selectedFeatures.value.size}`);
-  
+
   if (selectedFeatures.value.size === 0) {
     console.log(`No features selected, calling fetch_cards_() instead`);
     fetch_cards_();
     return;
   }
-  
+
   // 新しいWASM関数を使用する方法を選択
   if (selectedFeatures.value.size === 1) {
     // 単一フィーチャーの場合は従来の方法
     const feature = Array.from(selectedFeatures.value.values())[0];
     const [shift1, shift2] = feature.bit_shift;
     let cards = fetch_by_f_shifts_fn(shift1, shift2);
-    
+
     // カラーフィルターを適用
     if (color_bits.value > 0) {
       cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
     }
-    
+
     console.log(`Single feature result: ${cards.length} cards`);
     card_store.set_cards(cards);
   } else {
     // 複数フィーチャーの場合は新しいAND検索関数を使用
     const shiftsArray: number[] = [];
-    
+
     // 各フィーチャーのshift値を配列に格納
     for (const feature of selectedFeatures.value.values()) {
       const [shift1, shift2] = feature.bit_shift;
       shiftsArray.push(shift1);
       shiftsArray.push(shift2);
     }
-    
+
     console.log(`Using fetch_by_features_and with shifts:`, shiftsArray);
     let cards = fetch_by_features_and_fn(shiftsArray);
-    
+
     // カラーフィルターを適用
     if (color_bits.value > 0) {
       const beforeCount = cards.length;
       cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
       console.log(`After color filter: ${cards.length} (was ${beforeCount})`);
     }
-    
+
     console.log(`Final card count (AND condition): ${cards.length}`);
     card_store.set_cards(cards);
   }
-  
+
   console.log(`--- End Multiple Feature Filter ---`);
 };
 
@@ -131,14 +131,17 @@ const runWasm = async () => {
   try {
     // Wasmパッケージを動的にインポート
     const {
-      default: init, greet, say_goodbye, get_by_id,
-
-
+      default: init,
+      greet,
+      say_goodbye,
+      get_by_id,
+      fetch_by_f_bits,
       fetch_by_f_shifts,
       fetch_by_features_and,
       fetch_by_combined_bits,
       feature_conditions,
       bits_to_gradient,
+      CardExport
     } = await import('/static/pkg/datapack.js');
 
     // 初期化を呼び出し (WasmファイルのURLを暗黙的に指定)
@@ -235,7 +238,7 @@ const toggle_color = (color: ColorName) => {
     default:
       break;
   }
-  
+
   // カラー選択変更時に自動でフィルタリングを更新
   if (f1.value > 0 || f2.value > 0) {
     apply_bits([f1.value, f2.value]);
@@ -349,7 +352,7 @@ const clearAllFilters = () => {
   font-size: 12px;
   font-weight: 500;
   transition: background-color 0.2s ease;
-  
+
   &:hover {
     background-color: #c82333;
   }
@@ -416,7 +419,7 @@ td.skill {
     border-radius: 2px;
     font-size: 12px;
   }
-  
+
   .normal {
     line-height: 1.4;
   }
@@ -425,7 +428,7 @@ td.skill {
 a {
   color: #007bff;
   text-decoration: none;
-  
+
   &:hover {
     text-decoration: underline;
   }
