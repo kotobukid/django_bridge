@@ -26,7 +26,8 @@ let fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
 let fetch_by_f_bits_fn: any = null;
 let fetch_by_f_shifts_fn: any = null;
 let fetch_by_features_and_fn: any = null;
-let fetch_by_combined_bits_fn: any = null;
+let fetch_by_combined_bits_and_fn: any = null;
+let fetch_by_combined_bits_or_fn: any = null;
 const fetch_cards_ = async () => {
   await fetch_cards(`${f1.value}`, `${f2.value}`, color_bits.value);
 };
@@ -67,7 +68,7 @@ const applyFeatureFilter = (feature: any, isAdding: boolean) => {
 };
 
 const applyMultipleFeatureFilter = () => {
-  if (!fetch_by_features_and_fn || !fetch_by_combined_bits_fn) {
+  if (!fetch_by_features_and_fn || !fetch_by_combined_bits_and_fn) {
     console.warn('WASM not initialized yet');
     return;
   }
@@ -81,44 +82,50 @@ const applyMultipleFeatureFilter = () => {
     return;
   }
 
-  // 新しいWASM関数を使用する方法を選択
-  if (selectedFeatures.value.size === 1) {
-    // 単一フィーチャーの場合は従来の方法
-    const feature = Array.from(selectedFeatures.value.values())[0];
+  // ビットマスクを計算する方法に変更
+  let combinedBits1 = BigInt(0);
+  let combinedBits2 = BigInt(0);
+
+  // 各フィーチャーのビットを結合
+  for (const feature of selectedFeatures.value.values()) {
     const [shift1, shift2] = feature.bit_shift;
-    let cards = fetch_by_f_shifts_fn(shift1, shift2);
-
-    // カラーフィルターを適用
-    if (color_bits.value > 0) {
-      cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
+    
+    if (shift1 >= 0) {
+      combinedBits1 |= BigInt(1) << BigInt(shift1);
     }
-
-    console.log(`Single feature result: ${cards.length} cards`);
-    card_store.set_cards(cards);
-  } else {
-    // 複数フィーチャーの場合は新しいAND検索関数を使用
-    const shiftsArray: number[] = [];
-
-    // 各フィーチャーのshift値を配列に格納
-    for (const feature of selectedFeatures.value.values()) {
-      const [shift1, shift2] = feature.bit_shift;
-      shiftsArray.push(shift1);
-      shiftsArray.push(shift2);
+    if (shift2 >= 0) {
+      combinedBits2 |= BigInt(1) << BigInt(shift2);
     }
-
-    console.log(`Using fetch_by_features_and with shifts:`, shiftsArray);
-    let cards = fetch_by_features_and_fn(shiftsArray);
-
-    // カラーフィルターを適用
-    if (color_bits.value > 0) {
-      const beforeCount = cards.length;
-      cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
-      console.log(`After color filter: ${cards.length} (was ${beforeCount})`);
-    }
-
-    console.log(`Final card count (AND condition): ${cards.length}`);
-    card_store.set_cards(cards);
   }
+
+  console.log(`Combined bits: bits1=${combinedBits1}, bits2=${combinedBits2}`);
+  console.log(`Selected feature details:`);
+  for (const feature of selectedFeatures.value.values()) {
+    console.log(`  - ${feature.name}: shift=${feature.bit_shift}`);
+  }
+  
+  // fetch_by_combined_bits_and を使用（AND条件）
+  let cards = fetch_by_combined_bits_and_fn(combinedBits1, combinedBits2);
+  console.log(`Cards from WASM (AND condition): ${cards.length}`);
+
+  // デバッグ: 最初の数件のカードの特徴ビットを表示
+  if (cards.length > 0) {
+    console.log(`Sample cards feature bits:`);
+    for (let i = 0; i < Math.min(3, cards.length); i++) {
+      const card = cards[i];
+      console.log(`  ${card.name}: bits1=${card.feature_bits1}, bits2=${card.feature_bits2}`);
+    }
+  }
+
+  // カラーフィルターを適用
+  if (color_bits.value > 0) {
+    const beforeCount = cards.length;
+    cards = cards.filter((card: any) => (card.color & color_bits.value) === color_bits.value);
+    console.log(`After color filter: ${cards.length} (was ${beforeCount})`);
+  }
+
+  console.log(`Final card count (AND condition): ${cards.length}`);
+  card_store.set_cards(cards);
 
   console.log(`--- End Multiple Feature Filter ---`);
 };
@@ -132,13 +139,12 @@ const runWasm = async () => {
     // Wasmパッケージを動的にインポート
     const {
       default: init,
-      greet,
-      say_goodbye,
       get_by_id,
       fetch_by_f_bits,
       fetch_by_f_shifts,
       fetch_by_features_and,
-      fetch_by_combined_bits,
+      fetch_by_combined_bits_and,
+      fetch_by_combined_bits_or,
       feature_conditions,
       bits_to_gradient,
       CardExport
@@ -147,7 +153,6 @@ const runWasm = async () => {
     // 初期化を呼び出し (WasmファイルのURLを暗黙的に指定)
     await init('/pkg/datapack_bg.wasm');
 
-    console.log(say_goodbye())
 
     print_detail = (id) => {
       console.log(get_by_id(id));
@@ -157,10 +162,10 @@ const runWasm = async () => {
     fetch_by_f_bits_fn = fetch_by_f_bits;
     fetch_by_f_shifts_fn = fetch_by_f_shifts;
     fetch_by_features_and_fn = fetch_by_features_and;
-    fetch_by_combined_bits_fn = fetch_by_combined_bits;
+    fetch_by_combined_bits_and_fn = fetch_by_combined_bits_and;
+    fetch_by_combined_bits_or_fn = fetch_by_combined_bits_or;
 
     fetch_cards = async (bit1: string, bit2: string, color_filter?: number) => {
-      debugger
       let cards = fetch_by_f_bits(BigInt(bit1), BigInt(bit2));
       if (color_filter && color_filter > 0) {
         cards = cards.filter((card: any) => (card.color & color_filter) === color_filter);
@@ -187,9 +192,6 @@ const runWasm = async () => {
 
     // 初期状態で全カードを取得
     await fetch_cards('0', '0');
-
-    // Wasm関数を実行 (例: greet)
-    message.value = greet('Nuxt');
   } catch (err) {
     console.error('Failed to load Wasm:', err);
     message.value = 'Error loading Wasm';
@@ -290,26 +292,26 @@ const clearAllFilters = () => {
       .results-header
         span.count [ {{ card_store.cards_filtered.length }} items ]
       table
-      colgroup
-        col(style="width: 150px;")
-        col(style="width: 400px;")
-        col(style="width: 1450px;")
-      thead
-        tr
-          th CODE
-          th NAME
-          th Skill
-      tbody
-        tr(v-for="card in card_store.cards_filtered" :key="card.id")
-          td
-            a(:href="`https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=${card.code}`" target="_blank") {{ card.code }}
-          td.name(
-            :style="`text-shadow: #fff 1px 1px 4px; ${gradient(card.color)}`"
-            @click="print_detail(card.id)"
-          ) {{ card.name }}
-          td.skill
-            SoftWrap.normal(:text="card.skill_text")
-            SoftWrap.burst(:text="card.burst_text" v-if="card.has_burst == 2")
+        colgroup
+          col(style="width: 150px;")
+          col(style="width: 400px;")
+          col(style="width: 1450px;")
+        thead
+          tr
+            th CODE
+            th NAME
+            th Skill
+        tbody
+          tr(v-for="card in card_store.cards_filtered" :key="card.id")
+            td
+              a(:href="`https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=${card.code}`" target="_blank") {{ card.code }}
+            td.name(
+              :style="`text-shadow: #fff 1px 1px 4px; ${gradient(card.color)}`"
+              @click="print_detail(card.id)"
+            ) {{ card.name }}
+            td.skill
+              SoftWrap.normal(:text="card.skill_text")
+              SoftWrap.burst(:text="card.burst_text" v-if="card.has_burst == 2")
 </template>
 
 <style scoped lang="less">

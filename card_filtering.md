@@ -174,12 +174,29 @@ const results = datapack.fetch_by_f_bits(bits1, bits2);
 - `feature_bits2`: 次の64個のフィーチャー
 - ビット演算により高速な検索が可能
 
+## 実装した修正内容（2025年1月）
+
+### 1. WASM側修正
+- ✅ `CardExport`に`feature_bits1`、`feature_bits2`を追加（getter実装）
+- ✅ `Vec<CardExport>`を返すように関数を修正
+- ✅ `fetch_by_combined_bits`関数でAND/OR条件を明示的に指定可能
+
+### 2. フロントエンド側修正
+- ✅ `applyMultipleFeatureFilter`を`fetch_by_combined_bits`を使用するように変更
+- ✅ ビットマスクを直接計算してWASMに渡す実装
+- ✅ デバッグ情報の追加（feature_bits1/2の表示）
+
+### 3. 修正後の動作
+- 複数フィーチャー選択時：すべての条件を満たすカードのみ表示（AND条件）
+- チェック解除時：残りの選択されたフィーチャーで再フィルタリング
+- feature_bits1/2がJavaScriptから参照可能になり、デバッグが容易に
+
 ## 今後の対応方針
 
-### 1. WASM側修正（推奨）
-- `CardExport`に`feature_bits1`、`feature_bits2`を追加
-- 新しいAND条件専用のWASM関数を実装
-- ビット演算ロジックの見直し
+### 1. WASM側修正（完了）
+- ✅ `CardExport`に`feature_bits1`、`feature_bits2`を追加
+- ✅ 新しいAND条件専用のWASM関数を実装
+- ✅ ビット演算ロジックの見直し
 
 ### 2. フロントエンド側回避策
 - ID集合交差アプローチの改良

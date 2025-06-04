@@ -1,4 +1,5 @@
-mod gen;
+pub mod gen;
+pub mod filter;
 
 use color;
 use feature::feature::export_features;
@@ -314,54 +315,15 @@ pub fn get_by_id(id: i32) -> String {
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> Vec<CardExport> {
-    gen::cards::CARD_LIST
-        .iter()
-        .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
-
-            // 条件関数の確定
-            if bit1 == 0 && bits2 == 0 {
-                true
-            } else if bits2 == 0 || bits2 == 1 {
-                (feature_bits1 & bit1) != 0
-            } else if bit1 == 0 || bit1 == 1 {
-                (feature_bits2 & bits2) != 0
-            } else {
-                (feature_bits1 & bit1) == bit1 && (feature_bits2 & bits2) == bits2
-            }
-        })
-        .map(|c| CardExport::from(c))
-        .collect()
+pub fn fetch_by_f_bits(bit1: i64, bits2: i64) -> String {
+    let cards = filter::filter_by_f_bits(bit1, bits2);
+    format!("Found {} cards", cards.len())
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_f_shifts(shift1: isize, shift2: isize) -> Vec<CardExport> {
-    let bits1 = 1_i64 << shift1;
-    let bits2 = 1_i64 << shift2;
-
-    // web_sys::console::log_1(&format!("bits1: {}, bits2: {}", bits1, bits2).into());
-
-    gen::cards::CARD_LIST
-        .iter()
-        .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
-
-            // 条件関数の確定
-            if bits1 == 0 && bits2 == 0 {
-                true
-            } else if bits2 == 0 || bits2 == 1 {
-                (feature_bits1 & bits1) != 0
-            } else if bits1 == 0 || bits1 == 1 {
-                (feature_bits2 & bits2) != 0
-            } else {
-                (feature_bits1 & bits1) == bits1 && (feature_bits2 & bits2) == bits2
-            }
-        })
-        .map(|c| CardExport::from(c))
-        .collect()
+pub fn fetch_by_f_shifts(shift1: isize, shift2: isize) -> String {
+    let cards = filter::filter_by_f_shifts(shift1, shift2);
+    format!("Found {} cards", cards.len())
 }
 
 #[wasm_bindgen]
@@ -377,79 +339,19 @@ pub fn bits_to_gradient(bits: i32) -> JsValue {
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_features_and(features: &[i32]) -> Vec<CardExport> {
-    // featuresは [shift1_1, shift2_1, shift1_2, shift2_2, ...] の形式
-    // shift値が-1の場合は無視する
-    gen::cards::CARD_LIST
-        .iter()
-        .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
-            
-            // 全てのフィーチャーを満たすかチェック（AND条件）
-            for i in (0..features.len()).step_by(2) {
-                if i + 1 >= features.len() {
-                    break;
-                }
-                
-                let shift1 = features[i];
-                let shift2 = features[i + 1];
-                
-                // 両方とも-1の場合はスキップ
-                if shift1 < 0 && shift2 < 0 {
-                    continue;
-                }
-                
-                let bit1 = if shift1 >= 0 { 1_i64 << shift1 } else { 0 };
-                let bit2 = if shift2 >= 0 { 1_i64 << shift2 } else { 0 };
-                
-                let has_feature = if bit1 > 0 && bit2 > 0 {
-                    (feature_bits1 & bit1) != 0 && (feature_bits2 & bit2) != 0
-                } else if bit1 > 0 {
-                    (feature_bits1 & bit1) != 0
-                } else if bit2 > 0 {
-                    (feature_bits2 & bit2) != 0
-                } else {
-                    false
-                };
-                
-                if !has_feature {
-                    return false;
-                }
-            }
-            
-            true
-        })
-        .map(|c| CardExport::from(c))
-        .collect()
+pub fn fetch_by_features_and(features: &[i32]) -> String {
+    let cards = filter::filter_by_features_and(features);
+    format!("Found {} cards with features {:?}", cards.len(), features)
 }
 
 #[wasm_bindgen]
-pub fn fetch_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> Vec<CardExport> {
-    gen::cards::CARD_LIST
-        .iter()
-        .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
-            
-            match mode {
-                "and" => {
-                    // AND条件: 指定されたビットが全て立っている
-                    (bit1 == 0 || (feature_bits1 & bit1) == bit1) &&
-                    (bit2 == 0 || (feature_bits2 & bit2) == bit2)
-                },
-                "or" => {
-                    // OR条件: 指定されたビットのいずれかが立っている
-                    if bit1 == 0 && bit2 == 0 {
-                        true
-                    } else {
-                        (bit1 > 0 && (feature_bits1 & bit1) != 0) ||
-                        (bit2 > 0 && (feature_bits2 & bit2) != 0)
-                    }
-                },
-                _ => true
-            }
-        })
-        .map(|c| CardExport::from(c))
-        .collect()
+pub fn fetch_by_combined_bits_and(bit1: i64, bit2: i64) -> String {
+    let cards = filter::filter_by_combined_bits(bit1, bit2, "and");
+    format!("Found {} cards (AND: bit1={}, bit2={})", cards.len(), bit1, bit2)
+}
+
+#[wasm_bindgen]
+pub fn fetch_by_combined_bits_or(bit1: i64, bit2: i64) -> String {
+    let cards = filter::filter_by_combined_bits(bit1, bit2, "or");
+    format!("Found {} cards (OR: bit1={}, bit2={})", cards.len(), bit1, bit2)
 }
