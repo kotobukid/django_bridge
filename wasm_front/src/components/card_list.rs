@@ -10,13 +10,14 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
             <div class="p-4">
                 {cards.into_iter().map(|card| {
                     let color_style = datapack::bits_to_gradient_native(card.color() as i32);
-                    
+
+                    let card_url = format!("https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no={}", card.code());
                     view! {
                         <div class="card-item" style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0; border: 1px solid rgba(0,0,0,0.1);", color_style)>
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-lg" style="color: #374151;">
-                                        {card.name()}
+                                        <a href=card_url target="_blank">{card.name()}</a>
                                     </h3>
                                     <p class="text-sm mt-1" style="color: #374151; opacity: 0.8;">
                                         {card.code()}
