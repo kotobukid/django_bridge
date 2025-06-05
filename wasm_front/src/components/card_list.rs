@@ -7,23 +7,25 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
     
     view! {
         <div class="bg-white rounded-lg shadow">
-            <div class="divide-y divide-gray-200">
+            <div class="p-4">
                 {cards.into_iter().map(|card| {
+                    let color_style = datapack::bits_to_gradient_native(card.color() as i32);
+                    
                     view! {
-                        <div class="card-item">
+                        <div class="card-item" style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0; border: 1px solid rgba(0,0,0,0.1);", color_style)>
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
-                                    <h3 class="font-semibold text-lg">
+                                    <h3 class="font-semibold text-lg" style="color: #374151;">
                                         {card.name()}
                                     </h3>
-                                    <p class="text-sm text-gray-600 mt-1">
+                                    <p class="text-sm mt-1" style="color: #374151; opacity: 0.8;">
                                         {card.code()}
                                     </p>
                                     {
                                         let skill_text = card.skill_text();
                                         if !skill_text.is_empty() {
                                             view! {
-                                                <div class="mt-2 text-sm whitespace-pre-wrap">
+                                                <div class="mt-2 text-sm whitespace-pre-wrap" style="color: #374151;">
                                                     {skill_text}
                                                 </div>
                                             }.into_any()
@@ -36,7 +38,7 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                                         let has_burst = card.has_burst() > 0;
                                         if has_burst && !burst_text.is_empty() {
                                             view! {
-                                                <div class="mt-2 text-sm text-orange-600">
+                                                <div class="mt-2 text-sm" style="background: #374151; color: white; padding: 8px; border-radius: 4px;">
                                                     <span class="font-semibold">"【ライフバースト】"</span>
                                                     {burst_text}
                                                 </div>
@@ -46,12 +48,12 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                                         }
                                     }
                                 </div>
-                                <div class="ml-4 text-right">
+                                <div class="ml-4 text-right flex flex-col gap-1" style="min-width: 120px;">
                                     {
                                         let level = card.level();
                                         if !level.is_empty() {
                                             view! {
-                                                <div class="text-sm text-gray-600">
+                                                <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
                                                     {format!("Lv.{}", level)}
                                                 </div>
                                             }.into_any()
@@ -63,7 +65,7 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                                         let power = card.power();
                                         if !power.is_empty() {
                                             view! {
-                                                <div class="text-sm">
+                                                <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
                                                     {format!("Power: {}", power)}
                                                 </div>
                                             }.into_any()
@@ -75,7 +77,7 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                                         let cost = card.cost();
                                         if !cost.is_empty() {
                                             view! {
-                                                <div class="text-sm">
+                                                <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
                                                     {format!("Cost: {}", cost)}
                                                 </div>
                                             }.into_any()

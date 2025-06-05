@@ -372,6 +372,10 @@ pub fn fetch_by_colors(cards: &[CardExport], color_bits: u32) -> Vec<CardExport>
         .collect()
 }
 
+pub fn bits_to_gradient_native(bits: i32) -> String {
+    color::Colors::bits_to_gradient(bits)
+}
+
 pub fn fetch_by_features_and_native(cards: &[CardExport], feature_ids: &[i32]) -> Vec<CardExport> {
     // Convert feature IDs to bit patterns based on FEATURES data
     let mut bits1 = 0i64;
