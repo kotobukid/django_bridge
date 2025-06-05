@@ -5,10 +5,12 @@
 @layer components {
     .color-selector-button {
         @apply px-4 py-2 rounded-lg transition-all duration-200 font-medium;
+        /* 非選択時も同じ太さの透明ボーダーを適用してレイアウトシフトを防止 */
+        @apply ring-4 ring-offset-2 ring-transparent border-2 border-transparent;
     }
     
     .color-selector-active {
-        @apply ring-2 ring-offset-2 shadow-lg;
+        @apply ring-blue-600 shadow-lg border-blue-800;
     }
     
     .feature-checkbox {
@@ -17,5 +19,130 @@
     
     .card-item {
         @apply border-b border-gray-200 py-3 px-4 hover:bg-gray-50 cursor-pointer;
+    }
+
+    /* NavBar styles inspired by Nuxt version */
+    .nav-bar {
+        @apply flex items-center justify-between bg-gray-800 text-white px-5 h-12 mb-2 relative z-50;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-section {
+        @apply flex items-center;
+    }
+
+    .nav-links {
+        @apply gap-0;
+    }
+
+    .nav-link {
+        @apply py-3 px-5 no-underline text-gray-300 transition-all duration-200 relative;
+    }
+    
+    .nav-link:hover {
+        @apply bg-gray-700 text-white;
+    }
+    
+    .nav-link.active {
+        @apply bg-blue-500 text-white;
+    }
+    
+    .nav-link.active::after {
+        content: '';
+        @apply absolute bottom-0 left-0 right-0 h-1 bg-red-500;
+    }
+    
+    .nav-link span {
+        @apply text-sm font-medium;
+    }
+
+    .feature-menu {
+        @apply gap-0;
+    }
+
+    .menu-item {
+        @apply relative py-3 px-4 cursor-pointer transition-colors duration-200 text-gray-300 flex items-center;
+    }
+    
+    .menu-item:hover {
+        @apply bg-gray-700 text-white;
+    }
+    
+    .menu-item.active {
+        @apply bg-blue-500 text-white;
+    }
+    
+    .menu-item.has-selected {
+        @apply bg-green-600 text-white;
+    }
+    
+    .menu-item.has-selected:hover {
+        @apply bg-green-500;
+    }
+    
+    .menu-item.has-selected.active {
+        @apply bg-blue-500;
+    }
+
+    .menu-label {
+        @apply font-medium text-sm flex-1;
+    }
+
+    .indicator {
+        @apply text-xs ml-2 text-red-500;
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .menu-item.has-selected .indicator {
+        @apply text-white;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.6; }
+        100% { opacity: 1; }
+    }
+
+    .dropdown {
+        @apply absolute top-full left-0 bg-white border border-gray-300 border-t-0 rounded-b shadow-lg z-50;
+        min-width: 12rem;
+        max-width: 18rem;
+    }
+
+    .dropdown-right {
+        left: auto;
+        right: 0;
+    }
+
+    .dropdown-item {
+        @apply flex items-center py-2 px-3 cursor-pointer transition-colors duration-200 border-b border-gray-100 text-gray-700;
+    }
+    
+    .dropdown-item:last-child {
+        @apply border-b-0;
+    }
+    
+    .dropdown-item:hover {
+        @apply bg-gray-50;
+    }
+    
+    .dropdown-item.selected {
+        @apply bg-blue-50 text-blue-700;
+    }
+
+    .checkbox {
+        @apply w-4 h-4 border border-gray-400 rounded-sm mr-2 flex items-center justify-center bg-white transition-all duration-200;
+    }
+
+    .dropdown-item.selected .checkbox {
+        @apply border-blue-700 bg-blue-700 text-white;
+    }
+
+    .checkmark {
+        @apply text-xs font-bold;
+    }
+
+    .feature-name {
+        @apply text-xs flex-1;
     }
 }

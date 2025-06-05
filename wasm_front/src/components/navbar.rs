@@ -1,100 +1,179 @@
 use leptos::prelude::*;
-use crate::types::get_feature_categories;
 use std::collections::HashMap;
+
+#[derive(Debug, Clone)]
+struct FeatureTag {
+    id: String,
+    display_name: String,
+}
+
+#[derive(Debug, Clone)]
+struct CardFeature {
+    name: String,
+    feature_tag_id: String,
+}
+
+// 実際のfeatureモジュールからデータを取得する関数
+fn get_feature_data() -> (Vec<FeatureTag>, HashMap<String, Vec<CardFeature>>) {
+    // feature_conditions関数からデータを取得
+    let feature_map = datapack::feature_conditions();
+    
+    // JsValueからHashMapに変換
+    let feature_map: HashMap<String, Vec<serde_json::Value>> = 
+        serde_wasm_bindgen::from_value(feature_map).unwrap_or_default();
+    
+    let mut feature_tags = Vec::new();
+    let mut features_by_tag = HashMap::new();
+    
+    for (tag_key, features_json) in feature_map {
+        // FeatureTagを作成（先頭2文字削除）
+        let display_name = if tag_key.len() >= 2 {
+            tag_key[2..].to_string()
+        } else {
+            tag_key.clone()
+        };
+        
+        feature_tags.push(FeatureTag {
+            id: tag_key.clone(),
+            display_name,
+        });
+        
+        // CardFeatureのリストを作成
+        let card_features: Vec<CardFeature> = features_json
+            .into_iter()
+            .filter_map(|feature_json| {
+                let name = feature_json.get("name")?.as_str()?.to_string();
+                Some(CardFeature {
+                    name,
+                    feature_tag_id: tag_key.clone(),
+                })
+            })
+            .collect();
+        
+        features_by_tag.insert(tag_key, card_features);
+    }
+    
+    // ソート（表示順序を統一）
+    feature_tags.sort_by(|a, b| a.display_name.cmp(&b.display_name));
+    
+    (feature_tags, features_by_tag)
+}
 
 #[component]
 pub fn NavBar(
     selected_features: ReadSignal<HashMap<i32, bool>>,
     set_selected_features: WriteSignal<HashMap<i32, bool>>,
 ) -> impl IntoView {
-    let (dropdown_open, set_dropdown_open) = signal(false);
+    let (feature_tags, features_by_tag) = get_feature_data();
     
-    let toggle_feature = move |feature_id: i32| {
-        set_selected_features.update(|features| {
-            if features.contains_key(&feature_id) {
-                features.remove(&feature_id);
+    // 現在開いているドロップダウンのID（1つだけ）
+    let (open_dropdown, set_open_dropdown) = signal::<Option<String>>(None);
+    
+    // 各CardFeatureの選択状態を管理
+    let (selected_card_features, set_selected_card_features) = signal::<HashMap<String, bool>>(HashMap::new());
+    
+    let toggle_dropdown = move |tag_id: String| {
+        set_open_dropdown.update(|current| {
+            if current.as_ref() == Some(&tag_id) {
+                *current = None; // 既に開いている場合は閉じる
             } else {
-                features.insert(feature_id, true);
+                *current = Some(tag_id); // 他のを閉じて開く
             }
         });
     };
     
-    let clear_all = move |_| {
-        set_selected_features.set(HashMap::new());
+    let toggle_card_feature = move |feature_name: String| {
+        set_selected_card_features.update(|features| {
+            let current = features.get(&feature_name).copied().unwrap_or(false);
+            if current {
+                features.remove(&feature_name);
+            } else {
+                features.insert(feature_name, true);
+            }
+        });
     };
-    
-    let selected_count = Memo::new(move |_| {
-        selected_features.get().len()
-    });
 
     view! {
-        <nav class="bg-gray-800 text-white">
-            <div class="container mx-auto px-4">
-                <div class="flex items-center justify-between h-16">
-                    <div class="text-xl font-bold">
-                        "WIXOSS Card Filter"
-                    </div>
+        <nav class="nav-bar">
+            <div class="nav-section nav-links">
+                <a class="nav-link active" href="/card">
+                    <span>"Cards"</span>
+                </a>
+            </div>
+            
+            <div class="nav-section feature-menu">
+                {feature_tags.into_iter().map(|tag| {
+                    let tag_id = tag.id.clone();
+                    let tag_id_for_toggle = tag.id.clone();
+                    let tag_id_for_open_check = tag.id.clone();
+                    let tag_id_for_features = tag.id.clone();
+                    let features_by_tag_clone = features_by_tag.clone();
+                    let features_by_tag_clone2 = features_by_tag.clone();
                     
-                    <div class="relative">
-                        <button
-                            class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition-colors flex items-center gap-2"
-                            on:click=move |_| set_dropdown_open.update(|v| *v = !*v)
-                        >
-                            "Features"
-                            {move || if selected_count.get() != 0 {
-                                format!(" ({})", selected_count.get())
-                            } else {
-                                String::new()
-                            }}
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </button>
-                        
-                        <Show when=move || dropdown_open.get()>
-                            <div class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg z-50 text-gray-800">
-                                <div class="p-4">
-                                    {get_feature_categories().into_iter().map(|(category, features)| {
-                                        view! {
-                                            <div class="mb-4">
-                                                <h3 class="font-semibold mb-2">{category}</h3>
-                                                <div class="space-y-1">
-                                                    {features.into_iter().map(|feature| {
-                                                        let feature_id = feature.id;
-                                                        let is_selected = Memo::new(move |_| {
-                                                            selected_features.get().contains_key(&feature_id)
-                                                        });
-                                                        
-                                                        view! {
-                                                            <label class="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 rounded">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    class="feature-checkbox"
-                                                                    checked=is_selected
-                                                                    on:change=move |_| toggle_feature(feature_id)
-                                                                />
-                                                                <span class="text-sm">{feature.name}</span>
-                                                            </label>
-                                                        }
-                                                    }).collect_view()}
-                                                </div>
-                                            </div>
+                    let is_open = Memo::new(move |_| {
+                        open_dropdown.get().as_ref() == Some(&tag_id_for_open_check)
+                    });
+                    
+                    let has_selected_features = Memo::new(move |_| {
+                        let selected = selected_card_features.get();
+                        if let Some(card_features) = features_by_tag_clone.get(&tag_id_for_features) {
+                            card_features.iter()
+                                .any(|f| selected.get(&f.name).copied().unwrap_or(false))
+                        } else {
+                            false
+                        }
+                    });
+                    
+                    view! {
+                        <div class="menu-item" 
+                             class:has-selected=move || has_selected_features.get()
+                             class:active=move || is_open.get()
+                             on:click=move |_| toggle_dropdown(tag_id_for_toggle.clone())>
+                            <Show when=move || has_selected_features.get()>
+                                <span class="indicator">"●"</span>
+                            </Show>
+                            <span class="menu-label">{tag.display_name}</span>
+                            
+                            <Show when=move || is_open.get()>
+                                <div class="dropdown dropdown-right">
+                                    {if let Some(card_features) = features_by_tag_clone2.get(&tag_id) {
+                                        if card_features.is_empty() {
+                                            view! { <div class="dropdown-item">"No features"</div> }.into_any()
+                                        } else {
+                                            card_features.iter().map(|feature| {
+                                                let feature_name = feature.name.clone();
+                                                let feature_name_for_toggle = feature.name.clone();
+                                                let feature_name_for_check = feature.name.clone();
+                                                
+                                                let is_selected = Memo::new(move |_| {
+                                                    selected_card_features.get().get(&feature_name_for_check).copied().unwrap_or(false)
+                                                });
+                                                
+                                                view! {
+                                                    <div class="dropdown-item" 
+                                                         class:selected=move || is_selected.get()
+                                                         on:click=move |e| {
+                                                             e.stop_propagation();
+                                                             toggle_card_feature(feature_name_for_toggle.clone());
+                                                         }>
+                                                        <div class="checkbox">
+                                                            <Show when=move || is_selected.get()>
+                                                                <div class="checkmark">"✓"</div>
+                                                            </Show>
+                                                        </div>
+                                                        <span class="feature-name">{feature_name}</span>
+                                                    </div>
+                                                }
+                                            }).collect_view().into_any()
                                         }
-                                    }).collect_view()}
-                                    
-                                    <Show when=move || selected_count.get() != 0>
-                                        <button
-                                            class="mt-4 w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-                                            on:click=clear_all
-                                        >
-                                            "Clear All"
-                                        </button>
-                                    </Show>
+                                    } else {
+                                        view! { <div class="dropdown-item">"No features"</div> }.into_any()
+                                    }}
                                 </div>
-                            </div>
-                        </Show>
-                    </div>
-                </div>
+                            </Show>
+                        </div>
+                    }
+                }).collect_view()}
             </div>
         </nav>
     }

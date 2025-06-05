@@ -372,6 +372,14 @@ pub fn fetch_by_colors(cards: &[CardExport], color_bits: u32) -> Vec<CardExport>
         .collect()
 }
 
+pub fn fetch_by_colors_and(cards: &[CardExport], color_bits: u32) -> Vec<CardExport> {
+    cards
+        .iter()
+        .filter(|c| (c.color & color_bits) == color_bits)
+        .cloned()
+        .collect()
+}
+
 pub fn bits_to_gradient_native(bits: i32) -> String {
     color::Colors::bits_to_gradient(bits)
 }

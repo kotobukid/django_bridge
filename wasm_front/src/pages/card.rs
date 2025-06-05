@@ -31,7 +31,7 @@ pub fn CardPage() -> impl IntoView {
             // Apply color filter
             if color.has_any() {
                 let color_bits = color.to_bits();
-                filtered = datapack::fetch_by_colors(&filtered, color_bits);
+                filtered = datapack::fetch_by_colors_and(&filtered, color_bits);
             }
             
             // Apply feature filters
