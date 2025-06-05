@@ -8,6 +8,7 @@ use std::collections::HashMap;
 pub fn CardPage() -> impl IntoView {
     let (color_filter, set_color_filter) = signal(ColorFilter::new());
     let (selected_features, set_selected_features) = signal(HashMap::<i32, bool>::new());
+    let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new()); // 追加
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
     let (current_page, set_current_page) = signal(0usize);
     let cards_per_page = 50;
@@ -24,27 +25,11 @@ pub fn CardPage() -> impl IntoView {
     Effect::new(move || {
         if let Some(Ok(cards)) = all_cards.get() {
             let color = color_filter.get();
-            let features = selected_features.get();
+            let feature_names = selected_feature_names.get();
             
-            let mut filtered = cards.clone();
-            
-            // Apply color filter
-            if color.has_any() {
-                let color_bits = color.to_bits();
-                filtered = datapack::fetch_by_colors_and(&filtered, color_bits);
-            }
-            
-            // Apply feature filters
-            if !features.is_empty() {
-                let active_features: Vec<_> = features.iter()
-                    .filter(|(_, &v)| v)
-                    .map(|(&k, _)| k)
-                    .collect();
-                    
-                if !active_features.is_empty() {
-                    filtered = datapack::fetch_by_features_and_native(&filtered, &active_features);
-                }
-            }
+            // 複合フィルタリングを使用
+            let color_bits = if color.has_any() { color.to_bits() } else { 0 };
+            let filtered = datapack::fetch_by_colors_and_features_native(&cards, color_bits, &feature_names);
             
             set_filtered_cards.set(filtered);
             set_current_page.set(0);
@@ -70,6 +55,7 @@ pub fn CardPage() -> impl IntoView {
             <NavBar
                 selected_features=selected_features
                 set_selected_features=set_selected_features
+                on_feature_change=set_selected_feature_names
             />
             
             <div class="container mx-auto px-4 py-4">

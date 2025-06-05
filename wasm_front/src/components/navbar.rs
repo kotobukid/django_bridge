@@ -53,8 +53,13 @@ fn get_feature_data() -> (Vec<FeatureTag>, HashMap<String, Vec<CardFeature>>) {
         features_by_tag.insert(tag_key, card_features);
     }
     
-    // ソート（表示順序を統一）
-    feature_tags.sort_by(|a, b| a.display_name.cmp(&b.display_name));
+    // ソート（表示順序を統一 - 数値順）
+    feature_tags.sort_by(|a, b| {
+        // idの先頭2文字（数値部分）で比較
+        let a_num = a.id.chars().take(2).collect::<String>();
+        let b_num = b.id.chars().take(2).collect::<String>();
+        a_num.cmp(&b_num)
+    });
     
     (feature_tags, features_by_tag)
 }
@@ -63,6 +68,7 @@ fn get_feature_data() -> (Vec<FeatureTag>, HashMap<String, Vec<CardFeature>>) {
 pub fn NavBar(
     selected_features: ReadSignal<HashMap<i32, bool>>,
     set_selected_features: WriteSignal<HashMap<i32, bool>>,
+    on_feature_change: WriteSignal<Vec<String>>, // 追加: feature変更時のコールバック
 ) -> impl IntoView {
     let (feature_tags, features_by_tag) = get_feature_data();
     
@@ -91,6 +97,13 @@ pub fn NavBar(
                 features.insert(feature_name, true);
             }
         });
+        
+        // 親に現在選択されているfeature名のリストを通知
+        let selected_names: Vec<String> = selected_card_features.get()
+            .iter()
+            .filter_map(|(name, &selected)| if selected { Some(name.clone()) } else { None })
+            .collect();
+        on_feature_change.set(selected_names);
     };
 
     view! {

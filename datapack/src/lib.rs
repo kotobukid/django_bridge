@@ -384,29 +384,25 @@ pub fn bits_to_gradient_native(bits: i32) -> String {
     color::Colors::bits_to_gradient(bits)
 }
 
-pub fn fetch_by_features_and_native(cards: &[CardExport], feature_ids: &[i32]) -> Vec<CardExport> {
-    // Convert feature IDs to bit patterns based on FEATURES data
-    let mut bits1 = 0i64;
-    let mut bits2 = 0i64;
+pub fn fetch_by_features_and_native(cards: &[CardExport], feature_names: &[String]) -> Vec<CardExport> {
+    use feature::feature::{CardFeature, HashSetToBits};
+    use std::collections::HashSet;
+    use std::str::FromStr;
     
-    for &id in feature_ids {
-        match id {
-            1 => bits1 |= 1 << 0,  // ダブルクラッシュ
-            2 => bits1 |= 1 << 1,  // ランサー
-            3 => bits1 |= 1 << 2,  // アサシン
-            4 => bits1 |= 1 << 3,  // チャーム
-            5 => bits1 |= 1 << 4,  // レイヤー
-            6 => bits1 |= 1 << 5,  // ターン1回
-            7 => bits1 |= 1 << 6,  // シャドウ
-            8 => bits1 |= 1 << 10, // マルチエナ
-            9 => bits1 |= 1 << 11, // ライフバースト
-            10 => bits2 |= 1 << 0, // エンター
-            11 => bits2 |= 1 << 1, // ドライブ
-            12 => bits2 |= 1 << 2, // ライズ
-            13 => bits2 |= 1 << 3, // ビート
-            _ => {}
+    // feature名からCardFeatureに変換してビットを計算
+    let mut feature_set = HashSet::new();
+    
+    for name in feature_names {
+        if let Ok(feature) = parse_feature_name(name) {
+            feature_set.insert(feature);
         }
     }
+    
+    if feature_set.is_empty() {
+        return cards.to_vec();
+    }
+    
+    let (bits1, bits2) = feature_set.to_bits();
     
     cards
         .iter()
@@ -416,6 +412,118 @@ pub fn fetch_by_features_and_native(cards: &[CardExport], feature_ids: &[i32]) -
         })
         .cloned()
         .collect()
+}
+
+// feature名からCardFeatureに変換する関数
+pub fn parse_feature_name(name: &str) -> Result<feature::feature::CardFeature, String> {
+    use feature::feature::CardFeature;
+    
+    match name {
+        "ダブルクラッシュ" => Ok(CardFeature::DoubleCrush),
+        "ハンデス" => Ok(CardFeature::DiscardOpponent),
+        "ランダムハンデス" => Ok(CardFeature::RandomDiscard),
+        "ドロー" => Ok(CardFeature::Draw),
+        "アサシン" => Ok(CardFeature::Assassin),
+        "凍結" => Ok(CardFeature::Freeze),
+        "デッキ落下" => Ok(CardFeature::Drop),
+        "デッキ落下時" => Ok(CardFeature::OnDrop),
+        "リフレッシュ時" => Ok(CardFeature::OnRefresh),
+        "ランサー" => Ok(CardFeature::Lancer),
+        "Sランサー" => Ok(CardFeature::SLancer),
+        "シグニ除外" => Ok(CardFeature::RemoveSigni),
+        "アタック不可" => Ok(CardFeature::NonAttackable),
+        "ダウン" => Ok(CardFeature::Down),
+        "シグニアップ" => Ok(CardFeature::Up),
+        "エナチャージ" => Ok(CardFeature::Charge),
+        "エナ破壊" => Ok(CardFeature::EnerAttack),
+        "トラッシュ送り" => Ok(CardFeature::Trash),
+        "エナ送り" => Ok(CardFeature::EnerOffensive),
+        "パワーアップ" => Ok(CardFeature::PowerUp),
+        "パワーダウン" => Ok(CardFeature::PowerDown),
+        "バウンス" => Ok(CardFeature::Bounce),
+        "デッキバウンス" => Ok(CardFeature::DeckBounce),
+        "トラッシュ回収" => Ok(CardFeature::Salvage),
+        "ライフバースト" => Ok(CardFeature::LifeBurst),
+        "シャドウ" => Ok(CardFeature::Shadow),
+        "バニッシュ耐性" => Ok(CardFeature::Invulnerable),
+        "スペル参照" => Ok(CardFeature::OnSpell),
+        "アーツ・ピース参照" => Ok(CardFeature::OnArts),
+        "被バニッシュ時" => Ok(CardFeature::OnBanish),
+        "バニッシュ" => Ok(CardFeature::Banish),
+        "ガード" => Ok(CardFeature::Guard),
+        "ガード時" => Ok(CardFeature::OnGuard),
+        "アタック無効" => Ok(CardFeature::AttackNoEffect),
+        "被対象時" => Ok(CardFeature::OnTouch),
+        "覚醒" => Ok(CardFeature::Awake),
+        "エクシード" => Ok(CardFeature::Exceed),
+        "エクシード時" => Ok(CardFeature::OnExceed),
+        "ライフクロス追加" => Ok(CardFeature::AddLife),
+        "バースト参照" => Ok(CardFeature::OnBurst),
+        "ライフトラッシュ" => Ok(CardFeature::LifeTrash),
+        "ライフクラッシュ" => Ok(CardFeature::LifeCrush),
+        "ダメージ" => Ok(CardFeature::Damage),
+        "クラッシュ時" => Ok(CardFeature::OnLifeCrush),
+        "シグニゾーン移動" => Ok(CardFeature::Position),
+        "バニラ" => Ok(CardFeature::Vanilla),
+        "トップ操作" => Ok(CardFeature::TopSet),
+        "ボトム操作" => Ok(CardFeature::BottomCheck),
+        "バリア" => Ok(CardFeature::Barrier),
+        "ルリグトラッシュ参照" => Ok(CardFeature::LrigTrash),
+        "チャーム" => Ok(CardFeature::Charm),
+        "クラフト" => Ok(CardFeature::Craft),
+        "アクセ" => Ok(CardFeature::Acce),
+        "ライズ" => Ok(CardFeature::Rise),
+        "リコレクト" => Ok(CardFeature::Recollect),
+        "シーク" => Ok(CardFeature::SeekTop),
+        "能力消去" => Ok(CardFeature::EraseSkill),
+        "ダメージ無効" => Ok(CardFeature::CancelDamage),
+        "トラッシュ場出し" => Ok(CardFeature::Reanimate),
+        "追加アタック" => Ok(CardFeature::AdditionalAttack),
+        "ガード不可" => Ok(CardFeature::UnGuardable),
+        "スペル回収" => Ok(CardFeature::SalvageSpell),
+        "アタック時バニッシュ" => Ok(CardFeature::BanishOnAttack),
+        "バニッシュ代替" => Ok(CardFeature::ShootLike),
+        "シグニゾーン制限" => Ok(CardFeature::LimitSigni),
+        "スペルコスト軽減" => Ok(CardFeature::FreeSpell),
+        "複数色エナ" => Ok(CardFeature::DualColorEner),
+        "コイン獲得" => Ok(CardFeature::GainCoin),
+        "ベット/コイン使用" => Ok(CardFeature::BetCoin),
+        "手札コスト" => Ok(CardFeature::HandCost),
+        "ルリグダウンコスト" => Ok(CardFeature::RligDownCost),
+        "Lv3継承" => Ok(CardFeature::Inherit),
+        "グロウコスト軽減" => Ok(CardFeature::PreventGrowCost),
+        "ブロッカー場出し" => Ok(CardFeature::PutSigniDefense),
+        "アタッカー場出し" => Ok(CardFeature::PutSigniOffense),
+        "ハーモニー" => Ok(CardFeature::Harmony),
+        "マジックボックス" => Ok(CardFeature::MagicBox),
+        "ウィルス" => Ok(CardFeature::Virus),
+        "アーツコスト軽減" => Ok(CardFeature::FreeArts),
+        _ => Err(format!("Unknown feature: {}", name)),
+    }
+}
+
+// 色とfeatureの複合フィルタリング関数（全てAND条件）
+pub fn fetch_by_colors_and_features_native(
+    cards: &[CardExport], 
+    color_bits: u32, 
+    feature_names: &[String]
+) -> Vec<CardExport> {
+    use feature::feature::{CardFeature, HashSetToBits};
+    use std::collections::HashSet;
+    
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+    
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+    
+    filtered_cards
 }
 
 impl Clone for CardExport {

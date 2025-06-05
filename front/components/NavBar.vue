@@ -225,7 +225,7 @@ defineExpose({
 
 .indicator {
   font-size: 8px;
-  margin-left: 6px;
+  margin-right: 6px;
   color: #e74c3c;
   animation: pulse 1.5s ease-in-out infinite;
   

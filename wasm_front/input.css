@@ -89,7 +89,7 @@
     }
 
     .indicator {
-        @apply text-xs ml-2 text-red-500;
+        @apply text-xs mr-2 text-red-500;
         animation: pulse 1.5s ease-in-out infinite;
     }
 
