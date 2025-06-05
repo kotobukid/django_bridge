@@ -8,3 +8,4 @@ vm/.vagrant
 datapack/src/gen/cards.rs
 /table_definition/.venv
 /front/bun.lock
+dist

@@ -3,7 +3,7 @@ pub mod filter;
 
 use color;
 use feature::feature::export_features;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
 
@@ -46,7 +46,7 @@ struct CardCompact(
 );
 
 #[wasm_bindgen]
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize, PartialEq)]
 pub struct CardExport {
     id: i32,               // id
     name: String,          // name
@@ -354,4 +354,84 @@ pub fn fetch_by_combined_bits_and(bit1: i64, bit2: i64) -> String {
 pub fn fetch_by_combined_bits_or(bit1: i64, bit2: i64) -> String {
     let cards = filter::filter_by_combined_bits(bit1, bit2, "or");
     format!("Found {} cards (OR: bit1={}, bit2={})", cards.len(), bit1, bit2)
+}
+
+// Native Rust functions for Leptos (not exposed to WASM)
+pub fn get_all_cards() -> Result<Vec<CardExport>, String> {
+    Ok(gen::cards::CARD_LIST
+        .iter()
+        .map(|c| CardExport::from(c))
+        .collect())
+}
+
+pub fn fetch_by_colors(cards: &[CardExport], color_bits: u32) -> Vec<CardExport> {
+    cards
+        .iter()
+        .filter(|c| (c.color & color_bits) != 0)
+        .cloned()
+        .collect()
+}
+
+pub fn fetch_by_features_and_native(cards: &[CardExport], feature_ids: &[i32]) -> Vec<CardExport> {
+    // Convert feature IDs to bit patterns based on FEATURES data
+    let mut bits1 = 0i64;
+    let mut bits2 = 0i64;
+    
+    for &id in feature_ids {
+        match id {
+            1 => bits1 |= 1 << 0,  // ダブルクラッシュ
+            2 => bits1 |= 1 << 1,  // ランサー
+            3 => bits1 |= 1 << 2,  // アサシン
+            4 => bits1 |= 1 << 3,  // チャーム
+            5 => bits1 |= 1 << 4,  // レイヤー
+            6 => bits1 |= 1 << 5,  // ターン1回
+            7 => bits1 |= 1 << 6,  // シャドウ
+            8 => bits1 |= 1 << 10, // マルチエナ
+            9 => bits1 |= 1 << 11, // ライフバースト
+            10 => bits2 |= 1 << 0, // エンター
+            11 => bits2 |= 1 << 1, // ドライブ
+            12 => bits2 |= 1 << 2, // ライズ
+            13 => bits2 |= 1 << 3, // ビート
+            _ => {}
+        }
+    }
+    
+    cards
+        .iter()
+        .filter(|c| {
+            (bits1 == 0 || (c.feature_bits1 & bits1) == bits1) &&
+            (bits2 == 0 || (c.feature_bits2 & bits2) == bits2)
+        })
+        .cloned()
+        .collect()
+}
+
+impl Clone for CardExport {
+    fn clone(&self) -> Self {
+        CardExport {
+            id: self.id,
+            name: self.name.clone(),
+            code: self.code.clone(),
+            pronunciation: self.pronunciation.clone(),
+            color: self.color,
+            cost: self.cost.clone(),
+            level: self.level.clone(),
+            limit: self.limit.clone(),
+            limit_ex: self.limit_ex.clone(),
+            power: self.power.clone(),
+            has_burst: self.has_burst,
+            skill_text: self.skill_text.clone(),
+            burst_text: self.burst_text.clone(),
+            format: self.format,
+            story: self.story.clone(),
+            rarity: self.rarity.clone(),
+            url: self.url.clone(),
+            card_type: self.card_type,
+            product: self.product,
+            timing: self.timing,
+            feature_bits1: self.feature_bits1,
+            feature_bits2: self.feature_bits2,
+            ex1: self.ex1.clone(),
+        }
+    }
 }

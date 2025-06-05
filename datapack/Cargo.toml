@@ -15,7 +15,3 @@ web-sys = "0.3.77"
 feature = { path = "../shared/feature" }
 color = { path = "../shared/color" }
 
-[profile.release]
-lto = "fat"              # リンク時の最適化を有効（ファイルをさらに小さく）
-codegen-units = 1        # コード生成を1つのユニットで集中させる。処理速度向上
-opt-level = "z"
