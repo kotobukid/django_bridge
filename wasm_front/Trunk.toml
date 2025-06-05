@@ -7,6 +7,7 @@ command_arguments = ["-c", "if [ ! -f ../datapack/src/gen/cards.rs ]; then echo 
 target = "index.html"
 dist = "../dist"
 public_url = "/"
+release = true
 
 [watch]
 ignore = ["../dist"]

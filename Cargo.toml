@@ -35,6 +35,8 @@ thiserror = "1.0"
 url = "2.5"
 
 [profile.release]
-opt-level = "z"
-lto = true
-codegen-units = 1
+opt-level = "z"     # Optimize for size
+lto = true          # Enable Link Time Optimization
+codegen-units = 1   # Reduce parallel code generation units
+panic = 'abort'     # Remove panic unwinding to reduce binary size
+strip = true        # Strip symbols from binary

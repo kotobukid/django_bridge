@@ -105,3 +105,8 @@ cp front/public/pkg/.gitignore front/static/pkg/.gitignore
 #wasm_linux
 #generate
 #server
+
+[tasks.trunk_release]
+cwd="./wasm_front"
+command = "trunk"
+args = ["build", "--release", "--minify"]
