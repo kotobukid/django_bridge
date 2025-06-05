@@ -1,0 +1,17 @@
+[[hooks]]
+stage = "pre_build"
+command = "sh"
+command_arguments = ["-c", "if [ ! -f ../datapack/src/gen/cards.rs ]; then echo 'Error: ../datapack/src/gen/cards.rs not found. Run cargo make static first.'; exit 1; fi"]
+
+[build]
+target = "index.html"
+dist = "../dist"
+public_url = "./"
+release = true
+
+[watch]
+ignore = ["../dist"]
+
+[serve]
+port = 8080
+open = false

@@ -110,3 +110,8 @@ cp front/public/pkg/.gitignore front/static/pkg/.gitignore
 cwd="./wasm_front"
 command = "trunk"
 args = ["build", "--release", "--minify"]
+
+[tasks.trunk_pages]
+cwd="./wasm_front"
+command = "trunk"
+args = ["build", "--release", "--minify", "--config", "Trunk-pages.toml"]
