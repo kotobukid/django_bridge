@@ -9,3 +9,4 @@ datapack/src/gen/cards.rs
 /table_definition/.venv
 /front/bun.lock
 dist
+dist-pages

@@ -1,3 +1,0 @@
-git add dist/ --force
-git commit -m "Update dist files with relative paths for GitHub Pages"
-git subtree push --prefix=dist origin gh-pages
