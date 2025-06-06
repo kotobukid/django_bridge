@@ -3,10 +3,20 @@ stage = "pre_build"
 command = "sh"
 command_arguments = ["-c", "if [ ! -f ../datapack/src/gen/cards.rs ]; then echo 'Error: ../datapack/src/gen/cards.rs not found. Run cargo make static first.'; exit 1; fi"]
 
+[[hooks]]
+stage = "post_build"
+command = "sh"
+command_arguments = ["-c", "echo '' > ../dist/.nojekyll"]
+
+[[hooks]]
+stage = "post_build"
+command = "sh"
+command_arguments = ["-c", "cat > ../dist/404.html << 'EOF'\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <title>Redirecting...</title>\n    <script>\n        // GitHub Pages SPA redirect\n        window.location.replace('/django_bridge/');\n    </script>\n</head>\n<body></body>\n</html>\nEOF"]
+
 [build]
 target = "index.html"
 dist = "../dist"
-public_url = "./"
+public_url = "/django_bridge/"
 release = true
 
 [watch]
