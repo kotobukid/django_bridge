@@ -6,22 +6,10 @@ command_arguments = ["-c", "if [ ! -f ../datapack/src/gen/cards.rs ]; then echo 
 [[hooks]]
 stage = "post_build"
 command = "sh"
-command_arguments = ["-c", "echo '' > ../dist/.nojekyll"]
-
-[[hooks]]
-stage = "post_build"
-command = "sh"
-command_arguments = ["-c", "cat > ../dist/404.html << 'EOF'\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"utf-8\">\n    <title>Redirecting...</title>\n    <script>\n        // GitHub Pages SPA redirect\n        window.location.replace('/django_bridge/');\n    </script>\n</head>\n<body></body>\n</html>\nEOF"]
+command_arguments = ["-c", "touch ../dist-pages/.nojekyll && cp ../gh-pages-404.html ../dist-pages/404.html"]
 
 [build]
 target = "index.html"
-dist = "../dist"
+dist = "../dist-pages"
 public_url = "/django_bridge/"
 release = true
-
-[watch]
-ignore = ["../dist"]
-
-[serve]
-port = 8080
-open = false
