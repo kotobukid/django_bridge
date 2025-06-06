@@ -7,6 +7,7 @@ cargo make trunk_pages
 # gh-pages仕様への対応
 touch ./dist-pages/.nojekyll
 cp ./wasm_front/gh-pages-404.html ./dist-pages/404.html
+cp ./wasm_front/CNAME ./dist-pages/CNAME
 
 # 一時的なブランチを作成してチェックアウト
 git checkout -b temp-deploy
