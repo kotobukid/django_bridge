@@ -11,7 +11,7 @@ pub fn CardPage() -> impl IntoView {
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new()); // 追加
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
     let (current_page, set_current_page) = signal(0usize);
-    let cards_per_page = 50;
+    let cards_per_page = 20;
 
     // Load all cards from datapack
     let all_cards = Resource::new(
@@ -79,27 +79,50 @@ pub fn CardPage() -> impl IntoView {
                                         <CardList cards=displayed_cards.get()/>
                                         
                                         // Pagination
-                                        <div class="mt-8 flex justify-center gap-2">
-                                            <button
-                                                class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-                                                disabled=move || current_page.get() == 0
-                                                on:click=move |_| set_current_page.update(|p| *p = p.saturating_sub(1))
-                                            >
-                                                "Previous"
-                                            </button>
-                                            
-                                            <span class="px-4 py-2">
-                                                {move || format!("Page {} of {}", current_page.get() + 1, total_pages.get())}
-                                            </span>
-                                            
-                                            <button
-                                                class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
-                                                disabled=move || current_page.get() + 1 >= total_pages.get()
-                                                on:click=move |_| set_current_page.update(|p| *p += 1)
-                                            >
-                                                "Next"
-                                            </button>
-                                        </div>
+                                        <Show when=move || !filtered_cards.get().is_empty()>
+                                            <div class="mt-8 flex justify-center gap-2">
+                                                <button
+                                                    class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                                                    prop:disabled=move || current_page.get() == 0
+                                                    on:click=move |_| {
+                                                        set_current_page.update(|p| {
+                                                            if *p > 0 {
+                                                                *p -= 1;
+                                                            }
+                                                        })
+                                                    }
+                                                >
+                                                    "Previous"
+                                                </button>
+                                                
+                                                <span class="px-4 py-2">
+                                                    {move || {
+                                                        let current = current_page.get();
+                                                        let total = total_pages.get();
+                                                        format!("Page {} of {}", current + 1, total.max(1))
+                                                    }}
+                                                </span>
+                                                
+                                                <button
+                                                    class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
+                                                    prop:disabled=move || {
+                                                        let current = current_page.get();
+                                                        let total = total_pages.get();
+                                                        current + 1 >= total.max(1)
+                                                    }
+                                                    on:click=move |_| {
+                                                        let total = total_pages.get();
+                                                        set_current_page.update(|p| {
+                                                            if *p + 1 < total {
+                                                                *p += 1;
+                                                            }
+                                                        })
+                                                    }
+                                                >
+                                                    "Next"
+                                                </button>
+                                            </div>
+                                        </Show>
                                     </div>
                                 }.into_any(),
                                 Err(e) => view! {
