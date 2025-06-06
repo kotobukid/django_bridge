@@ -1,7 +1,7 @@
-use leptos::prelude::*;
-use crate::types::ColorFilter;
-use crate::components::IconRed;
 use crate::components::svg_definition::{IconBlack, IconBlue, IconColorless, IconGreen, IconWhite};
+use crate::components::IconRed;
+use crate::types::ColorFilter;
+use leptos::prelude::*;
 
 #[component]
 fn ColorButton(
@@ -23,7 +23,7 @@ fn ColorButton(
             _ => false,
         }
     });
-    
+
     view! {
         <button
             class=move || {
@@ -47,46 +47,43 @@ pub fn ColorSelector(
     set_color_filter: WriteSignal<ColorFilter>,
 ) -> impl IntoView {
     let toggle_color = move |color: &'static str| {
-        set_color_filter.update(|filter| {
-            match color {
-                "white" => filter.white = !filter.white,
-                "blue" => filter.blue = !filter.blue,
-                "black" => filter.black = !filter.black,
-                "red" => filter.red = !filter.red,
-                "green" => filter.green = !filter.green,
-                "colorless" => filter.colorless = !filter.colorless,
-                _ => {}
-            }
+        set_color_filter.update(|filter| match color {
+            "white" => filter.white = !filter.white,
+            "blue" => filter.blue = !filter.blue,
+            "black" => filter.black = !filter.black,
+            "red" => filter.red = !filter.red,
+            "green" => filter.green = !filter.green,
+            "colorless" => filter.colorless = !filter.colorless,
+            _ => {}
         });
     };
-    
+
     let clear_all = move |_| {
         set_color_filter.set(ColorFilter::new());
     };
 
     view! {
         <div class="bg-white rounded-lg shadow p-4">
-            <h2 class="text-lg font-semibold mb-4">"Color Filter"</h2>
             <div class="flex flex-wrap gap-2">
-                <ColorButton color="white" color_filter=color_filter on_click=toggle_color bg_class="bg-white text-gray-800 border border-gray-300">
+                <ColorButton color="white" color_filter=color_filter on_click=toggle_color bg_class="bg-amber-100 border border-gray-300">
                     <IconWhite />
                 </ColorButton>
-                <ColorButton color="blue" color_filter=color_filter on_click=toggle_color bg_class="bg-blue-500 text-white">
-                    <IconBlue />
-                </ColorButton>
-                <ColorButton color="black" color_filter=color_filter on_click=toggle_color bg_class="bg-gray-900 text-white">
-                    <IconBlack />
-                </ColorButton>
-                <ColorButton color="red" color_filter=color_filter on_click=toggle_color bg_class="bg-red-500 text-white">
+                <ColorButton color="red" color_filter=color_filter on_click=toggle_color bg_class="bg-rose-400">
                     <IconRed />
                 </ColorButton>
-                <ColorButton color="green" color_filter=color_filter on_click=toggle_color bg_class="bg-green-500 text-white">
+                <ColorButton color="blue" color_filter=color_filter on_click=toggle_color bg_class="bg-sky-300">
+                    <IconBlue />
+                </ColorButton>
+                <ColorButton color="green" color_filter=color_filter on_click=toggle_color bg_class="bg-emerald-400">
                     <IconGreen />
                 </ColorButton>
-                <ColorButton color="colorless" color_filter=color_filter on_click=toggle_color bg_class="bg-gray-500 text-white">
+                <ColorButton color="black" color_filter=color_filter on_click=toggle_color bg_class="bg-violet-400">
+                    <IconBlack />
+                </ColorButton>
+                <ColorButton color="colorless" color_filter=color_filter on_click=toggle_color bg_class="bg-gray-300">
                     <IconColorless />
                 </ColorButton>
-                
+
                 <Show when=move || color_filter.get().has_any()>
                     <button
                         class="color-selector-button bg-gray-300 text-gray-700"

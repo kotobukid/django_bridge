@@ -4,7 +4,7 @@
 
 @layer components {
     .color-selector-button {
-        @apply px-4 py-2 rounded-lg transition-all duration-200 font-medium;
+        @apply p-1 rounded-lg transition-all duration-200 font-medium;
         /* 非選択時も同じ太さの透明ボーダーを適用してレイアウトシフトを防止 */
         @apply ring-4 ring-offset-2 ring-transparent border-2 border-transparent;
     }
