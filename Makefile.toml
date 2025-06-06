@@ -14,19 +14,19 @@ script = [
 ]
 
 [tasks.static]
-description = "Generate Rust data code"
+description = "DBに保存済みのデータをRustコードとして書き出す"
 script = [
     "cd static_generator",
     "cargo run --release"
 ]
 
 [tasks.manage]
-description = "Run Django manage.py commands from the Rust project root"
+description = "Django manage.pyの拡張コマンドを実行"
 args = ["./table_definition/manage.py", "${@}"]
 command = "python"
 
 [tasks.syncdb]
-description = "Run syncdb binary"
+description = "Djangoのモデルの変更をRustのコードに追従させる"
 command = "cargo"
 env = { "CARGO_MANIFEST_DIR" = "${CARGO_MAKE_WORKSPACE_WORKING_DIRECTORY}/webapp" }
 args = [
@@ -40,7 +40,6 @@ description = "Run npm run generate in the ./front Nuxt.js project"
 cwd = "./front"
 command = "npm"
 args = ["run", "generate"]
-#env = { "WEB_PORT" = "8001" }
 
 [tasks.front_server]
 description = "Run npm run dev in the ./front Nuxt.js project"
@@ -49,79 +48,25 @@ command = "npm"
 args = ["run", "dev"]
 env = { "WEB_PORT" = "${BACKEND_PORT}" }
 
-[tasks.wasm]
-#description = "build wasm by wasm-pack (debug build) and organize files"
-#script = [
-#    "mkdir -p ./front/static/pkg",
-#    "cd datapack && wasm-pack build --target web --out-dir ../front/public/pkg",
-#    "mv ./front/public/pkg/datapack.d.ts ./front/static/pkg/datapack.d.ts",
-#    "mv ./front/public/pkg/datapack.js ./front/static/pkg/datapack.js",
-#    "mv ./front/public/pkg/datapack_bg.wasm.d.ts ./front/static/pkg/datapack_bg.wasm.d.ts",
-#    "mv ./front/public/pkg/package.json ./front/static/pkg/package.json"
-#]
-#
-#[tasks.wasm2]
-#description = "build wasm by wasm-pack (debug build) and organize files"
-#script = '''
-#bash -c "
-#mkdir -p ./front/static/pkg
-#cd datapack
-#wasm-pack build --target web --out-dir ../front/public/pkg
-#cd ..
-#mv ./front/public/pkg/datapack.d.ts ./front/static/pkg/datapack.d.ts
-#mv ./front/public/pkg/datapack.js ./front/static/pkg/datapack.js
-#mv ./front/public/pkg/datapack_bg.wasm.d.ts ./front/static/pkg/datapack_bg.wasm.d.ts
-#mv ./front/public/pkg/package.json ./front/static/pkg/package.json
-#"
-#'''
-#
-#
-#[tasks.wasm3]
-description = "build wasm by wasm-pack (debug build) and organize files"
-script = '''
-mkdir front\\static\\pkg >nul 2>&1
-cd datapack && wasm-pack build --target web --out-dir ..\\front\\public\\pkg && cd ..
-move /Y front\\public\\pkg\\datapack.d.ts front\\static\\pkg\\datapack.d.ts
-move /Y front\\public\\pkg\\datapack.js front\\static\\pkg\\datapack.js
-move /Y front\\public\\pkg\\datapack_bg.wasm.d.ts front\\static\\pkg\\datapack_bg.wasm.d.ts
-move /Y front\\public\\pkg\\package.json front\\static\\pkg\\package.json
-copy /Y front\\public\\pkg\\.gitignore front\\static\\pkg\\.gitignore
-'''
-[tasks.wasm_linux]
-description = "build wasm by wasm-pack (debug build) and organize files"
-script = '''
-mkdir -p front/static/pkg 2>/dev/null
-cd datapack && wasm-pack build --target web --out-dir ../front/public/pkg && cd ..
-mv front/public/pkg/datapack.d.ts front/static/pkg/datapack.d.ts
-mv front/public/pkg/datapack.js front/static/pkg/datapack.js
-mv front/public/pkg/datapack_bg.wasm.d.ts front/static/pkg/datapack_bg.wasm.d.ts
-mv front/public/pkg/package.json front/static/pkg/package.json
-cp front/public/pkg/.gitignore front/static/pkg/.gitignore
-'''
-
-# 実行順序
-# shared/webapp scrape
-#static
-#wasm_linux
-#generate
-#server
-
 [tasks.trunk_serve]
-cwd="./wasm_front"
+description = "Leptosアプリ開発サーバーを起動"
+cwd = "./wasm_front"
 command = "trunk"
 args = ["serve"]
 
 [tasks.trunk_build]
-cwd="./wasm_front"
+description = "Leptosアプリをビルド（AIエージェントに示す）"
+cwd = "./wasm_front"
 command = "trunk"
 args = ["build"]
 
 [tasks.trunk_release]
-cwd="./wasm_front"
+cwd = "./wasm_front"
 command = "trunk"
 args = ["build", "--release", "--minify"]
 
 [tasks.trunk_pages]
-cwd="./wasm_front"
+description = "Github Pages用にビルドする"
+cwd = "./wasm_front"
 command = "trunk"
 args = ["build", "--release", "--minify", "--config", "Trunk-pages.toml"]
