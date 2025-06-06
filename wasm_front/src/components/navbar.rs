@@ -66,8 +66,8 @@ fn get_feature_data() -> (Vec<FeatureTag>, HashMap<String, Vec<CardFeature>>) {
 
 #[component]
 pub fn NavBar(
-    selected_features: ReadSignal<HashMap<i32, bool>>,
-    set_selected_features: WriteSignal<HashMap<i32, bool>>,
+    _selected_features: ReadSignal<HashMap<i32, bool>>,
+    _set_selected_features: WriteSignal<HashMap<i32, bool>>,
     on_feature_change: WriteSignal<Vec<String>>, // 追加: feature変更時のコールバック
 ) -> impl IntoView {
     let (feature_tags, features_by_tag) = get_feature_data();

@@ -53,8 +53,8 @@ pub fn CardPage() -> impl IntoView {
     view! {
         <div class="min-h-screen bg-gray-100">
             <NavBar
-                selected_features=selected_features
-                set_selected_features=set_selected_features
+                _selected_features=selected_features
+                _set_selected_features=set_selected_features
                 on_feature_change=set_selected_feature_names
             />
             

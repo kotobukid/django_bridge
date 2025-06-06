@@ -111,6 +111,11 @@ cwd="./wasm_front"
 command = "trunk"
 args = ["serve"]
 
+[tasks.trunk_build]
+cwd="./wasm_front"
+command = "trunk"
+args = ["build"]
+
 [tasks.trunk_release]
 cwd="./wasm_front"
 command = "trunk"

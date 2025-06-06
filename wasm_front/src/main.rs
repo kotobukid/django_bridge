@@ -7,11 +7,13 @@ mod pages;
 mod types;
 
 use pages::{CardPage, HomePage};
+use components::SvgDefinition;
 
 #[component]
 fn App() -> impl IntoView {
     view! {
         <Router>
+            <SvgDefinition />
             <div class="min-h-screen bg-gray-100">
                 <Routes fallback=|| "Page not found.">
                     <Route path=path!("/") view=HomePage/>

@@ -1,5 +1,45 @@
 use leptos::prelude::*;
 use crate::types::ColorFilter;
+use crate::components::IconRed;
+use crate::components::svg_definition::{IconBlack, IconBlue, IconColorless, IconGreen, IconWhite};
+
+#[component]
+fn ColorButton(
+    color: &'static str,
+    color_filter: ReadSignal<ColorFilter>,
+    on_click: impl Fn(&'static str) + 'static,
+    bg_class: &'static str,
+    children: Children,
+) -> impl IntoView {
+    let is_active = Memo::new(move |_| {
+        let filter = color_filter.get();
+        match color {
+            "white" => filter.white,
+            "blue" => filter.blue,
+            "black" => filter.black,
+            "red" => filter.red,
+            "green" => filter.green,
+            "colorless" => filter.colorless,
+            _ => false,
+        }
+    });
+    
+    view! {
+        <button
+            class=move || {
+                let base = format!("color-selector-button {}", bg_class);
+                if is_active.get() {
+                    format!("{} color-selector-active", base)
+                } else {
+                    base
+                }
+            }
+            on:click=move |_| on_click(color)
+        >
+            {children()}
+        </button>
+    }
+}
 
 #[component]
 pub fn ColorSelector(
@@ -23,48 +63,29 @@ pub fn ColorSelector(
     let clear_all = move |_| {
         set_color_filter.set(ColorFilter::new());
     };
-    
-    let color_button = move |color: &'static str, label: &'static str, bg_class: &'static str| {
-        let is_active = Memo::new(move |_| {
-            let filter = color_filter.get();
-            match color {
-                "white" => filter.white,
-                "blue" => filter.blue,
-                "black" => filter.black,
-                "red" => filter.red,
-                "green" => filter.green,
-                "colorless" => filter.colorless,
-                _ => false,
-            }
-        });
-        
-        view! {
-            <button
-                class=move || {
-                    let base = format!("color-selector-button {}", bg_class);
-                    if is_active.get() {
-                        format!("{} color-selector-active", base)
-                    } else {
-                        base
-                    }
-                }
-                on:click=move |_| toggle_color(color)
-            >
-                {label}
-            </button>
-        }
-    };
 
     view! {
         <div class="bg-white rounded-lg shadow p-4">
             <h2 class="text-lg font-semibold mb-4">"Color Filter"</h2>
             <div class="flex flex-wrap gap-2">
-                {color_button("white", "White", "bg-white text-gray-800 border border-gray-300")}
-                {color_button("blue", "Blue", "bg-blue-500 text-white")}
-                {color_button("black", "Black", "bg-gray-900 text-white")}
-                {color_button("red", "Red", "bg-red-500 text-white")}
-                {color_button("green", "Green", "bg-green-500 text-white")}
-                {color_button("colorless", "Colorless", "bg-gray-500 text-white")}
+                <ColorButton color="white" color_filter=color_filter on_click=toggle_color bg_class="bg-white text-gray-800 border border-gray-300">
+                    <IconWhite />
+                </ColorButton>
+                <ColorButton color="blue" color_filter=color_filter on_click=toggle_color bg_class="bg-blue-500 text-white">
+                    <IconBlue />
+                </ColorButton>
+                <ColorButton color="black" color_filter=color_filter on_click=toggle_color bg_class="bg-gray-900 text-white">
+                    <IconBlack />
+                </ColorButton>
+                <ColorButton color="red" color_filter=color_filter on_click=toggle_color bg_class="bg-red-500 text-white">
+                    <IconRed />
+                </ColorButton>
+                <ColorButton color="green" color_filter=color_filter on_click=toggle_color bg_class="bg-green-500 text-white">
+                    <IconGreen />
+                </ColorButton>
+                <ColorButton color="colorless" color_filter=color_filter on_click=toggle_color bg_class="bg-gray-500 text-white">
+                    <IconColorless />
+                </ColorButton>
                 
                 <Show when=move || color_filter.get().has_any()>
                     <button
