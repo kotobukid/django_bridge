@@ -434,7 +434,7 @@ pub fn parse_feature_name(name: &str) -> Result<feature::feature::CardFeature, S
     match name {
         "ダブルクラッシュ" => Ok(CardFeature::DoubleCrush),
         "ハンデス" => Ok(CardFeature::DiscardOpponent),
-        "ランダムハンデス" => Ok(CardFeature::RandomDiscard),
+        "ハンデス(強)" => Ok(CardFeature::RandomDiscard),
         "ドロー" => Ok(CardFeature::Draw),
         "アサシン" => Ok(CardFeature::Assassin),
         "凍結" => Ok(CardFeature::Freeze),
