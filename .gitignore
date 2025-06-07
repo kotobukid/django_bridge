@@ -10,3 +10,5 @@ datapack/src/gen/cards.rs
 /front/bun.lock
 dist
 dist-pages
+custom_cache
+text_cache

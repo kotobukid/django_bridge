@@ -70,3 +70,29 @@ description = "Github Pages用にビルドする"
 cwd = "./wasm_front"
 command = "trunk"
 args = ["build", "--release", "--minify", "--config", "Trunk-pages.toml"]
+
+[tasks.scraper]
+description = "WIXOSSカード情報をスクレイピングしてデータベースに保存 (例: cargo make scraper booster WXDi-P16)"
+command = "cargo"
+args = [
+    "run",
+    "--release",
+    "--package",
+    "wxdb-scraper",
+    "--",
+    "${@}"
+]
+
+[tasks.scraper-fast]
+description = "高速スクレイピング（遅延時間短縮）"
+command = "cargo"
+args = [
+    "run",
+    "--release",
+    "--package",
+    "wxdb-scraper",
+    "--",
+    "${@}",
+    "--min-delay", "200",
+    "--max-delay", "800"
+]

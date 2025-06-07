@@ -2,7 +2,7 @@
 members = [
     "datapack",
     "server", "static_generator",
-    "syncdb",
+    "syncdb", "scraper",
     "shared/webapp",
     "shared/models",
     "shared/feature", "shared/color", "shared/cacher", "shared/injector",
