@@ -17,7 +17,7 @@ git add dist-pages/ --force
 git commit -m "Update dist files with relative paths for GitHub Pages"
 
 # gh-pagesブランチへのデプロイ
-git subtree push --prefix=dist-pages github gh-pages
+git subtree push --prefix=dist-pages github gh-pages --force
 
 # 元のブランチに戻る
 git checkout -
