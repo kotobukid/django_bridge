@@ -17,7 +17,20 @@ use webapp::state::AppState;
 
 #[tokio::main]
 async fn main() -> Result<(), sqlx::Error> {
-    from_filename("../.env").ok();
+    let workspace_env = format!("{}/.env", env::var("CARGO_WORKSPACE_DIR").unwrap_or_default());
+    let env_paths = [
+        ".env",                    // カレントディレクトリ
+        "../.env",                 // 一つ上のディレクトリ
+        "../../.env",              // 二つ上のディレクトリ（nested crateの場合）
+        workspace_env.as_str(),    // CARGO_WORKSPACE_DIRが設定されている場合
+    ];
+
+    for path in &env_paths {
+        if std::path::Path::new(path).exists() {
+            from_filename(path).ok();
+            break;
+        }
+    }
 
     let web_port: u16 = env::var("WEB_PORT").unwrap_or("8000".to_string()).parse().unwrap();
     let django_admin_port: u16 = env::var("DJANGO_ADMIN_PORT").unwrap_or("8200".to_string()).parse().unwrap();

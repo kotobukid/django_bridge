@@ -27,8 +27,20 @@ use webapp::repositories::{CardRepository, CardTypeRepository, ProductRepository
 ///
 /// .envファイルから環境変数を読み込み、PostgreSQLデータベースへの接続プールを作成します。
 async fn create_db() -> Result<Pool<Postgres>, Box<dyn std::error::Error>> {
-    // .envファイルを読み込む
-    from_filename("../.env").ok();
+    let workspace_env = format!("{}/.env", env::var("CARGO_WORKSPACE_DIR").unwrap_or_default());
+    let env_paths = [
+        ".env",                    // カレントディレクトリ
+        "../.env",                 // 一つ上のディレクトリ
+        "../../.env",              // 二つ上のディレクトリ（nested crateの場合）
+        workspace_env.as_str(),    // CARGO_WORKSPACE_DIRが設定されている場合
+    ];
+
+    for path in &env_paths {
+        if std::path::Path::new(path).exists() {
+            from_filename(path).ok();
+            break;
+        }
+    }
 
     // 環境変数からデータベース接続情報を取得
     let db_url = {

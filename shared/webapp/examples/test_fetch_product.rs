@@ -8,7 +8,20 @@ use webapp::repositories::ProductRepository;
 
 #[tokio::main]
 async fn main() {
-    from_filename("../.env").ok();
+    let workspace_env = format!("{}/.env", env::var("CARGO_WORKSPACE_DIR").unwrap_or_default());
+    let env_paths = [
+        ".env",                    // カレントディレクトリ
+        "../.env",                 // 一つ上のディレクトリ
+        "../../.env",              // 二つ上のディレクトリ（nested crateの場合）
+        workspace_env.as_str(),    // CARGO_WORKSPACE_DIRが設定されている場合
+    ];
+
+    for path in &env_paths {
+        if std::path::Path::new(path).exists() {
+            from_filename(path).ok();
+            break;
+        }
+    }
 
     let db_url = {
         let host = env::var("DB_HOST").expect("DB_HOST not found in .env");

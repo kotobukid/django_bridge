@@ -46,6 +46,24 @@ async fn create_db_pool() -> Result<Pool<Postgres>, Box<dyn std::error::Error>> 
 }
 
 fn build_database_url() -> Result<String, Box<dyn std::error::Error>> {
+    let workspace_env = format!(
+        "{}/.env",
+        env::var("CARGO_WORKSPACE_DIR").unwrap_or_default()
+    );
+    let env_paths = [
+        ".env",                 // カレントディレクトリ
+        "../.env",              // 一つ上のディレクトリ
+        "../../.env",           // 二つ上のディレクトリ（nested crateの場合）
+        workspace_env.as_str(), // CARGO_WORKSPACE_DIRが設定されている場合
+    ];
+
+    for path in &env_paths {
+        if std::path::Path::new(path).exists() {
+            from_filename(path).ok();
+            break;
+        }
+    }
+
     let host = env::var("DB_HOST")?;
     let port = env::var("DB_PORT")?;
     let user = env::var("DB_USER")?;
