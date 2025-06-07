@@ -21,6 +21,7 @@ use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 use rayon::prelude::*;
+use analyzer::{AnalyzeRule, Analyzer};
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;
@@ -637,47 +638,84 @@ fn wrap_by_gainskill(html: String) -> String {
     replaced
 }
 
+/// A rule that detects card features in text
+struct CardFeatureRule {
+    // This rule doesn't store any patterns, it uses create_detect_patterns() directly
+}
+
+impl CardFeatureRule {
+    fn new() -> Self {
+        Self {}
+    }
+
+    // Apply replace patterns and return the replaced text
+    fn apply_replace(&self, text: &str) -> String {
+        let (replace_patterns, _) = &create_detect_patterns();
+
+        replace_patterns
+            .iter()
+            .fold(text.to_string(), |current_text: String, pat: &ReplacePattern| {
+                let re = &pat.pattern_r;
+                let replaced = re.replace_all(&current_text, pat.replace_to).to_string();
+                replaced
+            })
+    }
+}
+
+impl AnalyzeRule<CardFeature> for CardFeatureRule {
+    fn detect(&self, text: &str) -> HashSet<CardFeature> {
+        let mut features = HashSet::new();
+
+        let (replace_patterns, detect_patterns) = &create_detect_patterns();
+
+        // First check replace patterns
+        for pat in replace_patterns {
+            let re = &pat.pattern_r;
+            if re.is_match(text) {
+                features.extend(pat.features_detected.iter().cloned());
+            }
+        }
+
+        // Then check detect patterns using parallel iterator
+        let detected_features: HashSet<CardFeature> = detect_patterns
+            .par_iter()
+            .filter_map(|pat: &DetectPattern| {
+                let re = &pat.pattern_r;
+
+                // Only if the pattern matches
+                if re.is_match(text) {
+                    Some(pat.features_detected.iter().cloned().collect::<HashSet<CardFeature>>())
+                } else {
+                    None
+                }
+            })
+            .reduce(HashSet::new, |mut acc, detected| {
+                acc.extend(detected); // Combine results from each thread
+                acc
+            });
+
+        // Combine all detected features
+        features.extend(detected_features);
+
+        features
+    }
+}
+
 fn rule_explain_to_feature(text: String) -> (String, HashSet<CardFeature>) {
     let text = replace_img_with_alt(text);
 
-    let mut features: HashSet<CardFeature> = HashSet::new();
+    // Create a single rule that handles both replace and detect patterns
+    let rule = CardFeatureRule::new();
 
-    let (replace_patterns, detect_patterns) = &create_detect_patterns();
+    // Apply replace patterns to get the replaced text
+    let replaced_text = rule.apply_replace(&text);
 
-    let replaced_text =
-        replace_patterns
-            .into_iter()
-            .fold(text, |current_text: String, pat: &ReplacePattern| {
-                let re = &pat.pattern_r;
+    // Create analyzer
+    let mut analyzer = Analyzer::new();
+    analyzer.add_rule(Box::new(rule));
 
-                if re.is_match(&current_text) {
-                    features.extend(pat.features_detected.iter().cloned());
-                }
-
-                let replaced = re.replace_all(&current_text, pat.replace_to).to_string();
-                replaced
-            });
-
-    // detect_patternsの並列処理結果をHashSetとして収集
-    let detected_features: HashSet<CardFeature> = detect_patterns
-        .par_iter()
-        .filter_map(|pat: &DetectPattern| {
-            let re = &pat.pattern_r;
-
-            // 正規表現に一致した場合のみ
-            if re.is_match(&replaced_text) {
-                Some(pat.features_detected.iter().cloned().collect::<HashSet<CardFeature>>())
-            } else {
-                None
-            }
-        })
-        .reduce(HashSet::new, |mut acc, detected| {
-            acc.extend(detected); // 各スレッドの結果を統合
-            acc
-        });
-
-    // 最終的にfeaturesと並列で検出したdetected_featuresを統合
-    features.extend(detected_features);
+    // Analyze the replaced text to detect features
+    let features = analyzer.analyze(&replaced_text);
 
     (replaced_text, features)
 }
