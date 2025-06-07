@@ -1,5 +1,29 @@
 use leptos::prelude::*;
 use datapack::CardExport;
+use crate::components::svg_definition::{IconWhite, IconBlue, IconRed, IconBlack, IconGreen, IconColorless};
+
+fn get_colors_from_bits(bits: i32) -> Vec<i32> {
+    let mut colors = Vec::new();
+    if bits & (1 << 1) != 0 { colors.push(1); } // White
+    if bits & (1 << 2) != 0 { colors.push(2); } // Blue
+    if bits & (1 << 3) != 0 { colors.push(3); } // Red
+    if bits & (1 << 4) != 0 { colors.push(4); } // Black
+    if bits & (1 << 5) != 0 { colors.push(5); } // Green
+    if bits & (1 << 6) != 0 { colors.push(6); } // Colorless
+    colors
+}
+
+fn render_color_icon(color: i32) -> impl IntoView {
+    match color {
+        1 => view! { <IconWhite /> }.into_any(),
+        2 => view! { <IconBlue /> }.into_any(),
+        3 => view! { <IconRed /> }.into_any(),
+        4 => view! { <IconBlack /> }.into_any(),
+        5 => view! { <IconGreen /> }.into_any(),
+        6 => view! { <IconColorless /> }.into_any(),
+        _ => view! { <span></span> }.into_any(),
+    }
+}
 
 #[component]
 pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
@@ -17,7 +41,13 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-lg" style="color: #374151;">
-                                        <a href=card_url target="_blank">{card.name()}</a>
+                                        <a href=card_url target="_blank" class="flex items-center gap-1">
+                                            {
+                                                let colors = get_colors_from_bits(card.color() as i32);
+                                                colors.into_iter().map(|color| render_color_icon(color)).collect_view()
+                                            }
+                                            {card.name()}
+                                        </a>
                                     </h3>
                                     <p class="text-sm mt-1" style="color: #374151; opacity: 0.8;">
                                         {card.code()}
