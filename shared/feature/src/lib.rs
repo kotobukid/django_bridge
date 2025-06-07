@@ -54,7 +54,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 130;
+pub const PATTERNS_AMOUNT_D: usize = 132;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -399,6 +399,14 @@ pub fn create_detect_patterns() -> (
         ],
         detect_pattern![
             r"見ないで選び、捨てさせる。",
+            feature::CardFeature::RandomDiscard
+        ],
+        detect_pattern![
+            r"対戦相手の手札を見て",
+            feature::CardFeature::RandomDiscard
+        ],
+        detect_pattern![    // コードラビラント・ヨグソトス専用
+            r"手札を３枚まで見ないで選び、それらを見て１枚をデッキの一番下に置く",
             feature::CardFeature::RandomDiscard
         ],
         detect_pattern![r"対象になったとき", feature::CardFeature::OnTouch],

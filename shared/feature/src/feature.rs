@@ -119,7 +119,7 @@ define_features! {
     DoubleCrush => { tag: Offensive, bit_shift: (1, 0), label: "ダブルクラッシュ" },
     // TripleCrush => { tag: Offensive, bit_shift: (2, 0), label: "トリプルクラッシュ" },
     DiscardOpponent => { tag: Disturb, bit_shift: (3, 0), label: "ハンデス" },
-    RandomDiscard => { tag: Disturb, bit_shift: (4, 0), label: "ランダムハンデス" },
+    RandomDiscard => { tag: Disturb, bit_shift: (4, 0), label: "ハンデス(強)" },
     Draw => { tag: Enhance, bit_shift: (5, 0), label: "ドロー" },
     Assassin => { tag: Lethal, bit_shift: (6, 0), label: "アサシン" },
     Freeze => { tag: Disturb, bit_shift: (7, 0), label: "凍結" },
