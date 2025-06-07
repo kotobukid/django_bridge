@@ -20,7 +20,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     for product in products {
         let product_cacher = ProductCacher::new(cache_dir.clone(), product);
-        
+
         match product_cacher.cache_all_pages().await {
             Ok(_) => println!("Successfully cached {}", product_cacher),
             Err(e) => eprintln!("Error caching {}: {}", product_cacher, e),
@@ -32,8 +32,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn create_db_pool() -> Result<Pool<Postgres>, Box<dyn std::error::Error>> {
-    from_filename("../.env").ok();
-
     let db_url = build_database_url()?;
 
     let pool = PgPoolOptions::new()

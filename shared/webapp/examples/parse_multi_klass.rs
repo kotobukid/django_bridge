@@ -5,11 +5,11 @@ use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
 use std::env;
 
+use models::card::CreateCard;
+use models::gen::django_models::WixCardKlassRel;
+use models::klass::create_klass;
 use std::sync::Arc;
 use std::time::Duration;
-use models::gen::django_models::WixCardKlassRel;
-use models::card::CreateCard;
-use models::klass::create_klass;
 use webapp::repositories::{CardRepository, KlassRelRepository};
 
 async fn create_db() -> Pool<Postgres> {
@@ -198,7 +198,7 @@ async fn main() -> Result<(), sqlx::Error> {
     let pool = create_db().await;
     let pool = Arc::new(pool);
     let mut klass_rel_repo: KlassRelRepository = KlassRelRepository::new(pool.clone());
-    klass_rel_repo.create_cache().await;
+    let _ = klass_rel_repo.create_cache().await;
 
     let signi = Signi::from_source(source);
 
@@ -209,7 +209,11 @@ async fn main() -> Result<(), sqlx::Error> {
 
     let klass_id = match klass_found {
         Some(id) => id,
-        None => klass_rel_repo.create_klass_if_not_exists(klass).await?,
+        None => klass_rel_repo
+            .create_klass_if_not_exists(klass)
+            .await
+            .ok()
+            .unwrap(),
     };
 
     let card: Card = signi.into();
@@ -224,7 +228,7 @@ async fn main() -> Result<(), sqlx::Error> {
         klass_id,
     };
 
-    klass_rel_repo.save(rel.clone()).await;
+    let _ = klass_rel_repo.save(rel.clone()).await;
 
     // println!("{:?}", rel);
 

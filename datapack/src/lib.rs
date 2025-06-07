@@ -1,9 +1,9 @@
-pub mod gen;
 pub mod filter;
+pub mod gen;
 
 use color;
 use feature::feature::export_features;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
 
@@ -347,13 +347,23 @@ pub fn fetch_by_features_and(features: &[i32]) -> String {
 #[wasm_bindgen]
 pub fn fetch_by_combined_bits_and(bit1: i64, bit2: i64) -> String {
     let cards = filter::filter_by_combined_bits(bit1, bit2, "and");
-    format!("Found {} cards (AND: bit1={}, bit2={})", cards.len(), bit1, bit2)
+    format!(
+        "Found {} cards (AND: bit1={}, bit2={})",
+        cards.len(),
+        bit1,
+        bit2
+    )
 }
 
 #[wasm_bindgen]
 pub fn fetch_by_combined_bits_or(bit1: i64, bit2: i64) -> String {
     let cards = filter::filter_by_combined_bits(bit1, bit2, "or");
-    format!("Found {} cards (OR: bit1={}, bit2={})", cards.len(), bit1, bit2)
+    format!(
+        "Found {} cards (OR: bit1={}, bit2={})",
+        cards.len(),
+        bit1,
+        bit2
+    )
 }
 
 // Native Rust functions for Leptos (not exposed to WASM)
@@ -384,31 +394,34 @@ pub fn bits_to_gradient_native(bits: i32) -> String {
     color::Colors::bits_to_gradient(bits)
 }
 
-pub fn fetch_by_features_and_native(cards: &[CardExport], feature_names: &[String]) -> Vec<CardExport> {
-    use feature::feature::{CardFeature, HashSetToBits};
+pub fn fetch_by_features_and_native(
+    cards: &[CardExport],
+    feature_names: &[String],
+) -> Vec<CardExport> {
+    use feature::feature::HashSetToBits;
     use std::collections::HashSet;
     use std::str::FromStr;
-    
+
     // feature名からCardFeatureに変換してビットを計算
     let mut feature_set = HashSet::new();
-    
+
     for name in feature_names {
         if let Ok(feature) = parse_feature_name(name) {
             feature_set.insert(feature);
         }
     }
-    
+
     if feature_set.is_empty() {
         return cards.to_vec();
     }
-    
+
     let (bits1, bits2) = feature_set.to_bits();
-    
+
     cards
         .iter()
         .filter(|c| {
-            (bits1 == 0 || (c.feature_bits1 & bits1) == bits1) &&
-            (bits2 == 0 || (c.feature_bits2 & bits2) == bits2)
+            (bits1 == 0 || (c.feature_bits1 & bits1) == bits1)
+                && (bits2 == 0 || (c.feature_bits2 & bits2) == bits2)
         })
         .cloned()
         .collect()
@@ -417,7 +430,7 @@ pub fn fetch_by_features_and_native(cards: &[CardExport], feature_names: &[Strin
 // feature名からCardFeatureに変換する関数
 pub fn parse_feature_name(name: &str) -> Result<feature::feature::CardFeature, String> {
     use feature::feature::CardFeature;
-    
+
     match name {
         "ダブルクラッシュ" => Ok(CardFeature::DoubleCrush),
         "ハンデス" => Ok(CardFeature::DiscardOpponent),
@@ -504,25 +517,24 @@ pub fn parse_feature_name(name: &str) -> Result<feature::feature::CardFeature, S
 
 // 色とfeatureの複合フィルタリング関数（全てAND条件）
 pub fn fetch_by_colors_and_features_native(
-    cards: &[CardExport], 
-    color_bits: u32, 
-    feature_names: &[String]
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
 ) -> Vec<CardExport> {
-    use feature::feature::{CardFeature, HashSetToBits};
-    use std::collections::HashSet;
-    
+    use feature::feature::HashSetToBits;
+
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
     } else {
         fetch_by_colors_and(cards, color_bits)
     };
-    
+
     // 次にfeatureでフィルタリング
     if !feature_names.is_empty() {
         filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
     }
-    
+
     filtered_cards
 }
 
