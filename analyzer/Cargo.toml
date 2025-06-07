@@ -3,5 +3,9 @@ name = "analyzer"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "analyzer"
+path = "src/lib.rs"
+
 [dependencies]
-regex = "1.11.1"
+regex = { workspace = true }
