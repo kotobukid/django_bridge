@@ -54,7 +54,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 128;
+pub const PATTERNS_AMOUNT_D: usize = 130;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -504,6 +504,11 @@ pub fn create_detect_patterns() -> (
             feature::CardFeature::EnerOffensive
         ],
         detect_pattern![r"クラフトの《", feature::CardFeature::Craft],
+        detect_pattern![
+            r"あなたのルリグデッキに《コードイート　ケチャチャ》",
+            feature::CardFeature::Craft
+        ], // メル=チアーズ専用
+        detect_pattern![r"フェゾーネマジックのクラフト", feature::CardFeature::Craft],
         detect_pattern![r"シグニをアップ", feature::CardFeature::Up],
         detect_pattern![
             any_num!["シグニ", "体を対象とし、(それ|それら)をアップ"],
