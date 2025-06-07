@@ -5,11 +5,61 @@ use reqwest::{Client, Response, Url};
 use scraper::{Html, Selector};
 use serde::Deserialize;
 use std::collections::HashMap;
-use std::fmt::Display;
+use std::error::Error;
+use std::fmt::{Display, Formatter};
 use std::fs;
 use std::fs::{File, ReadDir};
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
+
+/// Error types for the analyze module
+#[derive(Debug)]
+pub enum AnalyzeError {
+    /// IO error
+    Io(std::io::Error),
+    /// Request error
+    Request(reqwest::Error),
+    /// Parse error
+    Parse(String),
+    /// Cache error
+    Cache(String),
+    /// Parent path missing
+    ParentPathMissing,
+}
+
+impl Display for AnalyzeError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AnalyzeError::Io(err) => write!(f, "IO error: {}", err),
+            AnalyzeError::Request(err) => write!(f, "Request error: {}", err),
+            AnalyzeError::Parse(msg) => write!(f, "Parse error: {}", msg),
+            AnalyzeError::Cache(msg) => write!(f, "Cache error: {}", msg),
+            AnalyzeError::ParentPathMissing => write!(f, "Parent path missing"),
+        }
+    }
+}
+
+impl Error for AnalyzeError {
+    fn source(&self) -> Option<&(dyn Error + 'static)> {
+        match self {
+            AnalyzeError::Io(err) => Some(err),
+            AnalyzeError::Request(err) => Some(err),
+            _ => None,
+        }
+    }
+}
+
+impl From<std::io::Error> for AnalyzeError {
+    fn from(err: std::io::Error) -> Self {
+        AnalyzeError::Io(err)
+    }
+}
+
+impl From<reqwest::Error> for AnalyzeError {
+    fn from(err: reqwest::Error) -> Self {
+        AnalyzeError::Request(err)
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct SearchQuery {
@@ -24,15 +74,25 @@ pub struct SearchQuery {
     keyword_target: String,
 }
 
+/// Type of product
 #[derive(Clone, Debug, PartialEq)]
 pub enum ProductType {
+    /// Booster pack with a product number
     Booster(String),
+    /// Starter deck with a product number
     Starter(String),
+    /// Promotion card
     PromotionCard,
+    /// Special card with a product number
     SpecialCard(String),
 }
 
 impl ProductType {
+    /// Get the relative path for the product type
+    ///
+    /// # Returns
+    ///
+    /// The relative path for the product type
     fn get_path_relative(&self) -> String {
         match self {
             ProductType::Booster(product_no) => format!("booster/{}", product_no),
@@ -42,6 +102,11 @@ impl ProductType {
         }
     }
 
+    /// Get the product code
+    ///
+    /// # Returns
+    ///
+    /// The product code
     pub fn code(&self) -> String {
         match self {
             ProductType::Booster(code) => code.into(),
@@ -50,20 +115,25 @@ impl ProductType {
             ProductType::SpecialCard(code) => code.into(),
         }
     }
-
 }
 
+/// Implementation of SearchQuery
 impl SearchQuery {
+    /// Create a new SearchQuery
+    ///
+    /// # Arguments
+    ///
+    /// * `product_type` - The type of product to search for
+    /// * `card_page` - The page number to search for
+    ///
+    /// # Returns
+    ///
+    /// A new SearchQuery
     fn new(product_type: &ProductType, card_page: i32) -> SearchQuery {
         let keyword = match product_type {
             ProductType::SpecialCard(product_no) => product_no.clone(),
             _ => "".into(),
         };
-
-        // let product_type = match product_type {
-        //     ProductType::SpecialCard(_) => "".to_string(),
-        //     _ => product_type.clone(),
-        // };
 
         SearchQuery {
             search: "1".into(),
@@ -74,10 +144,16 @@ impl SearchQuery {
             rarelity: "".into(),
             tab_item: "".into(),
             support_formats: "2".into(),
-            keyword_target: "カードNo,カード名,カードタイプ,テキスト,イラストレーター,フレーバー".into(),
+            keyword_target: "カードNo,カード名,カードタイプ,テキスト,イラストレーター,フレーバー"
+                .into(),
         }
     }
 
+    /// Get the product type as a string
+    ///
+    /// # Returns
+    ///
+    /// The product type as a string
     fn get_product_type(&self) -> String {
         match &self.product_type {
             ProductType::Booster(_product_no) => "booster".into(),
@@ -87,6 +163,11 @@ impl SearchQuery {
         }
     }
 
+    /// Convert the SearchQuery to a HashMap
+    ///
+    /// # Returns
+    ///
+    /// A HashMap containing the SearchQuery parameters
     fn to_hashmap(&self) -> HashMap<String, String> {
         let empty_product_no = String::from("");
 
@@ -95,7 +176,6 @@ impl SearchQuery {
             ProductType::Starter(product_no) => product_no,
             ProductType::PromotionCard => &empty_product_no,
             ProductType::SpecialCard(_) => &empty_product_no,
-            // ProductType::SpecialCard(product_no) => product_no,
         };
 
         HashMap::from_iter(vec![
@@ -112,17 +192,18 @@ impl SearchQuery {
         ])
     }
 
+    /// Get the filename for the cache file
+    ///
+    /// # Returns
+    ///
+    /// The filename for the cache file
     fn to_filename(&self) -> String {
         match &self.product_type {
-            ProductType::Booster(product_no)
-            | ProductType::Starter(product_no)=> {
+            ProductType::Booster(product_no) | ProductType::Starter(product_no) => {
                 format!("{}-{}.html", product_no, self.card_page)
             }
-            ProductType::SpecialCard(_product_no) => {
-                println!("AAA {:?}", self);
-                let p = format!("{}-{}.html", self.keyword, self.card_page);
-                println!("BBB {}", p);
-                p
+            ProductType::SpecialCard(_) => {
+                format!("{}-{}.html", self.keyword, self.card_page)
             }
             ProductType::PromotionCard => {
                 format!("p{}.html", self.card_page)
@@ -130,6 +211,16 @@ impl SearchQuery {
         }
     }
 
+    /// Check if the cache file exists
+    ///
+    /// # Arguments
+    ///
+    /// * `dir` - The directory to check for the cache file
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(String)` if the cache file exists
+    /// * `Err(std::io::Error)` if the cache file does not exist
     fn cache_check(&self, dir: String) -> Result<String, std::io::Error> {
         let product_path = match &self.product_type {
             ProductType::Booster(product_no) => format!("booster/{}", product_no),
@@ -137,24 +228,33 @@ impl SearchQuery {
             ProductType::PromotionCard => String::from("promotion"),
             ProductType::SpecialCard(product_no) => format!("special/{}", product_no),
         };
-        let path: PathBuf = PathBuf::from(format!("{}/{}", dir, product_path)).join(&self.to_filename());
-        println!("PATH: {:?}", path);
+        let path: PathBuf =
+            PathBuf::from(format!("{}/{}", dir, product_path)).join(&self.to_filename());
+
         if path.exists() {
-            println!("cache found");
             let mut file: File = File::open(&path)?;
             let mut contents = String::new();
             file.read_to_string(&mut contents)?;
             Ok(contents)
         } else {
-            println!("cache not found");
             Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "An unexpected error occurred.",
+                "Cache file not found",
             ))
         }
     }
 }
 
+/// Create a directory if it doesn't exist
+///
+/// # Arguments
+///
+/// * `rel_path` - The path to create
+///
+/// # Returns
+///
+/// * `Ok(())` if the directory was created or already exists
+/// * `Err(std::io::Error)` if an error occurred
 pub fn try_mkdir(rel_path: &Path) -> Result<(), std::io::Error> {
     if !rel_path.exists() {
         fs::create_dir_all(rel_path)?;
@@ -163,15 +263,24 @@ pub fn try_mkdir(rel_path: &Path) -> Result<(), std::io::Error> {
     Ok(())
 }
 
+/// Cache product index data
+///
+/// # Arguments
+///
+/// * `product_type` - The type of product to cache
+/// * `card_page` - The page number to cache
+///
+/// # Returns
+///
+/// * `Ok(())` if the data was successfully cached
+/// * `Err(AnalyzeError)` if an error occurred
 #[async_recursion]
 pub async fn cache_product_index(
     product_type: &ProductType,
     card_page: i32,
-) -> Result<(), reqwest::Error> {
+) -> Result<(), AnalyzeError> {
     let p_no = product_type.get_path_relative();
-
     let url = "https://www.takaratomy.co.jp/products/wixoss/card/card_list.php";
-
     let search_query: SearchQuery = SearchQuery::new(product_type, card_page);
 
     let main: Option<String> = match search_query.cache_check("./text_cache".to_string()) {
@@ -187,21 +296,24 @@ pub async fn cache_product_index(
                 .send()
                 .await?;
 
-            let body: String = res.text().await.unwrap();
+            // Use ? operator instead of unwrap
+            let body: String = res.text().await?;
 
             let cache_filename: PathBuf =
-                PathBuf::from(format!("./text_cache/{}", p_no))
-                .join(&search_query.to_filename());
+                PathBuf::from(format!("./text_cache/{}", p_no)).join(&search_query.to_filename());
             println!("CFN {:?}", cache_filename);
+
             if let Some(parent_path) = cache_filename.parent() {
-                try_mkdir(parent_path).unwrap();
+                // Use ? operator instead of unwrap
+                try_mkdir(parent_path)?;
 
                 let content = find_one(&body, ".cardDip".into());
 
                 if let Some(element) = &content {
                     let file: Result<File, std::io::Error> = File::create(&cache_filename);
                     if let Ok(mut file_) = file {
-                        file_.write_all(element.as_bytes()).unwrap();
+                        // Use ? operator instead of unwrap
+                        file_.write_all(element.as_bytes())?;
                     }
                 }
                 content
@@ -211,16 +323,18 @@ pub async fn cache_product_index(
         }
     };
 
-    if let Some(count) = find_one(&main.unwrap(), "h3 p span".into()) {
+    // Handle the case where main is None
+    let main = main.ok_or_else(|| AnalyzeError::Parse("Failed to get main content".into()))?;
+
+    if let Some(count) = find_one(&main, "h3 p span".into()) {
         let count = extract_number(&count);
 
         if let Some(count) = count {
             let pages = (count / 21) + 1;
 
             if card_page < pages {
-                cache_product_index(product_type, card_page + 1)
-                    .await
-                    .unwrap();
+                // Use ? operator instead of unwrap
+                cache_product_index(product_type, card_page + 1).await?;
             }
         }
     } else {
@@ -230,17 +344,45 @@ pub async fn cache_product_index(
     Ok(())
 }
 
+/// Find the first element matching a selector in HTML content
+///
+/// # Arguments
+///
+/// * `content` - The HTML content to search
+/// * `selector` - The CSS selector to use
+///
+/// # Returns
+///
+/// * `Some(String)` if an element was found
+/// * `None` if no element was found or the selector is invalid
 pub fn find_one(content: &str, selector: String) -> Option<String> {
     let document: Html = Html::parse_document(content);
-    let main_selector: Selector = Selector::parse(selector.as_str()).unwrap();
 
-    // println!("{:?}", document.clone());
+    // Handle invalid selectors gracefully
+    let main_selector = match Selector::parse(selector.as_str()) {
+        Ok(selector) => selector,
+        Err(e) => {
+            eprintln!("Invalid selector '{}': {}", selector, e);
+            return None;
+        }
+    };
+
     document
         .select(&main_selector)
         .next()
         .map(|element| element.inner_html())
 }
 
+/// Collect card detail links from cached product index files
+///
+/// # Arguments
+///
+/// * `product_type` - The type of product to collect links for
+///
+/// # Returns
+///
+/// * `Ok(Vec<String>)` if links were found
+/// * `Err(())` if an error occurred
 pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec<String>, ()> {
     let product_root: String = product_type.get_path_relative();
     let path_s: String = format!("./text_cache/{}", product_root);
@@ -253,7 +395,6 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
 
     match files_result {
         Ok(files) => {
-            println!("{:?}", files);
             let all_text: String = files
                 .into_iter()
                 .map(|f| {
@@ -266,7 +407,6 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
                 .collect::<Vec<_>>()
                 .join("");
 
-            println!("AT {:?}", all_text);
             let parsed_html: Html = Html::parse_document(&all_text);
             let selector: Selector = Selector::parse("a.c-box").unwrap();
             let links: Vec<String> = parsed_html
@@ -274,7 +414,6 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
                 .map(|element| element.value().attr("href").unwrap_or("").to_owned())
                 .filter(|href| !href.is_empty())
                 .collect();
-            println!("LINKS {:?}", links);
             Ok(links)
         }
         Err(err) => {
@@ -284,10 +423,30 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
     }
 }
 
+/// Find all elements matching a selector in HTML content
+///
+/// # Arguments
+///
+/// * `content` - The HTML content to search
+/// * `selector` - The CSS selector to use
+///
+/// # Returns
+///
+/// A vector of inner HTML strings from the matching elements.
+/// Returns an empty vector if the selector is invalid.
 #[allow(dead_code)]
 pub fn find_many(content: &str, selector: String) -> Vec<String> {
     let document: Html = Html::parse_document(content);
-    let main_selector: Selector = Selector::parse(selector.as_str()).unwrap();
+
+    // Handle invalid selectors gracefully
+    let main_selector = match Selector::parse(selector.as_str()) {
+        Ok(selector) => selector,
+        Err(e) => {
+            eprintln!("Invalid selector '{}': {}", selector, e);
+            return Vec::new();
+        }
+    };
+
     let mut result: Vec<String> = Vec::new();
     for element in document.select(&main_selector) {
         result.push(element.inner_html());
@@ -295,28 +454,67 @@ pub fn find_many(content: &str, selector: String) -> Vec<String> {
     result
 }
 
+/// Extract a number from a string
+///
+/// # Arguments
+///
+/// * `s` - The string to extract a number from
+///
+/// # Returns
+///
+/// * `Some(i32)` if a number was found
+/// * `None` if no number was found
 pub fn extract_number(s: &str) -> Option<i32> {
     let digits: String = s.chars().filter(|c| c.is_ascii_digit()).collect();
     digits.parse().ok()
 }
 
+/// Query parameters for card details
 #[derive(Debug, Deserialize)]
 pub struct CardQuery {
+    /// The card type (usually "card_detail")
     card: String,
+    /// The card number
     card_no: String,
+    /// The directory to cache the card details
     cache_dir: Box<Path>,
 }
 
 impl CardQuery {
+    /// Get the relative filename for the cache file
+    ///
+    /// # Returns
+    ///
+    /// The relative filename for the cache file
     pub fn get_relative_filename(&self) -> String {
         let mut tokens: Vec<_> = self.card_no.split('-').collect();
-        let id = tokens.last().unwrap().to_string();
+
+        // Handle the case where there are no tokens
+        if tokens.is_empty() {
+            return format!("unknown/{}.html", self.card_no);
+        }
+
+        let id = tokens.last().unwrap_or(&"unknown").to_string();
         tokens.pop();
-        let dir: String = tokens.join("-");
+        let dir: String = if tokens.is_empty() {
+            "unknown".to_string()
+        } else {
+            tokens.join("-")
+        };
 
         format!("{}/{}.html", dir, id)
     }
 
+    /// Create a new CardQuery
+    ///
+    /// # Arguments
+    ///
+    /// * `card_no` - The card number
+    /// * `cache_dir` - The directory to cache the card details
+    ///
+    /// # Returns
+    ///
+    /// A new CardQuery
     pub fn new(card_no: String, cache_dir: Box<Path>) -> Self {
         Self {
             card_no,
@@ -325,6 +523,11 @@ impl CardQuery {
         }
     }
 
+    /// Check if the cache file exists
+    ///
+    /// # Returns
+    ///
+    /// `true` if the cache file exists, `false` otherwise
     pub fn check_cache_file_exists(&self) -> bool {
         let cache_file: PathBuf = PathBuf::from(format!(
             "{}/{}",
@@ -334,6 +537,12 @@ impl CardQuery {
         cache_file.exists()
     }
 
+    /// Get the cached text
+    ///
+    /// # Returns
+    ///
+    /// * `Some(String)` if the cache file exists and could be read
+    /// * `None` if the cache file does not exist or could not be read
     pub fn get_cache_text(&self) -> Option<String> {
         let cache_file: PathBuf = PathBuf::from(format!(
             "{}/{}",
@@ -341,17 +550,32 @@ impl CardQuery {
             self.get_relative_filename()
         ));
         if cache_file.exists() {
-            let mut file: File = File::open(&cache_file).expect("cache file open error");
-            let mut contents = String::new();
-            match file.read_to_string(&mut contents) {
-                Ok(_) => Some(contents),
-                _ => None,
+            match File::open(&cache_file) {
+                Ok(mut file) => {
+                    let mut contents = String::new();
+                    match file.read_to_string(&mut contents) {
+                        Ok(_) => Some(contents),
+                        Err(e) => {
+                            eprintln!("Error reading cache file: {}", e);
+                            None
+                        }
+                    }
+                }
+                Err(e) => {
+                    eprintln!("Error opening cache file: {}", e);
+                    None
+                }
             }
         } else {
             None
         }
     }
 
+    /// Convert the CardQuery to a HashMap
+    ///
+    /// # Returns
+    ///
+    /// A HashMap containing the CardQuery parameters
     pub fn to_hashmap(&self) -> HashMap<String, String> {
         HashMap::from_iter(vec![
             ("card_no".into(), self.card_no.clone()),
@@ -359,73 +583,114 @@ impl CardQuery {
         ])
     }
 
-    pub async fn download_card_detail(&self) -> Option<String> {
+    /// Download card detail data
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(String)` if the data was successfully downloaded
+    /// * `Err(AnalyzeError)` if an error occurred
+    pub async fn download_card_detail(&self) -> Result<String, AnalyzeError> {
         let cache_file: PathBuf = PathBuf::from(format!(
             "{}/{}",
             &self.cache_dir.display().to_string(),
             self.get_relative_filename()
         ));
 
-        // println!("{:?}", cache_file);
         if cache_file.exists() {
-            let mut file: File = File::open(&cache_file).expect("cache file open error");
+            let mut file: File = File::open(&cache_file)
+                .map_err(|e| AnalyzeError::Io(e))?;
             let mut contents = String::new();
 
-            match file.read_to_string(&mut contents) {
-                Ok(_) => Some(contents),
-                _ => None,
-            }
+            file.read_to_string(&mut contents)
+                .map_err(|e| AnalyzeError::Io(e))?;
+            Ok(contents)
         } else {
-            // "https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=WX24-P3-001"
             let url = "https://www.takaratomy.co.jp/products/wixoss/card_list.php";
-
             let form: HashMap<String, String> = self.to_hashmap();
-
             let client: Client = Client::new();
-            let res: Result<Response, reqwest::Error> = client
+
+            let response = client
                 .post(url)
                 .header(reqwest::header::COOKIE, "wixAge=conf;")
                 .form(&form)
                 .send()
-                .await;
+                .await?;
 
-            match res {
-                Ok(response) => {
-                    let body: String = response.text().await.unwrap();
-                    let body: String = format!("<html><body>{}", body);
-                    let content = find_one(&body, ".cardDetail".into());
+            let body = response.text().await?;
+            let body = format!("<html><body>{}", body);
+            let content = find_one(&body, ".cardDetail".into());
 
-                    if let Some(body_) = content {
-                        match write_to_cache(cache_file, body_.clone()) {
-                            Ok(()) => Some(body_),
-                            _ => None,
-                        }
-                    } else {
-                        // println!("{}", body);
-                        None
-                    }
-                }
-                Err(e) => {
-                    eprintln!("{}", e);
-                    None
-                }
+            if let Some(body_) = content {
+                write_to_cache(cache_file, body_.clone())
+                    .map_err(|e| AnalyzeError::Cache(format!("Failed to write to cache: {:?}", e)))?;
+                Ok(body_)
+            } else {
+                Err(AnalyzeError::Parse("Failed to find card detail".into()))
             }
         }
     }
 }
 
-pub fn parse_card_url(url_string: impl Display) -> Result<CardQuery, serde_qs::Error> {
-    let parsed_url: Url = Url::parse(&url_string.to_string()).expect("Failed to parse the URL");
+/// Parse a card URL into a CardQuery
+///
+/// # Arguments
+///
+/// * `url_string` - The URL to parse
+///
+/// # Returns
+///
+/// * `Ok(CardQuery)` if the URL was successfully parsed
+/// * `Err(AnalyzeError)` if an error occurred
+pub fn parse_card_url(url_string: impl Display) -> Result<CardQuery, AnalyzeError> {
+    let parsed_url: Url = Url::parse(&url_string.to_string())
+        .map_err(|e| AnalyzeError::Parse(format!("Failed to parse URL: {}", e)))?;
     let query: &str = parsed_url.query().unwrap_or_default();
     serde_qs::from_str::<CardQuery>(query)
+        .map_err(|e| AnalyzeError::Parse(format!("Failed to parse query: {}", e)))
 }
 
+/// Errors that can occur when caching data
+#[derive(Debug)]
 pub enum CacheError {
+    /// The parent path of the cache file is missing
     ParentPathMissing,
+    /// Failed to create the cache file
     FileCreationFailed(std::io::Error),
+    /// Failed to write to the cache file
     WriteFailed(std::io::Error),
 }
 
+impl std::fmt::Display for CacheError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CacheError::ParentPathMissing => write!(f, "Parent path is missing"),
+            CacheError::FileCreationFailed(err) => write!(f, "Failed to create file: {}", err),
+            CacheError::WriteFailed(err) => write!(f, "Failed to write to file: {}", err),
+        }
+    }
+}
+
+impl std::error::Error for CacheError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            CacheError::ParentPathMissing => None,
+            CacheError::FileCreationFailed(err) => Some(err),
+            CacheError::WriteFailed(err) => Some(err),
+        }
+    }
+}
+
+/// Writes data to a cache file
+///
+/// # Arguments
+///
+/// * `filename` - The path to the cache file
+/// * `body` - The data to write to the cache file
+///
+/// # Returns
+///
+/// * `Ok(())` if the data was successfully written to the cache file
+/// * `Err(CacheError)` if an error occurred
 pub fn write_to_cache(filename: PathBuf, body: String) -> Result<(), CacheError> {
     if let Some(parent_path) = filename.parent() {
         std::fs::create_dir_all(parent_path).map_err(|_| CacheError::ParentPathMissing)?;
