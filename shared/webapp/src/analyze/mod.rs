@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fmt::{Display, Formatter};
 use std::fs;
-use std::fs::{File, ReadDir};
+use std::fs::File;
 use std::io::prelude::*;
 use std::path::{Path, PathBuf};
 
@@ -382,45 +382,50 @@ pub fn find_one(content: &str, selector: String) -> Option<String> {
 /// # Returns
 ///
 /// * `Ok(Vec<String>)` if links were found
-/// * `Err(())` if an error occurred
-pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec<String>, ()> {
+/// * `Err(AnalyzeError)` if an error occurred
+pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec<String>, AnalyzeError> {
     let product_root: String = product_type.get_path_relative();
     let path_s: String = format!("./text_cache/{}", product_root);
     let product_dir: &Path = Path::new(&path_s);
 
-    // println!("{}", product_dir.display());
-
-    try_mkdir(product_dir).unwrap();
-    let files_result: std::io::Result<ReadDir> = fs::read_dir(product_dir);
-
-    match files_result {
-        Ok(files) => {
-            let all_text: String = files
-                .into_iter()
-                .map(|f| {
-                    let p: fs::DirEntry = f.unwrap();
-                    let file_path: PathBuf = p.path();
-                    let content: String = fs::read_to_string(file_path).unwrap();
-
-                    content
-                })
-                .collect::<Vec<_>>()
-                .join("");
-
-            let parsed_html: Html = Html::parse_document(&all_text);
-            let selector: Selector = Selector::parse("a.c-box").unwrap();
-            let links: Vec<String> = parsed_html
-                .select(&selector)
-                .map(|element| element.value().attr("href").unwrap_or("").to_owned())
-                .filter(|href| !href.is_empty())
-                .collect();
-            Ok(links)
-        }
-        Err(err) => {
-            println!("{:?}", err);
-            Err(())
+    // ディレクトリが存在しない場合は作成
+    try_mkdir(product_dir)?;
+    
+    let files = fs::read_dir(product_dir)?;
+    let mut all_text = String::new();
+    
+    // ファイルの読み込みエラーを適切に処理
+    for entry in files {
+        let entry = entry?;
+        let file_path = entry.path();
+        match fs::read_to_string(&file_path) {
+            Ok(content) => all_text.push_str(&content),
+            Err(e) => {
+                eprintln!("ファイル読み込みエラー: {:?}: {}", file_path, e);
+                // ファイル読み込みエラーは無視して続行
+            }
         }
     }
+
+    let parsed_html: Html = Html::parse_document(&all_text);
+    // 静的なセレクタなので、パニックする可能性は低いが、より安全に
+    let selector: Selector = Selector::parse("a.c-box")
+        .map_err(|e| AnalyzeError::Parse(format!("セレクタパースエラー: {}", e)))?;
+    
+    let links: Vec<String> = parsed_html
+        .select(&selector)
+        .map(|element| element.value().attr("href").unwrap_or("").to_owned())
+        .filter(|href| !href.is_empty())
+        .collect();
+    
+    Ok(links)
+}
+
+/// 以前の実装との互換性のため、エラーを簡略化するヘルパー関数
+pub async fn collect_card_detail_links_compat(product_type: &ProductType) -> Result<Vec<String>, ()> {
+    collect_card_detail_links(product_type).await.map_err(|e| {
+        eprintln!("カード詳細リンク収集エラー: {}", e);
+    })
 }
 
 /// Find all elements matching a selector in HTML content

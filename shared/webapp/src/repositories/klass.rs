@@ -2,6 +2,16 @@ use models::gen::django_models::{CreateKlass, KlassDb, WixCardKlassRel};
 use sqlx::{Pool, Postgres};
 use std::collections::HashMap;
 use std::sync::Arc;
+use thiserror::Error;
+
+/// クラスリポジトリのエラー型
+#[derive(Debug, Error)]
+pub enum KlassError {
+    #[error("データベースエラー: {0}")]
+    Database(#[from] sqlx::Error),
+    #[error("クラスが見つかりません: {0:?}")]
+    KlassNotFound(CreateKlass),
+}
 
 pub struct KlassRelRepository {
     db: Arc<Pool<Postgres>>,
@@ -16,15 +26,19 @@ impl KlassRelRepository {
         }
     }
 
-    pub async fn create_cache(&mut self) {
+    /// キャッシュを作成
+    /// 
+    /// # エラー
+    /// 
+    /// データベースアクセスエラーが発生した場合
+    pub async fn create_cache(&mut self) -> Result<(), KlassError> {
         let klasses = sqlx::query_as::<_, KlassDb>(
             r#"
             SELECT * FROM wix_klass
             "#,
         )
         .fetch_all(&*self.db)
-        .await
-        .unwrap();
+        .await?;
 
         let mut tree = HashMap::<CreateKlass, i64>::new();
         klasses.iter().for_each(|klass| {
@@ -53,6 +67,7 @@ impl KlassRelRepository {
             tree.insert(ck, klass.id);
         });
         self.cache = tree;
+        Ok(())
     }
 
     pub fn append_to_cache(&mut self, klass: CreateKlass, id: i64) {
@@ -65,12 +80,14 @@ impl KlassRelRepository {
         self.cache.get(klass).cloned()
     }
 
+    /// クラスが存在しない場合は作成
     pub async fn create_klass_if_not_exists(
         &mut self,
         klass: CreateKlass,
-    ) -> Result<i64, sqlx::Error> {
+    ) -> Result<i64, KlassError> {
         if self.check_klass_exists(klass.clone()).await? {
-            Ok(self.get_id_by_create_klass(&klass).unwrap())
+            self.get_id_by_create_klass(&klass)
+                .ok_or_else(|| KlassError::KlassNotFound(klass))
         } else {
             let id = self.create_klass(klass.clone()).await?;
             self.append_to_cache(klass, id);
@@ -87,7 +104,7 @@ impl KlassRelRepository {
         .fetch_all(&*self.db)
         .await?;
 
-        Ok(res.is_empty())
+        Ok(!res.is_empty())  // 存在する場合はtrue
     }
 
     async fn create_klass(&mut self, klass: CreateKlass) -> Result<i64, sqlx::Error> {
@@ -123,25 +140,29 @@ impl KlassRelRepository {
         .fetch_all(&*self.db)
         .await?;
 
-        Ok(found.is_empty())
+        Ok(!found.is_empty())  // 存在する場合はtrue
     }
 
-    pub async fn save(&self, item: WixCardKlassRel) {
-        match self
+    /// カードとクラスの関係を保存
+    /// 
+    /// # エラー
+    /// 
+    /// データベースアクセスエラーが発生した場合
+    pub async fn save(&self, item: WixCardKlassRel) -> Result<(), KlassError> {
+        let exists = self
             .check_rel_exists_by_values(item.card_id, item.klass_id)
-            .await
-        {
-            Ok(true) => (),
-            Ok(false) => {
-                let _ = sqlx::query(
-                    "INSERT INTO wix_card_klass (card_id, klass_id) VALUES ($1, $2) RETURNING *;",
-                )
-                .bind(item.card_id)
-                .bind(item.klass_id)
-                .fetch_all(&*self.db)
-                .await;
-            }
-            _ => (),
+            .await?;
+            
+        if !exists {  // 存在しない場合のみINSERT
+            sqlx::query(
+                "INSERT INTO wix_card_klass (card_id, klass_id) VALUES ($1, $2) RETURNING *;",
+            )
+            .bind(item.card_id)
+            .bind(item.klass_id)
+            .fetch_all(&*self.db)
+            .await?;
         }
+        
+        Ok(())
     }
 }

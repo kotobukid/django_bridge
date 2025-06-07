@@ -1,5 +1,6 @@
 use crate::analyze::wixoss::card::CardType;
 use crate::analyze::wixoss::format::Format;
+use crate::analyze::wixoss::selectors::{CARD_ARTIST, CARD_DATA_DD, CARD_NAME, CARD_NUM, CARD_RARITY, CARD_SKILL};
 use crate::analyze::wixoss::timing::TimingList;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story,
@@ -7,7 +8,7 @@ use crate::analyze::wixoss::{
 };
 use color::Colors;
 use feature::feature::{CardFeature, HashSetToBits};
-use scraper::{Html, Selector};
+use scraper::Html;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
 
@@ -68,40 +69,33 @@ impl WixossCard for Lrig {
     fn from_source(source: String) -> Self {
         let document: Html = Html::parse_document(&source);
 
-        let selector_card_num = Selector::parse(".cardNum").unwrap();
-        let card_no = match document.select(&selector_card_num).next() {
+        let card_no = match document.select(&CARD_NUM).next() {
             Some(card_no) => card_no.inner_html(),
             None => "unknown".into(),
         };
 
-        let selector_card_name = Selector::parse(".cardName").unwrap();
-        let card_name = match document.select(&selector_card_name).next() {
+        let card_name = match document.select(&CARD_NAME).next() {
             Some(card_name) => element_to_name_and_pronounce(card_name.inner_html()),
             None => ("unknown".into(), "unknown".into()),
         };
 
-        let selector_rarity = Selector::parse(".cardRarity").unwrap();
-        let card_rarity = match document.select(&selector_rarity).next() {
+        let card_rarity = match document.select(&CARD_RARITY).next() {
             Some(card_rarity) => card_rarity.inner_html(),
             None => "unknown rarity".into(),
         };
 
-        let selector_artist = Selector::parse(".cardImg p span").unwrap();
-        let artist = match document.select(&selector_artist).next() {
+        let artist = match document.select(&CARD_ARTIST).next() {
             Some(artist) => artist.inner_html(),
             None => "unknown artist".into(),
         };
 
-        let selector_card_data = Selector::parse(".cardData dd").unwrap();
-
         let mut card_data: Vec<String> = Vec::new();
-        for element in document.select(&selector_card_data) {
+        for element in document.select(&CARD_DATA_DD) {
             card_data.push(element.inner_html());
         }
 
-        let selector_card_skill = Selector::parse(".cardSkill").unwrap();
         let mut card_skills: Vec<String> = Vec::new();
-        for element in document.select(&selector_card_skill) {
+        for element in document.select(&CARD_SKILL) {
             card_skills.push(element.inner_html());
         }
 

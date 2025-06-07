@@ -33,3 +33,5 @@ color = { path = "../color" }
 analyzer = { path = "../../analyzer" }
 rayon = "1.10.0"
 futures = { workspace = true }
+thiserror = { workspace = true }
+once_cell = "1.19"
