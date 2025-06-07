@@ -1,19 +1,19 @@
-use crate::feature::CardFeature;
 use regex::Regex;
 
 pub mod feature;
+pub use feature::CardFeature;
 
 pub struct DetectPattern {
     pub pattern: &'static str,
     pub pattern_r: Regex,
-    pub features_detected: &'static [CardFeature],
+    pub features_detected: &'static [feature::CardFeature],
 }
 
 pub struct ReplacePattern {
     pub pattern: &'static str,
     pub pattern_r: Regex,
     pub replace_to: &'static str,
-    pub features_detected: &'static [CardFeature],
+    pub features_detected: &'static [feature::CardFeature],
 }
 
 macro_rules! replace_pattern {
@@ -68,7 +68,7 @@ pub fn create_detect_patterns() -> (
         replace_pattern![
             r"ライフバースト：",
             "LB:",
-            CardFeature::LifeBurst
+            feature::CardFeature::LifeBurst
         ],
         replace_pattern![
             r"』",
@@ -77,17 +77,17 @@ pub fn create_detect_patterns() -> (
         replace_pattern![
             r"ライフバースト：",
             "LB:",
-            CardFeature::LifeBurst
+            feature::CardFeature::LifeBurst
         ],
         replace_pattern![
             r"（対戦相手のライフクロスが１枚以上ある場合、ライフクロス１枚をクラッシュし、０枚の場合、あなたはゲームに勝利する）",
             "",
-            CardFeature::Damage
+            feature::CardFeature::Damage
         ],
         replace_pattern![
             r"（パワーが０以下のシグニはルールによってバニッシュされる）",
             "",
-            CardFeature::PowerDown
+            feature::CardFeature::PowerDown
         ],
         replace_pattern![
             r"（アタックによるダメージでライフクロスを２枚クラッシュする）",
@@ -112,32 +112,32 @@ pub fn create_detect_patterns() -> (
         replace_pattern![
             r"（【ランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスを１枚クラッシュする）",
             "*LANCER*",
-            CardFeature::Lancer
+            feature::CardFeature::Lancer
         ],
         replace_pattern![
             r"（【Ｓランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスがある場合はそれを１枚クラッシュする。無い場合は対戦相手にダメージを与える）",
             "*S LANCER*",
-            CardFeature::SLancer
+            feature::CardFeature::SLancer
         ],
         replace_pattern![
             r"（このクラフトは効果以外によっては場に出せない）",
             "*NO STANDARD PUT*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（このスペルはあなたのメインフェイズにルリグデッキから使用できる）",
             "*SPELL CRAFT*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（クラフトであるスペルは、使用後にゲームから除外される）",
             "*SPELL CRAFT GOES REMOVED*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）",
             "*RESONA CRAFT REMOVED*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（《ガードアイコン》を持つシグニは【ガード】を得る）",
@@ -245,7 +245,7 @@ pub fn create_detect_patterns() -> (
         replace_pattern![
             r"（フェゾーネマジックは５種類ある）",
             "*FESONE MAGIC*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（【出】能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい）",
@@ -310,22 +310,22 @@ pub fn create_detect_patterns() -> (
         replace_pattern![
             r"（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）",
             "*RANDOM RESONA MUST BE EXPOSED*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（レゾナでありクラフトであるシグニはリムーブできず場を離れるとゲームから除外される）",
             "*RESONA CANT BE REMOVED*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（クラフトであるシグニは場を離れるとゲームから除外される）",
             "*CRAFT SIGNI REMOVED ON LEAVE*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（このクラフトの上にあるシグニが場を離れるとこのクラフトはゲームから除外される）",
             "*TORAMARU GIMMICK*",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         replace_pattern![
             r"（チェックゾーンにあるカードはターン終了時にトラッシュに置かれる）",
@@ -354,352 +354,352 @@ pub fn create_detect_patterns() -> (
     ];
 
     let d_patterns: [DetectPattern; PATTERNS_AMOUNT_D] = [
-        detect_pattern![r"【ウィルス】", CardFeature::Virus],
-        detect_pattern![r"【ハーモニー】", CardFeature::Harmony],
-        detect_pattern![r"【ウィルス】", CardFeature::Virus],
+        detect_pattern![r"【ウィルス】", feature::CardFeature::Virus],
+        detect_pattern![r"【ハーモニー】", feature::CardFeature::Harmony],
+        detect_pattern![r"【ウィルス】", feature::CardFeature::Virus],
         detect_pattern![
             r"（このクラフトは効果以外によっては場に出せない）",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
-        detect_pattern![r"覚醒する", CardFeature::Awake],
+        detect_pattern![r"覚醒する", feature::CardFeature::Awake],
         detect_pattern![
             r"（このスペルはあなたのメインフェイズにルリグデッキから使用できる）",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         detect_pattern![
             r"（クラフトであるスペルは、使用後にゲームから除外される）",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
-        detect_pattern![r"《ガードアイコン》", CardFeature::Guard],
-        detect_pattern![r"アクセ", CardFeature::Acce],
-        detect_pattern![any_num!["エクシード", ""], CardFeature::Exceed],
+        detect_pattern![r"《ガードアイコン》", feature::CardFeature::Guard],
+        detect_pattern![r"アクセ", feature::CardFeature::Acce],
+        detect_pattern![any_num!["エクシード", ""], feature::CardFeature::Exceed],
         detect_pattern![
             r"（ゲームを開始する際に、このルリグを表向きにしたとき、このルリグがセンタールリグであるなら、[《コインアイコン》]+を得る）",
-            CardFeature::GainCoin
+            feature::CardFeature::GainCoin
         ],
         detect_pattern![
             r"（右下に【コイン】を持つルリグがグロウしたとき、それと同じ枚数の[《コインアイコン》]+を得る）",
-            CardFeature::GainCoin
+            feature::CardFeature::GainCoin
         ],
         detect_pattern![
             r"ルリグデッキに加える。（ゲーム終了時にそのレゾナがルリグデッキにあれば公開する）",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
-        detect_pattern![r"《コインアイコン》を得る", CardFeature::GainCoin],
-        detect_pattern![r"ガードアイコン", CardFeature::Guard],
-        detect_pattern![r"捨てさせる。", CardFeature::DiscardOpponent],
+        detect_pattern![r"《コインアイコン》を得る", feature::CardFeature::GainCoin],
+        detect_pattern![r"ガードアイコン", feature::CardFeature::Guard],
+        detect_pattern![r"捨てさせる。", feature::CardFeature::DiscardOpponent],
         detect_pattern![
             r"各プレイヤーは手札をすべてエナゾーンに置",
-            CardFeature::DiscardOpponent,
-            CardFeature::RandomDiscard
+            feature::CardFeature::DiscardOpponent,
+            feature::CardFeature::RandomDiscard
         ],
-        detect_pattern![r"見ないで選び、捨てさせる。", CardFeature::RandomDiscard],
-        detect_pattern![r"対象になったとき", CardFeature::OnTouch],
-        detect_pattern![r"ダウンする。", CardFeature::Down],
-        detect_pattern![r"エナチャージ", CardFeature::Charge],
+        detect_pattern![r"見ないで選び、捨てさせる。", feature::CardFeature::RandomDiscard],
+        detect_pattern![r"対象になったとき", feature::CardFeature::OnTouch],
+        detect_pattern![r"ダウンする。", feature::CardFeature::Down],
+        detect_pattern![r"エナチャージ", feature::CardFeature::Charge],
         detect_pattern![
             any_num!["カードを", "枚までエナゾーンに置"],
-            CardFeature::Charge
+            feature::CardFeature::Charge
         ],
         detect_pattern![
             r"残りを好きな順番でデッキの一番下に置く",
-            CardFeature::BottomCheck
+            feature::CardFeature::BottomCheck
         ],
-        detect_pattern![r"(それ|シグニ)をトラッシュに置", CardFeature::Trash],
-        detect_pattern![r"シグニバリア", CardFeature::Barrier],
-        detect_pattern![r"ルリグバリア", CardFeature::Barrier],
-        // (r"がアタックしたとき", do_remove:  "*ON ATTACK*", CardFeature::OnAttack]),
-        detect_pattern![r"アサシン", CardFeature::Assassin],
-        detect_pattern![r"シャドウ", CardFeature::Shadow],
-        detect_pattern![r"【マルチエナ】", CardFeature::DualColorEner],
+        detect_pattern![r"(それ|シグニ)をトラッシュに置", feature::CardFeature::Trash],
+        detect_pattern![r"シグニバリア", feature::CardFeature::Barrier],
+        detect_pattern![r"ルリグバリア", feature::CardFeature::Barrier],
+        // (r"がアタックしたとき", do_remove:  "*ON ATTACK*", feature::CardFeature::OnAttack]),
+        detect_pattern![r"アサシン", feature::CardFeature::Assassin],
+        detect_pattern![r"シャドウ", feature::CardFeature::Shadow],
+        detect_pattern![r"【マルチエナ】", feature::CardFeature::DualColorEner],
         detect_pattern![
             r"（エナコストを支払う際、このカードは好きな色１つとして支払える）",
-            CardFeature::DualColorEner
+            feature::CardFeature::DualColorEner
         ],
         detect_pattern![
             r"（エナコストを支払う際、このカードは.+１つとして支払える）",
-            CardFeature::DualColorEner
+            feature::CardFeature::DualColorEner
         ],
-        detect_pattern![r"チャーム", CardFeature::Charm],
-        detect_pattern![r"ダブルクラッシュ", CardFeature::DoubleCrush],
+        detect_pattern![r"チャーム", feature::CardFeature::Charm],
+        detect_pattern![r"ダブルクラッシュ", feature::CardFeature::DoubleCrush],
         detect_pattern![
             r"トリプルクラッシュ",
-            CardFeature::DoubleCrush // ダブクラと統合
+            feature::CardFeature::DoubleCrush // ダブクラと統合
         ],
-        detect_pattern![r"【シュート】", CardFeature::ShootLike],
+        detect_pattern![r"【シュート】", feature::CardFeature::ShootLike],
         detect_pattern![
             r"エナゾーンに置かれる代わりに(トラッシュ|手札|デッキの一番下)",
-            CardFeature::ShootLike
+            feature::CardFeature::ShootLike
         ],
-        detect_pattern![r"【ライズ】あなたの", CardFeature::Rise],
-        detect_pattern![r"ベット―", CardFeature::BetCoin],
-        detect_pattern![r"コインアイコン》：", CardFeature::BetCoin],
-        detect_pattern![r"Sランサー", CardFeature::SLancer, CardFeature::Lancer],
-        detect_pattern![r"Ｓランサー", CardFeature::SLancer, CardFeature::Lancer],
-        detect_pattern![r"【マジックボックス】", CardFeature::MagicBox],
+        detect_pattern![r"【ライズ】あなたの", feature::CardFeature::Rise],
+        detect_pattern![r"ベット―", feature::CardFeature::BetCoin],
+        detect_pattern![r"コインアイコン》：", feature::CardFeature::BetCoin],
+        detect_pattern![r"Sランサー", feature::CardFeature::SLancer, feature::CardFeature::Lancer],
+        detect_pattern![r"Ｓランサー", feature::CardFeature::SLancer, feature::CardFeature::Lancer],
+        detect_pattern![r"【マジックボックス】", feature::CardFeature::MagicBox],
         detect_pattern![
             any_num!["対戦相手のシグニ", "体を対象とし、それをゲームから除外する"],
-            CardFeature::RemoveSigni
+            feature::CardFeature::RemoveSigni
         ],
-        detect_pattern![r"バニッシュ", CardFeature::Banish],
+        detect_pattern![r"バニッシュ", feature::CardFeature::Banish],
         detect_pattern![
             r"シグニ.+エナゾーンに置", //todo: 対戦相手の
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"対戦相手は自分の.?シグニ１体を選びエナゾーンに置",
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"対戦相手のパワー.+以下のシグニ１体を対象とし、それをエナゾーンに置",
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             any_num![
                 "対戦相手のシグニを",
                 "体(まで|を)対象とし、(それら|それ)をエナゾーンに置"
             ],
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"対戦相手のすべてのシグニをエナゾーンに置",
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             any_num!["対戦相手の.+のシグニ", "体を対象とし、それをエナゾーンに置"],
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"支払ってもよい。そうした場合、(それ|それら)をエナゾーンに置",
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"フェゾーネマジックのクラフトから2種類を1枚ずつ公開しルリグデッキに加える",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
         detect_pattern![
             r"支払っても良い。そうした場合、対戦相手は自分のシグニ１体を選びエナゾーンに置",
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"対戦相手のシグニ１体を対象とし、それとこのシグニをエナゾーンに",
-            CardFeature::EnerOffensive
+            feature::CardFeature::EnerOffensive
         ],
         detect_pattern![
             r"クラフトの《",
-            CardFeature::Craft
+            feature::CardFeature::Craft
         ],
-        detect_pattern![r"シグニをアップ", CardFeature::Up],
+        detect_pattern![r"シグニをアップ", feature::CardFeature::Up],
         detect_pattern![
             any_num!["シグニ", "体を対象とし、(それ|それら)をアップ"],
-            CardFeature::Up
+            feature::CardFeature::Up
         ],
-        detect_pattern![r"凍結する", CardFeature::Freeze],
-        detect_pattern![r"それらの場所を入れ替え", CardFeature::Position],
-        detect_pattern![r"場に出すことができない", CardFeature::LimitSigni],
+        detect_pattern![r"凍結する", feature::CardFeature::Freeze],
+        detect_pattern![r"それらの場所を入れ替え", feature::CardFeature::Position],
+        detect_pattern![r"場に出すことができない", feature::CardFeature::LimitSigni],
         detect_pattern![
             any_num![
                 "対戦相手のシグニ",
                 "体(まで|を)対象とし、(それら|それ)を手札に戻"
             ],
-            CardFeature::Bounce
+            feature::CardFeature::Bounce
         ],
         detect_pattern![
             any_num![
                 "対戦相手のパワー",
                 "体(まで|を)対象とし、(それら|それ)を手札に戻"
             ],
-            CardFeature::Bounce
+            feature::CardFeature::Bounce
         ],
         detect_pattern![
             any_num!["対戦相手のシグニ", "体を対象とし、それを手札に戻"],
-            CardFeature::Bounce
+            feature::CardFeature::Bounce
         ],
-        // (    r"手札に加え", do_remove:  "*SALVAGE*", CardFeature::Salvage]),
+        // (    r"手札に加え", do_remove:  "*SALVAGE*", feature::CardFeature::Salvage]),
         detect_pattern![
             any_num!["ライフクロス", "枚をトラッシュに置"],
-            CardFeature::LifeTrash
+            feature::CardFeature::LifeTrash
         ],
         detect_pattern![
             any_num!["エナゾーンからカード", "枚(を|選び).+トラッシュに置"],
-            CardFeature::EnerAttack
+            feature::CardFeature::EnerAttack
         ],
-        detect_pattern![r"ルリグトラッシュに置", CardFeature::LrigTrash],
-        // (r"アタックフェイズ開始時", do_remove:  "*ON ATTACK START*", CardFeature::OnAttackStart]),
-        detect_pattern![r"ライフクロスに加える", CardFeature::AddLife],
-        detect_pattern![r"ランサー", CardFeature::Lancer],
-        detect_pattern![r"ライフクロスを１枚クラッシュする", CardFeature::LifeCrush],
+        detect_pattern![r"ルリグトラッシュに置", feature::CardFeature::LrigTrash],
+        // (r"アタックフェイズ開始時", do_remove:  "*ON ATTACK START*", feature::CardFeature::OnAttackStart]),
+        detect_pattern![r"ライフクロスに加える", feature::CardFeature::AddLife],
+        detect_pattern![r"ランサー", feature::CardFeature::Lancer],
+        detect_pattern![r"ライフクロスを１枚クラッシュする", feature::CardFeature::LifeCrush],
         detect_pattern![
             r"対戦相手のライフクロス１枚をクラッシュする。",
-            CardFeature::LifeCrush
+            feature::CardFeature::LifeCrush
         ],
-        detect_pattern![r"対戦相手にダメージを与える。", CardFeature::Damage],
-        detect_pattern![r"クラッシュしたとき、", CardFeature::OnLifeCrush],
+        detect_pattern![r"対戦相手にダメージを与える。", feature::CardFeature::Damage],
+        detect_pattern![r"クラッシュしたとき、", feature::CardFeature::OnLifeCrush],
         detect_pattern![
             r"クラッシュされ(る場合|たとき|るかトラッシュ|ていた場合)、",
-            CardFeature::OnLifeCrush
+            feature::CardFeature::OnLifeCrush
         ],
-        detect_pattern![r"リコレクトアイコン", CardFeature::Recollect],
-        detect_pattern![any_num![r"", "枚見"], CardFeature::SeekTop],
-        detect_pattern![r"デッキの一番上に(戻|置)", CardFeature::TopSet],
-        detect_pattern![r"のシグニは能力を失う", CardFeature::EraseSkill],
-        detect_pattern![r"それは能力を失う", CardFeature::EraseSkill],
+        detect_pattern![r"リコレクトアイコン", feature::CardFeature::Recollect],
+        detect_pattern![any_num![r"", "枚見"], feature::CardFeature::SeekTop],
+        detect_pattern![r"デッキの一番上に(戻|置)", feature::CardFeature::TopSet],
+        detect_pattern![r"のシグニは能力を失う", feature::CardFeature::EraseSkill],
+        detect_pattern![r"それは能力を失う", feature::CardFeature::EraseSkill],
         detect_pattern![
             any_num![
                 "シグニを",
                 "体(まで|を)対象とし、ターン終了時まで、それは能力を失う"
             ],
-            CardFeature::EraseSkill
+            feature::CardFeature::EraseSkill
         ],
         detect_pattern![
             r"それを《サーバント　ＺＥＲＯ》にする",
-            CardFeature::EraseSkill
+            feature::CardFeature::EraseSkill
         ],
-        detect_pattern![r"アタックできない", CardFeature::NonAttackable],
-        detect_pattern![any_num!["カードを", "枚引"], CardFeature::Draw],
+        detect_pattern![r"アタックできない", feature::CardFeature::NonAttackable],
+        detect_pattern![any_num!["カードを", "枚引"], feature::CardFeature::Draw],
         detect_pattern![
             any_num!["デッキの上からカードを", "枚トラッシュに置"],
-            CardFeature::Drop
+            feature::CardFeature::Drop
         ],
         detect_pattern![
             any_num![
                 "対戦相手のエナゾーンからカードを",
                 "枚まで対象とし、それらを手札に戻"
             ],
-            CardFeature::EnerAttack
+            feature::CardFeature::EnerAttack
         ],
-        detect_pattern![r"デッキの一番下に置", CardFeature::DeckBounce],
-        detect_pattern![r"シグニのパワーを＋", CardFeature::PowerUp],
-        detect_pattern![r"このシグニのパワーは＋", CardFeature::PowerUp],
-        detect_pattern![r"(シグニ|それ|それら)のパワーを＋", CardFeature::PowerUp],
-        detect_pattern![r"(シグニ|それ|それら)のパワーを－", CardFeature::PowerDown],
+        detect_pattern![r"デッキの一番下に置", feature::CardFeature::DeckBounce],
+        detect_pattern![r"シグニのパワーを＋", feature::CardFeature::PowerUp],
+        detect_pattern![r"このシグニのパワーは＋", feature::CardFeature::PowerUp],
+        detect_pattern![r"(シグニ|それ|それら)のパワーを＋", feature::CardFeature::PowerUp],
+        detect_pattern![r"(シグニ|それ|それら)のパワーを－", feature::CardFeature::PowerDown],
         detect_pattern![
             r"(シグニ|それ)のパワーをこの方法で.+－",
-            CardFeature::PowerDown
+            feature::CardFeature::PowerDown
         ],
-        detect_pattern![r"ダメージを受けない", CardFeature::CancelDamage],
-        detect_pattern![r"トラッシュからシグニ.+場に出", CardFeature::Reanimate],
+        detect_pattern![r"ダメージを受けない", feature::CardFeature::CancelDamage],
+        detect_pattern![r"トラッシュからシグニ.+場に出", feature::CardFeature::Reanimate],
         detect_pattern![
             any_num![
                 // あなたのトラッシュから黒のシグニ１枚を対象とし、それを場に出す  // TODO
                 "あなたのトラッシュから(シグニ|.+のシグニ)",
                 "枚を対象とし、それを場に出"
             ],
-            CardFeature::Reanimate
+            feature::CardFeature::Reanimate
         ],
         detect_pattern![
             r"(この|その)ルリグをアップし",
-            CardFeature::AdditionalAttack
+            feature::CardFeature::AdditionalAttack
         ],
-        detect_pattern![r"対戦相手は【ガード】ができない", CardFeature::UnGuardable],
+        detect_pattern![r"対戦相手は【ガード】ができない", feature::CardFeature::UnGuardable],
         detect_pattern![
             any_num!["スペル", "枚を.+手札に加え"],
-            CardFeature::SalvageSpell
+            feature::CardFeature::SalvageSpell
         ],
         detect_pattern![
             any_num![
                 "(シグニ|シグニを|シグニをそれぞれ)",
                 "枚(を|まで).+手札に加え"
             ],
-            CardFeature::Salvage
+            feature::CardFeature::Salvage
         ],
         detect_pattern![
             any_num!["スペル", "枚をコストを支払わずに使用する"],
-            CardFeature::FreeSpell
+            feature::CardFeature::FreeSpell
         ],
-        detect_pattern![r"このアーツの使用コストは.+減る", CardFeature::FreeArts],
+        detect_pattern![r"このアーツの使用コストは.+減る", feature::CardFeature::FreeArts],
         detect_pattern![
             r"このシグニがアタックしたとき.+バニッシュする",
-            CardFeature::BanishOnAttack
+            feature::CardFeature::BanishOnAttack
         ],
         detect_pattern![
             r"アタックを無効に", // todo: 攻防あり
-            CardFeature::AttackNoEffect
+            feature::CardFeature::AttackNoEffect
         ],
-        detect_pattern![r"バニッシュされない", CardFeature::Invulnerable],
-        detect_pattern![r"バニッシュされたとき", CardFeature::OnBanish],
+        detect_pattern![r"バニッシュされない", feature::CardFeature::Invulnerable],
+        detect_pattern![r"バニッシュされたとき", feature::CardFeature::OnBanish],
         detect_pattern![
             r"(ライフバーストを使用することを選んだ場合|ライフバーストの能力化効果の対象になったとき|ライフバースト】を持っているか|ライフバースト】を持つ場合|ライフバーストが発動する場合|ライフバーストは発動しない)",
-            CardFeature::OnBurst
+            feature::CardFeature::OnBurst
         ],
         detect_pattern![
             r"(置かれたライフクロスは|あなたのライフクロスとチェックゾーンにある【ライフバースト】を持たないカードは|ライフバースト】を持つカードを好きな枚数公開|ライフバーストの能力か効果の対象になったとき)",
-            CardFeature::OnBurst
+            feature::CardFeature::OnBurst
         ],
         detect_pattern![
             r"(エクシードのコストとして|あなたがエクシードのコストを支払ったとき、)",
-            CardFeature::OnExceed
+            feature::CardFeature::OnExceed
         ],
-        detect_pattern![any_num!["手札を", "枚捨ててもよい"], CardFeature::HandCost],
+        detect_pattern![any_num!["手札を", "枚捨ててもよい"], feature::CardFeature::HandCost],
         detect_pattern![
             r"アップ状態のルリグ(を好きな数|１体を)ダウンする",
-            CardFeature::RligDownCost
+            feature::CardFeature::RligDownCost
         ],
         detect_pattern![
             any_num!["アップ状態のルリグ", "体をダウンしてもよい"],
-            CardFeature::RligDownCost
+            feature::CardFeature::RligDownCost
         ],
         detect_pattern![
             r"このルリグはあなたのルリグトラッシュにあるレベル３の＜.+＞と同じカード名としても扱い、そのルリグの【(自|常)】能力を得る。",
-            CardFeature::Inherit
+            feature::CardFeature::Inherit
         ],
-        detect_pattern![r"グロウするためのコスト", CardFeature::PreventGrowCost],
+        detect_pattern![r"グロウするためのコスト", feature::CardFeature::PreventGrowCost],
         detect_pattern![
             any_num!["シグニを", "枚まで対象とし、それを場に出す"],
-            CardFeature::PutSigniDefense,
-            CardFeature::PutSigniOffense
+            feature::CardFeature::PutSigniDefense,
+            feature::CardFeature::PutSigniOffense
         ],
         detect_pattern![
             any_num!["あなたのトラッシュにスペルが", "枚以上あるかぎり"],
-            CardFeature::OnSpell
+            feature::CardFeature::OnSpell
         ],
         detect_pattern![
             r"(あなた|いずれかのプレイヤー)がスペルを使用したとき、",
-            CardFeature::OnSpell
+            feature::CardFeature::OnSpell
         ],
         detect_pattern![
             r"このターン、(あなたが次に|次にあなたが)スペルを使用する場合",
-            CardFeature::OnSpell
+            feature::CardFeature::OnSpell
         ],
         detect_pattern![
             r"このターンに(あなた|対戦相手)がスペルを使用していた場合、",
-            CardFeature::OnSpell
+            feature::CardFeature::OnSpell
         ],
         detect_pattern![
             r"《ディソナアイコン》のスペルを使用したとき、",
-            CardFeature::OnSpell
+            feature::CardFeature::OnSpell
         ],
         detect_pattern![
             r"のアーツを使用していた場合",
-            CardFeature::OnArts
+            feature::CardFeature::OnArts
         ],
         detect_pattern![
             r"あなたのルリグトラッシュにあるアーツ１枚につき",
-            CardFeature::OnArts
+            feature::CardFeature::OnArts
         ],
         detect_pattern![
             r"このアーツを使用する際、あなたのルリグデッキから.のアーツ１枚をルリグトラッシュに置いてもよい。",
-            CardFeature::OnArts
+            feature::CardFeature::OnArts
         ],
         detect_pattern![
             r"このゲームの間にあなたがリレーピースを使用している",
-            CardFeature::OnArts
+            feature::CardFeature::OnArts
         ],
         detect_pattern![
             r"あなたのルリグデッキにあるピース１枚をゲームから除外する",
-            CardFeature::OnArts
+            feature::CardFeature::OnArts
         ],
         detect_pattern![
             r"ピースを使用する際、カットインして使用できる",
-            CardFeature::OnArts
+            feature::CardFeature::OnArts
         ],
         // detect_pattern![ // 同上・特定の1枚のみに同時に存在する条件
         //     r"対戦相手のピース１枚を対象とし",
-        //     CardFeature::OnArts
+        //     feature::CardFeature::OnArts
         // ],
         detect_pattern![
             r"このターンにあなたがピースを使用していた場合",
-            CardFeature::OnArts
+            feature::CardFeature::OnArts
         ],
     ];
 
