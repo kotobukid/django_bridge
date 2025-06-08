@@ -3,6 +3,25 @@ use regex::Regex;
 pub mod feature;
 pub use feature::CardFeature;
 
+// フィーチャーのラベル定義を一元管理
+pub mod labels {
+    use super::feature::CardFeature;
+    use std::collections::HashMap;
+    use once_cell::sync::Lazy;
+    
+    // 日本語ラベルからCardFeatureへのマッピング
+    // Display実装から自動的にラベルを収集して構築
+    pub static FEATURE_LABELS: Lazy<HashMap<&'static str, CardFeature>> = Lazy::new(|| {
+        CardFeature::create_vec()
+            .into_iter()
+            .map(|feature| {
+                let label = feature.to_string();
+                (Box::leak(label.into_boxed_str()) as &'static str, feature)
+            })
+            .collect()
+    });
+}
+
 pub struct DetectPattern {
     pub pattern: &'static str,
     pub pattern_r: Regex,

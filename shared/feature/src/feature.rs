@@ -33,7 +33,7 @@ macro_rules! define_features {
                 }
             }
 
-            fn create_vec() -> Vec<CardFeature> {
+            pub fn create_vec() -> Vec<CardFeature> {
                     vec![
                         $(
                             CardFeature::$feature,
