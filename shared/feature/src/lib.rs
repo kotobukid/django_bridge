@@ -73,7 +73,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 132;
+pub const PATTERNS_AMOUNT_D: usize = 133;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -411,6 +411,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"《コインアイコン》を得る", feature::CardFeature::GainCoin],
         detect_pattern![r"ガードアイコン", feature::CardFeature::Guard],
         detect_pattern![r"捨てさせる。", feature::CardFeature::DiscardOpponent],
+        detect_pattern![any_num!["対戦相手は手札を", "枚捨て"], feature::CardFeature::DiscardOpponent],
         detect_pattern![
             r"各プレイヤーは手札をすべてエナゾーンに置",
             feature::CardFeature::DiscardOpponent,
