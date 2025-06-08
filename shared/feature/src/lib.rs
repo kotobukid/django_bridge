@@ -73,7 +73,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 133;
+pub const PATTERNS_AMOUNT_D: usize = 134;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -374,6 +374,7 @@ pub fn create_detect_patterns() -> (
 
     let d_patterns: [DetectPattern; PATTERNS_AMOUNT_D] = [
         detect_pattern![r"【ウィルス】", feature::CardFeature::Virus],
+        detect_pattern![r"感染状態", feature::CardFeature::Virus],
         detect_pattern![r"【ハーモニー】", feature::CardFeature::Harmony],
         detect_pattern![r"【ウィルス】", feature::CardFeature::Virus],
         detect_pattern![
@@ -411,7 +412,10 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"《コインアイコン》を得る", feature::CardFeature::GainCoin],
         detect_pattern![r"ガードアイコン", feature::CardFeature::Guard],
         detect_pattern![r"捨てさせる。", feature::CardFeature::DiscardOpponent],
-        detect_pattern![any_num!["対戦相手は手札を", "枚捨て"], feature::CardFeature::DiscardOpponent],
+        detect_pattern![
+            any_num!["対戦相手は手札を", "枚捨て"],
+            feature::CardFeature::DiscardOpponent
+        ],
         detect_pattern![
             r"各プレイヤーは手札をすべてエナゾーンに置",
             feature::CardFeature::DiscardOpponent,
@@ -421,11 +425,9 @@ pub fn create_detect_patterns() -> (
             r"見ないで選び、捨てさせる。",
             feature::CardFeature::RandomDiscard
         ],
+        detect_pattern![r"対戦相手の手札を見て", feature::CardFeature::RandomDiscard],
         detect_pattern![
-            r"対戦相手の手札を見て",
-            feature::CardFeature::RandomDiscard
-        ],
-        detect_pattern![    // コードラビラント・ヨグソトス専用
+            // コードラビラント・ヨグソトス専用
             r"手札を３枚まで見ないで選び、それらを見て１枚をデッキの一番下に置く",
             feature::CardFeature::RandomDiscard
         ],
