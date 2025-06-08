@@ -473,7 +473,7 @@ pub fn create_detect_patterns() -> (
         ],
         detect_pattern![r"【ライズ】あなたの", feature::CardFeature::Rise],
         detect_pattern![r"ベット―", feature::CardFeature::BetCoin],
-        detect_pattern![r"コインアイコン》：", feature::CardFeature::BetCoin],
+        detect_pattern![r"コインアイコン", feature::CardFeature::BetCoin],
         detect_pattern![
             r"Sランサー",
             feature::CardFeature::SLancer,
