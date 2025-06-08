@@ -6,9 +6,9 @@ pub use feature::CardFeature;
 // フィーチャーのラベル定義を一元管理
 pub mod labels {
     use super::feature::CardFeature;
-    use std::collections::HashMap;
     use once_cell::sync::Lazy;
-    
+    use std::collections::HashMap;
+
     // 日本語ラベルからCardFeatureへのマッピング
     // Display実装から自動的にラベルを収集して構築
     pub static FEATURE_LABELS: Lazy<HashMap<&'static str, CardFeature>> = Lazy::new(|| {
@@ -73,7 +73,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 134;
+pub const PATTERNS_AMOUNT_D: usize = 140;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -547,6 +547,15 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"凍結する", feature::CardFeature::Freeze],
         detect_pattern![r"それらの場所を入れ替え", feature::CardFeature::Position],
         detect_pattern![r"場に出すことができない", feature::CardFeature::LimitSigni],
+        detect_pattern![
+            r"シグニゾーン１つに配置する",
+            feature::CardFeature::Position
+        ],
+        detect_pattern![r"シグニゾーン１つを消す", feature::CardFeature::LimitSigni],
+        detect_pattern![r"配置しなければ", feature::CardFeature::Position], // ギロッポン
+        detect_pattern![r"新たに配置できない", feature::CardFeature::LimitSigni],
+        detect_pattern![r"新たに場に出せない", feature::CardFeature::LimitSigni],
+        detect_pattern![r"それらの場所を入れ替", feature::CardFeature::Position],
         detect_pattern![
             any_num![
                 "対戦相手のシグニ",
