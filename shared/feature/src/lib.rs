@@ -73,7 +73,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 140;
+pub const PATTERNS_AMOUNT_D: usize = 141;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -545,6 +545,7 @@ pub fn create_detect_patterns() -> (
             feature::CardFeature::Up
         ],
         detect_pattern![r"凍結する", feature::CardFeature::Freeze],
+        detect_pattern![r"凍結状態", feature::CardFeature::Freeze],
         detect_pattern![r"それらの場所を入れ替え", feature::CardFeature::Position],
         detect_pattern![r"場に出すことができない", feature::CardFeature::LimitSigni],
         detect_pattern![
