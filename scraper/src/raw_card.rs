@@ -1,4 +1,5 @@
 use models::gen::django_models::CreateRawCard;
+use regex::Regex;
 use scraper_html::{Html, Selector as ScraperSelector};
 use sqlx::{Pool, Postgres, Row};
 use std::sync::Arc;
@@ -59,14 +60,15 @@ impl RawCardService {
         // まず.cardSkillクラスから抽出を試す（詳細ページ用）
         if let Ok(card_skill_selector) = ScraperSelector::parse(".cardSkill") {
             if let Some(element) = document.select(&card_skill_selector).next() {
-                let text = element
-                    .text()
-                    .collect::<Vec<_>>()
-                    .join("\n")
-                    .trim()
-                    .to_string();
-                if !text.is_empty() {
-                    return text;
+                // HTMLを取得してIMGタグを置換する
+                let html_content = element.inner_html();
+                let processed_text = self.replace_img_tags_with_alt(&html_content);
+                
+                // HTMLタグを除去してテキストのみ取得
+                let cleaned_text = self.remove_html_tags(&processed_text);
+                
+                if !cleaned_text.trim().is_empty() {
+                    return cleaned_text.trim().to_string();
                 }
             }
         }
@@ -83,12 +85,14 @@ impl RawCardService {
                             // 対応するtd要素を取得
                             if let Ok(td_selector) = ScraperSelector::parse("td") {
                                 if let Some(td) = tr.select(&td_selector).next() {
-                                    return td
-                                        .text()
-                                        .collect::<Vec<_>>()
-                                        .join(" ")
-                                        .trim()
-                                        .to_string();
+                                    // HTMLを取得してIMGタグを置換する
+                                    let html_content = td.inner_html();
+                                    let processed_text = self.replace_img_tags_with_alt(&html_content);
+                                    
+                                    // HTMLタグを除去してテキストのみ取得
+                                    let cleaned_text = self.remove_html_tags(&processed_text);
+                                    
+                                    return cleaned_text.trim().to_string();
                                 }
                             }
                         }
@@ -111,20 +115,23 @@ impl RawCardService {
                 for img in document.select(&img_selector) {
                     // 親要素から同じdiv内のテキストを取得
                     if let Some(parent) = img.parent() {
-                        // ElementRefに変換してからテキストを取得
+                        // ElementRefに変換してからHTMLを取得
                         if let Some(parent_element) = scraper_html::ElementRef::wrap(parent) {
-                            let text = parent_element
-                                .text()
-                                .collect::<Vec<_>>()
-                                .join(" ")
-                                .trim()
-                                .to_string();
+                            let html_content = parent_element.inner_html();
+                            let processed_text = self.replace_img_tags_with_alt(&html_content);
+                            let cleaned_text = self.remove_html_tags(&processed_text);
+                            
                             // ライフバーストアイコンの後のテキストを抽出（：の後）
-                            if let Some(colon_pos) = text.find('：') {
-                                let burst_text = text[colon_pos + 3..].trim(); // 3バイトは '：' の文字
+                            if let Some(colon_pos) = cleaned_text.find('：') {
+                                let burst_text = cleaned_text[colon_pos + 3..].trim(); // 3バイトは '：' の文字
                                 if !burst_text.is_empty() {
                                     return burst_text.to_string();
                                 }
+                            }
+                            
+                            // ：が見つからない場合は全体をチェック
+                            if cleaned_text.contains("ライフバースト") {
+                                return cleaned_text.trim().to_string();
                             }
                         }
                     }
@@ -141,12 +148,12 @@ impl RawCardService {
                         if th_text.contains("ライフバースト") {
                             if let Ok(td_selector) = ScraperSelector::parse("td") {
                                 if let Some(td) = tr.select(&td_selector).next() {
-                                    return td
-                                        .text()
-                                        .collect::<Vec<_>>()
-                                        .join(" ")
-                                        .trim()
-                                        .to_string();
+                                    // HTMLを取得してIMGタグを置換する
+                                    let html_content = td.inner_html();
+                                    let processed_text = self.replace_img_tags_with_alt(&html_content);
+                                    let cleaned_text = self.remove_html_tags(&processed_text);
+                                    
+                                    return cleaned_text.trim().to_string();
                                 }
                             }
                         }
@@ -155,6 +162,37 @@ impl RawCardService {
             }
         }
         String::new()
+    }
+
+    /// IMGタグをalt属性の内容に置換する
+    fn replace_img_tags_with_alt(&self, html: &str) -> String {
+        let re = Regex::new(r#"<img[^>]*alt="([^"]*)"[^>]*>"#).unwrap();
+        let replaced = re.replace_all(html, |caps: &regex::Captures| {
+            let alt_text = &caps[1];
+            // 【】を除去してプレーンテキストに変換
+            alt_text
+                .replace("【", "")
+                .replace("】", "")
+                .replace("《", "")
+                .replace("》", "")
+        });
+        replaced.into_owned()
+    }
+
+    /// HTMLタグを除去してプレーンテキストを取得
+    fn remove_html_tags(&self, html: &str) -> String {
+        let re = Regex::new(r"<[^>]*>").unwrap();
+        let without_tags = re.replace_all(html, "");
+        
+        // 改行とスペースを正規化
+        let normalized = without_tags
+            .lines()
+            .map(|line| line.trim())
+            .filter(|line| !line.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n");
+        
+        normalized
     }
 
     /// 抽出したテキスト部分を除去したHTMLを作成
