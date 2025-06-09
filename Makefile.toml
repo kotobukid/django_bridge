@@ -10,7 +10,7 @@ description = "Run Axum server"
 env = { "WEB_PORT" = "${BACKEND_PORT}", "DJANGO_ADMIN_PORT" = "${DJANGO_ADMIN_PORT}" }
 script = [
     "cd server",
-    "cargo run --release"
+    "cargo run"
 ]
 
 [tasks.static]

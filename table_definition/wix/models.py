@@ -150,3 +150,42 @@ class Card(models.Model):
     class Meta:
         verbose_name = "カード"
         verbose_name_plural = "カード"
+
+
+class RawCard(models.Model):
+    """スクレイピングした生のカードデータを保存するモデル"""
+    
+    # 基本識別情報
+    card_number = models.CharField(verbose_name="カード番号", max_length=20, db_index=True)
+    name = models.CharField(verbose_name="カード名", max_length=200)
+    product = models.ForeignKey('Product', verbose_name="収録商品", on_delete=models.CASCADE, related_name='raw_cards')
+    
+    # 生HTML（完全な状態で保持）
+    raw_html = models.TextField(verbose_name="生HTML")
+    
+    # 事前解析済みフィールド
+    skill_text = models.TextField(verbose_name="スキルテキスト", blank=True, help_text="cardSkillセクションのテキスト")
+    life_burst_text = models.TextField(verbose_name="ライフバーストテキスト", blank=True, help_text="ライフバースト部分のテキスト")
+    
+    # メタデータ
+    source_url = models.URLField(verbose_name="ソースURL", max_length=500)
+    scraped_at = models.DateTimeField(verbose_name="スクレイピング日時", auto_now_add=True)
+    last_analyzed_at = models.DateTimeField(verbose_name="最終解析日時", null=True, blank=True)
+    
+    # 解析ステータス
+    is_analyzed = models.BooleanField(verbose_name="解析済み", default=False)
+    analysis_error = models.TextField(verbose_name="解析エラー", blank=True)
+    
+    class Meta:
+        verbose_name = "生カードデータ"
+        verbose_name_plural = "生カードデータ"
+        unique_together = ['card_number', 'product']
+        ordering = ['product', 'card_number']
+        indexes = [
+            models.Index(fields=['card_number']),
+            models.Index(fields=['scraped_at']),
+            models.Index(fields=['is_analyzed']),
+        ]
+    
+    def __str__(self):
+        return f"{self.card_number} - {self.name}"

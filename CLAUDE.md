@@ -115,3 +115,27 @@ cargo run --example parse_signi
 - Rust provides the API and business logic
 - Frontend is a separate Nuxt.js application
 - All card-related static data is scraped and cached
+
+## Architecture Refactoring (In Progress)
+
+### Goal
+Separate scraping and analysis logic to enable lightweight testing iterations without full scraping runs.
+
+### New Data Flow
+1. **Test Flow**: `[Skill Text String] → [Analyzer] → [Analysis Result]`
+2. **Production Flow**: `[Scraper] → [RawCard DB] → [Text Extraction] → [Analyzer] → [Feature Detection] → [DB]`
+
+### Crate Reorganization Plan
+- `scraper/` - Pure scraping functionality
+- `analyzer/` - Text analysis logic with isolated tests
+  - Can analyze skill text without scraping
+  - Tests use fixture strings, not live data
+- `shared/webapp/` - Integration layer
+- `shared/feature/` - Feature detection using analyzer results
+
+### RawCard Model
+New Django model to store scraped card data with minimal pre-processing:
+- Stores complete HTML
+- Extracts and stores skill text and life burst text separately
+- Enables individual card analysis by ID
+- Tracks analysis status and errors

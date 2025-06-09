@@ -24,7 +24,6 @@ async fn main() -> Result<(), sqlx::Error> {
         "../../.env",              // 二つ上のディレクトリ（nested crateの場合）
         workspace_env.as_str(),    // CARGO_WORKSPACE_DIRが設定されている場合
     ];
-
     for path in &env_paths {
         if std::path::Path::new(path).exists() {
             from_filename(path).ok();
@@ -63,7 +62,7 @@ async fn main() -> Result<(), sqlx::Error> {
         .nest("/card/", card_router)
         .nest("/product/", product_router);
 
-    let app_state = AppState { 
+    let app_state = AppState {
         db_pool: pool,
         django_admin_port
     };

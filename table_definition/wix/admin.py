@@ -6,7 +6,7 @@ Django Bridgeプロジェクト用の管理画面カスタマイズ
 - Axumプロジェクトからアクセス可能な管理インターフェースを提供
 """
 from django.contrib import admin
-from .models import Card, CardType, Color, Lrig, Product, Klass, Feature, Timing
+from .models import Card, CardType, Color, Lrig, Product, Klass, Feature, Timing, RawCard
 
 
 # 管理画面のサイト設定
@@ -87,3 +87,81 @@ class TimingAdmin(admin.ModelAdmin):
     list_display = ('name', 'id')
     search_fields = ('name',)
     ordering = ('id',)
+
+
+@admin.register(RawCard)
+class RawCardAdmin(admin.ModelAdmin):
+    list_display = ('card_number', 'name', 'product', 'scraped_at', 'is_analyzed', 'has_skill', 'has_burst')
+    list_filter = ('product', 'is_analyzed', 'scraped_at')
+    search_fields = ('card_number', 'name', 'skill_text', 'life_burst_text')
+    ordering = ('-scraped_at',)
+    readonly_fields = ('scraped_at', 'raw_html_preview')
+    date_hierarchy = 'scraped_at'
+    
+    fieldsets = (
+        ('基本情報', {
+            'fields': ('card_number', 'name', 'product', 'source_url')
+        }),
+        ('スクレイピングデータ', {
+            'fields': ('raw_html_preview', 'skill_text', 'life_burst_text'),
+            'classes': ('wide',)
+        }),
+        ('解析状態', {
+            'fields': ('is_analyzed', 'last_analyzed_at', 'analysis_error'),
+            'classes': ('collapse',)
+        }),
+        ('メタデータ', {
+            'fields': ('scraped_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def has_skill(self, obj):
+        """スキルテキストの有無を表示"""
+        return bool(obj.skill_text)
+    has_skill.boolean = True
+    has_skill.short_description = 'スキル有'
+    
+    def has_burst(self, obj):
+        """ライフバーストの有無を表示"""
+        return bool(obj.life_burst_text)
+    has_burst.boolean = True
+    has_burst.short_description = 'バースト有'
+    
+    def raw_html_preview(self, obj):
+        """生HTMLのプレビュー（最初の500文字）"""
+        from django.utils.html import format_html
+        if obj.raw_html:
+            preview = obj.raw_html[:500] + '...' if len(obj.raw_html) > 500 else obj.raw_html
+            return format_html('<pre style="white-space: pre-wrap; word-wrap: break-word;">{}</pre>', preview)
+        return '-'
+    raw_html_preview.short_description = '生HTML (プレビュー)'
+    
+    def get_queryset(self, request):
+        """クエリセットの最適化"""
+        return super().get_queryset(request).select_related('product')
+    
+    actions = ['mark_as_analyzed', 'mark_as_not_analyzed', 'reanalyze']
+    
+    def mark_as_analyzed(self, request, queryset):
+        """選択したカードを解析済みにマーク"""
+        updated = queryset.update(is_analyzed=True)
+        self.message_user(request, f'{updated}件のカードを解析済みにマークしました。')
+    mark_as_analyzed.short_description = '解析済みにマーク'
+    
+    def mark_as_not_analyzed(self, request, queryset):
+        """選択したカードを未解析にマーク"""
+        updated = queryset.update(is_analyzed=False, analysis_error='')
+        self.message_user(request, f'{updated}件のカードを未解析にマークしました。')
+    mark_as_not_analyzed.short_description = '未解析にマーク'
+    
+    def reanalyze(self, request, queryset):
+        """選択したカードの再解析をリクエスト"""
+        from django.utils import timezone
+        updated = queryset.update(
+            is_analyzed=False,
+            analysis_error='',
+            last_analyzed_at=timezone.now()
+        )
+        self.message_user(request, f'{updated}件のカードの再解析をリクエストしました。')
+    reanalyze.short_description = '再解析をリクエスト'
