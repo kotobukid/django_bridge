@@ -321,6 +321,7 @@ def update_timing():
 
 def update_product():
     products_source = (
+        (129, "st", "WX25-CD1", "ブルーアーカイブ〔WX25-CD1〕"),
         (130, "st", "WX24-D5", "BLACK ALT DESIRE〔WX24-D5〕"),
         (131, "st", "WX24-D4", "GREEN ALT WANNA〔WX24-D4〕"),
         (132, "st", "WX24-D3", "BLUE ALT APPLI〔WX24-D3〕"),
