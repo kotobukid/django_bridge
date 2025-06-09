@@ -556,6 +556,7 @@ fn main() -> Result<()> {
         ModelDefinition::new("wix", "CardType", "./table_definition/wix/models.py"),
         ModelDefinition::new("wix", "Product", "./table_definition/wix/models.py"),
         ModelDefinition::new("wix", "Klass", "./table_definition/wix/models.py"),
+        ModelDefinition::new("wix", "RawCard", "./table_definition/wix/models.py"),
     ];
 
     let dest_path = Path::new(&out_dir).join("django_models.rs");

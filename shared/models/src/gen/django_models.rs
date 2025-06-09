@@ -1,3 +1,4 @@
+use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
@@ -174,5 +175,44 @@ pub struct CreateKlass {
     /// Max length: 5
     pub cat3: Option<String>,
     pub sort_asc: i32,
+}
+
+
+#[allow(dead_code)]
+#[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
+pub struct RawCardDb {
+    /// Primary Key
+    pub id: i64,
+    /// Max length: 20
+    pub card_number: String,
+    /// Max length: 200
+    pub name: String,
+    pub raw_html: String,
+    pub skill_text: String,
+    pub life_burst_text: String,
+    /// Max length: 500
+    pub source_url: String,
+    pub scraped_at: DateTime<Utc>,
+    pub last_analyzed_at: Option<DateTime<Utc>>,
+    pub is_analyzed: bool,
+    pub analysis_error: String,
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, PartialEq, Eq)]
+pub struct CreateRawCard {
+    /// Max length: 20
+    pub card_number: String,
+    /// Max length: 200
+    pub name: String,
+    pub raw_html: String,
+    pub skill_text: String,
+    pub life_burst_text: String,
+    /// Max length: 500
+    pub source_url: String,
+    pub scraped_at: DateTime<Utc>,
+    pub last_analyzed_at: Option<DateTime<Utc>>,
+    pub is_analyzed: bool,
+    pub analysis_error: String,
 }
 

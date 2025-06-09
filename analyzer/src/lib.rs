@@ -810,6 +810,8 @@ pub mod migration {
     }
 }
 
+pub mod raw_card_analyzer;
+
 #[cfg(test)]
 mod tests {
     use super::*;
