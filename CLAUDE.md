@@ -1,10 +1,10 @@
 # Django Bridge Project - AI Assistant Guide
 
 ## Project Overview
-This is a WIXOSS Trading Card Game management system that bridges Django (for database management) with Rust (for performance-critical operations) and a Nuxt.js frontend.
+This is a WIXOSS Trading Card Game management system that bridges Django (for database management) with Rust (for performance-critical operations) and a Leptos frontend.
 
 ## Important Directories to Avoid
-- **DO NOT EXPLORE**: `shared/webapp/text_cache/` - Contains thousands of cached HTML files
+- **DO NOT EXPLORE**: `text_cache/`, `custom_cache` - Contains thousands of cached HTML files
 - **DO NOT EXPLORE**: `datapack/src/gen/` - Contains large generated files (especially cards.rs)
 - **AVOID**: Hidden directories like `.git`, `node_modules`, etc. unless specifically needed
 
@@ -51,14 +51,8 @@ cargo make analyze_all
 # Generate static data
 cargo make static
 
-# Build WASM module
-cargo make wasm_linux  # or cargo make wasm on other platforms
-
 # Generate frontend
-cargo make generate
-
-# Format Rust code
-cargo make fmt
+cargo make trunk_build
 ```
 
 ## Project Structure
@@ -72,10 +66,7 @@ cargo make fmt
 - `analyzer/` - RawCard analysis and feature extraction
 
 ### Frontend
-- `front/` - Nuxt.js 3 application
-- `front/pages/` - Page components
-- `front/components/` - Reusable Vue components
-- `front/stores/` - Pinia stores
+- `wasm_front/` - Leptos application
 
 ### Tools
 - `syncdb/` - Converts Django models to Rust structs
@@ -91,8 +82,7 @@ cargo make fmt
 5. **Test**: Run servers and verify changes
 
 ## Environment Variables
-- `DJANGO_BRIDGE_PORT` - Main server port (default: 8002)
-- `NUXT_DEV_PORT` - Frontend dev port (default: 3001)
+- `BACKEND_PORT` - Main server port (default: 8002)
 - `DJANGO_ADMIN_PORT` - Django admin port (default: 8003)
 
 ## Database
@@ -153,7 +143,7 @@ cargo make fmt
 - The project uses a unique Django-Rust hybrid architecture
 - Django handles all database migrations and schema
 - Rust provides the API and business logic
-- Frontend is a separate Nuxt.js application
+- Frontend is a separate Leptos application
 - **Scraping and analysis are completely decoupled** for better testing and reliability
 
 ## Implementation Status
