@@ -146,6 +146,28 @@ cargo make trunk_build
 - Frontend is a separate Leptos application
 - **Scraping and analysis are completely decoupled** for better testing and reliability
 
+## Critical Design Decisions & Lessons Learned
+
+### ⚠️ Symbol Preservation in Text Processing
+**CRITICAL**: The analyzer crate depends heavily on specific symbols in card text for feature detection.
+
+**Key Symbols That Must Be Preserved**:
+- `【】` brackets: Used for ability detection (`【アサシン】`, `【チャーム】`, `【ライフバースト】`, etc.)
+- `《》` brackets: Used for game mechanic detection (`《ガードアイコン》`, `《クラフト》`, etc.)
+- `:` colons: Used for timing detection (`出：`, `自：`, `起：`, etc.)
+
+**Location**: `scraper/src/raw_card.rs` - `replace_img_tags_with_alt()` function
+- **DO NOT remove** `【】` or `《》` symbols during HTML processing
+- These symbols are essential for pattern matching in `analyzer/src/lib.rs` and `shared/feature/src/lib.rs`
+- Removing them breaks dozens of detection rules and causes silent feature detection failures
+
+**Historical Issue**: Previously symbols were stripped for "clean text", causing:
+- Card colors detected incorrectly (e.g., green cards showing as 0 results)
+- Abilities like Guard, Assassin, Charm not being detected
+- Skill text missing timing indicators (`出：`, `自：`)
+
+**Current Implementation** (2025-01-10): Symbols are preserved to maintain detection accuracy.
+
 ## Implementation Status
 
 ### ✅ Completed - RawCard System

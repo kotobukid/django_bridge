@@ -169,12 +169,8 @@ impl RawCardService {
         let re = Regex::new(r#"<img[^>]*alt="([^"]*)"[^>]*>"#).unwrap();
         let replaced = re.replace_all(html, |caps: &regex::Captures| {
             let alt_text = &caps[1];
-            // 【】を除去してプレーンテキストに変換
-            alt_text
-                .replace("【", "")
-                .replace("】", "")
-                .replace("《", "")
-                .replace("》", "")
+            // 記号を保持（【】《》両方とも検知ルールで使用するため）
+            alt_text.to_string()
         });
         replaced.into_owned()
     }
