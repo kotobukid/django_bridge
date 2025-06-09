@@ -485,7 +485,6 @@ pub fn fetch_by_features_and_native(
 ) -> Vec<CardExport> {
     use feature::feature::HashSetToBits;
     use std::collections::HashSet;
-    use std::str::FromStr;
 
     // feature名からCardFeatureに変換してビットを計算
     let mut feature_set = HashSet::new();
@@ -526,7 +525,6 @@ pub fn fetch_by_colors_and_features_native(
     color_bits: u32,
     feature_names: &[String],
 ) -> Vec<CardExport> {
-    use feature::feature::HashSetToBits;
 
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
@@ -550,7 +548,6 @@ pub fn fetch_by_colors_features_and_card_types_native(
     feature_names: &[String],
     card_types: &[CardType],
 ) -> Vec<CardExport> {
-    use feature::feature::HashSetToBits;
 
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {

@@ -1,6 +1,5 @@
 use crate::analyze::wixoss::Card;
-// Removed analyzer dependency to avoid cyclic dependency
-// use analyzer::raw_card_analyzer::{AnalysisError, RawCardAnalyzer};
+use analyzer::raw_card_analyzer::{AnalysisError, RawCardAnalyzer};
 use models::card::CreateCard;
 use models::gen::django_models::RawCardDb;
 
@@ -13,42 +12,41 @@ impl WebAppRawCardAnalyzer {
     }
 }
 
-// Removed RawCardAnalyzer trait implementation to avoid cyclic dependency
-// #[async_trait::async_trait]
-// impl RawCardAnalyzer for WebAppRawCardAnalyzer {
-//     async fn analyze(&self, raw_card: &RawCardDb) -> Result<CreateCard, AnalysisError> {
-//         // Parse the HTML to get a Card struct
-//         let card = match Card::card_from_html(&raw_card.raw_html) {
-//             Some(card) => card,
-//             None => {
-//                 return Err(AnalysisError::new(
-//                     "Failed to parse card HTML".to_string(),
-//                     raw_card.id,
-//                 ));
-//             }
-//         };
+#[async_trait::async_trait]
+impl RawCardAnalyzer for WebAppRawCardAnalyzer {
+    async fn analyze(&self, raw_card: &RawCardDb) -> Result<CreateCard, AnalysisError> {
+        // Parse the HTML to get a Card struct
+        let card = match Card::card_from_html(&raw_card.raw_html) {
+            Some(card) => card,
+            None => {
+                return Err(AnalysisError::new(
+                    "Failed to parse card HTML".to_string(),
+                    raw_card.id,
+                ));
+            }
+        };
 
-//         // Convert Card to CreateCard
-//         let mut create_card: CreateCard = card.into();
+        // Convert Card to CreateCard
+        let mut create_card: CreateCard = card.into();
 
-//         // Override some fields with data from RawCardDb
-//         // TODO: Use raw_card.product_id when field is available
-//         create_card.url = Some(raw_card.source_url.clone());
+        // Override some fields with data from RawCardDb
+        // TODO: Use raw_card.product_id when field is available
+        create_card.url = Some(raw_card.source_url.clone());
 
-//         // Ensure the code matches what was scraped
-//         if create_card.code != raw_card.card_number {
-//             return Err(AnalysisError::new(
-//                 format!(
-//                     "Card number mismatch: expected {}, got {}",
-//                     raw_card.card_number, create_card.code
-//                 ),
-//                 raw_card.id,
-//             ));
-//         }
+        // Ensure the code matches what was scraped
+        if create_card.code != raw_card.card_number {
+            return Err(AnalysisError::new(
+                format!(
+                    "Card number mismatch: expected {}, got {}",
+                    raw_card.card_number, create_card.code
+                ),
+                raw_card.id,
+            ));
+        }
 
-//         Ok(create_card)
-//     }
-// }
+        Ok(create_card)
+    }
+}
 
 /// Utility function to analyze a single raw card and save to database
 /// NOTE: This function is currently disabled due to cyclic dependency removal

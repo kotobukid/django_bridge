@@ -30,6 +30,7 @@ clap = { workspace = true }
 models = { path = "../models" }
 feature = { path = "../feature" }
 color = { path = "../color" }
+analyzer = { path = "../../analyzer" }
 rayon = "1.10.0"
 async-trait = "0.1"
 futures = { workspace = true }

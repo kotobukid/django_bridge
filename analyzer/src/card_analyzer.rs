@@ -4,6 +4,9 @@ use models::card::CreateCard;
 use models::r#gen::django_models::RawCardDb;
 use sqlx::{Pool, Postgres, Row};
 use std::sync::Arc;
+use feature::{create_detect_patterns, CardFeature};
+use feature::feature::HashSetToBits;
+use std::collections::HashSet;
 
 /// RawCardDb with product_id included
 #[derive(sqlx::FromRow, Debug, Clone)]
@@ -162,36 +165,81 @@ impl SimpleRawCardAnalyzer {
                 if let Some(dd_end) = after_dt.find("</dd>") {
                     let color_text = &after_dt[dd_start + 4..dd_end];
                     
-                    // 各色をチェック
+                    // 各色をチェック（shared/color/lib.rsの定義に合わせる）
                     if color_text.contains("白") {
-                        color |= 1 << 0; // White
-                    }
-                    if color_text.contains("赤") {
-                        color |= 1 << 1; // Red  
+                        color |= 1 << 1; // White
                     }
                     if color_text.contains("青") {
                         color |= 1 << 2; // Blue
                     }
-                    if color_text.contains("緑") {
-                        color |= 1 << 3; // Green
+                    if color_text.contains("赤") {
+                        color |= 1 << 3; // Red  
                     }
                     if color_text.contains("黒") {
                         color |= 1 << 4; // Black
                     }
+                    if color_text.contains("緑") {
+                        color |= 1 << 5; // Green
+                    }
                     if color_text.contains("無") {
-                        color = 1 << 7; // Colorless
+                        color = 1 << 6; // Colorless
                     }
                 }
             }
         }
         
-        // 何も検出されない場合はデフォルトで無色
+        // 何も検出されない場合はデフォルトで不明
         if color == 0 {
-            color = 1 << 7;
+            color = 1 << 7; // Unknown
         }
         
         color
     }
+
+    /// スキルテキストとライフバーストテキストから特徴を検出する
+    fn detect_features_from_text(&self, skill_text: &str, life_burst_text: &str) -> (i64, i64) {
+        let (replace_patterns, detect_patterns) = create_detect_patterns();
+        let mut detected_features = HashSet::new();
+        
+        // 結合したテキスト
+        let combined_text = format!("{} {}", skill_text, life_burst_text);
+        
+        // デバッグ出力を追加
+        if !skill_text.is_empty() || !life_burst_text.is_empty() {
+            // println!("DEBUG: Combined text: '{}'", combined_text);
+        }
+        
+        // 置換パターンで特徴を検出
+        for pattern in &replace_patterns {
+            if pattern.pattern_r.is_match(&combined_text) {
+                for feature in pattern.features_detected {
+                    // println!("DEBUG: Replace pattern '{}' matched, adding feature: {:?}", pattern.pattern, feature);
+                    detected_features.insert(feature.clone());
+                }
+            }
+        }
+        
+        // 検出パターンで特徴を検出
+        for pattern in &detect_patterns {
+            if pattern.pattern_r.is_match(&combined_text) {
+                for feature in pattern.features_detected {
+                    // println!("DEBUG: Detect pattern '{}' matched, adding feature: {:?}", pattern.pattern, feature);
+                    detected_features.insert(feature.clone());
+                }
+            }
+        }
+        
+        // HashSetからビットに変換（feature crateの標準実装を使用）
+        let result = detected_features.to_bits();
+        
+        // デバッグ出力を追加
+        if result.0 != 0 || result.1 != 0 {
+            // println!("DEBUG: Final feature bits: {:b} / {:b}", result.0, result.1);
+        }
+        
+        result
+    }
+    
 
     pub async fn analyze_with_product_id(
         &self,
@@ -205,6 +253,9 @@ impl SimpleRawCardAnalyzer {
         // HTMLから色を検出
         let color = self.detect_color_from_html(&raw_card.raw_html);
         // println!("DEBUG: Card {} - Detected color: {}", raw_card.card_number, color);
+        
+        // スキルテキストとライフバーストテキストから特徴を検出
+        let (feature_bits1, feature_bits2) = self.detect_features_from_text(&raw_card.skill_text, &raw_card.life_burst_text);
         
         // 基本的なCreateCardを作成
         Ok(CreateCard {
@@ -231,8 +282,8 @@ impl SimpleRawCardAnalyzer {
             rarity: None,
             timing: None,
             url: Some(raw_card.source_url.clone()),
-            feature_bits1: 0, // TODO: 特徴解析を実装
-            feature_bits2: 0,
+            feature_bits1,
+            feature_bits2,
             ex1: None,
         })
     }

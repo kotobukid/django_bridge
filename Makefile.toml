@@ -105,7 +105,20 @@ args = [
     "-p",
     "analyzer",
     "--",
+    "--batch-size",
+    "20",
     "--limit",
     "10000",
     "--force"
 ]
+[tasks.wasm_linux]
+description = "build wasm by wasm-pack (debug build) and organize files"
+script = '''
+mkdir -p front/static/pkg 2>/dev/null
+cd datapack && wasm-pack build --target web --out-dir ../front/public/pkg && cd ..
+mv front/public/pkg/datapack.d.ts front/static/pkg/datapack.d.ts
+mv front/public/pkg/datapack.js front/static/pkg/datapack.js
+mv front/public/pkg/datapack_bg.wasm.d.ts front/static/pkg/datapack_bg.wasm.d.ts
+mv front/public/pkg/package.json front/static/pkg/package.json
+cp front/public/pkg/.gitignore front/static/pkg/.gitignore
+'''
