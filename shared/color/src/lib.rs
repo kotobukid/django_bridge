@@ -74,7 +74,7 @@ impl Color {
             Color::White => "#fff1b4",
             Color::Blue => "#b4ceff",
             Color::Red => "#ffb4b4",
-            Color::Black => "#9263f9",
+            Color::Black => "rgb(176, 150, 255)",
             Color::Green => "#ccffb4",
             Color::Colorless => "#cfcfcf",
             _ => "#ffffff", // デフォルト色

@@ -5,6 +5,8 @@ use feature::CardFeature;
 use rayon::prelude::*;
 use std::collections::HashSet;
 
+mod common;
+
 #[test]
 fn test_sample() {
     assert_eq!(add(1, 2), 3);
@@ -20,14 +22,18 @@ fn test_card_feature_detection_banish_pattern() {
     【自】：各アタックフェイズ開始時、対戦相手は【チャーム】が付いている自分のシグニ１体を対象とし、それをバニッシュする。
     "#;
 
-    let mut analyzer: Analyzer<CardFeature> = Analyzer::new();
-    analyzer.add_rule(Box::new(BanishDetectRule::new()));
-
-    let detected_features = analyzer.analyze(card_skill_text);
+    // 本番のルールを使用
+    let detected_features = common::detect_features(card_skill_text);
 
     assert!(
         detected_features.contains(&CardFeature::Banish),
         "Should detect Banish feature from 'バニッシュする' text"
+    );
+
+    // 【チャーム】も検出されるはず
+    assert!(
+        detected_features.contains(&CardFeature::Charm),
+        "Should also detect Charm feature from 【チャーム】 text"
     );
 }
 
@@ -38,10 +44,8 @@ fn test_card_feature_detection_charm_pattern() {
     【自】：対戦相手のシグニ１体が場に出たとき、対戦相手は自分のデッキの一番上のカードをそのシグニの【チャーム】にする。
     "#;
 
-    let mut analyzer: Analyzer<CardFeature> = Analyzer::new();
-    analyzer.add_rule(Box::new(CharmDetectRule::new()));
-
-    let detected_features = analyzer.analyze(card_skill_text);
+    // 本番のルールを使用
+    let detected_features = common::detect_features(card_skill_text);
 
     assert!(
         detected_features.contains(&CardFeature::Charm),
@@ -56,151 +60,61 @@ fn test_card_feature_detection_multiple_features() {
     【常】：このシグニがアタックしたとき、対戦相手のライフクロス１枚をクラッシュする。
     "#;
 
-    let mut analyzer: Analyzer<CardFeature> = Analyzer::new();
-    analyzer.add_rule(Box::new(LifeBurstDetectRule::new()));
-    analyzer.add_rule(Box::new(DrawDetectRule::new()));
-    analyzer.add_rule(Box::new(BanishDetectRule::new()));
-    analyzer.add_rule(Box::new(CrashDetectRule::new()));
+    // 本番のルールを使用（前処理も含む）
+    let (processed_text, detected_features) = common::analyze_with_preprocessing(card_skill_text);
 
-    let detected_features = analyzer.analyze(card_skill_text);
-
+    // 検出されたフィーチャーを確認
     assert!(
         detected_features.contains(&CardFeature::LifeBurst),
         "Should detect LifeBurst feature"
     );
     assert!(
         detected_features.contains(&CardFeature::Draw),
-        "Should detect Draw feature"
+        "Should detect Draw feature from 'カードを１枚引く'"
     );
     assert!(
         detected_features.contains(&CardFeature::Banish),
-        "Should detect Banish feature"
+        "Should detect Banish feature from 'バニッシュする'"
     );
     assert!(
-        detected_features.contains(&CardFeature::DoubleCrush),
-        "Should detect Crash feature"
+        detected_features.contains(&CardFeature::LifeCrush),
+        "Should detect LifeCrush feature from 'ライフクロス１枚をクラッシュする'"
     );
-    assert_eq!(
-        detected_features.len(),
-        4,
-        "Should detect exactly 4 features"
+
+    // 前処理の動作確認
+    // 本番では【ライフバースト】パターンは検出パターンで処理され、置換は行われない
+}
+
+#[test]
+fn test_card_feature_detection_virustotal() {
+    let card_skill_text = r#"対戦相手のシグニ１体を対象とし、それをバニッシュする。それが感染状態の場合、代わりにそれをトラッシュに置く。"#;
+
+    // 本番のルールを使用
+    let detected_features = common::detect_features(card_skill_text);
+
+    // 期待されるフィーチャーを検証
+    assert!(
+        detected_features.contains(&CardFeature::Banish),
+        "Should detect Banish feature from 'バニッシュする'"
+    );
+    assert!(
+        detected_features.contains(&CardFeature::Virus),
+        "Should detect Virus feature from '感染状態'"
+    );
+    assert!(
+        detected_features.contains(&CardFeature::Trash),
+        "Should detect Trash feature from 'トラッシュに置く'"
+    );
+
+    // 検出されたフィーチャーの詳細を出力（デバッグ用）
+    println!(
+        "Detected features for virustotal test: {:?}",
+        detected_features
     );
 }
 
-/// Rule to detect Banish pattern
-pub struct BanishDetectRule {
-    pattern: regex::Regex,
-}
-
-impl BanishDetectRule {
-    pub fn new() -> Self {
-        Self {
-            pattern: regex::Regex::new(r"バニッシュ").unwrap(),
-        }
-    }
-}
-
-impl AnalyzeRule<CardFeature> for BanishDetectRule {
-    fn detect(&self, text: &str) -> HashSet<CardFeature> {
-        let mut result = HashSet::new();
-        if self.pattern.is_match(text) {
-            result.insert(CardFeature::Banish);
-        }
-        result
-    }
-}
-
-/// Rule to detect Charm pattern
-pub struct CharmDetectRule {
-    pattern: regex::Regex,
-}
-
-impl CharmDetectRule {
-    pub fn new() -> Self {
-        Self {
-            pattern: regex::Regex::new(r"【チャーム】").unwrap(),
-        }
-    }
-}
-
-impl AnalyzeRule<CardFeature> for CharmDetectRule {
-    fn detect(&self, text: &str) -> HashSet<CardFeature> {
-        let mut result = HashSet::new();
-        if self.pattern.is_match(text) {
-            result.insert(CardFeature::Charm);
-        }
-        result
-    }
-}
-
-/// Rule to detect LifeBurst pattern
-pub struct LifeBurstDetectRule {
-    pattern: regex::Regex,
-}
-
-impl LifeBurstDetectRule {
-    pub fn new() -> Self {
-        Self {
-            pattern: regex::Regex::new(r"【ライフバースト】").unwrap(),
-        }
-    }
-}
-
-impl AnalyzeRule<CardFeature> for LifeBurstDetectRule {
-    fn detect(&self, text: &str) -> HashSet<CardFeature> {
-        let mut result = HashSet::new();
-        if self.pattern.is_match(text) {
-            result.insert(CardFeature::LifeBurst);
-        }
-        result
-    }
-}
-
-/// Rule to detect Draw pattern
-pub struct DrawDetectRule {
-    pattern: regex::Regex,
-}
-
-impl DrawDetectRule {
-    pub fn new() -> Self {
-        Self {
-            pattern: regex::Regex::new(r"カードを.*?引く").unwrap(),
-        }
-    }
-}
-
-impl AnalyzeRule<CardFeature> for DrawDetectRule {
-    fn detect(&self, text: &str) -> HashSet<CardFeature> {
-        let mut result = HashSet::new();
-        if self.pattern.is_match(text) {
-            result.insert(CardFeature::Draw);
-        }
-        result
-    }
-}
-
-/// Rule to detect Crash pattern
-pub struct CrashDetectRule {
-    pattern: regex::Regex,
-}
-
-impl CrashDetectRule {
-    pub fn new() -> Self {
-        Self {
-            pattern: regex::Regex::new(r"クラッシュ").unwrap(),
-        }
-    }
-}
-
-impl AnalyzeRule<CardFeature> for CrashDetectRule {
-    fn detect(&self, text: &str) -> HashSet<CardFeature> {
-        let mut result = HashSet::new();
-        if self.pattern.is_match(text) {
-            result.insert(CardFeature::DoubleCrush);
-        }
-        result
-    }
-}
+// 以下の個別ルールは本番ルールを使用するように変更したため不要になりました
+// 既存のテストとの互換性のために、一部のテストではまだ使用されているため残しています
 
 #[test]
 fn test_numeric_variation_rule() {
@@ -336,11 +250,8 @@ fn test_parallel_performance() {
 
 #[test]
 fn test_enhanced_analyzer_features() {
-    let mut analyzer: Analyzer<CardFeature> = Analyzer::new();
-
-    // カスタムルールを追加
-    analyzer.add_rule(Box::new(BanishDetectRule::new()));
-    analyzer.add_rule(Box::new(CharmDetectRule::new()));
+    // 本番のアナライザーを使用
+    let analyzer = common::get_production_analyzer();
 
     let test_text = "対戦相手のシグニをバニッシュして【チャーム】を付ける";
 

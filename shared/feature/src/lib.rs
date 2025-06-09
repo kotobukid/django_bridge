@@ -73,7 +73,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 141;
+pub const PATTERNS_AMOUNT_D: usize = 142;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -785,6 +785,7 @@ pub fn create_detect_patterns() -> (
             r"このターンにあなたがピースを使用していた場合",
             feature::CardFeature::OnArts
         ],
+        detect_pattern![r"【ライフバースト】", feature::CardFeature::LifeBurst],
     ];
 
     (r_patterns, d_patterns)

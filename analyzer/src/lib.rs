@@ -1053,6 +1053,69 @@ pub mod migration {
 pub mod card_analyzer;
 pub mod raw_card_analyzer;
 
+/// 本番のフィーチャー検出パターンを使用するルール
+pub struct ProductionFeatureRule;
+
+impl ProductionFeatureRule {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl AnalyzeRule<CardFeature> for ProductionFeatureRule {
+    fn detect(&self, text: &str) -> HashSet<CardFeature> {
+        use feature::create_detect_patterns;
+        
+        let mut features = HashSet::new();
+        let (replace_patterns, detect_patterns) = create_detect_patterns();
+
+        // 置換パターンからフィーチャーを検出
+        for pattern in replace_patterns.iter() {
+            if pattern.pattern_r.is_match(text) {
+                features.extend(pattern.features_detected.iter().cloned());
+            }
+        }
+
+        // 検出パターンからフィーチャーを検出
+        for pattern in detect_patterns.iter() {
+            if pattern.pattern_r.is_match(text) {
+                features.extend(pattern.features_detected.iter().cloned());
+            }
+        }
+
+        features
+    }
+
+    fn preprocess(&self, text: &str) -> String {
+        use feature::create_detect_patterns;
+        
+        let (replace_patterns, _) = create_detect_patterns();
+        
+        // 置換パターンを順番に適用
+        replace_patterns.iter().fold(
+            text.to_string(),
+            |current_text, pattern| {
+                pattern.pattern_r
+                    .replace_all(&current_text, pattern.replace_to)
+                    .into_owned()
+            }
+        )
+    }
+}
+
+/// 本番のフィーチャー検出ロジックをそのまま使用するアナライザーを作成
+pub fn create_production_analyzer() -> Analyzer<CardFeature> {
+    let mut analyzer = Analyzer::new();
+    analyzer.add_rule(Box::new(ProductionFeatureRule::new()));
+    analyzer
+}
+
+/// 本番と同じ方法でテキストからフィーチャーを検出（前処理込み）
+pub fn analyze_text_with_production_rules(text: &str) -> (String, HashSet<CardFeature>) {
+    let rule = ProductionFeatureRule::new();
+    rule.analyze(text)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
