@@ -17,7 +17,8 @@ use crate::analyze::wixoss::selectors::{
     SPAN_SELECTOR,
 };
 use crate::analyze::wixoss::timing::TimingList;
-use analyzer::{AnalyzeRule, Analyzer};
+// Removed analyzer dependency to avoid cyclic dependency
+// use analyzer::{AnalyzeRule, Analyzer};
 use feature::feature::CardFeature;
 use models::card::CreateCard;
 use rayon::prelude::*;
@@ -309,7 +310,7 @@ impl From<Card> for CreateCard {
             story: val.story.value,
             rarity: Some(val.rarity),
             timing: Some(val.time.to_bitset()),
-            card_type: 0, // default
+            card_type: val.card_type.to_db_id(), // 検出されたcard_typeを使用
             product: 0,   // default
             url: None,
             skill_text: Some(normal_skills.join("\n")),
@@ -658,10 +659,9 @@ impl CardFeatureRule {
             },
         )
     }
-}
-
-impl AnalyzeRule<CardFeature> for CardFeatureRule {
-    fn detect(&self, text: &str) -> HashSet<CardFeature> {
+    
+    // Direct feature detection without trait
+    fn detect_features(&self, text: &str) -> HashSet<CardFeature> {
         let mut features = HashSet::new();
 
         let (replace_patterns, detect_patterns) = &create_detect_patterns();
@@ -713,12 +713,8 @@ fn rule_explain_to_feature(text: String) -> (String, HashSet<CardFeature>) {
     // Apply replace patterns to get the replaced text
     let replaced_text = rule.apply_replace(&text);
 
-    // Create analyzer
-    let mut analyzer = Analyzer::new();
-    analyzer.add_rule(Box::new(rule));
-
-    // Analyze the replaced text to detect features
-    let features = analyzer.analyze(&replaced_text);
+    // Detect features directly without using Analyzer trait
+    let features = rule.detect_features(&replaced_text);
 
     (replaced_text, features)
 }

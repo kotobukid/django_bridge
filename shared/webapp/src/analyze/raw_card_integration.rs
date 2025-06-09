@@ -1,5 +1,6 @@
 use crate::analyze::wixoss::Card;
-use analyzer::raw_card_analyzer::{AnalysisError, RawCardAnalyzer};
+// Removed analyzer dependency to avoid cyclic dependency
+// use analyzer::raw_card_analyzer::{AnalysisError, RawCardAnalyzer};
 use models::card::CreateCard;
 use models::gen::django_models::RawCardDb;
 
@@ -12,51 +13,70 @@ impl WebAppRawCardAnalyzer {
     }
 }
 
-#[async_trait::async_trait]
-impl RawCardAnalyzer for WebAppRawCardAnalyzer {
-    async fn analyze(&self, raw_card: &RawCardDb) -> Result<CreateCard, AnalysisError> {
-        // Parse the HTML to get a Card struct
-        let card = match Card::card_from_html(&raw_card.raw_html) {
-            Some(card) => card,
-            None => {
-                return Err(AnalysisError::new(
-                    "Failed to parse card HTML".to_string(),
-                    raw_card.id,
-                ));
-            }
-        };
+// Removed RawCardAnalyzer trait implementation to avoid cyclic dependency
+// #[async_trait::async_trait]
+// impl RawCardAnalyzer for WebAppRawCardAnalyzer {
+//     async fn analyze(&self, raw_card: &RawCardDb) -> Result<CreateCard, AnalysisError> {
+//         // Parse the HTML to get a Card struct
+//         let card = match Card::card_from_html(&raw_card.raw_html) {
+//             Some(card) => card,
+//             None => {
+//                 return Err(AnalysisError::new(
+//                     "Failed to parse card HTML".to_string(),
+//                     raw_card.id,
+//                 ));
+//             }
+//         };
 
-        // Convert Card to CreateCard
-        let mut create_card: CreateCard = card.into();
+//         // Convert Card to CreateCard
+//         let mut create_card: CreateCard = card.into();
 
-        // Override some fields with data from RawCardDb
-        // TODO: Use raw_card.product_id when field is available
-        create_card.url = Some(raw_card.source_url.clone());
+//         // Override some fields with data from RawCardDb
+//         // TODO: Use raw_card.product_id when field is available
+//         create_card.url = Some(raw_card.source_url.clone());
 
-        // Ensure the code matches what was scraped
-        if create_card.code != raw_card.card_number {
-            return Err(AnalysisError::new(
-                format!(
-                    "Card number mismatch: expected {}, got {}",
-                    raw_card.card_number, create_card.code
-                ),
-                raw_card.id,
-            ));
-        }
+//         // Ensure the code matches what was scraped
+//         if create_card.code != raw_card.card_number {
+//             return Err(AnalysisError::new(
+//                 format!(
+//                     "Card number mismatch: expected {}, got {}",
+//                     raw_card.card_number, create_card.code
+//                 ),
+//                 raw_card.id,
+//             ));
+//         }
 
-        Ok(create_card)
-    }
-}
+//         Ok(create_card)
+//     }
+// }
 
 /// Utility function to analyze a single raw card and save to database
+/// NOTE: This function is currently disabled due to cyclic dependency removal
 pub async fn analyze_and_save_card(
     raw_card: &RawCardDb,
     pool: &sqlx::PgPool,
 ) -> Result<i64, Box<dyn std::error::Error>> {
-    let analyzer = WebAppRawCardAnalyzer::new();
+    // let analyzer = WebAppRawCardAnalyzer::new();
 
-    // Analyze the raw card
-    let create_card = analyzer.analyze(raw_card).await?;
+    // Analyze the raw card using Card::card_from_html directly
+    let card = match Card::card_from_html(&raw_card.raw_html) {
+        Some(card) => card,
+        None => {
+            return Err(format!("Failed to parse card HTML for card {}", raw_card.id).into());
+        }
+    };
+    
+    // Convert Card to CreateCard
+    let mut create_card: CreateCard = card.into();
+    create_card.url = Some(raw_card.source_url.clone());
+    
+    // Ensure the code matches what was scraped
+    if create_card.code != raw_card.card_number {
+        return Err(format!(
+            "Card number mismatch: expected {}, got {}",
+            raw_card.card_number, create_card.code
+        ).into());
+    }
 
     // Save to database using the repository
     use crate::repositories::CardRepository;
@@ -81,15 +101,30 @@ pub async fn analyze_raw_cards_batch(
     raw_cards: Vec<RawCardDb>,
     pool: &sqlx::PgPool,
 ) -> Vec<Result<i64, Box<dyn std::error::Error>>> {
-    let analyzer = WebAppRawCardAnalyzer::new();
+    // let analyzer = WebAppRawCardAnalyzer::new();
     let mut results = Vec::new();
 
     for raw_card in raw_cards {
         let result: Result<i64, Box<dyn std::error::Error>> = async {
-            let create_card = analyzer
-                .analyze(&raw_card)
-                .await
-                .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
+            // Analyze using Card::card_from_html directly
+            let card = match Card::card_from_html(&raw_card.raw_html) {
+                Some(card) => card,
+                None => {
+                    return Err(format!("Failed to parse card HTML for card {}", raw_card.id).into());
+                }
+            };
+            
+            // Convert Card to CreateCard
+            let mut create_card: CreateCard = card.into();
+            create_card.url = Some(raw_card.source_url.clone());
+            
+            // Ensure the code matches what was scraped
+            if create_card.code != raw_card.card_number {
+                return Err(format!(
+                    "Card number mismatch: expected {}, got {}",
+                    raw_card.card_number, create_card.code
+                ).into());
+            }
 
             use crate::repositories::CardRepository;
             use std::sync::Arc;

@@ -109,7 +109,7 @@ class Feature(models.Model):
 
 class Card(models.Model):
     name = models.CharField(verbose_name="名前", max_length=256, null=False, blank=False, default='N/A')
-    code = models.CharField(verbose_name="番号", max_length=16, null=False, blank=False, default='N/A')
+    code = models.CharField(verbose_name="番号", max_length=16, null=False, blank=False, default='N/A', unique=True)
     pronunciation = models.CharField(verbose_name="読み方", max_length=64, null=False, blank=False, default='N/A')
     user = models.ManyToManyField(verbose_name="限定条件", to=Lrig, blank=True)
     color = models.IntegerField(verbose_name="色", null=False, blank=False, default=1 << 7)

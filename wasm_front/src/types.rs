@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+pub use datapack::CardType;
 
 // Re-export CardExport from datapack as Card
 // pub use datapack::CardExport as Card;
@@ -50,6 +51,75 @@ impl ColorFilter {
 
     pub fn has_any(&self) -> bool {
         self.white || self.blue || self.black || self.red || self.green || self.colorless
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct CardTypeFilter {
+    pub lrig: bool,
+    pub lrig_assist: bool,
+    pub arts: bool,
+    pub key: bool,
+    pub signi: bool,
+    pub spell: bool,
+    pub resona: bool,
+    pub signi_craft: bool,
+    pub arts_craft: bool,
+    pub resona_craft: bool,
+    pub spell_craft: bool,
+    pub piece: bool,
+    pub piece_relay: bool,
+    pub piece_craft: bool,
+    pub token: bool,
+}
+
+impl CardTypeFilter {
+    pub fn new() -> Self {
+        Self {
+            lrig: false,
+            lrig_assist: false,
+            arts: false,
+            key: false,
+            signi: false,
+            spell: false,
+            resona: false,
+            signi_craft: false,
+            arts_craft: false,
+            resona_craft: false,
+            spell_craft: false,
+            piece: false,
+            piece_relay: false,
+            piece_craft: false,
+            token: false,
+        }
+    }
+
+    pub fn has_any(&self) -> bool {
+        self.lrig || self.lrig_assist || self.arts || self.key || self.signi || self.spell 
+            || self.resona || self.signi_craft || self.arts_craft || self.resona_craft 
+            || self.spell_craft || self.piece || self.piece_relay || self.piece_craft || self.token
+    }
+
+    pub fn get_selected_card_types(&self) -> Vec<CardType> {
+        let mut selected = Vec::new();
+        
+        if self.lrig { selected.push(CardType::Lrig); }
+        if self.lrig_assist { selected.push(CardType::LrigAssist); }
+        if self.arts { selected.push(CardType::Arts); }
+        if self.key { selected.push(CardType::Key); }
+        if self.signi { selected.push(CardType::Signi); }
+        if self.spell { selected.push(CardType::Spell); }
+        if self.resona { selected.push(CardType::Resona); }
+        if self.signi_craft { selected.push(CardType::SigniCraft); }
+        if self.arts_craft { selected.push(CardType::ArtsCraft); }
+        if self.resona_craft { selected.push(CardType::ResonaCraft); }
+        if self.spell_craft { selected.push(CardType::SpellCraft); }
+        if self.piece { selected.push(CardType::Piece); }
+        if self.piece_relay { selected.push(CardType::PieceRelay); }
+        if self.piece_craft { selected.push(CardType::PieceCraft); }
+        if self.token { selected.push(CardType::Token); }
+        
+        selected
     }
 }
 

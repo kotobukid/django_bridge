@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Deserialize};
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
 pub struct CardDb {
@@ -121,6 +121,7 @@ pub struct CreateCardType {
     pub sort_asc: i32,
 }
 
+
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
 pub struct ProductDb {
@@ -149,6 +150,7 @@ pub struct CreateProduct {
     pub sort_asc: i32,
 }
 
+
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
 pub struct KlassDb {
@@ -174,6 +176,7 @@ pub struct CreateKlass {
     pub cat3: Option<String>,
     pub sort_asc: i32,
 }
+
 
 #[allow(dead_code)]
 #[derive(sqlx::FromRow, Debug, Clone, Serialize, Deserialize)]
@@ -212,3 +215,4 @@ pub struct CreateRawCard {
     pub is_analyzed: bool,
     pub analysis_error: String,
 }
+

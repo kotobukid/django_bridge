@@ -7,6 +7,91 @@ use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum CardType {
+    Lrig,
+    LrigAssist,
+    Arts,
+    Key,
+    Signi,
+    Spell,
+    Resona,
+    SigniCraft,
+    ArtsCraft,
+    ResonaCraft,
+    SpellCraft,
+    Piece,
+    PieceRelay,
+    PieceCraft,
+    Token,
+    Unknown,
+}
+
+impl CardType {
+    pub fn from_u8(value: u8) -> Self {
+        match value {
+            1 => CardType::Lrig,           // ルリグ
+            2 => CardType::Arts,           // アーツ  
+            3 => CardType::LrigAssist,     // アシストルリグ
+            4 => CardType::Piece,          // ピース
+            5 => CardType::Signi,          // シグニ
+            6 => CardType::Spell,          // スペル
+            7 => CardType::Resona,         // レゾナ
+            8 => CardType::Key,            // キー
+            9 => CardType::ArtsCraft,      // クラフトアーツ
+            10 => CardType::SigniCraft,    // クラフトシグニ
+            11 => CardType::SpellCraft,    // クラフトスペル
+            12 => CardType::PieceRelay,    // リレーピース
+            13 => CardType::PieceCraft,    // クラフトピース
+            14 => CardType::ResonaCraft,   // クラフトレゾナ
+            15 => CardType::Token,         // トークン
+            _ => CardType::Unknown,
+        }
+    }
+
+    pub fn to_u8(&self) -> u8 {
+        match self {
+            CardType::Lrig => 1,           // ルリグ
+            CardType::Arts => 2,           // アーツ  
+            CardType::LrigAssist => 3,     // アシストルリグ
+            CardType::Piece => 4,          // ピース
+            CardType::Signi => 5,          // シグニ
+            CardType::Spell => 6,          // スペル
+            CardType::Resona => 7,         // レゾナ
+            CardType::Key => 8,            // キー
+            CardType::ArtsCraft => 9,      // クラフトアーツ
+            CardType::SigniCraft => 10,    // クラフトシグニ
+            CardType::SpellCraft => 11,    // クラフトスペル
+            CardType::PieceRelay => 12,    // リレーピース
+            CardType::PieceCraft => 13,    // クラフトピース
+            CardType::ResonaCraft => 14,   // クラフトレゾナ
+            CardType::Token => 15,         // トークン
+            CardType::Unknown => 0,
+        }
+    }
+
+    pub fn display_name(&self) -> &'static str {
+        match self {
+            CardType::Lrig => "ルリグ",
+            CardType::LrigAssist => "ルリグアシスト",
+            CardType::Arts => "アーツ",
+            CardType::Key => "キー",
+            CardType::Signi => "シグニ",
+            CardType::Spell => "スペル",
+            CardType::Resona => "レゾナ",
+            CardType::SigniCraft => "シグニクラフト",
+            CardType::ArtsCraft => "アーツクラフト",
+            CardType::ResonaCraft => "レゾナクラフト",
+            CardType::SpellCraft => "スペルクラフト",
+            CardType::Piece => "ピース",
+            CardType::PieceRelay => "ピースリレー",
+            CardType::PieceCraft => "ピースクラフト",
+            CardType::Token => "トークン",
+            CardType::Unknown => "不明",
+        }
+    }
+}
+
 #[wasm_bindgen]
 pub fn greet(name: &str) -> String {
     format!("Hello, {name}{name}!")
@@ -453,6 +538,39 @@ pub fn fetch_by_colors_and_features_native(
     // 次にfeatureでフィルタリング
     if !feature_names.is_empty() {
         filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    filtered_cards
+}
+
+// 色、feature、カード種別の複合フィルタリング関数（全てAND条件）
+pub fn fetch_by_colors_features_and_card_types_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+) -> Vec<CardExport> {
+    use feature::feature::HashSetToBits;
+
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    // 最後にカード種別でフィルタリング
+    if !card_types.is_empty() {
+        let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| card_type_u8s.contains(&card.card_type))
+            .collect();
     }
 
     filtered_cards

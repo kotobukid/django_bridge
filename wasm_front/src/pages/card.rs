@@ -1,5 +1,5 @@
-use crate::components::{CardList, ColorSelector, NavBar};
-use crate::types::ColorFilter;
+use crate::components::{CardList, CardTypeSelector, ColorSelector, NavBar};
+use crate::types::{CardTypeFilter, ColorFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
 use std::collections::HashMap;
@@ -7,6 +7,7 @@ use std::collections::HashMap;
 #[component]
 pub fn CardPage() -> impl IntoView {
     let (color_filter, set_color_filter) = signal(ColorFilter::new());
+    let (card_type_filter, set_card_type_filter) = signal(CardTypeFilter::new());
     let (selected_features, set_selected_features) = signal(HashMap::<i32, bool>::new());
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new()); // 追加
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
@@ -16,16 +17,27 @@ pub fn CardPage() -> impl IntoView {
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
 
-    // Apply filters when color or features change
+    // Apply filters when color, features, or card types change
     Effect::new(move || {
         if let Some(Ok(cards)) = all_cards.get() {
             let color = color_filter.get();
+            let card_type = card_type_filter.get();
             let feature_names = selected_feature_names.get();
 
             // 複合フィルタリングを使用
             let color_bits = if color.has_any() { color.to_bits() } else { 0 };
-            let filtered =
-                datapack::fetch_by_colors_and_features_native(&cards, color_bits, &feature_names);
+            let card_types = if card_type.has_any() { 
+                card_type.get_selected_card_types() 
+            } else { 
+                Vec::new() 
+            };
+            
+            let filtered = datapack::fetch_by_colors_features_and_card_types_native(
+                &cards, 
+                color_bits, 
+                &feature_names,
+                &card_types
+            );
 
             set_filtered_cards.set(filtered);
             set_current_page.set(0);
@@ -55,10 +67,14 @@ pub fn CardPage() -> impl IntoView {
             />
 
             <div class="container mx-auto px-4 py-4">
-                <div class="mb-6">
+                <div class="mb-6 space-y-4">
                     <ColorSelector
                         color_filter=color_filter
                         set_color_filter=set_color_filter
+                    />
+                    <CardTypeSelector
+                        card_type_filter=card_type_filter
+                        set_card_type_filter=set_card_type_filter
                     />
                 </div>
 

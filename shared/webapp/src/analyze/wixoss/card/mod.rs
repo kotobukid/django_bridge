@@ -97,6 +97,28 @@ impl CardType {
             _ => "token",
         }
     }
+
+    /// CardTypeをデータベースIDに変換
+    pub fn to_db_id(&self) -> i32 {
+        match self {
+            CardType::Lrig => 1,
+            CardType::LrigAssist => 2,
+            CardType::Arts => 3,
+            CardType::Key => 4,
+            CardType::Signi => 5,
+            CardType::Spell => 6,
+            CardType::Resona => 7,
+            CardType::SigniCraft => 8,
+            CardType::ArtsCraft => 9,
+            CardType::ResonaCraft => 10,
+            CardType::SpellCraft => 11,
+            CardType::Piece => 12,
+            CardType::PieceRelay => 13,
+            CardType::PieceCraft => 14,
+            CardType::Token => 15,
+            CardType::Unknown => 0,
+        }
+    }
 }
 
 fn remove_tag_and_br(text: &str) -> String {
