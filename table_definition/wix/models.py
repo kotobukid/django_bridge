@@ -110,7 +110,7 @@ class Feature(models.Model):
 class Card(models.Model):
     name = models.CharField(verbose_name="名前", max_length=256, null=False, blank=False, default='N/A')
     code = models.CharField(verbose_name="番号", max_length=16, null=False, blank=False, default='N/A')
-    pronunciation = models.CharField(verbose_name="読み方", max_length=32, null=False, blank=False, default='N/A')
+    pronunciation = models.CharField(verbose_name="読み方", max_length=64, null=False, blank=False, default='N/A')
     user = models.ManyToManyField(verbose_name="限定条件", to=Lrig, blank=True)
     color = models.IntegerField(verbose_name="色", null=False, blank=False, default=1 << 7)
     cost = models.CharField(verbose_name="使用コスト", max_length=16, null=True, blank=True)
@@ -156,7 +156,7 @@ class RawCard(models.Model):
     """スクレイピングした生のカードデータを保存するモデル"""
     
     # 基本識別情報
-    card_number = models.CharField(verbose_name="カード番号", max_length=20, db_index=True)
+    card_number = models.CharField(verbose_name="カード番号", max_length=20, unique=True, db_index=True)
     name = models.CharField(verbose_name="カード名", max_length=200)
     product = models.ForeignKey('Product', verbose_name="収録商品", on_delete=models.CASCADE, related_name='raw_cards', null=True, blank=True)
     

@@ -123,6 +123,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let card_type_repo = Arc::new(Mutex::new(CardTypeRepository::new(pool.clone())));
     let product_repo = Arc::new(Mutex::new(ProductRepository::new(pool.clone())));
 
+    // リポジトリキャッシュを初期化
+    println!("リポジトリキャッシュを初期化中...");
+    {
+        let mut repo = product_repo.lock().await;
+        repo.create_cache().await;
+    }
+
     // スクレイピングを実行
     println!("スクレイピングを開始します...");
     scraping_service.scrape_cards(

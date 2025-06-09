@@ -811,6 +811,7 @@ pub mod migration {
 }
 
 pub mod raw_card_analyzer;
+pub mod card_analyzer;
 
 #[cfg(test)]
 mod tests {

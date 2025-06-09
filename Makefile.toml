@@ -96,3 +96,16 @@ args = [
     "--min-delay", "200",
     "--max-delay", "800"
 ]
+
+[tasks.analyze_all]
+description = "DB保存済みの全カードを(再)解析"
+command = "cargo"
+args = [
+    "run",
+    "-p",
+    "analyzer",
+    "--",
+    "--limit",
+    "10000",
+    "--force"
+]

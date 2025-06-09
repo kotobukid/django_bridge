@@ -144,8 +144,7 @@ impl ScrapingService {
                     .lock()
                     .await
                     .get_id_by_code(&product_type.code())
-                    .await
-                    .unwrap_or(0);
+                    .await;
 
                 // カード名を抽出（HTMLから）
                 let card_name = self.raw_card_service
@@ -162,7 +161,7 @@ impl ScrapingService {
 
                 // RawCardをデータベースに保存
                 let raw_card_id = self.raw_card_service
-                    .save_raw_card(pool.clone(), create_raw_card)
+                    .save_raw_card_with_product(pool.clone(), create_raw_card, product_id)
                     .await
                     .map_err(|e| format!("RawCardの保存に失敗しました: {}", e))?;
 

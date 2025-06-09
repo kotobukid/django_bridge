@@ -168,14 +168,36 @@ impl RawCardService {
         pool: Arc<Pool<Postgres>>,
         create_raw_card: CreateRawCard,
     ) -> Result<i64, Box<dyn std::error::Error>> {
+        self.save_raw_card_with_product(pool, create_raw_card, None).await
+    }
+
+    /// RawCardをデータベースに保存 (product_id指定版)
+    pub async fn save_raw_card_with_product(
+        &self,
+        pool: Arc<Pool<Postgres>>,
+        create_raw_card: CreateRawCard,
+        product_id: Option<i64>,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
         let result = sqlx::query(
             r#"
             INSERT INTO wix_rawcard (
                 card_number, name, raw_html, skill_text, 
                 life_burst_text, source_url, scraped_at, last_analyzed_at, 
-                is_analyzed, analysis_error
+                is_analyzed, analysis_error, product_id
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+            ON CONFLICT (card_number) 
+            DO UPDATE SET
+                name = EXCLUDED.name,
+                raw_html = EXCLUDED.raw_html,
+                skill_text = EXCLUDED.skill_text,
+                life_burst_text = EXCLUDED.life_burst_text,
+                source_url = EXCLUDED.source_url,
+                scraped_at = EXCLUDED.scraped_at,
+                last_analyzed_at = EXCLUDED.last_analyzed_at,
+                is_analyzed = EXCLUDED.is_analyzed,
+                analysis_error = EXCLUDED.analysis_error,
+                product_id = EXCLUDED.product_id
             RETURNING id
             "#
         )
@@ -189,6 +211,7 @@ impl RawCardService {
         .bind(&create_raw_card.last_analyzed_at)
         .bind(&create_raw_card.is_analyzed)
         .bind(&create_raw_card.analysis_error)
+        .bind(product_id)
         .fetch_one(pool.as_ref())
         .await?;
 
