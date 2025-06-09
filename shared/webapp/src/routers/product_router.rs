@@ -1,4 +1,3 @@
-use models::product::Product;
 use crate::repositories::ProductRepository;
 use crate::state::AppState;
 use axum::extract::State;
@@ -7,6 +6,7 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use axum::Json;
 use axum::Router;
+use models::product::Product;
 use serde::Serialize;
 use sqlx::{Error, Pool, Postgres};
 use std::sync::Arc;

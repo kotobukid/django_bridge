@@ -1,5 +1,5 @@
 //! カードルーター
-//! 
+//!
 //! カード一覧の取得APIを提供
 
 use crate::repositories::CardRepository;
@@ -31,13 +31,13 @@ struct RouterState {
 }
 
 /// カードルーターを作成
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `pool` - データベース接続プール
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// 設定されたAxumルーター
 pub fn create_card_router(pool: Arc<Pool<Postgres>>) -> Router<AppState> {
     let card_repo = CardRepository::new(pool);
@@ -50,17 +50,17 @@ pub fn create_card_router(pool: Arc<Pool<Postgres>>) -> Router<AppState> {
 }
 
 /// カード一覧をテキスト形式で取得
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `state` - ルーター状態
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// カード名を改行区切りで連結した文字列
 async fn card_list(State(state): State<RouterState>) -> impl IntoResponse {
     println!("カード一覧テキスト形式の取得を開始");
-    
+
     match state.card_repo.get_all().await {
         Ok(card_list) => {
             let result = card_list
@@ -68,7 +68,10 @@ async fn card_list(State(state): State<RouterState>) -> impl IntoResponse {
                 .map(|card| card.name)
                 .collect::<Vec<String>>()
                 .join("\n");
-            println!("カード一覧テキスト形式の取得が成功: {}件", result.lines().count());
+            println!(
+                "カード一覧テキスト形式の取得が成功: {}件",
+                result.lines().count()
+            );
             result
         }
         Err(e) => {
@@ -100,36 +103,29 @@ impl CardListJson {
     }
 }
 /// カード一覧をJSON形式で取得
-/// 
+///
 /// # 引数
-/// 
+///
 /// * `state` - ルーター状態
-/// 
+///
 /// # 戻り値
-/// 
+///
 /// JSON形式のカード一覧またはエラーステータス
 async fn card_list_json(
     State(state): State<RouterState>,
 ) -> Result<Json<CardListJson>, StatusCode> {
     println!("カード一覧JSON形式の取得を開始");
-    
-    let cards = state
-        .card_repo
-        .get_all()
-        .await
-        .map_err(|e| {
-            eprintln!("カード一覧取得エラー: {:?}", e);
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
-        
-    let cards: Vec<Card> = cards
-        .into_iter()
-        .map(|card| card.into())
-        .collect();
-        
+
+    let cards = state.card_repo.get_all().await.map_err(|e| {
+        eprintln!("カード一覧取得エラー: {:?}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    let cards: Vec<Card> = cards.into_iter().map(|card| card.into()).collect();
+
     let total = cards.len();
     println!("カード一覧JSON形式の取得が成功: {}件", total);
-    
+
     let res = CardListJson::new(cards);
     Ok(Json(res))
 }

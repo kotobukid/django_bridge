@@ -1,5 +1,5 @@
-mod home;
 mod card;
+mod home;
 
-pub use home::HomePage;
 pub use card::CardPage;
+pub use home::HomePage;

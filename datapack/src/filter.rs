@@ -8,23 +8,23 @@ pub fn filter_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> Vec<CardExpo
         .filter(|c| {
             let feature_bits1 = c.20;
             let feature_bits2 = c.21;
-            
+
             match mode {
                 "and" => {
                     // AND条件: 指定されたビットが全て立っている
-                    (bit1 == 0 || (feature_bits1 & bit1) == bit1) &&
-                    (bit2 == 0 || (feature_bits2 & bit2) == bit2)
-                },
+                    (bit1 == 0 || (feature_bits1 & bit1) == bit1)
+                        && (bit2 == 0 || (feature_bits2 & bit2) == bit2)
+                }
                 "or" => {
                     // OR条件: 指定されたビットのいずれかが立っている
                     if bit1 == 0 && bit2 == 0 {
                         true
                     } else {
-                        (bit1 > 0 && (feature_bits1 & bit1) != 0) ||
-                        (bit2 > 0 && (feature_bits2 & bit2) != 0)
+                        (bit1 > 0 && (feature_bits1 & bit1) != 0)
+                            || (bit2 > 0 && (feature_bits2 & bit2) != 0)
                     }
-                },
-                _ => true
+                }
+                _ => true,
             }
         })
         .map(|c| CardExport::from(c))
@@ -38,24 +38,24 @@ pub fn filter_by_features_and(features: &[i32]) -> Vec<CardExport> {
         .filter(|c| {
             let feature_bits1 = c.20;
             let feature_bits2 = c.21;
-            
+
             // 全てのフィーチャーを満たすかチェック（AND条件）
             for i in (0..features.len()).step_by(2) {
                 if i + 1 >= features.len() {
                     break;
                 }
-                
+
                 let shift1 = features[i];
                 let shift2 = features[i + 1];
-                
+
                 // 両方とも-1の場合はスキップ
                 if shift1 < 0 && shift2 < 0 {
                     continue;
                 }
-                
+
                 let bit1 = if shift1 >= 0 { 1_i64 << shift1 } else { 0 };
                 let bit2 = if shift2 >= 0 { 1_i64 << shift2 } else { 0 };
-                
+
                 let has_feature = if bit1 > 0 && bit2 > 0 {
                     (feature_bits1 & bit1) != 0 && (feature_bits2 & bit2) != 0
                 } else if bit1 > 0 {
@@ -65,12 +65,12 @@ pub fn filter_by_features_and(features: &[i32]) -> Vec<CardExport> {
                 } else {
                     false
                 };
-                
+
                 if !has_feature {
                     return false;
                 }
             }
-            
+
             true
         })
         .map(|c| CardExport::from(c))

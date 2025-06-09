@@ -1,7 +1,7 @@
-use std::sync::Arc;
-use sqlx::{Pool, Postgres, Row};
 use models::gen::django_models::CreateRawCard;
 use scraper_html::{Html, Selector as ScraperSelector};
+use sqlx::{Pool, Postgres, Row};
+use std::sync::Arc;
 
 /// RawCard 作成とテキスト抽出のためのサービス
 pub struct RawCardService {
@@ -33,8 +33,8 @@ impl RawCardService {
 
         // スキルテキストを抽出
         let skill_text = self.extract_skill_text(&document);
-        
-        // ライフバーストテキストを抽出  
+
+        // ライフバーストテキストを抽出
         let life_burst_text = self.extract_life_burst_text(&document);
 
         // 抽出したテキスト部分を除去したHTMLを作成
@@ -59,13 +59,18 @@ impl RawCardService {
         // まず.cardSkillクラスから抽出を試す（詳細ページ用）
         if let Ok(card_skill_selector) = ScraperSelector::parse(".cardSkill") {
             if let Some(element) = document.select(&card_skill_selector).next() {
-                let text = element.text().collect::<Vec<_>>().join("\n").trim().to_string();
+                let text = element
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("\n")
+                    .trim()
+                    .to_string();
                 if !text.is_empty() {
                     return text;
                 }
             }
         }
-        
+
         // テーブル行を検索してスキルテキストを見つける
         if let Ok(tr_selector) = ScraperSelector::parse("tr") {
             for tr in document.select(&tr_selector) {
@@ -73,11 +78,17 @@ impl RawCardService {
                 if let Ok(th_selector) = ScraperSelector::parse("th") {
                     if let Some(th) = tr.select(&th_selector).next() {
                         let th_text = th.text().collect::<String>();
-                        if th_text.contains("テキスト") && !th_text.contains("ライフバースト") {
+                        if th_text.contains("テキスト") && !th_text.contains("ライフバースト")
+                        {
                             // 対応するtd要素を取得
                             if let Ok(td_selector) = ScraperSelector::parse("td") {
                                 if let Some(td) = tr.select(&td_selector).next() {
-                                    return td.text().collect::<Vec<_>>().join(" ").trim().to_string();
+                                    return td
+                                        .text()
+                                        .collect::<Vec<_>>()
+                                        .join(" ")
+                                        .trim()
+                                        .to_string();
                                 }
                             }
                         }
@@ -92,7 +103,7 @@ impl RawCardService {
     fn extract_life_burst_text(&self, document: &Html) -> String {
         // HTMLからライフバーストアイコンを含むテキストを探す
         let html_string = document.html();
-        
+
         // ライフバーストアイコンがある場合、その後のテキストを抽出
         if html_string.contains("icon_txt_burst.png") {
             // ライフバーストアイコンを含む行を抽出
@@ -102,10 +113,15 @@ impl RawCardService {
                     if let Some(parent) = img.parent() {
                         // ElementRefに変換してからテキストを取得
                         if let Some(parent_element) = scraper_html::ElementRef::wrap(parent) {
-                            let text = parent_element.text().collect::<Vec<_>>().join(" ").trim().to_string();
+                            let text = parent_element
+                                .text()
+                                .collect::<Vec<_>>()
+                                .join(" ")
+                                .trim()
+                                .to_string();
                             // ライフバーストアイコンの後のテキストを抽出（：の後）
                             if let Some(colon_pos) = text.find('：') {
-                                let burst_text = text[colon_pos + 3..].trim();  // 3バイトは '：' の文字
+                                let burst_text = text[colon_pos + 3..].trim(); // 3バイトは '：' の文字
                                 if !burst_text.is_empty() {
                                     return burst_text.to_string();
                                 }
@@ -115,7 +131,7 @@ impl RawCardService {
                 }
             }
         }
-        
+
         // テーブル行を検索してライフバーストテキストを見つける（フォールバック）
         if let Ok(tr_selector) = ScraperSelector::parse("tr") {
             for tr in document.select(&tr_selector) {
@@ -125,7 +141,12 @@ impl RawCardService {
                         if th_text.contains("ライフバースト") {
                             if let Ok(td_selector) = ScraperSelector::parse("td") {
                                 if let Some(td) = tr.select(&td_selector).next() {
-                                    return td.text().collect::<Vec<_>>().join(" ").trim().to_string();
+                                    return td
+                                        .text()
+                                        .collect::<Vec<_>>()
+                                        .join(" ")
+                                        .trim()
+                                        .to_string();
                                 }
                             }
                         }
@@ -137,7 +158,7 @@ impl RawCardService {
     }
 
     /// 抽出したテキスト部分を除去したHTMLを作成
-    /// 
+    ///
     /// 注意: これは簡易的な実装です。より正確な除去が必要な場合は
     /// HTMLパーサーを使って該当要素を削除する方が良いでしょう。
     fn remove_extracted_text(
@@ -168,7 +189,8 @@ impl RawCardService {
         pool: Arc<Pool<Postgres>>,
         create_raw_card: CreateRawCard,
     ) -> Result<i64, Box<dyn std::error::Error>> {
-        self.save_raw_card_with_product(pool, create_raw_card, None).await
+        self.save_raw_card_with_product(pool, create_raw_card, None)
+            .await
     }
 
     /// RawCardをデータベースに保存 (product_id指定版)
@@ -199,7 +221,7 @@ impl RawCardService {
                 analysis_error = EXCLUDED.analysis_error,
                 product_id = EXCLUDED.product_id
             RETURNING id
-            "#
+            "#,
         )
         .bind(&create_raw_card.card_number)
         .bind(&create_raw_card.name)
@@ -222,18 +244,23 @@ impl RawCardService {
     /// カード名をHTMLから抽出（カード番号が分からない場合用）
     pub fn extract_card_name_from_html(&self, html: &str) -> Option<String> {
         let document = Html::parse_document(html);
-        
+
         // まず.cardNameクラスから抽出を試す（詳細ページ用）
         if let Ok(card_name_selector) = ScraperSelector::parse(".cardName") {
             if let Some(element) = document.select(&card_name_selector).next() {
                 // <br>タグがある場合の処理
-                let text = element.text().collect::<Vec<_>>().join(" ").trim().to_string();
+                let text = element
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join(" ")
+                    .trim()
+                    .to_string();
                 if !text.is_empty() {
                     return Some(text);
                 }
             }
         }
-        
+
         // h1タグから抽出を試す
         if let Ok(h1_selector) = ScraperSelector::parse("h1") {
             if let Some(h1) = document.select(&h1_selector).next() {
@@ -243,7 +270,7 @@ impl RawCardService {
                 }
             }
         }
-        
+
         // テーブルからカード名を探す
         if let Ok(dt_selector) = ScraperSelector::parse("dt") {
             for dt in document.select(&dt_selector) {
@@ -255,7 +282,8 @@ impl RawCardService {
                             if let Some(parent_element) = scraper_html::ElementRef::wrap(parent) {
                                 // 同じ親要素内の次のdd要素を探す
                                 for dd in parent_element.select(&dd_selector) {
-                                    let dd_text = dd.text().collect::<Vec<_>>().join(" ").trim().to_string();
+                                    let dd_text =
+                                        dd.text().collect::<Vec<_>>().join(" ").trim().to_string();
                                     if !dd_text.is_empty() {
                                         return Some(dd_text);
                                     }
@@ -266,7 +294,7 @@ impl RawCardService {
                 }
             }
         }
-        
+
         None
     }
 }
@@ -286,7 +314,7 @@ mod tests {
         let service = RawCardService::new().unwrap();
         let html = "<html><body></body></html>";
         let document = Html::parse_document(html);
-        
+
         let skill_text = service.extract_skill_text(&document);
         assert_eq!(skill_text, "");
     }
@@ -297,10 +325,10 @@ mod tests {
         let html = "<html><body>Some skill text here and some other content</body></html>";
         let skill_text = "Some skill text here";
         let life_burst_text = "";
-        
+
         let result = service.remove_extracted_text(html, skill_text, life_burst_text);
         assert!(result.is_ok());
-        
+
         let cleaned = result.unwrap();
         assert!(cleaned.contains("[SKILL_TEXT_EXTRACTED]"));
         assert!(!cleaned.contains("Some skill text here"));

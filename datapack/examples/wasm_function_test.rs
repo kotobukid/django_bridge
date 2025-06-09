@@ -11,50 +11,60 @@ fn main() {
     println!("全カード取得（0, 0）:");
     let all_cards = filter_by_f_bits(0, 0);
     println!("結果: {}件のカード", all_cards.len());
-    
+
     // テスト3: filter_by_f_shifts（アサシン）
     println!("\n3. filter_by_f_shifts テスト - アサシン");
-    let assassin_cards = filter_by_f_shifts(6, 0);  // アサシンのshift値
+    let assassin_cards = filter_by_f_shifts(6, 0); // アサシンのshift値
     println!("アサシンカード: {}件", assassin_cards.len());
 
     // テスト4: filter_by_f_shifts（Sランサー）
     println!("\n4. filter_by_f_shifts テスト - Sランサー");
-    let slancer_cards = filter_by_f_shifts(12, 0);  // Sランサーのshift値
+    let slancer_cards = filter_by_f_shifts(12, 0); // Sランサーのshift値
     println!("Sランサーカード: {}件", slancer_cards.len());
 
     // テスト5: filter_by_features_and
     println!("\n5. filter_by_features_and テスト");
-    let features_array = [6, 0, 12, 0];  // アサシン(6,0) + Sランサー(12,0)
+    let features_array = [6, 0, 12, 0]; // アサシン(6,0) + Sランサー(12,0)
     println!("入力配列: {:?}", features_array);
     let and_result = filter_by_features_and(&features_array);
     println!("AND結果: {}件", and_result.len());
-    
+
     if and_result.len() > 0 {
         println!("該当カード:");
         for (i, card) in and_result.iter().enumerate() {
-            println!("  {}. {} (bits1={}, bits2={})", 
-                i+1, card.name(), card.feature_bits1(), card.feature_bits2());
+            println!(
+                "  {}. {} (bits1={}, bits2={})",
+                i + 1,
+                card.name(),
+                card.feature_bits1(),
+                card.feature_bits2()
+            );
         }
     }
 
     // テスト6: filter_by_combined_bits（AND条件）
     println!("\n6. filter_by_combined_bits テスト - AND条件");
-    let assassin_bit = 1_i64 << 6;   // アサシン
-    let slancer_bit = 1_i64 << 12;   // Sランサー
-    let combined_bits = assassin_bit | slancer_bit;  // 組み合わせ
-    
+    let assassin_bit = 1_i64 << 6; // アサシン
+    let slancer_bit = 1_i64 << 12; // Sランサー
+    let combined_bits = assassin_bit | slancer_bit; // 組み合わせ
+
     println!("アサシンビット: {}", assassin_bit);
     println!("Sランサービット: {}", slancer_bit);
     println!("組み合わせビット: {}", combined_bits);
-    
+
     let and_cards = filter_by_combined_bits(combined_bits, 0, "and");
     println!("AND条件結果: {}件", and_cards.len());
-    
+
     if and_cards.len() > 0 {
         println!("該当カード:");
         for (i, card) in and_cards.iter().enumerate() {
-            println!("  {}. {} (bits1={}, bits2={})", 
-                i+1, card.name(), card.feature_bits1(), card.feature_bits2());
+            println!(
+                "  {}. {} (bits1={}, bits2={})",
+                i + 1,
+                card.name(),
+                card.feature_bits1(),
+                card.feature_bits2()
+            );
         }
     }
 
@@ -67,7 +77,7 @@ fn main() {
     println!("\n8. 境界値テスト");
     let edge_case1 = filter_by_combined_bits(0, 0, "and");
     println!("(0,0) AND結果: {}件", edge_case1.len());
-    
+
     let edge_case2 = filter_by_combined_bits(-1, -1, "invalid");
     println!("(-1,-1) invalid結果: {}件", edge_case2.len());
 

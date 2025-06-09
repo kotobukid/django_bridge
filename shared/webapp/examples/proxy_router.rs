@@ -1,4 +1,3 @@
-
 use axum::{
     body::Body,
     extract::OriginalUri,
@@ -17,8 +16,7 @@ const PROXY_HOST_PORT: &str = "127.0.0.1:8000";
 
 #[tokio::main]
 async fn main() -> Result<(), std::io::Error> {
-    let app = Router::new()
-        .route("/{*path}", any(proxy_handler));
+    let app = Router::new().route("/{*path}", any(proxy_handler));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("Listening on {}", addr);

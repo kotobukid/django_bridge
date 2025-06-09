@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn test_search_query_new() {
         let query = SearchQuery::new("booster", 1);
-        
+
         assert_eq!(query.search, "1");
         assert_eq!(query.product_type, "booster");
         assert_eq!(query.card_page, "1");
@@ -117,7 +117,7 @@ mod tests {
         let query = SearchQuery::new("special_card", 2)
             .with_keyword("WXDi-P01".to_string())
             .with_keyword_target("カードNo,カード名".to_string());
-        
+
         assert_eq!(query.product_type, "special_card");
         assert_eq!(query.card_page, "2");
         assert_eq!(query.keyword, "WXDi-P01");
@@ -126,42 +126,38 @@ mod tests {
 
     #[test]
     fn test_to_filename_booster() {
-        let query = SearchQuery::new("booster", 1)
-            .with_product_no("WXDi-P01".to_string());
-        
+        let query = SearchQuery::new("booster", 1).with_product_no("WXDi-P01".to_string());
+
         assert_eq!(query.to_filename(), "WXDi-P01-1.html");
     }
 
     #[test]
     fn test_to_filename_starter() {
-        let query = SearchQuery::new("starter", 3)
-            .with_product_no("WX24-D1".to_string());
-        
+        let query = SearchQuery::new("starter", 3).with_product_no("WX24-D1".to_string());
+
         assert_eq!(query.to_filename(), "WX24-D1-3.html");
     }
 
     #[test]
     fn test_to_filename_special_card() {
-        let query = SearchQuery::new("special_card", 2)
-            .with_keyword("special".to_string());
-        
+        let query = SearchQuery::new("special_card", 2).with_keyword("special".to_string());
+
         assert_eq!(query.to_filename(), "special-2.html");
     }
 
     #[test]
     fn test_to_filename_promotion_card() {
         let query = SearchQuery::new("promotion_card", 5);
-        
+
         assert_eq!(query.to_filename(), "p5.html");
     }
 
     #[test]
     fn test_to_hashmap() {
-        let query = SearchQuery::new("booster", 1)
-            .with_product_no("WXDi-P01".to_string());
-        
+        let query = SearchQuery::new("booster", 1).with_product_no("WXDi-P01".to_string());
+
         let hashmap = query.to_hashmap();
-        
+
         assert_eq!(hashmap.get("search"), Some(&"1".to_string()));
         assert_eq!(hashmap.get("product_type"), Some(&"booster".to_string()));
         assert_eq!(hashmap.get("product_no"), Some(&"WXDi-P01".to_string()));
@@ -171,11 +167,10 @@ mod tests {
 
     #[test]
     fn test_to_hashmap_special_card() {
-        let query = SearchQuery::new("special_card", 1)
-            .with_keyword("special".to_string());
-        
+        let query = SearchQuery::new("special_card", 1).with_keyword("special".to_string());
+
         let hashmap = query.to_hashmap();
-        
+
         // special_cardの場合、product_noは空になる
         assert_eq!(hashmap.get("product_no"), Some(&"".to_string()));
         assert_eq!(hashmap.get("keyword"), Some(&"special".to_string()));
@@ -183,36 +178,34 @@ mod tests {
 
     #[test]
     fn test_check_cache_not_found() {
-        let query = SearchQuery::new("booster", 1)
-            .with_product_no("TEST".to_string());
-        
+        let query = SearchQuery::new("booster", 1).with_product_no("TEST".to_string());
+
         let temp_dir = std::env::temp_dir().join("test_cache_not_found");
-        
+
         match query.check_cache(temp_dir) {
-            Err(CacherError::CacheNotFound) => (),  // 期待される結果
+            Err(CacherError::CacheNotFound) => (), // 期待される結果
             _ => panic!("Expected CacheNotFound error"),
         }
     }
 
     #[test]
     fn test_check_cache_found() -> Result<()> {
-        let query = SearchQuery::new("booster", 1)
-            .with_product_no("TEST".to_string());
-        
+        let query = SearchQuery::new("booster", 1).with_product_no("TEST".to_string());
+
         let temp_dir = std::env::temp_dir().join("test_cache_found");
         let cache_dir = temp_dir.join("booster");
         let cache_file = cache_dir.join("TEST-1.html");
-        
+
         // テスト用のキャッシュファイルを作成
         fs::create_dir_all(&cache_dir)?;
         fs::write(&cache_file, "test content")?;
-        
+
         let result = query.check_cache(temp_dir.clone())?;
         assert_eq!(result, "test content");
-        
+
         // クリーンアップ
         fs::remove_dir_all(&temp_dir).ok();
-        
+
         Ok(())
     }
 }

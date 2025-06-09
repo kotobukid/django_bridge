@@ -49,7 +49,10 @@ mod tests {
         assert!(format!("{}", io_error).contains("file not found"));
 
         let unknown_type_error = CacherError::UnknownProductType("invalid".to_string());
-        assert_eq!(format!("{}", unknown_type_error), "Unknown product type: invalid");
+        assert_eq!(
+            format!("{}", unknown_type_error),
+            "Unknown product type: invalid"
+        );
 
         let cache_not_found_error = CacherError::CacheNotFound;
         assert_eq!(format!("{}", cache_not_found_error), "Cache not found");
@@ -62,9 +65,9 @@ mod tests {
     fn test_from_io_error() {
         let io_error = io::Error::new(io::ErrorKind::PermissionDenied, "permission denied");
         let cacher_error: CacherError = io_error.into();
-        
+
         match cacher_error {
-            CacherError::Io(_) => (),  // 期待される結果
+            CacherError::Io(_) => (), // 期待される結果
             _ => panic!("Expected Io error variant"),
         }
     }
@@ -72,7 +75,7 @@ mod tests {
     #[test]
     fn test_error_trait() {
         let error = CacherError::UnknownProductType("test".to_string());
-        
+
         // std::error::Errorトレイトが実装されていることを確認
         let _: &dyn std::error::Error = &error;
     }

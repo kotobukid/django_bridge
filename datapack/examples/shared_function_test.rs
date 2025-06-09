@@ -5,17 +5,22 @@ fn main() {
 
     // テスト1: filter_by_combined_bits (AND条件)
     println!("\n1. filter_by_combined_bits - AND条件");
-    let assassin_bit = 1_i64 << 6;   // アサシン
-    let slancer_bit = 1_i64 << 12;   // Sランサー
+    let assassin_bit = 1_i64 << 6; // アサシン
+    let slancer_bit = 1_i64 << 12; // Sランサー
     let combined_bits = assassin_bit | slancer_bit;
-    
+
     let and_cards = filter_by_combined_bits(combined_bits, 0, "and");
     println!("AND条件結果: {}件", and_cards.len());
-    
+
     if and_cards.len() > 0 {
         for (i, card) in and_cards.iter().enumerate() {
-            println!("  {}. {} (bits1={}, bits2={})", 
-                i+1, card.name(), card.feature_bits1(), card.feature_bits2());
+            println!(
+                "  {}. {} (bits1={}, bits2={})",
+                i + 1,
+                card.name(),
+                card.feature_bits1(),
+                card.feature_bits2()
+            );
         }
     }
 
@@ -26,14 +31,19 @@ fn main() {
 
     // テスト3: filter_by_features_and
     println!("\n3. filter_by_features_and");
-    let features = [6, 0, 12, 0];  // アサシン + Sランサー
+    let features = [6, 0, 12, 0]; // アサシン + Sランサー
     let features_and_cards = filter_by_features_and(&features);
     println!("features_and結果: {}件", features_and_cards.len());
-    
+
     if features_and_cards.len() > 0 {
         for (i, card) in features_and_cards.iter().enumerate() {
-            println!("  {}. {} (bits1={}, bits2={})", 
-                i+1, card.name(), card.feature_bits1(), card.feature_bits2());
+            println!(
+                "  {}. {} (bits1={}, bits2={})",
+                i + 1,
+                card.name(),
+                card.feature_bits1(),
+                card.feature_bits2()
+            );
         }
     }
 
@@ -41,7 +51,7 @@ fn main() {
     println!("\n4. filter_by_f_shifts - 個別テスト");
     let assassin_shifts = filter_by_f_shifts(6, 0);
     let slancer_shifts = filter_by_f_shifts(12, 0);
-    
+
     println!("アサシンのみ: {}件", assassin_shifts.len());
     println!("Sランサーのみ: {}件", slancer_shifts.len());
 
@@ -52,10 +62,13 @@ fn main() {
 
     // テスト6: 結果の一致確認
     println!("\n6. 結果の一致確認");
-    println!("AND条件とfeatures_and: {} == {} -> {}", 
-        and_cards.len(), features_and_cards.len(), 
-        and_cards.len() == features_and_cards.len());
-    
+    println!(
+        "AND条件とfeatures_and: {} == {} -> {}",
+        and_cards.len(),
+        features_and_cards.len(),
+        and_cards.len() == features_and_cards.len()
+    );
+
     // 実際のカード名も比較
     if and_cards.len() == features_and_cards.len() && and_cards.len() > 0 {
         let and_names: Vec<_> = and_cards.iter().map(|c| c.name()).collect();

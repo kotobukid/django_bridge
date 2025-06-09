@@ -11,12 +11,15 @@ use webapp::repositories::{CardRepository, StaticCodeGenerator};
 
 #[tokio::main]
 async fn main() {
-    let workspace_env = format!("{}/.env", env::var("CARGO_WORKSPACE_DIR").unwrap_or_default());
+    let workspace_env = format!(
+        "{}/.env",
+        env::var("CARGO_WORKSPACE_DIR").unwrap_or_default()
+    );
     let env_paths = [
-        ".env",                    // カレントディレクトリ
-        "../.env",                 // 一つ上のディレクトリ
-        "../../.env",              // 二つ上のディレクトリ（nested crateの場合）
-        workspace_env.as_str(),    // CARGO_WORKSPACE_DIRが設定されている場合
+        ".env",                 // カレントディレクトリ
+        "../.env",              // 一つ上のディレクトリ
+        "../../.env",           // 二つ上のディレクトリ（nested crateの場合）
+        workspace_env.as_str(), // CARGO_WORKSPACE_DIRが設定されている場合
     ];
 
     for path in &env_paths {
@@ -49,7 +52,10 @@ async fn main() {
 
     let card_repo = CardRepository::new(pool.clone());
 
-    write_to_file("../datapack/src/gen/cards.rs", card_repo.code().await.as_str());
+    write_to_file(
+        "../datapack/src/gen/cards.rs",
+        card_repo.code().await.as_str(),
+    );
     println!("extract")
 }
 

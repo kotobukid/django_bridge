@@ -6,14 +6,12 @@ use std::sync::Arc;
 use clap::Parser;
 use tokio::sync::Mutex;
 
-use webapp::analyze::{
-    cache_product_index, collect_card_detail_links, try_mkdir, ProductType,
-};
+use webapp::analyze::{cache_product_index, collect_card_detail_links, try_mkdir, ProductType};
 use webapp::repositories::{CardTypeRepository, ProductRepository};
 
 mod db;
-mod scraping;
 mod raw_card;
+mod scraping;
 
 use db::create_database_pool;
 use scraping::ScrapingService;
@@ -55,10 +53,10 @@ struct Args {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
-    
+
     println!("WIXOSS カード情報スクレイピングツール");
     println!("製品タイプ: {}", args.product_type);
-    
+
     // 製品コードを取得（指定がない場合は空文字列）
     let product_code = args.code.unwrap_or_else(|| "".to_string());
     if !product_code.is_empty() {
@@ -78,19 +76,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return Err("スターターの解析には製品コードが必要です".into());
             }
             ProductType::Starter(product_code)
-        },
+        }
         "booster" => {
             if product_code.is_empty() {
                 return Err("ブースターの解析には製品コードが必要です".into());
             }
             ProductType::Booster(product_code)
-        },
+        }
         "sp" => {
             if product_code.is_empty() {
                 return Err("スペシャルカードの解析には製品コードが必要です".into());
             }
             ProductType::SpecialCard(product_code)
-        },
+        }
         "pr" => ProductType::PromotionCard,
         _ => {
             return Err(format!("無効な製品タイプです: {}", args.product_type).into());
@@ -111,7 +109,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // カード詳細リンクを収集
     println!("カード詳細リンクを収集中...");
-    let links = collect_card_detail_links(&product_type).await
+    let links = collect_card_detail_links(&product_type)
+        .await
         .map_err(|_| "カード詳細リンクの収集に失敗しました")?;
     println!("収集したリンク数: {}", links.len());
 
@@ -132,15 +131,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // スクレイピングを実行
     println!("スクレイピングを開始します...");
-    scraping_service.scrape_cards(
-        links,
-        pool,
-        card_type_repo,
-        product_repo,
-        product_type,
-    ).await?;
+    scraping_service
+        .scrape_cards(links, pool, card_type_repo, product_repo, product_type)
+        .await?;
 
     println!("スクレイピングが完了しました。");
     Ok(())
 }
-

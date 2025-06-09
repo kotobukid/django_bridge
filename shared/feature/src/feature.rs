@@ -237,9 +237,9 @@ pub struct ExportedFeatureGroup {
 impl CardFeature {
     pub fn export(&self) -> ExportedCardFeature {
         ExportedCardFeature {
-            name: format!("{}", self), // Enum名を文字列化
-            bit_shift: self.to_bit_shifts(),    // to_bit_shift の結果を使用
-            tag: self.tag(),             // タグカテゴリを取得
+            name: format!("{}", self),       // Enum名を文字列化
+            bit_shift: self.to_bit_shifts(), // to_bit_shift の結果を使用
+            tag: self.tag(),                 // タグカテゴリを取得
         }
     }
 }

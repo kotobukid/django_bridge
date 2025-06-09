@@ -1,8 +1,8 @@
-pub mod gen;
 pub mod card;
-pub mod product;
-pub mod klass;
 pub mod cardtype;
+pub mod gen;
+pub mod klass;
+pub mod product;
 
 #[macro_export]
 macro_rules! new_type {

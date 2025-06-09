@@ -1,6 +1,8 @@
 use crate::analyze::wixoss::card::CardType;
 use crate::analyze::wixoss::format::Format;
-use crate::analyze::wixoss::selectors::{CARD_ARTIST, CARD_DATA_DD, CARD_NAME, CARD_NUM, CARD_RARITY, CARD_SKILL};
+use crate::analyze::wixoss::selectors::{
+    CARD_ARTIST, CARD_DATA_DD, CARD_NAME, CARD_NUM, CARD_RARITY, CARD_SKILL,
+};
 use crate::analyze::wixoss::timing::TimingList;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story,

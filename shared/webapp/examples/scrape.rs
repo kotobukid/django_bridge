@@ -17,22 +17,25 @@ use url::Url;
 
 // ローカルモジュールのインポート
 use models::card::CreateCard;
+use webapp::analyze::wixoss::Card;
 use webapp::analyze::{
     cache_product_index, collect_card_detail_links, try_mkdir, CardQuery, ProductType,
 };
-use webapp::analyze::wixoss::Card;
 use webapp::repositories::{CardRepository, CardTypeRepository, ProductRepository};
 
 /// データベース接続プールを作成する関数
 ///
 /// .envファイルから環境変数を読み込み、PostgreSQLデータベースへの接続プールを作成します。
 async fn create_db() -> Result<Pool<Postgres>, Box<dyn std::error::Error>> {
-    let workspace_env = format!("{}/.env", env::var("CARGO_WORKSPACE_DIR").unwrap_or_default());
+    let workspace_env = format!(
+        "{}/.env",
+        env::var("CARGO_WORKSPACE_DIR").unwrap_or_default()
+    );
     let env_paths = [
-        ".env",                    // カレントディレクトリ
-        "../.env",                 // 一つ上のディレクトリ
-        "../../.env",              // 二つ上のディレクトリ（nested crateの場合）
-        workspace_env.as_str(),    // CARGO_WORKSPACE_DIRが設定されている場合
+        ".env",                 // カレントディレクトリ
+        "../.env",              // 一つ上のディレクトリ
+        "../../.env",           // 二つ上のディレクトリ（nested crateの場合）
+        workspace_env.as_str(), // CARGO_WORKSPACE_DIRが設定されている場合
     ];
 
     for path in &env_paths {
@@ -123,19 +126,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return Err("スターターの解析には製品コードが必要です".into());
             }
             ProductType::Starter(product_code)
-        },
+        }
         "booster" => {
             if product_code.is_empty() {
                 return Err("ブースターの解析には製品コードが必要です".into());
             }
             ProductType::Booster(product_code)
-        },
+        }
         "sp" => {
             if product_code.is_empty() {
                 return Err("スペシャルカードの解析には製品コードが必要です".into());
             }
             ProductType::SpecialCard(product_code)
-        },
+        }
         "pr" => ProductType::PromotionCard,
         _ => {
             return Err(format!("無効な製品タイプです: {}", args.product_type).into());
@@ -155,9 +158,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let card_type_repo = Arc::new(Mutex::new(CardTypeRepository::new(pool.clone())));
 
     // 製品リポジトリを初期化
-    let product_repo = Arc::new(Mutex::new(ProductRepository::new(
-        pool.clone(),
-    )));
+    let product_repo = Arc::new(Mutex::new(ProductRepository::new(pool.clone())));
 
     // リンク収集結果を処理
     let links = links.map_err(|_| "カード詳細リンクの収集に失敗しました")?;
@@ -216,13 +217,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                         // カードデータをCreateCard形式に変換
                         let mut create_card: CreateCard = card.into();
-                        create_card.card_type = card_type_id.to_string().parse::<i32>()
-                            .map_err(|_| format!("カードタイプIDの変換に失敗しました: {}", card_type_id))?;
-                        create_card.product = product_id.to_string().parse::<i32>()
+                        create_card.card_type =
+                            card_type_id.to_string().parse::<i32>().map_err(|_| {
+                                format!("カードタイプIDの変換に失敗しました: {}", card_type_id)
+                            })?;
+                        create_card.product = product_id
+                            .to_string()
+                            .parse::<i32>()
                             .map_err(|_| format!("製品IDの変換に失敗しました: {}", product_id))?;
 
                         // データベースに保存
-                        db(pool.clone(), create_card).await
+                        db(pool.clone(), create_card)
+                            .await
                             .map_err(|e| format!("データベースへの保存に失敗しました: {}", e))?;
 
                         println!("カードを保存しました: {}", card_no);

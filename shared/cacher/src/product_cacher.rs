@@ -75,7 +75,10 @@ impl ProductCacher {
 
     pub async fn cache_all_pages(&self) -> Result<()> {
         let page_count = self.cache_page(1).await?;
-        println!("Total pages for {}: {}", self.product.product_code, page_count);
+        println!(
+            "Total pages for {}: {}",
+            self.product.product_code, page_count
+        );
 
         for page in 2..=page_count {
             self.cache_page(page).await?;
@@ -87,7 +90,10 @@ impl ProductCacher {
 
     async fn cache_page(&self, page_number: i32) -> Result<i32> {
         let search_query = self.create_search_query(page_number)?;
-        println!("Caching page {} for {}", page_number, self.product.product_code);
+        println!(
+            "Caching page {} for {}",
+            page_number, self.product.product_code
+        );
 
         let content = match search_query.check_cache(self.root_dir.clone()) {
             Ok(cached_content) => cached_content,
@@ -158,7 +164,7 @@ impl ProductCacher {
         for entry in entries {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.extension().and_then(|s| s.to_str()) == Some("html") {
                 // TODO: Parse HTML and extract card detail links
                 println!("Processing: {:?}", path);
@@ -177,7 +183,7 @@ mod tests {
 
     fn create_test_product(product_type: &str, product_code: &str) -> Product {
         use models::product::ProductDb;
-        
+
         Product(ProductDb {
             id: 1,
             name: "Test Product".to_string(),
@@ -191,7 +197,7 @@ mod tests {
     #[test]
     fn test_get_cache_dir_path() {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
-        
+
         // ブースターパックのテスト
         let product = create_test_product("bo", "WXDi-P01");
         let cacher = ProductCacher::new(temp_dir.clone(), product);
@@ -222,7 +228,7 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("unknown", "TEST");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         match cacher.get_cache_dir_path() {
             Err(CacherError::UnknownProductType(t)) => assert_eq!(t, "unknown"),
             _ => panic!("Expected UnknownProductType error"),
@@ -234,15 +240,15 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("bo", "WXDi-P01");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         let query = cacher.create_search_query(1)?;
-        
+
         assert_eq!(query.product_type, "booster");
         assert_eq!(query.product_no, "WXDi-P01");
         assert_eq!(query.card_page, "1");
         assert_eq!(query.search, "1");
         assert_eq!(query.support_formats, "2");
-        
+
         Ok(())
     }
 
@@ -251,13 +257,13 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("st", "WX24-D1");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         let query = cacher.create_search_query(2)?;
-        
+
         assert_eq!(query.product_type, "starter");
         assert_eq!(query.product_no, "WX24-D1");
         assert_eq!(query.card_page, "2");
-        
+
         Ok(())
     }
 
@@ -266,14 +272,17 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("sp", "SPECIAL");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         let query = cacher.create_search_query(3)?;
-        
+
         assert_eq!(query.product_type, "special_card");
         assert_eq!(query.keyword, "SPECIAL");
         assert_eq!(query.card_page, "3");
-        assert_eq!(query.keyword_target, "カードNo,カード名,カードタイプ,テキスト,イラストレーター,フレーバー");
-        
+        assert_eq!(
+            query.keyword_target,
+            "カードNo,カード名,カードタイプ,テキスト,イラストレーター,フレーバー"
+        );
+
         Ok(())
     }
 
@@ -282,12 +291,12 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("pr", "PROMO");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         let query = cacher.create_search_query(4)?;
-        
+
         assert_eq!(query.product_type, "promotion_card");
         assert_eq!(query.card_page, "4");
-        
+
         Ok(())
     }
 
@@ -296,7 +305,7 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("unknown", "TEST");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         match cacher.create_search_query(1) {
             Err(CacherError::UnknownProductType(t)) => assert_eq!(t, "unknown"),
             _ => panic!("Expected UnknownProductType error"),
@@ -308,22 +317,22 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("bo", "TEST");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         // 42件のアイテムがある場合のテスト（21件/ページなので2ページ）
         let content_42_items = r#"<h3><p><span>42</span>件のカードが見つかりました</p></h3>"#;
         let page_count = cacher.extract_page_count(content_42_items)?;
         assert_eq!(page_count, 2);
-        
+
         // 21件のアイテムがある場合のテスト（ちょうど1ページ）
         let content_21_items = r#"<h3><p><span>21</span>件のカードが見つかりました</p></h3>"#;
         let page_count = cacher.extract_page_count(content_21_items)?;
         assert_eq!(page_count, 1);
-        
+
         // 43件のアイテムがある場合のテスト（3ページ必要）
         let content_43_items = r#"<h3><p><span>43</span>件のカードが見つかりました</p></h3>"#;
         let page_count = cacher.extract_page_count(content_43_items)?;
         assert_eq!(page_count, 3);
-        
+
         Ok(())
     }
 
@@ -332,11 +341,11 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_product_cacher");
         let product = create_test_product("bo", "TEST");
         let cacher = ProductCacher::new(temp_dir, product);
-        
+
         let content_no_match = r#"<div>No count information</div>"#;
-        
+
         match cacher.extract_page_count(content_no_match) {
-            Err(CacherError::ParseError(_)) => (),  // 期待される結果
+            Err(CacherError::ParseError(_)) => (), // 期待される結果
             _ => panic!("Expected ParseError"),
         }
     }
@@ -346,24 +355,23 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_save_cache");
         let product = create_test_product("bo", "TEST");
         let cacher = ProductCacher::new(temp_dir.clone(), product);
-        
-        let search_query = SearchQuery::new("booster", 1)
-            .with_product_no("TEST".to_string());
-        
+
+        let search_query = SearchQuery::new("booster", 1).with_product_no("TEST".to_string());
+
         let content = "test cache content";
         cacher.save_to_cache(&search_query, content)?;
-        
+
         // ファイルが作成されたかチェック
         let cache_path = temp_dir.join("booster").join("TEST-1.html");
         assert!(cache_path.exists());
-        
+
         // ファイル内容をチェック
         let saved_content = fs::read_to_string(&cache_path)?;
         assert_eq!(saved_content, content);
-        
+
         // クリーンアップ
         fs::remove_dir_all(&temp_dir).ok();
-        
+
         Ok(())
     }
 
@@ -372,7 +380,7 @@ mod tests {
         let temp_dir = std::env::temp_dir().join("test_display");
         let product = create_test_product("bo", "WXDi-P01");
         let cacher = ProductCacher::new(temp_dir.clone(), product);
-        
+
         let display_string = format!("{}", cacher);
         assert!(display_string.contains("WXDi-P01"));
         assert!(display_string.contains("ProductCacher"));

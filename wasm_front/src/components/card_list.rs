@@ -1,15 +1,29 @@
-use leptos::prelude::*;
+use crate::components::svg_definition::{
+    IconBlack, IconBlue, IconColorless, IconGreen, IconRed, IconWhite,
+};
 use datapack::CardExport;
-use crate::components::svg_definition::{IconWhite, IconBlue, IconRed, IconBlack, IconGreen, IconColorless};
+use leptos::prelude::*;
 
 fn get_colors_from_bits(bits: i32) -> Vec<i32> {
     let mut colors = Vec::new();
-    if bits & (1 << 1) != 0 { colors.push(1); } // White
-    if bits & (1 << 2) != 0 { colors.push(2); } // Blue
-    if bits & (1 << 3) != 0 { colors.push(3); } // Red
-    if bits & (1 << 4) != 0 { colors.push(4); } // Black
-    if bits & (1 << 5) != 0 { colors.push(5); } // Green
-    if bits & (1 << 6) != 0 { colors.push(6); } // Colorless
+    if bits & (1 << 1) != 0 {
+        colors.push(1);
+    } // White
+    if bits & (1 << 2) != 0 {
+        colors.push(2);
+    } // Blue
+    if bits & (1 << 3) != 0 {
+        colors.push(3);
+    } // Red
+    if bits & (1 << 4) != 0 {
+        colors.push(4);
+    } // Black
+    if bits & (1 << 5) != 0 {
+        colors.push(5);
+    } // Green
+    if bits & (1 << 6) != 0 {
+        colors.push(6);
+    } // Colorless
     colors
 }
 
@@ -28,7 +42,7 @@ fn render_color_icon(color: i32) -> impl IntoView {
 #[component]
 pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
     let is_empty = cards.is_empty();
-    
+
     view! {
         <div class="bg-white rounded-lg shadow">
             <div class="p-4">
@@ -122,7 +136,7 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                     }
                 }).collect_view()}
             </div>
-            
+
             <Show when=move || is_empty>
                 <div class="p-8 text-center text-gray-500">
                     "No cards found matching your filters."

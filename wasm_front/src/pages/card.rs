@@ -1,7 +1,7 @@
-use leptos::prelude::*;
+use crate::components::{CardList, ColorSelector, NavBar};
 use crate::types::ColorFilter;
-use crate::components::{NavBar, ColorSelector, CardList};
 use datapack::CardExport;
+use leptos::prelude::*;
 use std::collections::HashMap;
 
 #[component]
@@ -14,23 +14,19 @@ pub fn CardPage() -> impl IntoView {
     let cards_per_page = 20;
 
     // Load all cards from datapack
-    let all_cards = Resource::new(
-        || {},
-        |_| async move {
-            datapack::get_all_cards()
-        }
-    );
+    let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
 
     // Apply filters when color or features change
     Effect::new(move || {
         if let Some(Ok(cards)) = all_cards.get() {
             let color = color_filter.get();
             let feature_names = selected_feature_names.get();
-            
+
             // 複合フィルタリングを使用
             let color_bits = if color.has_any() { color.to_bits() } else { 0 };
-            let filtered = datapack::fetch_by_colors_and_features_native(&cards, color_bits, &feature_names);
-            
+            let filtered =
+                datapack::fetch_by_colors_and_features_native(&cards, color_bits, &feature_names);
+
             set_filtered_cards.set(filtered);
             set_current_page.set(0);
         }
@@ -41,7 +37,7 @@ pub fn CardPage() -> impl IntoView {
         let page = current_page.get();
         let start = page * cards_per_page;
         let end = (start + cards_per_page).min(cards.len());
-        
+
         cards[start..end].to_vec()
     });
 
@@ -57,7 +53,7 @@ pub fn CardPage() -> impl IntoView {
                 _set_selected_features=set_selected_features
                 on_feature_change=set_selected_feature_names
             />
-            
+
             <div class="container mx-auto px-4 py-4">
                 <div class="mb-6">
                     <ColorSelector
@@ -65,11 +61,11 @@ pub fn CardPage() -> impl IntoView {
                         set_color_filter=set_color_filter
                     />
                 </div>
-                
+
                 <div class="mb-4 text-sm text-gray-600">
                     {move || format!("Found {} cards", filtered_cards.get().len())}
                 </div>
-                
+
                 <Suspense fallback=move || view! { <div>"Loading cards..."</div> }>
                     {move || {
                         if let Some(result) = all_cards.get() {
@@ -77,7 +73,7 @@ pub fn CardPage() -> impl IntoView {
                                 Ok(_) => view! {
                                     <div>
                                         <CardList cards=displayed_cards.get()/>
-                                        
+
                                         // Pagination
                                         <Show when=move || !filtered_cards.get().is_empty()>
                                             <div class="mt-8 flex justify-center gap-2">
@@ -94,7 +90,7 @@ pub fn CardPage() -> impl IntoView {
                                                 >
                                                     "Previous"
                                                 </button>
-                                                
+
                                                 <span class="px-4 py-2">
                                                     {move || {
                                                         let current = current_page.get();
@@ -102,7 +98,7 @@ pub fn CardPage() -> impl IntoView {
                                                         format!("Page {} of {}", current + 1, total.max(1))
                                                     }}
                                                 </span>
-                                                
+
                                                 <button
                                                     class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-gray-300"
                                                     prop:disabled=move || {

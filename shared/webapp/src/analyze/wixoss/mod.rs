@@ -1,7 +1,7 @@
 pub mod card;
 pub mod format;
-mod timing;
 mod selectors;
+mod timing;
 
 pub(crate) use crate::analyze::wixoss::card::{detect_card_type, CardType};
 use crate::analyze::wixoss::format::Format;
@@ -12,18 +12,21 @@ pub use crate::analyze::wixoss::card::{
     Arts, ArtsCraft, Key, Lrig, LrigAssist, Piece, PieceCraft, PieceRelay, Resona, ResonaCraft,
     Signi, SigniCraft, Spell, SpellCraft,
 };
+use crate::analyze::wixoss::selectors::{
+    BR_SELECTOR, CARD_ARTIST, CARD_DATA_DD, CARD_NAME, CARD_NUM, CARD_RARITY, CARD_SKILL,
+    SPAN_SELECTOR,
+};
 use crate::analyze::wixoss::timing::TimingList;
-use crate::analyze::wixoss::selectors::{CARD_ARTIST, CARD_DATA_DD, CARD_NAME, CARD_NUM, CARD_RARITY, CARD_SKILL, BR_SELECTOR, SPAN_SELECTOR};
+use analyzer::{AnalyzeRule, Analyzer};
 use feature::feature::CardFeature;
 use models::card::CreateCard;
+use rayon::prelude::*;
 use regex::Regex;
 use scraper::Html;
 use serde::ser::SerializeSeq;
 use serde::{Serialize, Serializer};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-use rayon::prelude::*;
-use analyzer::{AnalyzeRule, Analyzer};
 
 pub trait WixossCard: Sized {
     fn from_source(source: String) -> Self;
@@ -266,7 +269,7 @@ pub struct Card {
     features: HashSet<CardFeature>,
     feature_bits1: i64,
     feature_bits2: i64,
-    ex1: OptionString
+    ex1: OptionString,
 }
 
 impl From<Card> for CreateCard {
@@ -312,7 +315,7 @@ impl From<Card> for CreateCard {
             skill_text: Some(normal_skills.join("\n")),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
-            ex1: val.ex1.value
+            ex1: val.ex1.value,
         }
     }
 }
@@ -500,7 +503,7 @@ pub struct Token {
     features: HashSet<CardFeature>,
     feature_bits1: i64,
     feature_bits2: i64,
-    ex1: OptionString
+    ex1: OptionString,
 }
 
 impl From<Token> for Card {
@@ -586,7 +589,7 @@ impl WixossCard for Token {
             features,
             feature_bits1: 0,
             feature_bits2: 0,
-            ex1: OptionString::empty()
+            ex1: OptionString::empty(),
         }
     }
 }
@@ -646,13 +649,14 @@ impl CardFeatureRule {
     fn apply_replace(&self, text: &str) -> String {
         let (replace_patterns, _) = &create_detect_patterns();
 
-        replace_patterns
-            .iter()
-            .fold(text.to_string(), |current_text: String, pat: &ReplacePattern| {
+        replace_patterns.iter().fold(
+            text.to_string(),
+            |current_text: String, pat: &ReplacePattern| {
                 let re = &pat.pattern_r;
                 let replaced = re.replace_all(&current_text, pat.replace_to).to_string();
                 replaced
-            })
+            },
+        )
     }
 }
 
@@ -678,7 +682,12 @@ impl AnalyzeRule<CardFeature> for CardFeatureRule {
 
                 // Only if the pattern matches
                 if re.is_match(text) {
-                    Some(pat.features_detected.iter().cloned().collect::<HashSet<CardFeature>>())
+                    Some(
+                        pat.features_detected
+                            .iter()
+                            .cloned()
+                            .collect::<HashSet<CardFeature>>(),
+                    )
                 } else {
                     None
                 }

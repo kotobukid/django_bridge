@@ -1,9 +1,9 @@
-use std::sync::Arc;
-use sqlx::{Pool, Postgres, Row};
-use models::card::CreateCard;
-use models::r#gen::django_models::RawCardDb;
 use crate::raw_card_analyzer::{AnalysisError, RawCardAnalyzer};
 use chrono::{DateTime, Utc};
+use models::card::CreateCard;
+use models::r#gen::django_models::RawCardDb;
+use sqlx::{Pool, Postgres, Row};
+use std::sync::Arc;
 
 /// RawCardDb with product_id included
 #[derive(sqlx::FromRow, Debug, Clone)]
@@ -60,16 +60,16 @@ impl RawCardAnalyzer for SimpleRawCardAnalyzer {
 
 impl SimpleRawCardAnalyzer {
     pub async fn analyze_with_product_id(
-        &self, 
-        raw_card: &RawCardDb, 
-        product_id: Option<i64>
+        &self,
+        raw_card: &RawCardDb,
+        product_id: Option<i64>,
     ) -> Result<CreateCard, AnalysisError> {
         // 基本的なCreateCardを作成
         Ok(CreateCard {
             name: raw_card.name.clone(),
             code: raw_card.card_number.clone(),
             pronunciation: raw_card.name.clone(), // デフォルトで名前を使用
-            color: 128, // デフォルト無色
+            color: 128,                           // デフォルト無色
             cost: None,
             level: None,
             limit: None,
@@ -77,7 +77,11 @@ impl SimpleRawCardAnalyzer {
             product: product_id.unwrap_or(0) as i32,
             card_type: 0, // TODO: card_type情報を取得
             power: None,
-            has_burst: if raw_card.life_burst_text.is_empty() { 2 } else { 1 },
+            has_burst: if raw_card.life_burst_text.is_empty() {
+                2
+            } else {
+                1
+            },
             skill_text: Some(raw_card.skill_text.clone()),
             burst_text: Some(raw_card.life_burst_text.clone()),
             format: 7, // デフォルトオールスター
@@ -102,7 +106,10 @@ impl CardRepository {
         Self { pool }
     }
 
-    pub async fn save_card(&self, create_card: CreateCard) -> Result<i64, Box<dyn std::error::Error>> {
+    pub async fn save_card(
+        &self,
+        create_card: CreateCard,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
         let result = sqlx::query(
             r#"
             INSERT INTO wix_card (
@@ -159,22 +166,24 @@ pub async fn analyze_and_save_card_with_product_id(
     pool: &Pool<Postgres>,
 ) -> Result<i64, Box<dyn std::error::Error>> {
     let analyzer = SimpleRawCardAnalyzer::new();
-    
+
     // RawCardを解析
-    let create_card = analyzer.analyze_with_product_id(raw_card, product_id).await?;
-    
+    let create_card = analyzer
+        .analyze_with_product_id(raw_card, product_id)
+        .await?;
+
     // DBに保存
     let card_repo = CardRepository::new(Arc::new(pool.clone()));
     let card_id = card_repo.save_card(create_card).await?;
-    
+
     // RawCardを解析済みにマーク
     sqlx::query(
-        "UPDATE wix_rawcard SET is_analyzed = true, last_analyzed_at = NOW() WHERE id = $1"
+        "UPDATE wix_rawcard SET is_analyzed = true, last_analyzed_at = NOW() WHERE id = $1",
     )
     .bind(raw_card.id)
     .execute(pool)
     .await?;
-    
+
     Ok(card_id)
 }
 
@@ -184,12 +193,12 @@ pub async fn analyze_raw_cards_batch(
     pool: &Pool<Postgres>,
 ) -> Vec<Result<i64, Box<dyn std::error::Error>>> {
     let mut results = Vec::new();
-    
+
     for raw_card in raw_cards {
         let result = analyze_and_save_card(&raw_card, pool).await;
         results.push(result);
     }
-    
+
     results
 }
 
@@ -199,12 +208,17 @@ pub async fn analyze_raw_cards_with_product_batch(
     pool: &Pool<Postgres>,
 ) -> Vec<Result<i64, Box<dyn std::error::Error>>> {
     let mut results = Vec::new();
-    
+
     for raw_card_with_product in raw_cards {
         let raw_card = raw_card_with_product.to_raw_card_db();
-        let result = analyze_and_save_card_with_product_id(&raw_card, raw_card_with_product.product_id, pool).await;
+        let result = analyze_and_save_card_with_product_id(
+            &raw_card,
+            raw_card_with_product.product_id,
+            pool,
+        )
+        .await;
         results.push(result);
     }
-    
+
     results
 }

@@ -10,8 +10,8 @@ use tokio::time::{sleep, Duration};
 use url::Url;
 
 use models::card::CreateCard;
-use webapp::analyze::{CardQuery, ProductType};
 use webapp::analyze::wixoss::Card;
+use webapp::analyze::{CardQuery, ProductType};
 use webapp::repositories::{CardTypeRepository, ProductRepository};
 
 use crate::db::save_card_to_database;
@@ -56,7 +56,7 @@ impl ScrapingService {
         product_type: ProductType,
     ) -> Result<(), Box<dyn std::error::Error>> {
         println!("処理対象のカード数: {}", links.len());
-        
+
         let mut success_count = 0;
         let mut error_count = 0;
         let mut skip_count = 0;
@@ -64,14 +64,17 @@ impl ScrapingService {
         // 現在は順次処理（将来的に並列処理を追加可能）
         for (index, link) in links.iter().enumerate() {
             println!("進行状況: {}/{}", index + 1, links.len());
-            
-            match self.process_single_card(
-                link,
-                pool.clone(),
-                card_type_repo.clone(),
-                product_repo.clone(),
-                &product_type,
-            ).await {
+
+            match self
+                .process_single_card(
+                    link,
+                    pool.clone(),
+                    card_type_repo.clone(),
+                    product_repo.clone(),
+                    &product_type,
+                )
+                .await
+            {
                 Ok(ProcessResult::Success) => {
                     success_count += 1;
                     println!("✓ カードを保存しました");
@@ -147,7 +150,8 @@ impl ScrapingService {
                     .await;
 
                 // カード名を抽出（HTMLから）
-                let card_name = self.raw_card_service
+                let card_name = self
+                    .raw_card_service
                     .extract_card_name_from_html(&html_text)
                     .unwrap_or_else(|| format!("Unknown Card {}", card_no));
 
@@ -160,7 +164,8 @@ impl ScrapingService {
                 )?;
 
                 // RawCardをデータベースに保存
-                let raw_card_id = self.raw_card_service
+                let raw_card_id = self
+                    .raw_card_service
                     .save_raw_card_with_product(pool.clone(), create_raw_card, product_id)
                     .await
                     .map_err(|e| format!("RawCardの保存に失敗しました: {}", e))?;
@@ -197,4 +202,3 @@ fn extract_card_no(url_str: &str) -> Option<String> {
     // card_noパラメータを取得
     params.get("card_no").map(|s| s.to_string())
 }
-

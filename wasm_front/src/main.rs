@@ -6,8 +6,8 @@ mod components;
 mod pages;
 mod types;
 
-use pages::{CardPage, HomePage};
 use components::SvgDefinition;
+use pages::{CardPage, HomePage};
 
 #[component]
 fn App() -> impl IntoView {

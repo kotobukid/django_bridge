@@ -1,9 +1,9 @@
 mod card;
+mod cardtype;
 mod klass;
 mod product;
-mod cardtype;
 
 pub use card::*;
+pub use cardtype::*;
 pub use klass::*;
 pub use product::*;
-pub use cardtype::*;

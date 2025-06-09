@@ -1,5 +1,5 @@
-use std::collections::HashMap;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
@@ -64,7 +64,7 @@ impl Color {
             Color::Green => 1 << 5,     // 32
             Color::Colorless => 1 << 6, // 64
             Color::Unknown => 1 << 7,   // 128
-            // Color::White && Color::Red -> 10
+                                         // Color::White && Color::Red -> 10
         }
     }
 
@@ -146,7 +146,10 @@ impl Colors {
         let width_1 = if colors.len() > 1 {
             (100 - (offset * 2)) / (colors.len() - 1)
         } else {
-            return format!("background-color: {};", colors.first().unwrap().to_css_color_code());
+            return format!(
+                "background-color: {};",
+                colors.first().unwrap().to_css_color_code()
+            );
         };
 
         // 各色のグラデーションコードを生成
@@ -236,7 +239,8 @@ pub fn convert_cost(cost_string: &str) -> Result<String, String> {
             }
 
             // 対応する内部表記に変換
-            let internal = natural_to_internal.get(color.as_str())
+            let internal = natural_to_internal
+                .get(color.as_str())
                 .ok_or_else(|| format!("Unexpected color '{}'", color))?;
 
             // 次が "×" か確認
@@ -255,7 +259,9 @@ pub fn convert_cost(cost_string: &str) -> Result<String, String> {
                 }
             }
 
-            let count: usize = count.parse().map_err(|_| "Failed to parse count".to_string())?;
+            let count: usize = count
+                .parse()
+                .map_err(|_| "Failed to parse count".to_string())?;
             result.push(*internal);
             result.push_str(&count.to_string());
         }

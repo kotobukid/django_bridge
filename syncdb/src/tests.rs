@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use crate::*;
-    use rustpython_parser::{Tok, StringKind};
+    use rustpython_parser::{StringKind, Tok};
 
     #[test]
     fn test_first_upper() {
@@ -11,7 +11,7 @@ mod tests {
         assert_eq!(first_upper("Hello"), "Hello");
         assert_eq!(first_upper("123"), "123");
         assert_eq!(first_upper("_test"), "_test");
-        
+
         // パフォーマンス最適化のテスト - すでに大文字の場合は借用を返す
         let already_upper = "Hello";
         match first_upper(already_upper) {
@@ -91,12 +91,14 @@ mod tests {
     fn test_analyze_relation_field_with_string_literal() {
         // ForeignKey("Product") のケース
         let tokens = vec![
-            Tok::Name { name: "ForeignKey".to_string() },
+            Tok::Name {
+                name: "ForeignKey".to_string(),
+            },
             Tok::Lpar,
-            Tok::String { 
+            Tok::String {
                 value: "Product".to_string(),
                 kind: StringKind::String,
-                triple_quoted: false 
+                triple_quoted: false,
             },
             Tok::Rpar,
         ];
@@ -109,14 +111,18 @@ mod tests {
     fn test_analyze_relation_field_with_to_parameter() {
         // ForeignKey(to="Product") のケース
         let tokens = vec![
-            Tok::Name { name: "ForeignKey".to_string() },
+            Tok::Name {
+                name: "ForeignKey".to_string(),
+            },
             Tok::Lpar,
-            Tok::Name { name: "to".to_string() },
+            Tok::Name {
+                name: "to".to_string(),
+            },
             Tok::Equal,
-            Tok::String { 
+            Tok::String {
                 value: "Product".to_string(),
                 kind: StringKind::String,
-                triple_quoted: false 
+                triple_quoted: false,
             },
             Tok::Rpar,
         ];
@@ -129,9 +135,13 @@ mod tests {
     fn test_analyze_relation_field_with_model_reference() {
         // ForeignKey(Product) のケース（文字列ではなく、直接モデル参照）
         let tokens = vec![
-            Tok::Name { name: "ForeignKey".to_string() },
+            Tok::Name {
+                name: "ForeignKey".to_string(),
+            },
             Tok::Lpar,
-            Tok::Name { name: "Product".to_string() },
+            Tok::Name {
+                name: "Product".to_string(),
+            },
             Tok::Rpar,
         ];
 
@@ -198,12 +208,8 @@ class Product(models.Model):
     is_active = models.BooleanField(default=True)
 "#;
 
-        let result = generate_struct_from_python(
-            "myapp",
-            "Product",
-            python_code,
-            &mut crate_requirements,
-        );
+        let result =
+            generate_struct_from_python("myapp", "Product", python_code, &mut crate_requirements);
 
         assert!(result.is_ok());
         let (db_struct, create_struct, _) = result.unwrap();

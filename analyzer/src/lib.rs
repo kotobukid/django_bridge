@@ -1,7 +1,7 @@
-use std::collections::HashSet;
-use regex::Regex;
 use feature::CardFeature;
 use rayon::prelude::*;
+use regex::Regex;
+use std::collections::HashSet;
 
 /// テキストを解析してパターンを検出するルールのトレイト
 pub trait AnalyzeRule<T> {
@@ -199,7 +199,11 @@ pub struct CompiledPattern {
 }
 
 impl CompiledPattern {
-    pub fn new(pattern: &str, features: Vec<CardFeature>, replace_to: Option<String>) -> Result<Self, regex::Error> {
+    pub fn new(
+        pattern: &str,
+        features: Vec<CardFeature>,
+        replace_to: Option<String>,
+    ) -> Result<Self, regex::Error> {
         Ok(Self {
             regex: Regex::new(pattern)?,
             features,
@@ -211,7 +215,11 @@ impl CompiledPattern {
         Self::new(pattern, features, None)
     }
 
-    pub fn replace_pattern(pattern: &str, replace_to: String, features: Vec<CardFeature>) -> Result<Self, regex::Error> {
+    pub fn replace_pattern(
+        pattern: &str,
+        replace_to: String,
+        features: Vec<CardFeature>,
+    ) -> Result<Self, regex::Error> {
         Self::new(pattern, features, Some(replace_to))
     }
 }
@@ -224,9 +232,14 @@ pub struct NumericVariationRule {
 }
 
 impl NumericVariationRule {
-    pub fn new(pattern_head: &str, pattern_tail: &str, features: Vec<CardFeature>) -> Result<Self, regex::Error> {
+    pub fn new(
+        pattern_head: &str,
+        pattern_tail: &str,
+        features: Vec<CardFeature>,
+    ) -> Result<Self, regex::Error> {
         let base_pattern = format!("{}{}", pattern_head, pattern_tail);
-        let patterns = Self::generate_numeric_patterns(pattern_head, pattern_tail, features.clone())?;
+        let patterns =
+            Self::generate_numeric_patterns(pattern_head, pattern_tail, features.clone())?;
 
         Ok(Self {
             base_pattern,
@@ -235,18 +248,42 @@ impl NumericVariationRule {
         })
     }
 
-    fn generate_numeric_patterns(head: &str, tail: &str, features: Vec<CardFeature>) -> Result<Vec<CompiledPattern>, regex::Error> {
+    fn generate_numeric_patterns(
+        head: &str,
+        tail: &str,
+        features: Vec<CardFeature>,
+    ) -> Result<Vec<CompiledPattern>, regex::Error> {
         // 日本語全角数字（括弧付き）
-        let numbers = ["（０）", "（１）", "（２）", "（３）", "（４）", "（５）", "（６）", "（７）", "（８）", "（９）"];
+        let numbers = [
+            "（０）",
+            "（１）",
+            "（２）",
+            "（３）",
+            "（４）",
+            "（５）",
+            "（６）",
+            "（７）",
+            "（８）",
+            "（９）",
+        ];
         let mut patterns = Vec::new();
 
         for num in numbers {
-            let pattern = format!("{}{}{}", regex::escape(head), regex::escape(num), regex::escape(tail));
+            let pattern = format!(
+                "{}{}{}",
+                regex::escape(head),
+                regex::escape(num),
+                regex::escape(tail)
+            );
             patterns.push(CompiledPattern::detect_pattern(&pattern, features.clone())?);
         }
 
         // 任意の数字にマッチする汎用パターンも追加
-        let generic_pattern = format!("{}[（]?[０-９]+[）]?{}", regex::escape(head), regex::escape(tail));
+        let generic_pattern = format!(
+            "{}[（]?[０-９]+[）]?{}",
+            regex::escape(head),
+            regex::escape(tail)
+        );
         patterns.push(CompiledPattern::detect_pattern(&generic_pattern, features)?);
 
         Ok(patterns)
@@ -276,7 +313,11 @@ impl SimpleRule {
         })
     }
 
-    pub fn replace_rule(pattern: &str, replace_to: String, features: Vec<CardFeature>) -> Result<Self, regex::Error> {
+    pub fn replace_rule(
+        pattern: &str,
+        replace_to: String,
+        features: Vec<CardFeature>,
+    ) -> Result<Self, regex::Error> {
         Ok(Self {
             pattern: CompiledPattern::replace_pattern(pattern, replace_to, features)?,
         })
@@ -294,7 +335,10 @@ impl AnalyzeRule<CardFeature> for SimpleRule {
 
     fn preprocess(&self, text: &str) -> String {
         if let Some(ref replace_to) = self.pattern.replace_to {
-            self.pattern.regex.replace_all(text, replace_to).into_owned()
+            self.pattern
+                .regex
+                .replace_all(text, replace_to)
+                .into_owned()
         } else {
             text.to_string()
         }
@@ -315,25 +359,58 @@ pub mod category_rules {
             let mut patterns = Vec::new();
 
             // アサシンパターン
-            patterns.push(CompiledPattern::detect_pattern(r"アサシン", vec![CardFeature::Assassin])?);
-            patterns.push(CompiledPattern::detect_pattern(r"【アサシン】", vec![CardFeature::Assassin])?);
-            patterns.push(CompiledPattern::detect_pattern(r"このシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える", vec![CardFeature::Assassin])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"アサシン",
+                vec![CardFeature::Assassin],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"【アサシン】",
+                vec![CardFeature::Assassin],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"このシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える",
+                vec![CardFeature::Assassin],
+            )?);
 
             // ダブルクラッシュパターン
-            patterns.push(CompiledPattern::detect_pattern(r"ダブルクラッシュ", vec![CardFeature::DoubleCrush])?);
-            patterns.push(CompiledPattern::detect_pattern(r"トリプルクラッシュ", vec![CardFeature::DoubleCrush])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"ダブルクラッシュ",
+                vec![CardFeature::DoubleCrush],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"トリプルクラッシュ",
+                vec![CardFeature::DoubleCrush],
+            )?);
 
             // Sランサーパターン
-            patterns.push(CompiledPattern::detect_pattern(r"Sランサー", vec![CardFeature::SLancer, CardFeature::Lancer])?);
-            patterns.push(CompiledPattern::detect_pattern(r"Ｓランサー", vec![CardFeature::SLancer, CardFeature::Lancer])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"Sランサー",
+                vec![CardFeature::SLancer, CardFeature::Lancer],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"Ｓランサー",
+                vec![CardFeature::SLancer, CardFeature::Lancer],
+            )?);
 
             // ランサーパターン
-            patterns.push(CompiledPattern::detect_pattern(r"ランサー", vec![CardFeature::Lancer])?);
-            patterns.push(CompiledPattern::detect_pattern(r"ライフクロスを１枚クラッシュする", vec![CardFeature::LifeCrush])?);
-            patterns.push(CompiledPattern::detect_pattern(r"対戦相手のライフクロス１枚をクラッシュする。", vec![CardFeature::LifeCrush])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"ランサー",
+                vec![CardFeature::Lancer],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"ライフクロスを１枚クラッシュする",
+                vec![CardFeature::LifeCrush],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"対戦相手のライフクロス１枚をクラッシュする。",
+                vec![CardFeature::LifeCrush],
+            )?);
 
             // ダメージパターン
-            patterns.push(CompiledPattern::detect_pattern(r"対戦相手にダメージを与える。", vec![CardFeature::Damage])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"対戦相手にダメージを与える。",
+                vec![CardFeature::Damage],
+            )?);
 
             Ok(Self { patterns })
         }
@@ -361,21 +438,48 @@ pub mod category_rules {
             let mut patterns = Vec::new();
 
             // バニッシュパターン
-            patterns.push(CompiledPattern::detect_pattern(r"バニッシュ", vec![CardFeature::Banish])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"バニッシュ",
+                vec![CardFeature::Banish],
+            )?);
 
             // パワーダウンパターン
-            patterns.push(CompiledPattern::detect_pattern(r"(シグニ|それ|それら)のパワーを－", vec![CardFeature::PowerDown])?);
-            patterns.push(CompiledPattern::detect_pattern(r"(シグニ|それ)のパワーをこの方法で.+－", vec![CardFeature::PowerDown])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"(シグニ|それ|それら)のパワーを－",
+                vec![CardFeature::PowerDown],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"(シグニ|それ)のパワーをこの方法で.+－",
+                vec![CardFeature::PowerDown],
+            )?);
 
             // バウンスパターン
-            patterns.push(CompiledPattern::detect_pattern(r"対戦相手のシグニ.+体(まで|を)対象とし、(それら|それ)を手札に戻", vec![CardFeature::Bounce])?);
-            patterns.push(CompiledPattern::detect_pattern(r"対戦相手のパワー.+体(まで|を)対象とし、(それら|それ)を手札に戻", vec![CardFeature::Bounce])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"対戦相手のシグニ.+体(まで|を)対象とし、(それら|それ)を手札に戻",
+                vec![CardFeature::Bounce],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"対戦相手のパワー.+体(まで|を)対象とし、(それら|それ)を手札に戻",
+                vec![CardFeature::Bounce],
+            )?);
 
             // エナ攻撃パターン
-            patterns.push(CompiledPattern::detect_pattern(r"シグニ.+エナゾーンに置", vec![CardFeature::EnerOffensive])?);
-            patterns.push(CompiledPattern::detect_pattern(r"対戦相手は自分の.?シグニ１体を選びエナゾーンに置", vec![CardFeature::EnerOffensive])?);
-            patterns.push(CompiledPattern::detect_pattern(r"対戦相手のパワー.+以下のシグニ１体を対象とし、それをエナゾーンに置", vec![CardFeature::EnerOffensive])?);
-            patterns.push(CompiledPattern::detect_pattern(r"対戦相手のすべてのシグニをエナゾーンに置", vec![CardFeature::EnerOffensive])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"シグニ.+エナゾーンに置",
+                vec![CardFeature::EnerOffensive],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"対戦相手は自分の.?シグニ１体を選びエナゾーンに置",
+                vec![CardFeature::EnerOffensive],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"対戦相手のパワー.+以下のシグニ１体を対象とし、それをエナゾーンに置",
+                vec![CardFeature::EnerOffensive],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"対戦相手のすべてのシグニをエナゾーンに置",
+                vec![CardFeature::EnerOffensive],
+            )?);
 
             Ok(Self { patterns })
         }
@@ -403,20 +507,44 @@ pub mod category_rules {
             let mut patterns = Vec::new();
 
             // ガードパターン
-            patterns.push(CompiledPattern::detect_pattern(r"《ガードアイコン》", vec![CardFeature::Guard])?);
-            patterns.push(CompiledPattern::detect_pattern(r"ガードアイコン", vec![CardFeature::Guard])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"《ガードアイコン》",
+                vec![CardFeature::Guard],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"ガードアイコン",
+                vec![CardFeature::Guard],
+            )?);
 
             // バリアパターン
-            patterns.push(CompiledPattern::detect_pattern(r"シグニバリア", vec![CardFeature::Barrier])?);
-            patterns.push(CompiledPattern::detect_pattern(r"ルリグバリア", vec![CardFeature::Barrier])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"シグニバリア",
+                vec![CardFeature::Barrier],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"ルリグバリア",
+                vec![CardFeature::Barrier],
+            )?);
 
             // シャドウパターン
-            patterns.push(CompiledPattern::detect_pattern(r"シャドウ", vec![CardFeature::Shadow])?);
-            patterns.push(CompiledPattern::detect_pattern(r"【シャドウ】", vec![CardFeature::Shadow])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"シャドウ",
+                vec![CardFeature::Shadow],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"【シャドウ】",
+                vec![CardFeature::Shadow],
+            )?);
 
             // 無敵パターン
-            patterns.push(CompiledPattern::detect_pattern(r"バニッシュされない", vec![CardFeature::Invulnerable])?);
-            patterns.push(CompiledPattern::detect_pattern(r"ダメージを受けない", vec![CardFeature::CancelDamage])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"バニッシュされない",
+                vec![CardFeature::Invulnerable],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"ダメージを受けない",
+                vec![CardFeature::CancelDamage],
+            )?);
 
             Ok(Self { patterns })
         }
@@ -446,22 +574,53 @@ pub mod category_rules {
             let mut numeric_rules = Vec::new();
 
             // 数値バリエーション付きドローパターン
-            numeric_rules.push(NumericVariationRule::new("カードを", "枚引", vec![CardFeature::Draw])?);
+            numeric_rules.push(NumericVariationRule::new(
+                "カードを",
+                "枚引",
+                vec![CardFeature::Draw],
+            )?);
 
             // チャージパターン
-            patterns.push(CompiledPattern::detect_pattern(r"エナチャージ", vec![CardFeature::Charge])?);
-            numeric_rules.push(NumericVariationRule::new("カードを", "枚までエナゾーンに置", vec![CardFeature::Charge])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"エナチャージ",
+                vec![CardFeature::Charge],
+            )?);
+            numeric_rules.push(NumericVariationRule::new(
+                "カードを",
+                "枚までエナゾーンに置",
+                vec![CardFeature::Charge],
+            )?);
 
             // サルベージパターン
-            numeric_rules.push(NumericVariationRule::new("(シグニ|シグニを|シグニをそれぞれ)", "枚(を|まで).+手札に加え", vec![CardFeature::Salvage])?);
-            numeric_rules.push(NumericVariationRule::new("スペル", "枚を.+手札に加え", vec![CardFeature::SalvageSpell])?);
+            numeric_rules.push(NumericVariationRule::new(
+                "(シグニ|シグニを|シグニをそれぞれ)",
+                "枚(を|まで).+手札に加え",
+                vec![CardFeature::Salvage],
+            )?);
+            numeric_rules.push(NumericVariationRule::new(
+                "スペル",
+                "枚を.+手札に加え",
+                vec![CardFeature::SalvageSpell],
+            )?);
 
             // パワーアップパターン
-            patterns.push(CompiledPattern::detect_pattern(r"シグニのパワーを＋", vec![CardFeature::PowerUp])?);
-            patterns.push(CompiledPattern::detect_pattern(r"このシグニのパワーは＋", vec![CardFeature::PowerUp])?);
-            patterns.push(CompiledPattern::detect_pattern(r"(シグニ|それ|それら)のパワーを＋", vec![CardFeature::PowerUp])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"シグニのパワーを＋",
+                vec![CardFeature::PowerUp],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"このシグニのパワーは＋",
+                vec![CardFeature::PowerUp],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"(シグニ|それ|それら)のパワーを＋",
+                vec![CardFeature::PowerUp],
+            )?);
 
-            Ok(Self { patterns, numeric_rules })
+            Ok(Self {
+                patterns,
+                numeric_rules,
+            })
         }
     }
 
@@ -495,25 +654,52 @@ pub mod category_rules {
             let mut patterns = Vec::new();
 
             // チャームパターン
-            patterns.push(CompiledPattern::detect_pattern(r"チャーム", vec![CardFeature::Charm])?);
-            patterns.push(CompiledPattern::detect_pattern(r"【チャーム】", vec![CardFeature::Charm])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"チャーム",
+                vec![CardFeature::Charm],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"【チャーム】",
+                vec![CardFeature::Charm],
+            )?);
 
             // クラフトパターン
-            patterns.push(CompiledPattern::detect_pattern(r"【クラフト】", vec![CardFeature::Craft])?);
-            patterns.push(CompiledPattern::detect_pattern(r"クラフトの《", vec![CardFeature::Craft])?);
-            patterns.push(CompiledPattern::detect_pattern(r"（このクラフトは効果以外によっては場に出せない）", vec![CardFeature::Craft])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"【クラフト】",
+                vec![CardFeature::Craft],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"クラフトの《",
+                vec![CardFeature::Craft],
+            )?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"（このクラフトは効果以外によっては場に出せない）",
+                vec![CardFeature::Craft],
+            )?);
 
             // アクセパターン
-            patterns.push(CompiledPattern::detect_pattern(r"アクセ", vec![CardFeature::Acce])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"アクセ",
+                vec![CardFeature::Acce],
+            )?);
 
             // ライズパターン
-            patterns.push(CompiledPattern::detect_pattern(r"【ライズ】あなたの", vec![CardFeature::Rise])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"【ライズ】あなたの",
+                vec![CardFeature::Rise],
+            )?);
 
             // ウィルスパターン
-            patterns.push(CompiledPattern::detect_pattern(r"【ウィルス】", vec![CardFeature::Virus])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"【ウィルス】",
+                vec![CardFeature::Virus],
+            )?);
 
             // ライフバーストパターン
-            patterns.push(CompiledPattern::detect_pattern(r"【ライフバースト】", vec![CardFeature::LifeBurst])?);
+            patterns.push(CompiledPattern::detect_pattern(
+                r"【ライフバースト】",
+                vec![CardFeature::LifeBurst],
+            )?);
 
             Ok(Self { patterns })
         }
@@ -558,7 +744,10 @@ impl CardFeatureAnalyzer {
         Ok(analyzer)
     }
 
-    pub fn add_category_rule(&mut self, rule: Box<dyn AnalyzeRule<CardFeature> + Send + Sync>) -> Result<(), regex::Error> {
+    pub fn add_category_rule(
+        &mut self,
+        rule: Box<dyn AnalyzeRule<CardFeature> + Send + Sync>,
+    ) -> Result<(), regex::Error> {
         self.category_rules.push(rule);
         Ok(())
     }
@@ -572,25 +761,25 @@ impl CardFeatureAnalyzer {
         self.add_preprocessor_rule(SimpleRule::replace_rule(
             r"【ライフバースト】：",
             "LB:".to_string(),
-            vec![CardFeature::LifeBurst]
+            vec![CardFeature::LifeBurst],
         )?);
 
         self.add_preprocessor_rule(SimpleRule::replace_rule(
             r"（パワーが０以下のシグニはルールによってバニッシュされる）",
             "*POWER DOWN*".to_string(),
-            vec![CardFeature::PowerDown]
+            vec![CardFeature::PowerDown],
         )?);
 
         self.add_preprocessor_rule(SimpleRule::replace_rule(
             r"（シグニのパワーを計算する場合、先に基本パワーを適用してプラスやマイナスをする）",
             "*CALC ORDER*".to_string(),
-            vec![]
+            vec![],
         )?);
 
         self.add_preprocessor_rule(SimpleRule::replace_rule(
             r"（凍結された(ルリグ|シグニ)は次の自分のアップフェイズにアップしない）",
             "*FROZEN*".to_string(),
-            vec![CardFeature::Freeze]
+            vec![CardFeature::Freeze],
         )?);
 
         self.add_preprocessor_rule(SimpleRule::replace_rule(
@@ -635,7 +824,8 @@ impl AnalyzeRule<CardFeature> for CardFeatureAnalyzer {
         }
 
         // カテゴリルールからフィーチャーを収集（並列）
-        let category_features: HashSet<CardFeature> = self.category_rules
+        let category_features: HashSet<CardFeature> = self
+            .category_rules
             .par_iter()
             .flat_map(|rule| rule.detect(&processed_text))
             .collect();
@@ -677,10 +867,15 @@ where
 /// 既存パターンを新しいアナライザーシステムに変換するための移行ユーティリティ
 pub mod migration {
     use super::*;
-    use feature::{create_detect_patterns, DetectPattern, ReplacePattern, PATTERNS_AMOUNT_D, PATTERNS_AMOUNT_R};
+    use feature::{
+        DetectPattern, PATTERNS_AMOUNT_D, PATTERNS_AMOUNT_R, ReplacePattern, create_detect_patterns,
+    };
 
     // パターンを直接作成する関数
-    fn get_legacy_patterns() -> ([ReplacePattern; PATTERNS_AMOUNT_R], [DetectPattern; PATTERNS_AMOUNT_D]) {
+    fn get_legacy_patterns() -> (
+        [ReplacePattern; PATTERNS_AMOUNT_R],
+        [DetectPattern; PATTERNS_AMOUNT_D],
+    ) {
         create_detect_patterns()
     }
 
@@ -691,11 +886,12 @@ pub mod migration {
         // 既存の置換パターンを前処理ルールとして追加
         let (replace_patterns, _detect_patterns) = get_legacy_patterns();
 
-        for pattern in &replace_patterns[..5] { // 最初の5つだけをテストに使用
+        for pattern in &replace_patterns[..5] {
+            // 最初の5つだけをテストに使用
             let rule = SimpleRule::replace_rule(
                 pattern.pattern,
                 pattern.replace_to.to_string(),
-                pattern.features_detected.to_vec()
+                pattern.features_detected.to_vec(),
             )?;
             analyzer.add_preprocessor_rule(rule);
         }
@@ -743,15 +939,51 @@ pub mod migration {
         let mut rules = Vec::new();
 
         // 既存システムの一般的な数値パターン
-        rules.push(NumericVariationRule::new("カードを", "枚引", vec![CardFeature::Draw])?);
-        rules.push(NumericVariationRule::new("カードを", "枚までエナゾーンに置", vec![CardFeature::Charge])?);
-        rules.push(NumericVariationRule::new("対戦相手のシグニ", "体を対象とし、それをバニッシュする", vec![CardFeature::Banish])?);
-        rules.push(NumericVariationRule::new("対戦相手のシグニ", "体を対象とし、それを手札に戻", vec![CardFeature::Bounce])?);
-        rules.push(NumericVariationRule::new("ライフクロス", "枚をトラッシュに置", vec![CardFeature::LifeTrash])?);
-        rules.push(NumericVariationRule::new("エナゾーンからカード", "枚を選び、それらをトラッシュに置", vec![CardFeature::EnerAttack])?);
-        rules.push(NumericVariationRule::new("デッキの上からカードを", "枚トラッシュに置", vec![CardFeature::Drop])?);
-        rules.push(NumericVariationRule::new("スペル", "枚をコストを支払わずに使用する", vec![CardFeature::FreeSpell])?);
-        rules.push(NumericVariationRule::new("シグニ", "枚を対象とし、それを場に出す", vec![CardFeature::PutSigniDefense, CardFeature::PutSigniOffense])?);
+        rules.push(NumericVariationRule::new(
+            "カードを",
+            "枚引",
+            vec![CardFeature::Draw],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "カードを",
+            "枚までエナゾーンに置",
+            vec![CardFeature::Charge],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "対戦相手のシグニ",
+            "体を対象とし、それをバニッシュする",
+            vec![CardFeature::Banish],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "対戦相手のシグニ",
+            "体を対象とし、それを手札に戻",
+            vec![CardFeature::Bounce],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "ライフクロス",
+            "枚をトラッシュに置",
+            vec![CardFeature::LifeTrash],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "エナゾーンからカード",
+            "枚を選び、それらをトラッシュに置",
+            vec![CardFeature::EnerAttack],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "デッキの上からカードを",
+            "枚トラッシュに置",
+            vec![CardFeature::Drop],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "スペル",
+            "枚をコストを支払わずに使用する",
+            vec![CardFeature::FreeSpell],
+        )?);
+        rules.push(NumericVariationRule::new(
+            "シグニ",
+            "枚を対象とし、それを場に出す",
+            vec![CardFeature::PutSigniDefense, CardFeature::PutSigniOffense],
+        )?);
 
         Ok(rules)
     }
@@ -775,7 +1007,10 @@ pub mod migration {
         // 置換パターンを適用（最初の5つのみ）
         let mut processed_text = text.to_string();
         for pattern in &replace_patterns[..5] {
-            processed_text = pattern.pattern_r.replace_all(&processed_text, pattern.replace_to).into_owned();
+            processed_text = pattern
+                .pattern_r
+                .replace_all(&processed_text, pattern.replace_to)
+                .into_owned();
         }
 
         // 検出パターンを適用（最初の10個のみ）
@@ -783,7 +1018,12 @@ pub mod migration {
             .iter()
             .filter_map(|pat| {
                 if pat.pattern_r.is_match(&processed_text) {
-                    Some(pat.features_detected.iter().cloned().collect::<HashSet<CardFeature>>())
+                    Some(
+                        pat.features_detected
+                            .iter()
+                            .cloned()
+                            .collect::<HashSet<CardFeature>>(),
+                    )
                 } else {
                     None
                 }
@@ -810,8 +1050,8 @@ pub mod migration {
     }
 }
 
-pub mod raw_card_analyzer;
 pub mod card_analyzer;
+pub mod raw_card_analyzer;
 
 #[cfg(test)]
 mod tests {
@@ -852,7 +1092,8 @@ mod tests {
         let mut analyzer = Analyzer::new();
         analyzer.add_rule(Box::new(WordLengthRule::new(3)));
 
-        let words: HashSet<String> = analyzer.analyze("The quick brown fox jumps over the lazy dog");
+        let words: HashSet<String> =
+            analyzer.analyze("The quick brown fox jumps over the lazy dog");
 
         assert!(words.contains("The"));
         assert!(words.contains("fox"));
@@ -866,7 +1107,8 @@ mod tests {
         let mut analyzer = Analyzer::new();
         analyzer.add_rule(Box::new(EmailDetectRule::new()));
 
-        let emails: HashSet<String> = analyzer.analyze("Contact us at test@example.com or support@company.org for more information.");
+        let emails: HashSet<String> = analyzer
+            .analyze("Contact us at test@example.com or support@company.org for more information.");
 
         assert!(emails.contains("test@example.com"));
         assert!(emails.contains("support@company.org"));

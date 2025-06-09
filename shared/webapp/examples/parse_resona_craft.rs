@@ -1,4 +1,4 @@
-use webapp::analyze::wixoss::{card::CardType, Card, card::ResonaCraft, WixossCard};
+use webapp::analyze::wixoss::{card::CardType, card::ResonaCraft, Card, WixossCard};
 
 fn main() {
     let source: String = r#"

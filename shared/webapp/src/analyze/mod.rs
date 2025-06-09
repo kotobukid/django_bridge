@@ -1,5 +1,5 @@
-pub mod wixoss;
 pub mod raw_card_integration;
+pub mod wixoss;
 
 use async_recursion::async_recursion;
 use reqwest::{Client, Response, Url};
@@ -384,17 +384,19 @@ pub fn find_one(content: &str, selector: String) -> Option<String> {
 ///
 /// * `Ok(Vec<String>)` if links were found
 /// * `Err(AnalyzeError)` if an error occurred
-pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec<String>, AnalyzeError> {
+pub async fn collect_card_detail_links(
+    product_type: &ProductType,
+) -> Result<Vec<String>, AnalyzeError> {
     let product_root: String = product_type.get_path_relative();
     let path_s: String = format!("./text_cache/{}", product_root);
     let product_dir: &Path = Path::new(&path_s);
 
     // ディレクトリが存在しない場合は作成
     try_mkdir(product_dir)?;
-    
+
     let files = fs::read_dir(product_dir)?;
     let mut all_text = String::new();
-    
+
     // ファイルの読み込みエラーを適切に処理
     for entry in files {
         let entry = entry?;
@@ -412,18 +414,20 @@ pub async fn collect_card_detail_links(product_type: &ProductType) -> Result<Vec
     // 静的なセレクタなので、パニックする可能性は低いが、より安全に
     let selector: Selector = Selector::parse("a.c-box")
         .map_err(|e| AnalyzeError::Parse(format!("セレクタパースエラー: {}", e)))?;
-    
+
     let links: Vec<String> = parsed_html
         .select(&selector)
         .map(|element| element.value().attr("href").unwrap_or("").to_owned())
         .filter(|href| !href.is_empty())
         .collect();
-    
+
     Ok(links)
 }
 
 /// 以前の実装との互換性のため、エラーを簡略化するヘルパー関数
-pub async fn collect_card_detail_links_compat(product_type: &ProductType) -> Result<Vec<String>, ()> {
+pub async fn collect_card_detail_links_compat(
+    product_type: &ProductType,
+) -> Result<Vec<String>, ()> {
     collect_card_detail_links(product_type).await.map_err(|e| {
         eprintln!("カード詳細リンク収集エラー: {}", e);
     })
@@ -603,8 +607,7 @@ impl CardQuery {
         ));
 
         if cache_file.exists() {
-            let mut file: File = File::open(&cache_file)
-                .map_err(|e| AnalyzeError::Io(e))?;
+            let mut file: File = File::open(&cache_file).map_err(|e| AnalyzeError::Io(e))?;
             let mut contents = String::new();
 
             file.read_to_string(&mut contents)
@@ -627,8 +630,9 @@ impl CardQuery {
             let content = find_one(&body, ".cardDetail".into());
 
             if let Some(body_) = content {
-                write_to_cache(cache_file, body_.clone())
-                    .map_err(|e| AnalyzeError::Cache(format!("Failed to write to cache: {:?}", e)))?;
+                write_to_cache(cache_file, body_.clone()).map_err(|e| {
+                    AnalyzeError::Cache(format!("Failed to write to cache: {:?}", e))
+                })?;
                 Ok(body_)
             } else {
                 Err(AnalyzeError::Parse("Failed to find card detail".into()))

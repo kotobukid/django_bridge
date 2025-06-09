@@ -27,9 +27,9 @@ impl KlassRelRepository {
     }
 
     /// キャッシュを作成
-    /// 
+    ///
     /// # エラー
-    /// 
+    ///
     /// データベースアクセスエラーが発生した場合
     pub async fn create_cache(&mut self) -> Result<(), KlassError> {
         let klasses = sqlx::query_as::<_, KlassDb>(
@@ -104,7 +104,7 @@ impl KlassRelRepository {
         .fetch_all(&*self.db)
         .await?;
 
-        Ok(!res.is_empty())  // 存在する場合はtrue
+        Ok(!res.is_empty()) // 存在する場合はtrue
     }
 
     async fn create_klass(&mut self, klass: CreateKlass) -> Result<i64, sqlx::Error> {
@@ -140,20 +140,21 @@ impl KlassRelRepository {
         .fetch_all(&*self.db)
         .await?;
 
-        Ok(!found.is_empty())  // 存在する場合はtrue
+        Ok(!found.is_empty()) // 存在する場合はtrue
     }
 
     /// カードとクラスの関係を保存
-    /// 
+    ///
     /// # エラー
-    /// 
+    ///
     /// データベースアクセスエラーが発生した場合
     pub async fn save(&self, item: WixCardKlassRel) -> Result<(), KlassError> {
         let exists = self
             .check_rel_exists_by_values(item.card_id, item.klass_id)
             .await?;
-            
-        if !exists {  // 存在しない場合のみINSERT
+
+        if !exists {
+            // 存在しない場合のみINSERT
             sqlx::query(
                 "INSERT INTO wix_card_klass (card_id, klass_id) VALUES ($1, $2) RETURNING *;",
             )
@@ -162,7 +163,7 @@ impl KlassRelRepository {
             .fetch_all(&*self.db)
             .await?;
         }
-        
+
         Ok(())
     }
 }

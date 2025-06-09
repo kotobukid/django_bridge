@@ -1,15 +1,15 @@
 use crate::analyze::wixoss::card::CardType;
-use color::Colors;
-use feature::feature::{CardFeature, HashSetToBits};
 use crate::analyze::wixoss::format::Format;
+use crate::analyze::wixoss::timing::TimingList;
 use crate::analyze::wixoss::{
     element_to_name_and_pronounce, flatten_break, parse_card_skill, parse_format, parse_story,
     split_by_break, Card, OptionString, Skills, WixossCard,
 };
+use color::Colors;
+use feature::feature::{CardFeature, HashSetToBits};
 use scraper::{Html, Selector};
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
-use crate::analyze::wixoss::timing::TimingList;
 
 #[derive(Debug)]
 pub struct Resona {

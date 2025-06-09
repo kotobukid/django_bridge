@@ -10,7 +10,7 @@ impl Product {
             "st" => &self.product_code,
             "sp" => &self.product_code,
             "pr" => "",
-            _ => ""
+            _ => "",
         };
         sub_dir.to_string()
     }

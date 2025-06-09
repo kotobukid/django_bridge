@@ -14,13 +14,13 @@ use thiserror::Error;
 pub enum SyncDbError {
     #[error("Failed to tokenize Python code: {0}")]
     TokenizationError(String),
-    
+
     #[error("IO error: {0}")]
     IoError(#[from] std::io::Error),
-    
+
     #[error("Environment variable not found: {0}")]
     EnvVarError(#[from] std::env::VarError),
-    
+
     #[error("Path error: {0}")]
     PathError(String),
 }
@@ -234,11 +234,10 @@ fn generate_struct_from_python(
         update_crate_requirements(crate_requirements, fields.f_type.as_str());
 
         let rust_type = map_django_field_to_rust_type(fields.f_type.as_str());
-        
+
         if let DjangoFieldType::Relation(_) = &rust_type {
             // リレーションの解析処理で関連モデル名を取得
-            let related_model =
-                analyze_relation_field(fields.tokens.clone(), fields.name.as_str());
+            let related_model = analyze_relation_field(fields.tokens.clone(), fields.name.as_str());
 
             if let Some(model) = related_model {
                 rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
@@ -318,8 +317,16 @@ struct ModelDefinition {
 }
 
 impl ModelDefinition {
-    const fn new(app_name: &'static str, struct_name: &'static str, file_path: &'static str) -> Self {
-        Self { app_name, struct_name, file_path }
+    const fn new(
+        app_name: &'static str,
+        struct_name: &'static str,
+        file_path: &'static str,
+    ) -> Self {
+        Self {
+            app_name,
+            struct_name,
+            file_path,
+        }
     }
 }
 
@@ -354,11 +361,11 @@ fn map_django_field_to_rust_type(field_type: &str) -> DjangoFieldType {
         "TimeField" => DjangoFieldType::Valid("chrono::NaiveTime"),
         "URLField" => DjangoFieldType::Valid("String"),
         "UUIDField" => DjangoFieldType::Valid("String"),
-        
+
         // relationships
         "ForeignKey" | "OneToOneField" => DjangoFieldType::Relation("i64"),
         "ManyToManyField" => DjangoFieldType::ManyToMany,
-        
+
         // unknown type
         unknown => DjangoFieldType::None(unknown.to_string()),
     }
@@ -366,15 +373,15 @@ fn map_django_field_to_rust_type(field_type: &str) -> DjangoFieldType {
 
 fn generate_field_comment(fields: &Fields) -> Option<String> {
     let mut parts = Vec::new();
-    
+
     if let Some(default) = &fields.default_value {
         parts.push(format!("Default: {}", default));
     }
-    
+
     if let Some(length) = &fields.max_length {
         parts.push(format!("Max length: {}", length));
     }
-    
+
     if parts.is_empty() {
         None
     } else {
@@ -529,9 +536,9 @@ impl CrateRequirements {
     }
 }
 fn get_output_dir() -> Result<PathBuf> {
-    let manifest_dir = env::var("CARGO_MANIFEST_DIR")
-        .context("Failed to get CARGO_MANIFEST_DIR")?;
-    
+    let manifest_dir =
+        env::var("CARGO_MANIFEST_DIR").context("Failed to get CARGO_MANIFEST_DIR")?;
+
     Ok(PathBuf::from(manifest_dir)
         .parent() // マニフェストディレクトリの親に移動
         .ok_or_else(|| SyncDbError::PathError("Failed to get parent directory".to_string()))?
@@ -545,8 +552,7 @@ fn main() -> Result<()> {
     let out_dir = get_output_dir()?;
     println!("Output directory: {}", out_dir.display());
 
-    fs::create_dir_all(&out_dir)
-        .context("Output directory creation failed")?;
+    fs::create_dir_all(&out_dir).context("Output directory creation failed")?;
 
     let models = [
         ModelDefinition::new("wix", "Card", "./table_definition/wix/models.py"),
@@ -589,10 +595,10 @@ fn main() -> Result<()> {
 
         // 構造体生成コードと依存クレート解析
         let result = generate_struct_from_python(
-            model.app_name, 
-            model.struct_name, 
-            python_code, 
-            &mut crate_req
+            model.app_name,
+            model.struct_name,
+            python_code,
+            &mut crate_req,
         )?;
         struct_defs.push(result);
     }

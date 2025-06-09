@@ -25,14 +25,14 @@ impl RawCardAnalyzer for WebAppRawCardAnalyzer {
                 ));
             }
         };
-        
+
         // Convert Card to CreateCard
         let mut create_card: CreateCard = card.into();
-        
+
         // Override some fields with data from RawCardDb
         // TODO: Use raw_card.product_id when field is available
         create_card.url = Some(raw_card.source_url.clone());
-        
+
         // Ensure the code matches what was scraped
         if create_card.code != raw_card.card_number {
             return Err(AnalysisError::new(
@@ -43,7 +43,7 @@ impl RawCardAnalyzer for WebAppRawCardAnalyzer {
                 raw_card.id,
             ));
         }
-        
+
         Ok(create_card)
     }
 }
@@ -54,25 +54,25 @@ pub async fn analyze_and_save_card(
     pool: &sqlx::PgPool,
 ) -> Result<i64, Box<dyn std::error::Error>> {
     let analyzer = WebAppRawCardAnalyzer::new();
-    
+
     // Analyze the raw card
     let create_card = analyzer.analyze(raw_card).await?;
-    
+
     // Save to database using the repository
     use crate::repositories::CardRepository;
     use std::sync::Arc;
     let card_repo = CardRepository::new(Arc::new(pool.clone()));
     let card_result = card_repo.upsert(create_card).await?;
     let card_id = card_result.id;
-    
+
     // Update the raw card to mark it as analyzed
     sqlx::query(
-        "UPDATE wix_rawcard SET is_analyzed = true, last_analyzed_at = NOW() WHERE id = $1"
+        "UPDATE wix_rawcard SET is_analyzed = true, last_analyzed_at = NOW() WHERE id = $1",
     )
     .bind(raw_card.id)
     .execute(pool)
     .await?;
-    
+
     Ok(card_id)
 }
 
@@ -83,50 +83,51 @@ pub async fn analyze_raw_cards_batch(
 ) -> Vec<Result<i64, Box<dyn std::error::Error>>> {
     let analyzer = WebAppRawCardAnalyzer::new();
     let mut results = Vec::new();
-    
+
     for raw_card in raw_cards {
         let result: Result<i64, Box<dyn std::error::Error>> = async {
-            let create_card = analyzer.analyze(&raw_card).await
+            let create_card = analyzer
+                .analyze(&raw_card)
+                .await
                 .map_err(|e| Box::new(e) as Box<dyn std::error::Error>)?;
-            
+
             use crate::repositories::CardRepository;
             use std::sync::Arc;
             let card_repo = CardRepository::new(Arc::new(pool.clone()));
             let card_result = card_repo.upsert(create_card).await?;
             let card_id = card_result.id;
-            
+
             // Mark as analyzed
             sqlx::query(
-                "UPDATE wix_rawcard SET is_analyzed = true, last_analyzed_at = NOW() WHERE id = $1"
+                "UPDATE wix_rawcard SET is_analyzed = true, last_analyzed_at = NOW() WHERE id = $1",
             )
             .bind(raw_card.id)
             .execute(pool)
             .await?;
-            
+
             Ok(card_id)
-        }.await;
-        
+        }
+        .await;
+
         // If there was an error, update the raw card with the error message
         if let Err(ref e) = result {
-            let _ = sqlx::query(
-                "UPDATE wix_rawcard SET analysis_error = $1 WHERE id = $2"
-            )
-            .bind(e.to_string())
-            .bind(raw_card.id)
-            .execute(pool)
-            .await;
+            let _ = sqlx::query("UPDATE wix_rawcard SET analysis_error = $1 WHERE id = $2")
+                .bind(e.to_string())
+                .bind(raw_card.id)
+                .execute(pool)
+                .await;
         }
-        
+
         results.push(result);
     }
-    
+
     results
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[tokio::test]
     async fn test_webapp_analyzer_creation() {
         let _analyzer = WebAppRawCardAnalyzer::new();

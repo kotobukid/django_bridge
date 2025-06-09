@@ -1,6 +1,6 @@
 use analyzer::raw_card_analyzer::{DefaultRawCardAnalyzer, RawCardAnalyzer};
-use models::r#gen::django_models::RawCardDb;
 use chrono::Utc;
+use models::r#gen::django_models::RawCardDb;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -18,10 +18,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         is_analyzed: false,
         analysis_error: "".to_string(),
     };
-    
+
     // Create analyzer
     let analyzer = DefaultRawCardAnalyzer::new()?;
-    
+
     // Analyze the card
     match analyzer.analyze(&raw_card).await {
         Ok(create_card) => {
@@ -37,6 +37,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Analysis failed: {}", e);
         }
     }
-    
+
     Ok(())
 }

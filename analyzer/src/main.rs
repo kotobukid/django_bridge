@@ -1,12 +1,12 @@
 use analyzer::card_analyzer::{
-    SimpleRawCardAnalyzer, analyze_and_save_card_with_product_id, analyze_raw_cards_with_product_batch, RawCardWithProduct,
+    RawCardWithProduct, SimpleRawCardAnalyzer, analyze_and_save_card_with_product_id,
+    analyze_raw_cards_with_product_batch,
 };
 use clap::Parser;
 use dotenvy;
 use dotenvy::from_filename;
 use sqlx::PgPool;
 use std::env;
-
 
 /// WIXOSS カード解析ツール
 ///
@@ -133,13 +133,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // 詳細モード: 個別に処理
             let analyzer = SimpleRawCardAnalyzer::new();
             for raw_card_with_product in batch {
-                println!("  解析中: {} - {} (product_id: {:?})", 
-                    raw_card_with_product.card_number, 
+                println!(
+                    "  解析中: {} - {} (product_id: {:?})",
+                    raw_card_with_product.card_number,
                     raw_card_with_product.name,
-                    raw_card_with_product.product_id);
+                    raw_card_with_product.product_id
+                );
                 let raw_card = raw_card_with_product.to_raw_card_db();
 
-                match analyzer.analyze_with_product_id(&raw_card, raw_card_with_product.product_id).await {
+                match analyzer
+                    .analyze_with_product_id(&raw_card, raw_card_with_product.product_id)
+                    .await
+                {
                     Ok(create_card) => {
                         println!("    ✓ 解析成功");
                         if args.verbose {
@@ -161,7 +166,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                             );
                         }
 
-                        match analyze_and_save_card_with_product_id(&raw_card, raw_card_with_product.product_id, &pool).await {
+                        match analyze_and_save_card_with_product_id(
+                            &raw_card,
+                            raw_card_with_product.product_id,
+                            &pool,
+                        )
+                        .await
+                        {
                             Ok(card_id) => {
                                 println!("    ✓ 保存完了 (ID: {})", card_id);
                                 total_success += 1;

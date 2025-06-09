@@ -1,6 +1,6 @@
-use rustpython_parser_core::mode::Mode;
 use rustpython_parser::lexer::lex;
 use rustpython_parser::Tok;
+use rustpython_parser_core::mode::Mode;
 use std::fs;
 
 fn main() -> std::io::Result<()> {
@@ -49,7 +49,10 @@ fn main() -> std::io::Result<()> {
                                         tokens_iter.next(); // "(" を消費
 
                                         while let Some(Ok((tok, _))) = tokens_iter.next() {
-                                            if let Tok::Name { name: ref attr_name } = tok {
+                                            if let Tok::Name {
+                                                name: ref attr_name,
+                                            } = tok
+                                            {
                                                 if let Some(Ok((Tok::Equal, _))) =
                                                     tokens_iter.next()
                                                 {
@@ -57,7 +60,8 @@ fn main() -> std::io::Result<()> {
                                                         tokens_iter.next()
                                                     {
                                                         // 値をフォーマット
-                                                        let formatted_value = format_tok_value(&tok_value);
+                                                        let formatted_value =
+                                                            format_tok_value(&tok_value);
                                                         attributes.push((
                                                             attr_name.clone(),
                                                             formatted_value,
@@ -102,11 +106,11 @@ fn main() -> std::io::Result<()> {
 /// トークン値を分かりやすい形式にフォーマット
 fn format_tok_value(tok: &Tok) -> String {
     match tok {
-        Tok::Int { value } => value.to_string(),  // 整数を直接文字列化
+        Tok::Int { value } => value.to_string(), // 整数を直接文字列化
         Tok::String { value, .. } => format!("{:?}", value), // 文字列をエスケープ付きで出力
-        Tok::True => "true".to_string(), // PythonのTrueをRustのtrueにマッピング
-        Tok::False => "false".to_string(), // PythonのFalseをRustのfalseにマッピング
-        Tok::Name { name } => name.clone(), // その他の名前をそのまま使用
-        _ => format!("{:?}", tok), // 未知の型（デバッグ用）
+        Tok::True => "true".to_string(),         // PythonのTrueをRustのtrueにマッピング
+        Tok::False => "false".to_string(),       // PythonのFalseをRustのfalseにマッピング
+        Tok::Name { name } => name.clone(),      // その他の名前をそのまま使用
+        _ => format!("{:?}", tok),               // 未知の型（デバッグ用）
     }
 }
