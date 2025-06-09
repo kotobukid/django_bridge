@@ -254,7 +254,7 @@ pub fn export_features() -> HashMap<String, Vec<ExportedCardFeature>> {
 
         feature_map
             .entry(exported.tag.to_string()) // タグごとに分類
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(exported);
     }
 

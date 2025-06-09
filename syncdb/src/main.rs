@@ -235,33 +235,30 @@ fn generate_struct_from_python(
 
         let rust_type = map_django_field_to_rust_type(fields.f_type.as_str());
         
-        match &rust_type {
-            DjangoFieldType::Relation(_) => {
-                // リレーションの解析処理で関連モデル名を取得
-                let related_model =
-                    analyze_relation_field(fields.tokens.clone(), fields.name.as_str());
+        if let DjangoFieldType::Relation(_) = &rust_type {
+            // リレーションの解析処理で関連モデル名を取得
+            let related_model =
+                analyze_relation_field(fields.tokens.clone(), fields.name.as_str());
 
-                if let Some(model) = related_model {
-                    rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
-                    create_struct.push_str(&format!("\n    /// Related field to model: {}", model));
-                } else {
-                    rust_struct.push_str(&format!(
-                        "\n    /// Related field: {} (unknown related model)",
-                        fields.name
-                    ));
-                    create_struct.push_str(&format!(
-                        "\n    /// Related field: {} (unknown related model)",
-                        fields.name
-                    ));
-                }
+            if let Some(model) = related_model {
+                rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
+                create_struct.push_str(&format!("\n    /// Related field to model: {}", model));
+            } else {
+                rust_struct.push_str(&format!(
+                    "\n    /// Related field: {} (unknown related model)",
+                    fields.name
+                ));
+                create_struct.push_str(&format!(
+                    "\n    /// Related field: {} (unknown related model)",
+                    fields.name
+                ));
             }
-            _ => {}
         }
 
         match rust_type {
             DjangoFieldType::Valid(ty) => {
                 // コメント生成（default値とmax_lengthを含める）
-                if let Some(comment) = generate_field_comment(&fields) {
+                if let Some(comment) = generate_field_comment(fields) {
                     rust_struct.push_str(&format!("    {}\n", comment));
                     create_struct.push_str(&format!("    {}\n", comment));
                 }
