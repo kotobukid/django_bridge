@@ -15,6 +15,7 @@ use webapp::analyze::wixoss::Card;
 use webapp::repositories::{CardTypeRepository, ProductRepository};
 
 use crate::db::save_card_to_database;
+use crate::raw_card::RawCardService;
 
 /// スクレイピングサービス
 ///
@@ -25,6 +26,7 @@ pub struct ScrapingService {
     max_delay: u64,
     #[allow(dead_code)]
     concurrency: usize,
+    raw_card_service: RawCardService,
 }
 
 impl ScrapingService {
@@ -34,13 +36,14 @@ impl ScrapingService {
         min_delay: u64,
         max_delay: u64,
         concurrency: usize,
-    ) -> Self {
-        Self {
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
             cache_dir,
             min_delay,
             max_delay,
             concurrency,
-        }
+            raw_card_service: RawCardService::new()?,
+        })
     }
 
     /// カードリストをスクレイピングして処理
@@ -135,43 +138,36 @@ impl ScrapingService {
 
         // テキストの処理
         match text {
-            Some(text) => {
-                // HTMLからカード情報を抽出
-                match Card::card_from_html(text.as_str()) {
-                    Some(card) => {
-                        // カードタイプIDを取得
-                        let card_type_code = &card.card_type.code();
-                        let card_type_id = card_type_repo
-                            .lock()
-                            .await
-                            .find_by_code(card_type_code)
-                            .await
-                            .unwrap_or(0);
+            Some(html_text) => {
+                // 製品IDを取得
+                let product_id = product_repo
+                    .lock()
+                    .await
+                    .get_id_by_code(&product_type.code())
+                    .await
+                    .unwrap_or(0);
 
-                        // 製品IDを取得
-                        let product_id = product_repo
-                            .lock()
-                            .await
-                            .get_id_by_code(&product_type.code())
-                            .await
-                            .unwrap_or(0);
+                // カード名を抽出（HTMLから）
+                let card_name = self.raw_card_service
+                    .extract_card_name_from_html(&html_text)
+                    .unwrap_or_else(|| format!("Unknown Card {}", card_no));
 
-                        // カードデータをCreateCard形式に変換
-                        let mut create_card: CreateCard = card.into();
-                        create_card.card_type = card_type_id as i32;
-                        create_card.product = product_id as i32;
+                // CreateRawCardを作成
+                let create_raw_card = self.raw_card_service.create_raw_card_from_html(
+                    card_no.clone(),
+                    card_name,
+                    link.to_string(),
+                    html_text,
+                )?;
 
-                        // データベースに保存
-                        save_card_to_database(pool, create_card).await
-                            .map_err(|e| format!("データベースへの保存に失敗しました: {}", e))?;
+                // RawCardをデータベースに保存
+                let raw_card_id = self.raw_card_service
+                    .save_raw_card(pool.clone(), create_raw_card)
+                    .await
+                    .map_err(|e| format!("RawCardの保存に失敗しました: {}", e))?;
 
-                        Ok(ProcessResult::Success)
-                    }
-                    None => {
-                        eprintln!("  カードの解析に失敗しました: {}", card_no);
-                        Ok(ProcessResult::Skipped)
-                    }
-                }
+                println!("  ✓ RawCard保存完了 (ID: {})", raw_card_id);
+                Ok(ProcessResult::Success)
             }
             None => {
                 eprintln!("  ダウンロードに失敗しました: {}", card_no);

@@ -139,3 +139,37 @@ New Django model to store scraped card data with minimal pre-processing:
 - Extracts and stores skill text and life burst text separately
 - Enables individual card analysis by ID
 - Tracks analysis status and errors
+
+## Implementation Status
+
+### ✅ Completed (Phase 1)
+1. **RawCard Django Model**: Added to `table_definition/wix/models.py`
+2. **Database Migration**: Applied successfully
+3. **Rust Model Generation**: `syncdb` generated RawCardDb struct
+4. **Django Admin Interface**: Full admin panel with filtering and actions
+5. **RawCard Analysis System**: 
+   - `analyzer/src/raw_card_analyzer.rs` - Core analysis traits and logic
+   - `shared/webapp/src/analyze/raw_card_integration.rs` - WebApp integration
+   - Feature detection from skill text and life burst text
+   - Database save functionality via CardRepository
+6. **Testing**: Unit tests and integration examples working
+
+### 🚧 Next Phase: Scraper Integration
+**Goal**: Modify scraper to save results to RawCard table instead of direct analysis
+
+**Planned Implementation**:
+1. **Scraper Dependencies**: Add models, sqlx, database connection
+2. **RawCard Repository**: Create save/update methods for scraped data
+3. **HTML Text Extraction**: Pre-process HTML to extract skill text and life burst text
+4. **Scraper Flow Update**: 
+   ```
+   [URL] → [HTML Download] → [Text Extraction] → [RawCard Save] → [DB]
+   ```
+5. **Batch Processing**: Product-level scraping with duplicate prevention
+6. **CLI Interface**: Command-line options for selective scraping
+
+**Benefits**:
+- Scraping and analysis completely decoupled
+- Individual card analysis by ID
+- Fast analyzer testing without network access
+- Resume capability for failed scraping jobs

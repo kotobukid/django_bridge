@@ -13,6 +13,7 @@ use webapp::repositories::{CardTypeRepository, ProductRepository};
 
 mod db;
 mod scraping;
+mod raw_card;
 
 use db::create_database_pool;
 use scraping::ScrapingService;
@@ -102,7 +103,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         args.min_delay,
         args.max_delay,
         args.concurrency,
-    );
+    )?;
 
     // 製品インデックスをキャッシュ
     println!("製品インデックスをキャッシュ中...");

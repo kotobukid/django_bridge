@@ -158,7 +158,7 @@ class RawCard(models.Model):
     # 基本識別情報
     card_number = models.CharField(verbose_name="カード番号", max_length=20, db_index=True)
     name = models.CharField(verbose_name="カード名", max_length=200)
-    product = models.ForeignKey('Product', verbose_name="収録商品", on_delete=models.CASCADE, related_name='raw_cards')
+    product = models.ForeignKey('Product', verbose_name="収録商品", on_delete=models.CASCADE, related_name='raw_cards', null=True, blank=True)
     
     # 生HTML（完全な状態で保持）
     raw_html = models.TextField(verbose_name="生HTML")
