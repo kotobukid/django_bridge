@@ -3,7 +3,7 @@ use leptos::prelude::*;
 #[component]
 pub fn SvgDefinition() -> impl IntoView {
     view! {
-        <svg style="display: inline;" width="0" height="0">
+        <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
             <defs>
               <linearGradient gradientUnits="userSpaceOnUse" x1="67.336" y1="-39.914" x2="67.336" y2="-20.406" id="gradient-0" gradientTransform="matrix(0.879611, -0.475694, 0.427208, 0.789956, 21.13001, 25.106044)">
                 <stop offset="0" style="stop-color: rgb(164, 255, 219);"></stop>
