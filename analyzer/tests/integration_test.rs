@@ -54,6 +54,23 @@ fn test_card_feature_detection_charm_pattern() {
 }
 
 #[test]
+fn test_card_feature_detection_acce_pattern() {
+    // WXDi-P05-060
+    let card_skill_text = r#"
+    あなたの赤のシグニ１体を対象とし、それの下にカードが無い場合、このカードをそれの下に置く。
+
+    【常】：このカードの上にある赤のシグニは「【自】：あなたのアタックフェイズ開始時、【エナチャージ１】をする。」を得る。
+    【常】：このカードの上にある《コードアクセル　ヒャッハー》のパワーを＋2000する。 
+    "#;
+
+    let detected_features = common::detect_features(card_skill_text);
+    assert!(
+        !detected_features.contains(&CardFeature::Acce),
+        "Should NOT detect Acce feature from 'コードアクセル' text"
+    );
+}
+
+#[test]
 fn test_card_feature_detection_multiple_features() {
     let card_skill_text = r#"
     【ライフバースト】：カードを１枚引く。対戦相手のシグニ１体をバニッシュする。
