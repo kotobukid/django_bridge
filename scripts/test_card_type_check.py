@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 import os
 import sys
-sys.path.append('/home/kotobukid/projects/wxdb/table_definition')
+
+# プロジェクトルートからの相対パスでDjango設定
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+table_definition_path = os.path.join(project_root, 'table_definition')
+sys.path.append(table_definition_path)
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'table_definition.settings')
 
 import django
