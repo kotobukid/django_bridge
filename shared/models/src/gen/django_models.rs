@@ -9,7 +9,7 @@ pub struct CardDb {
     pub name: String,
     /// Default: N/A, Max length: 16
     pub code: String,
-    /// Default: N/A, Max length: 64
+    /// Default: N/A, Max length: 128
     pub pronunciation: String,
     pub color: i32,
     /// Max length: 16
@@ -44,7 +44,7 @@ pub struct CreateCard {
     pub name: String,
     /// Default: N/A, Max length: 16
     pub code: String,
-    /// Default: N/A, Max length: 64
+    /// Default: N/A, Max length: 128
     pub pronunciation: String,
     pub color: i32,
     /// Max length: 16
