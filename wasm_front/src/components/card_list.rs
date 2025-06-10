@@ -40,6 +40,34 @@ fn render_color_icon(color: i32) -> impl IntoView {
 }
 
 #[component]
+pub fn Icons(
+    #[prop(into)] colors: Vec<i32>
+) -> impl IntoView {
+    // Calculate width based on number of icons with 14px spacing (18px overlap from 32px)
+    let width = if colors.is_empty() {
+        0
+    } else {
+        32 + (colors.len() - 1) * 14
+    };
+    
+    view! {
+        <div class="color-icons" style=format!("width: {}px; flex-shrink: 0;", width)>
+            {colors.into_iter().map(|color| {
+                match color {
+                    1 => view! { <IconWhite /> }.into_any(),
+                    2 => view! { <IconBlue /> }.into_any(),
+                    3 => view! { <IconRed /> }.into_any(),
+                    4 => view! { <IconBlack /> }.into_any(),
+                    5 => view! { <IconGreen /> }.into_any(),
+                    6 => view! { <IconColorless /> }.into_any(),
+                    _ => view! { <span></span> }.into_any(),
+                }
+            }).collect_view()}
+        </div>
+    }
+}
+
+#[component]
 pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
     let is_empty = cards.is_empty();
     
@@ -63,10 +91,7 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-lg" style="color: #374151;">
                                         <a href=card_url target="_blank" class="flex items-center gap-1">
-                                            {
-                                                let colors = get_colors_from_bits(card.color() as i32);
-                                                colors.into_iter().map(|color| render_color_icon(color)).collect_view()
-                                            }
+                                            <Icons colors={get_colors_from_bits(card.color() as i32)} />
                                             {card.name()}
                                         </a>
                                     </h3>
@@ -100,44 +125,44 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                                         }
                                     }
                                 </div>
-                                <div class="ml-4 text-right flex flex-col gap-1" style="min-width: 120px;">
-                                    {
-                                        let level = card.level();
-                                        if !level.is_empty() {
-                                            view! {
-                                                <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
-                                                    {format!("Lv.{}", level)}
-                                                </div>
-                                            }.into_any()
-                                        } else {
-                                            view! { <span></span> }.into_any()
-                                        }
-                                    }
-                                    {
-                                        let power = card.power();
-                                        if !power.is_empty() {
-                                            view! {
-                                                <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
-                                                    {format!("Power: {}", power)}
-                                                </div>
-                                            }.into_any()
-                                        } else {
-                                            view! { <span></span> }.into_any()
-                                        }
-                                    }
-                                    {
-                                        let cost = card.cost();
-                                        if !cost.is_empty() {
-                                            view! {
-                                                <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
-                                                    {format!("Cost: {}", cost)}
-                                                </div>
-                                            }.into_any()
-                                        } else {
-                                            view! { <span></span> }.into_any()
-                                        }
-                                    }
-                                </div>
+                                // <div class="ml-4 text-right flex flex-col gap-1" style="min-width: 120px;">
+                                //     {
+                                //         let level = card.level();
+                                //         if !level.is_empty() {
+                                //             view! {
+                                //                 <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
+                                //                     {format!("Lv.{}", level)}
+                                //                 </div>
+                                //             }.into_any()
+                                //         } else {
+                                //             view! { <span></span> }.into_any()
+                                //         }
+                                //     }
+                                //     // {
+                                //     //     let power = card.power();
+                                //     //     if !power.is_empty() {
+                                //     //         view! {
+                                //     //             <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
+                                //     //                 {format!("Power: {}", power)}
+                                //     //             </div>
+                                //     //         }.into_any()
+                                //     //     } else {
+                                //     //         view! { <span></span> }.into_any()
+                                //     //     }
+                                //     // }
+                                //     // {
+                                //     //     let cost = card.cost();
+                                //     //     if !cost.is_empty() {
+                                //     //         view! {
+                                //     //             <div class="text-sm px-2 py-1 rounded" style="background: rgba(0,0,0,0.1); color: #374151;">
+                                //     //                 {format!("Cost: {}", cost)}
+                                //     //             </div>
+                                //     //         }.into_any()
+                                //     //     } else {
+                                //     //         view! { <span></span> }.into_any()
+                                //     //     }
+                                //     // }
+                                // </div>
                             </div>
                         </div>
                     }

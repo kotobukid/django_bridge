@@ -49,6 +49,27 @@ html {
     .card-border-white {
         border: 2px solid #ffffff !important;
     }
+
+    /* Color icons container for overlapping display */
+    .color-icons {
+        position: relative;
+        height: 32px; /* Match SVG height */
+        display: inline-block;
+    }
+
+    .color-icons svg {
+        position: absolute;
+        top: 0;
+        width: 32px;
+        height: 32px;
+    }
+
+    .color-icons svg:nth-child(1) { left: 0; }
+    .color-icons svg:nth-child(2) { left: 14px; }
+    .color-icons svg:nth-child(3) { left: 28px; }
+    .color-icons svg:nth-child(4) { left: 42px; }
+    .color-icons svg:nth-child(5) { left: 56px; }
+    .color-icons svg:nth-child(6) { left: 70px; }
     
     /* Keyframes for card fade-in animation */
     @keyframes cardFadeIn {
