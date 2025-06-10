@@ -50,8 +50,15 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                     let color_style = datapack::bits_to_gradient_native(card.color() as i32);
 
                     let card_url = format!("https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no={}", card.code());
+                    
+                    // Determine border class based on card type
+                    let border_class = match card.card_type() {
+                        5 | 6 => "card-border-black", // Signi (5) or Spell (6)
+                        _ => "card-border-white",
+                    };
+                    
                     view! {
-                        <div class="card-item" style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0; border: 1px solid rgba(0,0,0,0.1);", color_style)>
+                        <div class=format!("card-item {}", border_class) style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0;", color_style)>
                             <div class="flex justify-between items-start">
                                 <div class="flex-1">
                                     <h3 class="font-semibold text-lg" style="color: #374151;">

@@ -38,6 +38,16 @@ html {
         animation: cardFadeIn 0.6s ease-out;
         opacity: 1;
         transform: translateY(0);
+        box-shadow: #818181 2px 2px 2px;
+    }
+
+    /* Card border styles based on card type */
+    .card-border-black {
+        border: 2px solid #000000 !important;
+    }
+
+    .card-border-white {
+        border: 2px solid #ffffff !important;
     }
     
     /* Keyframes for card fade-in animation */
