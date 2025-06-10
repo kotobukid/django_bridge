@@ -1,8 +1,57 @@
-use crate::{AnalyzeRule, CardFeatureAnalyzer};
 use feature::feature::CardFeature;
 use models::card::CreateCard;
 use models::r#gen::django_models::RawCardDb;
 use std::collections::HashSet;
+
+/// Convert full-width characters to half-width equivalents
+/// Handles:
+/// - Full-width alphanumeric characters (Ａ-Ｚ, ａ-ｚ, ０-９)
+/// - Full-width space (　)
+/// - Common full-width symbols
+pub fn to_half(text: &str) -> String {
+    text.chars()
+        .map(|ch| match ch {
+            // Full-width uppercase letters (Ａ-Ｚ) -> (A-Z)
+            'Ａ'..='Ｚ' => {
+                let offset = ch as u32 - 'Ａ' as u32;
+                char::from_u32('A' as u32 + offset).unwrap()
+            }
+            // Full-width lowercase letters (ａ-ｚ) -> (a-z)
+            'ａ'..='ｚ' => {
+                let offset = ch as u32 - 'ａ' as u32;
+                char::from_u32('a' as u32 + offset).unwrap()
+            }
+            // Full-width digits (０-９) -> (0-9)
+            '０'..='９' => {
+                let offset = ch as u32 - '０' as u32;
+                char::from_u32('0' as u32 + offset).unwrap()
+            }
+            // Full-width space
+            '　' => ' ',
+            // Common full-width symbols
+            '－' => '-',  // Full-width hyphen/minus
+            '＋' => '+',  // Full-width plus
+            '．' => '.',  // Full-width period
+            '，' => ',',  // Full-width comma
+            '：' => ':',  // Full-width colon
+            '；' => ';',  // Full-width semicolon
+            '！' => '!',  // Full-width exclamation
+            '？' => '?',  // Full-width question mark
+            '（' => '(',  // Full-width left parenthesis
+            '）' => ')',  // Full-width right parenthesis
+            '［' => '[',  // Full-width left bracket
+            '］' => ']',  // Full-width right bracket
+            '＊' => '*',  // Full-width asterisk
+            '＆' => '&',  // Full-width ampersand
+            '＝' => '=',  // Full-width equals
+            '／' => '/',  // Full-width slash
+            '＜' => '<',  // Full-width less than
+            '＞' => '>',  // Full-width greater than
+            // Keep other characters as-is
+            _ => ch,
+        })
+        .collect()
+}
 
 /// Error type for card analysis
 #[derive(Debug, Clone)]
@@ -47,42 +96,9 @@ pub trait RawCardAnalyzer {
     }
 }
 
-/// Default implementation of RawCardAnalyzer that uses webapp's analyze module
-pub struct DefaultRawCardAnalyzer {
-    feature_analyzer: CardFeatureAnalyzer,
-}
-
-impl DefaultRawCardAnalyzer {
-    pub fn new() -> Result<Self, regex::Error> {
-        Ok(Self {
-            feature_analyzer: CardFeatureAnalyzer::new()?,
-        })
-    }
-
-    /// Analyze skill text and life burst text to detect features
-    fn analyze_features(&self, skill_text: &str, life_burst_text: &str) -> (i64, i64) {
-        let mut all_features = HashSet::new();
-
-        // Analyze normal skill text
-        if !skill_text.is_empty() {
-            let features = self.feature_analyzer.detect(skill_text);
-            all_features.extend(features);
-        }
-
-        // Analyze life burst text
-        if !life_burst_text.is_empty() {
-            let features = self.feature_analyzer.detect(life_burst_text);
-            all_features.extend(features);
-        }
-
-        // Convert features to bit representation
-        let (bits1, bits2) = features_to_bits(&all_features);
-        (bits1, bits2)
-    }
-}
 
 /// Convert a set of features to two 64-bit integers
-fn features_to_bits(features: &HashSet<CardFeature>) -> (i64, i64) {
+pub fn features_to_bits(features: &HashSet<CardFeature>) -> (i64, i64) {
     let mut bits1: i64 = 0;
     let mut bits2: i64 = 0;
 
@@ -99,54 +115,69 @@ fn features_to_bits(features: &HashSet<CardFeature>) -> (i64, i64) {
     (bits1, bits2)
 }
 
-#[async_trait::async_trait]
-impl RawCardAnalyzer for DefaultRawCardAnalyzer {
-    async fn analyze(&self, raw_card: &RawCardDb) -> Result<CreateCard, AnalysisError> {
-        // For now, we'll need to use the existing webapp analyze module
-        // This is a bridge implementation that will use the HTML parsing logic
-
-        // Detect features from skill texts
-        let (feature_bits1, feature_bits2) =
-            self.analyze_features(&raw_card.skill_text, &raw_card.life_burst_text);
-
-        // Since we can't fully parse the HTML without the webapp module,
-        // we'll create a minimal CreateCard for now
-        // In the future, this should call into webapp's analyze::wixoss::Card::card_from_html
-
-        Ok(CreateCard {
-            name: raw_card.name.clone(),
-            code: raw_card.card_number.clone(),
-            pronunciation: raw_card.name.clone(), // Default to name for now
-            color: 128,                           // Default colorless (bit 7)
-            power: None,
-            has_burst: if raw_card.life_burst_text.is_empty() {
-                2
-            } else {
-                1
-            }, // 1=has burst, 2=no burst
-            cost: None,
-            level: None,
-            limit: None,
-            limit_ex: None,
-            burst_text: Some(raw_card.life_burst_text.clone()),
-            format: 7, // Default to all-star
-            story: None,
-            rarity: None,
-            timing: None,
-            card_type: 0, // Will need to be determined from HTML
-            product: 0,   // TODO: Get product ID from raw_card when field is available
-            url: Some(raw_card.source_url.clone()),
-            skill_text: Some(raw_card.skill_text.clone()),
-            feature_bits1,
-            feature_bits2,
-            ex1: None,
-        })
-    }
-}
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_to_half_uppercase() {
+        assert_eq!(to_half("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ"), 
+                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    }
+
+    #[test]
+    fn test_to_half_lowercase() {
+        assert_eq!(to_half("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ"), 
+                   "abcdefghijklmnopqrstuvwxyz");
+    }
+
+    #[test]
+    fn test_to_half_numbers() {
+        assert_eq!(to_half("０１２３４５６７８９"), "0123456789");
+    }
+
+    #[test]
+    fn test_to_half_space() {
+        assert_eq!(to_half("ハロー　ワールド"), "ハロー ワールド");
+    }
+
+    #[test]
+    fn test_to_half_mixed() {
+        assert_eq!(to_half("カードＷＸ２４－Ｐ１"), "カードWX24-P1");
+        assert_eq!(to_half("レベル３　パワー１２０００"), "レベル3 パワー12000");
+        assert_eq!(to_half("ＬＢ：カードを１枚引く"), "LB:カードを1枚引く");
+    }
+
+    #[test]
+    fn test_to_half_preserves_japanese() {
+        let input = "このシグニはアサシンを持つ";
+        assert_eq!(to_half(input), input);
+    }
+
+    #[test]
+    fn test_to_half_symbols() {
+        // Test that full-width symbols are converted
+        assert_eq!(to_half("【チャーム】《ガードアイコン》：；・"), "【チャーム】《ガードアイコン》:;・");
+        assert_eq!(to_half("（パワー＋１０００）"), "(パワー+1000)");
+        assert_eq!(to_half("！？＝＜＞"), "!?=<>");
+    }
+
+    #[test]
+    fn test_to_half_real_card_examples() {
+        // Real card name examples
+        assert_eq!(to_half("コードアクセル　Ｈｙａｈｈａｈ"), "コードアクセル Hyahhah");
+        assert_eq!(to_half("羅植姫　ガーベラ／／Ｍｅｍｏｒｉａｌ"), "羅植姫 ガーベラ//Memorial");
+        
+        // Real skill text examples
+        assert_eq!(to_half("【エナチャージ１】をする"), "【エナチャージ1】をする");
+        assert_eq!(to_half("パワーを＋２０００する"), "パワーを+2000する");
+    }
+
+    #[test]
+    fn test_to_half_empty_string() {
+        assert_eq!(to_half(""), "");
+    }
 
     #[test]
     fn test_features_to_bits() {
@@ -165,30 +196,4 @@ mod tests {
         assert_eq!(bits2, draw_shift2 | banish_shift2);
     }
 
-    #[tokio::test]
-    async fn test_analyze_empty_card() {
-        let analyzer = DefaultRawCardAnalyzer::new().unwrap();
-
-        let raw_card = RawCardDb {
-            id: 1,
-            card_number: "TEST-001".to_string(),
-            name: "Test Card".to_string(),
-            raw_html: "<html></html>".to_string(),
-            skill_text: "".to_string(),
-            life_burst_text: "".to_string(),
-            source_url: "https://example.com".to_string(),
-            scraped_at: chrono::Utc::now(),
-            last_analyzed_at: None,
-            is_analyzed: false,
-            analysis_error: "".to_string(),
-        };
-
-        let result = analyzer.analyze(&raw_card).await;
-        assert!(result.is_ok());
-
-        let create_card = result.unwrap();
-        assert_eq!(create_card.name, "Test Card");
-        assert_eq!(create_card.code, "TEST-001");
-        assert_eq!(create_card.has_burst, 2); // No burst
-    }
 }

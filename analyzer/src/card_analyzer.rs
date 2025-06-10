@@ -1,10 +1,10 @@
-use crate::raw_card_analyzer::{AnalysisError, RawCardAnalyzer};
+use crate::raw_card_analyzer::{AnalysisError, RawCardAnalyzer, to_half};
 use chrono::{DateTime, Utc};
 use models::card::CreateCard;
 use models::r#gen::django_models::RawCardDb;
 use sqlx::{Pool, Postgres, Row};
 use std::sync::Arc;
-use feature::{create_detect_patterns, CardFeature};
+use feature::create_detect_patterns;
 use feature::feature::HashSetToBits;
 use std::collections::HashSet;
 
@@ -201,8 +201,8 @@ impl SimpleRawCardAnalyzer {
         let (replace_patterns, detect_patterns) = create_detect_patterns();
         let mut detected_features = HashSet::new();
         
-        // 結合したテキスト
-        let combined_text = format!("{} {}", skill_text, life_burst_text);
+        // 半角に変換してから結合
+        let combined_text = format!("{} {}", to_half(skill_text), to_half(life_burst_text));
         
         // デバッグ出力を追加
         if !skill_text.is_empty() || !life_burst_text.is_empty() {
@@ -259,9 +259,9 @@ impl SimpleRawCardAnalyzer {
         
         // 基本的なCreateCardを作成
         Ok(CreateCard {
-            name: raw_card.name.clone(),
-            code: raw_card.card_number.clone(),
-            pronunciation: raw_card.name.clone(), // デフォルトで名前を使用
+            name: to_half(&raw_card.name),
+            code: to_half(&raw_card.card_number),
+            pronunciation: to_half(&raw_card.name), // デフォルトで名前を使用
             color,
             cost: None,
             level: None,
@@ -275,8 +275,8 @@ impl SimpleRawCardAnalyzer {
             } else {
                 1
             },
-            skill_text: Some(raw_card.skill_text.clone()),
-            burst_text: Some(raw_card.life_burst_text.clone()),
+            skill_text: Some(to_half(&raw_card.skill_text)),
+            burst_text: Some(to_half(&raw_card.life_burst_text)),
             format: 7, // デフォルトオールスター
             story: None,
             rarity: None,

@@ -1,4 +1,5 @@
-use analyzer::raw_card_analyzer::{DefaultRawCardAnalyzer, RawCardAnalyzer};
+use analyzer::card_analyzer::SimpleRawCardAnalyzer;
+use analyzer::raw_card_analyzer::RawCardAnalyzer;
 use chrono::Utc;
 use models::r#gen::django_models::RawCardDb;
 
@@ -20,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create analyzer
-    let analyzer = DefaultRawCardAnalyzer::new()?;
+    let analyzer = SimpleRawCardAnalyzer::new();
 
     // Analyze the card
     match analyzer.analyze(&raw_card).await {
