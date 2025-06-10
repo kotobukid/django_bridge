@@ -12,4 +12,4 @@ pub use card_type_selector::CardTypeSelector;
 pub use color_selector::ColorSelector;
 pub use navbar::NavBar;
 pub use pagination::Pagination;
-pub use svg_definition::{IconRed, SvgDefinition};
+pub use svg_definition::{ColorIconWithNum, ColorIconsWithNum, IconRed, SvgDefinition};

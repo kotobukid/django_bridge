@@ -1,5 +1,5 @@
 use crate::components::svg_definition::{
-    IconBlack, IconBlue, IconColorless, IconGreen, IconRed, IconWhite,
+    ColorIconsWithNum, IconBlack, IconBlue, IconColorless, IconGreen, IconRed, IconWhite,
 };
 use datapack::CardExport;
 use leptos::prelude::*;
@@ -86,11 +86,62 @@ pub fn CardItem(
                         <a href=card_url target="_blank" class="flex items-center gap-1">
                             <Icons colors={get_colors_from_bits(card.color() as i32)} />
                             {card.name()}
+                            {
+                                let cost = card.cost();
+                                if !cost.is_empty() {
+                                    view! {
+                                        <div class="ml-2">
+                                            <ColorIconsWithNum code={cost} />
+                                        </div>
+                                    }.into_any()
+                                } else {
+                                    view! { <span></span> }.into_any()
+                                }
+                            }
                         </a>
                     </h3>
-                    <p class="text-sm mt-1" style="color: #374151; opacity: 0.8;">
-                        {card.code()}
-                    </p>
+                    <div class="flex items-center gap-2 text-sm mt-1" style="color: #374151; opacity: 0.8;">
+                        <span>{card.code()}</span>
+                        {
+                            // レベル表示
+                            let level = card.level();
+                            if !level.is_empty() {
+                                view! {
+                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                                        "Lv." {level}
+                                    </span>
+                                }.into_any()
+                            } else {
+                                view! { <span></span> }.into_any()
+                            }
+                        }
+                        {
+                            // パワー表示
+                            let power = card.power();
+                            if !power.is_empty() {
+                                view! {
+                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
+                                        "⚡" {power}
+                                    </span>
+                                }.into_any()
+                            } else {
+                                view! { <span></span> }.into_any()
+                            }
+                        }
+                        {
+                            // リミット表示
+                            let limit = card.limit();
+                            if !limit.is_empty() {
+                                view! {
+                                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
+                                        "LIM " {limit}
+                                    </span>
+                                }.into_any()
+                            } else {
+                                view! { <span></span> }.into_any()
+                            }
+                        }
+                    </div>
                     {
                         let skill_text = card.skill_text();
                         if !skill_text.is_empty() {

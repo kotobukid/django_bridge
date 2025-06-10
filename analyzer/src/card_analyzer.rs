@@ -7,6 +7,7 @@ use std::sync::Arc;
 use feature::create_detect_patterns;
 use feature::feature::HashSetToBits;
 use std::collections::HashSet;
+use color::convert_cost;
 
 /// RawCardDb with product_id included
 #[derive(sqlx::FromRow, Debug, Clone)]
@@ -196,6 +197,210 @@ impl SimpleRawCardAnalyzer {
         color
     }
 
+    /// HTMLから共通のdd要素を抽出するヘルパーメソッド
+    fn extract_dd_elements(&self, html: &str) -> Vec<String> {
+        let mut dd_elements = Vec::new();
+        
+        // <dt>カード種類</dt> または <dt>種類</dt> 以降の<dd>要素を抽出
+        let start_patterns = ["<dt>カード種類</dt>", "<dt>種類</dt>"];
+        let mut start_index = None;
+        
+        for pattern in &start_patterns {
+            if let Some(index) = html.find(pattern) {
+                start_index = Some(index);
+                break;
+            }
+        }
+        
+        if let Some(start) = start_index {
+            let mut current_pos = start;
+            
+            // <dd>要素を順番に収集
+            while let Some(dd_start) = html[current_pos..].find("<dd>") {
+                let absolute_dd_start = current_pos + dd_start;
+                if let Some(dd_end) = html[absolute_dd_start..].find("</dd>") {
+                    let absolute_dd_end = absolute_dd_start + dd_end;
+                    let dd_content = &html[absolute_dd_start + 4..absolute_dd_end];
+                    dd_elements.push(dd_content.to_string());
+                    current_pos = absolute_dd_end + 5; // "</dd>"の後
+                } else {
+                    break;
+                }
+            }
+        }
+        
+        dd_elements
+    }
+
+    /// HTMLからレベル情報を検出する（dd[3]）
+    pub fn detect_level_from_html(&self, html: &str) -> Option<String> {
+        let dd_elements = self.extract_dd_elements(html);
+        
+        if dd_elements.len() > 3 {
+            let level_text = dd_elements[3].trim();
+            if !level_text.is_empty() && level_text != "-" {
+                Some(level_text.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// HTMLからリミット情報を検出する（dd[6]、ルリグのみ）
+    pub fn detect_limit_from_html(&self, html: &str) -> Option<String> {
+        let dd_elements = self.extract_dd_elements(html);
+        
+        if dd_elements.is_empty() {
+            return None;
+        }
+        
+        // ルリグカードかどうかをチェック
+        let card_type = &dd_elements[0];
+        let is_lrig = card_type.contains("ルリグ");
+        
+        if is_lrig && dd_elements.len() > 6 {
+            let limit_text = dd_elements[6].trim();
+            if !limit_text.is_empty() && limit_text != "-" {
+                Some(limit_text.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// HTMLからパワー情報を検出する（dd[7]、シグニ/クラフトのみ）
+    pub fn detect_power_from_html(&self, html: &str) -> Option<String> {
+        let dd_elements = self.extract_dd_elements(html);
+        
+        if dd_elements.is_empty() {
+            return None;
+        }
+        
+        // シグニまたはクラフトカードかどうかをチェック
+        let card_type = &dd_elements[0];
+        let is_signi_or_craft = card_type.contains("シグニ") || card_type.contains("クラフト");
+        
+        if is_signi_or_craft && dd_elements.len() > 7 {
+            let power_text = dd_elements[7].trim();
+            if !power_text.is_empty() && power_text != "-" {
+                Some(power_text.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// HTMLから使用タイミング情報を検出する（dd[9]、アーツ/ピースのみ）
+    pub fn detect_timing_from_html(&self, html: &str) -> Option<String> {
+        let dd_elements = self.extract_dd_elements(html);
+        
+        if dd_elements.is_empty() {
+            return None;
+        }
+        
+        // アーツまたはピースカードかどうかをチェック
+        let card_type = &dd_elements[0];
+        let is_arts_or_piece = card_type.contains("アーツ") || card_type.contains("ピース");
+        
+        if is_arts_or_piece && dd_elements.len() > 9 {
+            let timing_text = dd_elements[9].trim();
+            if !timing_text.is_empty() && timing_text != "-" {
+                Some(timing_text.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// HTMLからリミット消費情報を検出する（dd[8]、将来対応）
+    pub fn detect_limit_ex_from_html(&self, html: &str) -> Option<String> {
+        let dd_elements = self.extract_dd_elements(html);
+        
+        if dd_elements.len() > 8 {
+            let limit_ex_text = dd_elements[8].trim();
+            if !limit_ex_text.is_empty() && limit_ex_text != "-" {
+                Some(limit_ex_text.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// HTMLからストーリー情報を検出する（dd[11]のdissonaアイコンチェック）
+    pub fn detect_story_from_html(&self, html: &str) -> Option<String> {
+        let dd_elements = self.extract_dd_elements(html);
+        
+        if dd_elements.len() > 11 {
+            let story_html = &dd_elements[11];
+            
+            // dd[11]内にdissonaアイコンがあるかチェック
+            if story_html.contains("icon_txt_dissona.png") {
+                Some("dissona".to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
+    /// HTMLからコスト情報を検出する（ルリグはグロウコスト、それ以外はコスト）
+    pub fn detect_cost_from_html(&self, html: &str) -> Option<String> {
+        let dd_elements = self.extract_dd_elements(html);
+        
+        // dd要素が十分にない場合は早期リターン
+        if dd_elements.is_empty() {
+            return None;
+        }
+        
+        // カードタイプを確認（dd[0]がカード種類）
+        let card_type = &dd_elements[0];
+        let is_lrig = card_type.contains("ルリグ");
+        
+        // ルリグの場合はグロウコスト（dd[4]）、それ以外はコスト（dd[5]）
+        let cost_index = if is_lrig { 4 } else { 5 };
+        
+        if dd_elements.len() > cost_index {
+            let cost_html = &dd_elements[cost_index];
+            
+            // HTMLタグを除去（flatten_breakと同等の処理）
+            let cost_text = cost_html
+                .replace('\n', "")
+                .replace("<br>", "")
+                .replace("<br/>", "")
+                .replace("<br />", "");
+            
+            if !cost_text.trim().is_empty() && cost_text.trim() != "-" {
+                // convert_cost関数を使って「《白》×１《青》×２」→「w1u2」形式に変換
+                match convert_cost(&cost_text) {
+                    Ok(converted) => Some(converted),
+                    Err(_) => {
+                        // 変換に失敗した場合は元のテキストを返す
+                        println!("DEBUG: Failed to convert {} '{}' for {} card", 
+                                if is_lrig { "grow cost" } else { "cost" }, 
+                                cost_text, 
+                                if is_lrig { "Lrig" } else { "non-Lrig" });
+                        Some(cost_text)
+                    }
+                }
+            } else {
+                None
+            }
+        } else {
+            None
+        }
+    }
+
     /// スキルテキストとライフバーストテキストから特徴を検出する
     fn detect_features_from_text(&self, skill_text: &str, life_burst_text: &str) -> (i64, i64) {
         let (replace_patterns, detect_patterns) = create_detect_patterns();
@@ -254,6 +459,33 @@ impl SimpleRawCardAnalyzer {
         let color = self.detect_color_from_html(&raw_card.raw_html);
         // println!("DEBUG: Card {} - Detected color: {}", raw_card.card_number, color);
         
+        // HTMLからコストを検出
+        let cost = self.detect_cost_from_html(&raw_card.raw_html);
+        
+        // HTMLから追加フィールドを検出
+        let level_str = self.detect_level_from_html(&raw_card.raw_html);
+        let limit_str = self.detect_limit_from_html(&raw_card.raw_html);
+        let power = self.detect_power_from_html(&raw_card.raw_html);
+        let timing_str = self.detect_timing_from_html(&raw_card.raw_html);
+        let limit_ex_str = self.detect_limit_ex_from_html(&raw_card.raw_html);
+        let story = self.detect_story_from_html(&raw_card.raw_html);
+        
+        // 数値フィールドの型変換（String → i32）
+        let level: Option<i32> = level_str.and_then(|s| s.parse().ok());
+        let limit: Option<i32> = limit_str.and_then(|s| s.parse().ok());
+        let limit_ex: Option<i32> = limit_ex_str.and_then(|s| s.parse().ok());
+        
+        // タイミングは数値ではなく文字列のままにしておく（"メインフェイズ"等）
+        // 将来的に数値コード化が必要であれば別途マッピング処理を追加
+        let timing: Option<i32> = timing_str.and_then(|s| {
+            // タイミング文字列を数値にマッピング（仮の実装）
+            match s.as_str() {
+                "メインフェイズ" => Some(1),
+                "アタックフェイズ" => Some(2),
+                _ => None,
+            }
+        });
+        
         // スキルテキストとライフバーストテキストから特徴を検出
         let (feature_bits1, feature_bits2) = self.detect_features_from_text(&raw_card.skill_text, &raw_card.life_burst_text);
         
@@ -263,13 +495,13 @@ impl SimpleRawCardAnalyzer {
             code: to_half(&raw_card.card_number),
             pronunciation: to_half(&raw_card.name), // デフォルトで名前を使用
             color,
-            cost: None,
-            level: None,
-            limit: None,
-            limit_ex: None,
+            cost,
+            level,
+            limit,
+            limit_ex,
             product: product_id.unwrap_or(0) as i32,
             card_type,
-            power: None,
+            power,
             has_burst: if raw_card.life_burst_text.is_empty() {
                 2
             } else {
@@ -278,9 +510,9 @@ impl SimpleRawCardAnalyzer {
             skill_text: Some(to_half(&raw_card.skill_text)),
             burst_text: Some(to_half(&raw_card.life_burst_text)),
             format: 7, // デフォルトオールスター
-            story: None,
+            story,
             rarity: None,
-            timing: None,
+            timing,
             url: Some(raw_card.source_url.clone()),
             feature_bits1,
             feature_bits2,

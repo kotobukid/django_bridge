@@ -65,6 +65,9 @@ cargo make trunk_build
 
 # Build WASM datapack module
 cargo make wasm_linux
+
+# Complete rebuild sequence (after data changes)
+cargo make static && cargo make wasm_linux && cargo make trunk_build
 ```
 
 ## Project Structure
@@ -124,6 +127,42 @@ table_definition/.venv/bin/python manage.py runserver 0.0.0.0:8003
 # Example: Python scripts
 table_definition/.venv/bin/python script_name.py
 ```
+
+## Ad-hoc Analysis Scripts
+**Location and Execution Rules**: All ad-hoc scripts for analyzing code or database should be placed in the `scripts/` directory.
+
+**Execution Format**: Always run scripts from the project root using relative paths:
+```bash
+# Correct execution from project root
+python scripts/hoge.py
+table_definition/.venv/bin/python scripts/analyze_data.py
+
+# Script should handle relative imports and paths properly
+```
+
+**Script Writing Guidelines**:
+- Place all analysis scripts in `scripts/` directory
+- Write scripts to work when executed from project root
+- Use relative paths for imports and file access
+- Include proper Django setup if accessing database models
+- Add meaningful comments and docstrings for future reference
+
+## Static Data Generation Critical Process
+**When to Regenerate**: Always run `cargo make static` after any database schema changes or card data updates.
+
+**Process Flow**:
+1. Database changes (via analyzer or direct updates)
+2. Run `cargo make static` to regenerate `datapack/src/gen/cards.rs`
+3. WASM rebuild (if needed): `cargo make wasm_linux`
+4. Frontend rebuild to pick up new data
+
+**Field Mapping in Static Data**: The static data generation process converts database records to Rust tuples. Critical fields include:
+- Position 6: level (String)
+- Position 7: limit (String) 
+- Position 8: limit_ex (String)
+- Position 9: power (String)
+
+**Important**: The `Card::to_rust_code()` method in `shared/models/src/card.rs` handles the conversion from database `Option<i32>` fields to string representation for static data.
 
 ## Data Flow Architecture
 
@@ -216,7 +255,7 @@ cd front && npm run typecheck
 
 ## Implementation Status
 
-### ✅ Completed - RawCard System
+### ✅ Completed - RawCard System & Field Extraction
 1. **RawCard Django Model**: Complete with product foreign key relationship
 2. **Database Migration**: Applied with proper constraints and indexing
 3. **Rust Model Generation**: Auto-synced via `syncdb`
@@ -230,17 +269,27 @@ cd front && npm run typecheck
    - Product ID propagation from RawCard to Card
    - Batch processing with progress tracking
    - CLI options for flexible operation
-6. **Testing**: Complete end-to-end validation from scraping to final card data
+   - **Card Field Extraction**: Complete extraction of power, level, limit, timing, story fields from HTML
+   - **Card Type Conditional Logic**: Proper field extraction based on card type (Lrig vs Signi vs Arts etc.)
+6. **Frontend Integration**: 
+   - CardItem component displays level, power, limit with colored badges
+   - CardExport properly exposes all new fields via getter methods
+7. **Static Data Pipeline**: End-to-end data flow from database to frontend via static generation
+8. **Testing**: Complete end-to-end validation from scraping to final card data
 
 ### 🎯 Current Focus
 - Code quality improvements (Clippy warnings)
 - Feature detection enhancement in analyzer
 - Performance optimization for large datasets
+- WASM build optimization (current issues with wasm-opt)
 
 ## Testing
 ```bash
 # Run Rust tests
 cargo test
+
+# Test specific analyzer features
+cargo test -p analyzer field_extraction_tests
 
 # Test scraper with small dataset
 cargo run --release -p wxdb-scraper -- booster WX24-P1
@@ -248,8 +297,14 @@ cargo run --release -p wxdb-scraper -- booster WX24-P1
 # Test analyzer on recent data
 cargo run -p analyzer -- --limit 10 --verbose
 
+# Test datapack field extraction
+cargo run --example test_new_fields  # Run from datapack directory
+
 # Check data integrity
 python manage.py shell -c "from wix.models import RawCard, Card; print(f'RawCard: {RawCard.objects.count()}, Card: {Card.objects.count()}')"  # From table_definition/ using .venv
+
+# Verify field extraction statistics
+python scripts/test_field_extraction.py
 ```
 
 ## Frontend Development (Leptos/WASM)
@@ -291,3 +346,30 @@ cargo make front_server
 # Generate static build
 cargo make generate
 ```
+
+## Troubleshooting
+
+### WASM Build Issues
+If `cargo make wasm_linux` fails with wasm-opt errors:
+
+1. **Check for bulk memory operations error**: This is a known issue with wasm-opt
+2. **Workaround**: Disable wasm-opt by adding to `datapack/Cargo.toml`:
+   ```toml
+   [package.metadata.wasm-pack.profile.release]
+   wasm-opt = false
+   ```
+3. **Alternative**: Use development builds which skip optimization
+
+### Static Data Not Updating
+If frontend doesn't show new field values:
+1. Verify database has the data: Check with Django shell or scripts
+2. Regenerate static data: `cargo make static`
+3. Rebuild WASM: `cargo make wasm_linux`
+4. Clear browser cache or use hard refresh
+
+### Field Extraction Issues
+If new fields aren't being extracted properly:
+1. Test extraction methods: `cargo test -p analyzer field_extraction_tests`
+2. Check HTML structure: Use `scripts/analyze_html_structure.py`
+3. Verify card type detection: Ensure proper dd element extraction
+4. Run field extraction verification: `python scripts/test_field_extraction.py`

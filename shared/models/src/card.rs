@@ -32,10 +32,10 @@ impl Card {
 
     pub fn to_rust_code(&self) -> String {
         let cost_ = self.cost.clone().unwrap_or("".into());
-        let level_: String = to_value!(self.level.clone(), "".into());
-        let limit_: String = to_value!(self.limit.clone(), "".into());
-        let limit_ex_: String = to_value!(self.limit_ex.clone(), "".into());
-        let power_: String = to_value!(self.power.clone(), "".into());
+        let level_: String = self.level.map(|l| l.to_string()).unwrap_or("".into());
+        let limit_: String = self.limit.map(|l| l.to_string()).unwrap_or("".into());
+        let limit_ex_: String = self.limit_ex.map(|l| l.to_string()).unwrap_or("".into());
+        let power_: String = self.power.clone().unwrap_or("".into());
         let skill_text_: String = self.skill_text.clone().unwrap_or("".into());
         let burst_text_: String = self.burst_text.clone().unwrap_or("".into());
         let story_: String = self.story.clone().unwrap_or("".into());

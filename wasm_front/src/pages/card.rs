@@ -1,4 +1,4 @@
-use crate::components::{CardList, CardTypeSelector, ColorSelector, NavBar, Pagination};
+use crate::components::{CardList, CardTypeSelector, ColorIconWithNum, ColorIconsWithNum, ColorSelector, NavBar, Pagination};
 use crate::types::{CardTypeFilter, ColorFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
@@ -67,7 +67,6 @@ pub fn CardPage() -> impl IntoView {
                 _set_selected_features=set_selected_features
                 on_feature_change=set_selected_feature_names
             />
-
             <div class="container mx-auto px-4 py-4">
                 <div class="mb-6 space-y-4">
                     <ColorSelector

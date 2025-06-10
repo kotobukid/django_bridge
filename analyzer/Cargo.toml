@@ -15,6 +15,7 @@ path = "src/main.rs"
 regex = { workspace = true }
 feature = { path = "../shared/feature" }
 models = { path = "../shared/models" }
+color = { path = "../shared/color" }
 tokio = { workspace = true }
 rayon = "1.10"
 async-trait = "0.1"

@@ -1051,6 +1051,7 @@ pub mod migration {
 }
 
 pub mod card_analyzer;
+pub mod test_field_extraction;
 pub mod raw_card_analyzer;
 
 /// 本番のフィーチャー検出パターンを使用するルール
