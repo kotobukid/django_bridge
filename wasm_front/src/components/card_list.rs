@@ -42,7 +42,7 @@ fn render_color_icon(color: i32) -> impl IntoView {
 #[component]
 pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
     let is_empty = cards.is_empty();
-
+    
     view! {
         <div class="bg-white rounded-lg shadow">
             <div class="p-4">

@@ -2,6 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Firefox-specific scroll behavior override */
+@-moz-document url-prefix() {
+    html.firefox-instant-scroll {
+        scroll-behavior: auto !important;
+    }
+    html.firefox-instant-scroll body {
+        scroll-behavior: auto !important;
+    }
+}
+
 @layer components {
     .color-selector-button {
         @apply p-1 rounded-lg transition-all duration-200 font-medium;
@@ -19,6 +34,22 @@
     
     .card-item {
         @apply border-b border-gray-200 py-3 px-4 hover:bg-gray-50 cursor-pointer;
+        /* Page transition feedback animation */
+        animation: cardFadeIn 0.6s ease-out;
+        opacity: 1;
+        transform: translateY(0);
+    }
+    
+    /* Keyframes for card fade-in animation */
+    @keyframes cardFadeIn {
+        0% {
+            opacity: 0.3;
+            transform: translateY(8px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* NavBar styles inspired by Nuxt version */
