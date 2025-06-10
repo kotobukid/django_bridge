@@ -105,6 +105,26 @@ cargo make wasm_linux
 - Rust uses the same database via SQLx
 - **Python Environment**: Use `table_definition/.venv` for Django operations
 
+## Python Environment
+**IMPORTANT**: Always use the Python environment located at `table_definition/.venv` for all Python operations.
+
+Before running any Python commands:
+```bash
+# Activate the virtual environment
+source table_definition/.venv/bin/activate
+```
+
+Or run Python commands directly using the virtual environment:
+```bash
+# Example: Django commands
+table_definition/.venv/bin/python manage.py makemigrations
+table_definition/.venv/bin/python manage.py migrate
+table_definition/.venv/bin/python manage.py runserver 0.0.0.0:8003
+
+# Example: Python scripts
+table_definition/.venv/bin/python script_name.py
+```
+
 ## Data Flow Architecture
 
 ### Production Data Pipeline ✅ **COMPLETED**
