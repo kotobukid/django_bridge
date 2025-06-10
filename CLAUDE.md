@@ -1,3 +1,7 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # Django Bridge Project - AI Assistant Guide
 
 ## Project Overview
@@ -38,6 +42,11 @@ python manage.py runserver 0.0.0.0:8003  # Run from table_definition/ using .ven
 ```bash
 # Scrape cards from a specific product
 cargo run --release -p wxdb-scraper -- booster WX24-P1
+# Or use the convenience command:
+cargo make scraper booster WX24-P1
+
+# Fast scraping with reduced delays
+cargo make scraper-fast booster WX24-P1
 
 # Analyze scraped RawCard data
 cargo run -p analyzer -- --limit 100 --verbose
@@ -48,17 +57,20 @@ cargo make analyze_all
 
 ### Build Commands
 ```bash
-# Generate static data
+# Generate static data from database
 cargo make static
 
-# Generate frontend
+# Build Leptos frontend
 cargo make trunk_build
+
+# Build WASM datapack module
+cargo make wasm_linux
 ```
 
 ## Project Structure
 
 ### Backend
-- `server/` - Main Axum web server
+- `server/` - Main Axum web server (port 8002)
 - `shared/webapp/` - Core business logic and API routes
 - `shared/models/` - Rust data models (auto-generated from Django)
 - `table_definition/wix/models.py` - Django model definitions (source of truth)
@@ -66,12 +78,14 @@ cargo make trunk_build
 - `analyzer/` - RawCard analysis and feature extraction
 
 ### Frontend
-- `wasm_front/` - Leptos application
+- `wasm_front/` - Leptos WASM application (primary frontend)
+- `front/` - Nuxt.js application (legacy, being phased out)
 
 ### Tools
 - `syncdb/` - Converts Django models to Rust structs
 - `datapack/` - WebAssembly module for frontend filtering
 - `shared/feature/` - Card feature detection logic
+- `static_generator/` - Generates static Rust code from database
 
 ## Development Workflow
 
@@ -114,6 +128,18 @@ cargo make trunk_build
    - Products are pre-loaded in database with unique codes
    - Scraper maps product codes to IDs via ProductRepository
    - Both `RawCard` and `Card` tables maintain product foreign keys
+
+## Linting and Code Quality
+```bash
+# Run clippy (Rust linter)
+cargo clippy --all-targets --all-features
+
+# Run rustfmt
+cargo fmt --all
+
+# Type check TypeScript/JavaScript in Nuxt frontend
+cd front && npm run typecheck
+```
 
 ## Common Tasks
 
@@ -204,4 +230,44 @@ cargo run -p analyzer -- --limit 10 --verbose
 
 # Check data integrity
 python manage.py shell -c "from wix.models import RawCard, Card; print(f'RawCard: {RawCard.objects.count()}, Card: {Card.objects.count()}')"  # From table_definition/ using .venv
+```
+
+## Frontend Development (Leptos/WASM)
+
+### Running Frontend
+```bash
+# Development server with hot reload (port 8080)
+cargo make trunk_serve
+
+# Build for production
+cargo make trunk_release
+
+# Build for GitHub Pages deployment
+cargo make trunk_pages
+```
+
+### Frontend Architecture
+- **Leptos framework** with reactive signals for state management
+- **Component structure**: 
+  - `wasm_front/src/components/` - Reusable UI components
+  - `wasm_front/src/pages/` - Page-level components
+  - `wasm_front/src/main.rs` - Router and app entry point
+- **Styling**: Tailwind CSS with custom components in `input.css`
+- **Data filtering**: Uses `datapack` WASM module for client-side card filtering
+
+### Component State Management
+When creating interactive components:
+- Use `signal()` for local state
+- Consider extraction to separate components when adding features like:
+  - Card flip animations
+  - Feature reporting UI
+  - Expandable details view
+
+## Nuxt.js Frontend (Legacy)
+```bash
+# Run development server (port 3001)
+cargo make front_server
+
+# Generate static build
+cargo make generate
 ```
