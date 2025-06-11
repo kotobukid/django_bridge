@@ -108,7 +108,7 @@ pub fn CardItem(
                             if !level.is_empty() {
                                 view! {
                                     <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                        "Lv." {level}
+                                        "Lv: " {level}
                                     </span>
                                 }.into_any()
                             } else {
@@ -121,7 +121,7 @@ pub fn CardItem(
                             if !power.is_empty() {
                                 view! {
                                     <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
-                                        "⚡" {power}
+                                        "Pow: " {power}
                                     </span>
                                 }.into_any()
                             } else {
@@ -134,7 +134,7 @@ pub fn CardItem(
                             if !limit.is_empty() {
                                 view! {
                                     <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                        "LIM " {limit}
+                                        "Lim: " {limit}
                                     </span>
                                 }.into_any()
                             } else {

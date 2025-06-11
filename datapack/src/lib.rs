@@ -573,6 +573,47 @@ pub fn fetch_by_colors_features_and_card_types_native(
     filtered_cards
 }
 
+// 色、feature、カード種別、商品の複合フィルタリング関数（全てAND条件）
+pub fn fetch_by_colors_features_card_types_and_products_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+    products: &[u8],
+) -> Vec<CardExport> {
+
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    // カード種別でフィルタリング
+    if !card_types.is_empty() {
+        let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| card_type_u8s.contains(&card.card_type))
+            .collect();
+    }
+
+    // 最後に商品でフィルタリング
+    if !products.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| products.contains(&card.product))
+            .collect();
+    }
+
+    filtered_cards
+}
+
 impl Clone for CardExport {
     fn clone(&self) -> Self {
         CardExport {

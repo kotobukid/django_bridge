@@ -1,5 +1,5 @@
-use crate::components::{CardList, CardTypeSelector, ColorIconWithNum, ColorIconsWithNum, ColorSelector, NavBar, Pagination};
-use crate::types::{CardTypeFilter, ColorFilter};
+use crate::components::{CardList, CardTypeSelector, ColorSelector, NavBar, Pagination, ProductSelector};
+use crate::types::{CardTypeFilter, ColorFilter, ProductFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
 use std::collections::HashMap;
@@ -8,6 +8,7 @@ use std::collections::HashMap;
 pub fn CardPage() -> impl IntoView {
     let (color_filter, set_color_filter) = signal(ColorFilter::new());
     let (card_type_filter, set_card_type_filter) = signal(CardTypeFilter::new());
+    let product_filter = RwSignal::new(ProductFilter::new());
     let (selected_features, set_selected_features) = signal(HashMap::<i32, bool>::new());
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new()); // 追加
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
@@ -19,11 +20,12 @@ pub fn CardPage() -> impl IntoView {
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
 
-    // Apply filters when color, features, or card types change
+    // Apply filters when color, features, card types, or products change
     Effect::new(move || {
         if let Some(Ok(cards)) = all_cards.get() {
             let color = color_filter.get();
             let card_type = card_type_filter.get();
+            let product = product_filter.read();
             let feature_names = selected_feature_names.get();
 
             // 複合フィルタリングを使用
@@ -33,12 +35,18 @@ pub fn CardPage() -> impl IntoView {
             } else { 
                 Vec::new() 
             };
+            let products = if product.has_any() {
+                product.selected_products.clone()
+            } else {
+                Vec::new()
+            };
             
-            let filtered = datapack::fetch_by_colors_features_and_card_types_native(
+            let filtered = datapack::fetch_by_colors_features_card_types_and_products_native(
                 &cards, 
                 color_bits, 
                 &feature_names,
-                &card_types
+                &card_types,
+                &products
             );
 
             set_filtered_cards.set(filtered);
@@ -76,6 +84,9 @@ pub fn CardPage() -> impl IntoView {
                     <CardTypeSelector
                         card_type_filter=card_type_filter
                         set_card_type_filter=set_card_type_filter
+                    />
+                    <ProductSelector
+                        product_filter=product_filter
                     />
                 </div>
 

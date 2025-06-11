@@ -4,6 +4,35 @@ pub use datapack::CardType;
 // Re-export CardExport from datapack as Card
 // pub use datapack::CardExport as Card;
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ProductFilter {
+    pub selected_products: Vec<u8>,
+}
+
+impl ProductFilter {
+    pub fn new() -> Self {
+        Self {
+            selected_products: Vec::new(),
+        }
+    }
+    
+    pub fn has_any(&self) -> bool {
+        !self.selected_products.is_empty()
+    }
+    
+    pub fn toggle_product(&mut self, product_id: u8) {
+        if let Some(pos) = self.selected_products.iter().position(|&p| p == product_id) {
+            self.selected_products.remove(pos);
+        } else {
+            self.selected_products.push(product_id);
+        }
+    }
+    
+    pub fn is_selected(&self, product_id: u8) -> bool {
+        self.selected_products.contains(&product_id)
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ColorFilter {
     pub white: bool,

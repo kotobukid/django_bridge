@@ -5,6 +5,7 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
+use crate::repositories::StaticCodeGenerator;
 
 #[derive(Clone)]
 pub struct ProductRepository {
@@ -42,7 +43,7 @@ impl ProductRepository {
     ) -> Pin<Box<dyn Future<Output = Result<Vec<Product>, sqlx::Error>> + Send + 'a>> {
         Box::pin(async move {
             let query_future = sqlx::query_as::<_, ProductDb>(
-                "SELECT id, name, product_code, url, product_type, sort_asc FROM wix_product",
+                "SELECT id, name, product_code, url, product_type, sort_asc FROM wix_product ORDER BY id",
             )
             .fetch_all(&*self.db_connector);
 
@@ -53,5 +54,38 @@ impl ProductRepository {
                 Err(_) => Err(sqlx::Error::PoolTimedOut),
             }
         })
+    }
+}
+
+impl StaticCodeGenerator for ProductRepository {
+    async fn code(&self) -> String {
+        let lines = self.get_all_as_code().await;
+        format!(
+            "{}{}{}",
+            ProductRepository::headline(lines.len() as i32),
+            lines.join("\n"),
+            ProductRepository::tail()
+        )
+    }
+
+    async fn get_all_as_code(&self) -> Vec<String> {
+        let products = self.get_all().await.unwrap();
+        products
+            .into_iter()
+            .map(|p| format!(r#"    ({}_u8, "{}", "{}"),"#, p.id, p.product_code, p.name))
+            .collect()
+    }
+
+    fn headline(length: i32) -> String {
+        format!(
+            r"pub type ProductStatic = (u8, &'static str, &'static str);
+pub const PRODUCT_LIST: &[ProductStatic; {}] = &[
+",
+            length
+        )
+    }
+
+    fn tail() -> &'static str {
+        "];"
     }
 }
