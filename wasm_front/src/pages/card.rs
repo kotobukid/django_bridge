@@ -1,4 +1,4 @@
-use crate::components::{CardList, CardTypeSelector, ColorSelector, NavBar, Pagination, ProductSelector};
+use crate::components::{CardList, CardTypeSelector, ColorSelector, FeatureOverlay, OverlayButton, Pagination, ProductOverlay};
 use crate::types::{CardTypeFilter, ColorFilter, ProductFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
@@ -9,11 +9,15 @@ pub fn CardPage() -> impl IntoView {
     let (color_filter, set_color_filter) = signal(ColorFilter::new());
     let (card_type_filter, set_card_type_filter) = signal(CardTypeFilter::new());
     let product_filter = RwSignal::new(ProductFilter::new());
-    let (selected_features, set_selected_features) = signal(HashMap::<i32, bool>::new());
-    let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new()); // 追加
+    let selected_features = RwSignal::new(HashMap::<String, bool>::new());
+    let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new());
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
     let (current_page, set_current_page) = signal(0usize);
     let cards_per_page = 20;
+    
+    // オーバーレイ表示状態
+    let (show_feature_overlay, set_show_feature_overlay) = signal(false);
+    let (show_product_overlay, set_show_product_overlay) = signal(false);
     
 
 
@@ -68,26 +72,44 @@ pub fn CardPage() -> impl IntoView {
         (total + cards_per_page - 1) / cards_per_page
     });
 
+    // フィルタの有効状態を判定
+    let has_active_features = Memo::new(move |_| {
+        !selected_features.read().is_empty()
+    });
+    
+    let has_active_products = Memo::new(move |_| {
+        product_filter.read().has_any()
+    });
+
     view! {
         <div class="min-h-screen bg-gray-100">
-            <NavBar
-                _selected_features=selected_features
-                _set_selected_features=set_selected_features
-                on_feature_change=set_selected_feature_names
-            />
             <div class="container mx-auto px-4 py-4">
+                // フィルタボタン行
                 <div class="mb-6 space-y-4">
-                    <ColorSelector
-                        color_filter=color_filter
-                        set_color_filter=set_color_filter
-                    />
-                    <CardTypeSelector
-                        card_type_filter=card_type_filter
-                        set_card_type_filter=set_card_type_filter
-                    />
-                    <ProductSelector
-                        product_filter=product_filter
-                    />
+                    <div class="flex flex-wrap gap-3">
+                        <OverlayButton
+                            label="カード効果".to_string()
+                            is_active=Signal::derive(move || has_active_features.get())
+                            on_click=Callback::new(move |_| set_show_feature_overlay.set(true))
+                        />
+                        <OverlayButton
+                            label="製品".to_string()
+                            is_active=Signal::derive(move || has_active_products.get())
+                            on_click=Callback::new(move |_| set_show_product_overlay.set(true))
+                        />
+                    </div>
+                    
+                    // 常時表示フィルタ
+                    <div class="space-y-3">
+                        <ColorSelector
+                            color_filter=color_filter
+                            set_color_filter=set_color_filter
+                        />
+                        <CardTypeSelector
+                            card_type_filter=card_type_filter
+                            set_card_type_filter=set_card_type_filter
+                        />
+                    </div>
                 </div>
 
                 <div class="mb-4 text-sm text-gray-600">
@@ -137,6 +159,63 @@ pub fn CardPage() -> impl IntoView {
                     }}
                 </Suspense>
             </div>
+            
+            // フィーチャーオーバーレイ
+            <Show when=move || show_feature_overlay.get()>
+                <div 
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-85"
+                    on:click=move |_| set_show_feature_overlay.set(false)
+                >
+                    <div 
+                        class="bg-white rounded-lg shadow-lg max-w-4xl max-h-[80vh] w-full mx-4 overflow-hidden"
+                        on:click=|e| e.stop_propagation()
+                    >
+                        <div class="flex items-center justify-between p-4 border-b">
+                            <h2 class="text-lg font-semibold">"カード効果選択"</h2>
+                            <button 
+                                class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
+                                on:click=move |_| set_show_feature_overlay.set(false)
+                            >
+                                "×"
+                            </button>
+                        </div>
+                        <div class="p-4 overflow-y-auto max-h-[60vh]">
+                            <FeatureOverlay
+                                selected_features=selected_features
+                                on_feature_change=set_selected_feature_names
+                            />
+                        </div>
+                    </div>
+                </div>
+            </Show>
+            
+            // 商品オーバーレイ
+            <Show when=move || show_product_overlay.get()>
+                <div 
+                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-85"
+                    on:click=move |_| set_show_product_overlay.set(false)
+                >
+                    <div 
+                        class="bg-white rounded-lg shadow-lg max-w-4xl max-h-[80vh] w-full mx-4 overflow-hidden"
+                        on:click=|e| e.stop_propagation()
+                    >
+                        <div class="flex items-center justify-between p-4 border-b">
+                            <h2 class="text-lg font-semibold">"製品選択"</h2>
+                            <button 
+                                class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
+                                on:click=move |_| set_show_product_overlay.set(false)
+                            >
+                                "×"
+                            </button>
+                        </div>
+                        <div class="p-4 overflow-y-auto max-h-[60vh]">
+                            <ProductOverlay
+                                product_filter=product_filter
+                            />
+                        </div>
+                    </div>
+                </div>
+            </Show>
         </div>
     }
 }

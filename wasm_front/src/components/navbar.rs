@@ -110,12 +110,6 @@ pub fn NavBar(
 
     view! {
         <nav class="nav-bar">
-            <div class="nav-section nav-links">
-                <a class="nav-link active" href="/card">
-                    <span>"Cards"</span>
-                </a>
-            </div>
-
             <div class="nav-section feature-menu">
                 {feature_tags.into_iter().map(|tag| {
                     let tag_id = tag.id.clone();
