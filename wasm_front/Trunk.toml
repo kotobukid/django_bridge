@@ -10,7 +10,7 @@ public_url = "/"
 release = true
 
 [watch]
-ignore = ["../dist"]
+ignore = ["../dist", "leptos.md"]
 
 [serve]
 port = 8080
