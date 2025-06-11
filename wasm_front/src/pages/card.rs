@@ -1,4 +1,7 @@
-use crate::components::{CardList, CardTypeSelector, ColorSelector, FeatureOverlay, OverlayButton, Pagination, ProductOverlay};
+use crate::components::{
+    CardList, CardTypeSelector, ColorSelector, FeatureOverlay, OverlayButton, Pagination,
+    ProductOverlay,
+};
 use crate::types::{CardTypeFilter, ColorFilter, ProductFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
@@ -14,12 +17,10 @@ pub fn CardPage() -> impl IntoView {
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
     let (current_page, set_current_page) = signal(0usize);
     let cards_per_page = 20;
-    
+
     // オーバーレイ表示状態
     let (show_feature_overlay, set_show_feature_overlay) = signal(false);
     let (show_product_overlay, set_show_product_overlay) = signal(false);
-    
-
 
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
@@ -34,23 +35,23 @@ pub fn CardPage() -> impl IntoView {
 
             // 複合フィルタリングを使用
             let color_bits = if color.has_any() { color.to_bits() } else { 0 };
-            let card_types = if card_type.has_any() { 
-                card_type.get_selected_card_types() 
-            } else { 
-                Vec::new() 
+            let card_types = if card_type.has_any() {
+                card_type.get_selected_card_types()
+            } else {
+                Vec::new()
             };
             let products = if product.has_any() {
                 product.selected_products.clone()
             } else {
                 Vec::new()
             };
-            
+
             let filtered = datapack::fetch_by_colors_features_card_types_and_products_native(
-                &cards, 
-                color_bits, 
+                &cards,
+                color_bits,
                 &feature_names,
                 &card_types,
-                &products
+                &products,
             );
 
             set_filtered_cards.set(filtered);
@@ -73,13 +74,9 @@ pub fn CardPage() -> impl IntoView {
     });
 
     // フィルタの有効状態を判定
-    let has_active_features = Memo::new(move |_| {
-        !selected_features.read().is_empty()
-    });
-    
-    let has_active_products = Memo::new(move |_| {
-        product_filter.read().has_any()
-    });
+    let has_active_features = Memo::new(move |_| !selected_features.read().is_empty());
+
+    let has_active_products = Memo::new(move |_| product_filter.read().has_any());
 
     view! {
         <div class="min-h-screen bg-gray-100">
@@ -98,7 +95,7 @@ pub fn CardPage() -> impl IntoView {
                             on_click=Callback::new(move |_| set_show_product_overlay.set(true))
                         />
                     </div>
-                    
+
                     // 常時表示フィルタ
                     <div class="space-y-3">
                         <ColorSelector
@@ -159,20 +156,21 @@ pub fn CardPage() -> impl IntoView {
                     }}
                 </Suspense>
             </div>
-            
+
             // フィーチャーオーバーレイ
             <Show when=move || show_feature_overlay.get()>
-                <div 
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-85"
+                <div
+                    class="fixed inset-0 z-50 flex items-center justify-center"
+                    style="background-color: rgba(0, 0, 0, 0.75);"
                     on:click=move |_| set_show_feature_overlay.set(false)
                 >
-                    <div 
+                    <div
                         class="bg-white rounded-lg shadow-lg max-w-4xl max-h-[80vh] w-full mx-4 overflow-hidden"
                         on:click=|e| e.stop_propagation()
                     >
                         <div class="flex items-center justify-between p-4 border-b">
                             <h2 class="text-lg font-semibold">"カード効果選択"</h2>
-                            <button 
+                            <button
                                 class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
                                 on:click=move |_| set_show_feature_overlay.set(false)
                             >
@@ -188,20 +186,21 @@ pub fn CardPage() -> impl IntoView {
                     </div>
                 </div>
             </Show>
-            
+
             // 商品オーバーレイ
             <Show when=move || show_product_overlay.get()>
-                <div 
-                    class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-85"
+                <div
+                    class="fixed inset-0 z-50 flex items-center justify-center"
+                    style="background-color: rgba(0, 0, 0, 0.75);"
                     on:click=move |_| set_show_product_overlay.set(false)
                 >
-                    <div 
+                    <div
                         class="bg-white rounded-lg shadow-lg max-w-4xl max-h-[80vh] w-full mx-4 overflow-hidden"
                         on:click=|e| e.stop_propagation()
                     >
                         <div class="flex items-center justify-between p-4 border-b">
                             <h2 class="text-lg font-semibold">"製品選択"</h2>
-                            <button 
+                            <button
                                 class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
                                 on:click=move |_| set_show_product_overlay.set(false)
                             >
