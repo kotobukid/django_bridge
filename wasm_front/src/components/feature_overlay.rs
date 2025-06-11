@@ -165,7 +165,7 @@ pub fn FeatureOverlay(
                                                 let feature_name_for_toggle = feature.name.clone();
                                                 let feature_name_for_check = feature.name.clone();
 
-                                                let is_selected = Memo::new(move |_| {
+                                                let is_selected = Signal::derive(move || {
                                                     selected_features.read().get(&feature_name_for_check).copied().unwrap_or(false)
                                                 });
 
@@ -174,7 +174,7 @@ pub fn FeatureOverlay(
                                                         <input 
                                                             type="checkbox"
                                                             class="form-checkbox h-4 w-4 text-blue-600 rounded"
-                                                            checked=move || is_selected.get()
+                                                            checked=is_selected
                                                             on:change=move |_| toggle_card_feature(feature_name_for_toggle.clone())
                                                         />
                                                         <span class="text-sm">{feature_name}</span>

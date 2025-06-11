@@ -21,6 +21,10 @@ pub fn CardPage() -> impl IntoView {
     // オーバーレイ表示状態
     let (show_feature_overlay, set_show_feature_overlay) = signal(false);
     let (show_product_overlay, set_show_product_overlay) = signal(false);
+    
+    // オーバーレイの強制再描画用
+    let (feature_overlay_key, set_feature_overlay_key) = signal(0u32);
+    let (product_overlay_key, set_product_overlay_key) = signal(0u32);
 
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
@@ -169,7 +173,22 @@ pub fn CardPage() -> impl IntoView {
                         on:click=|e| e.stop_propagation()
                     >
                         <div class="flex items-center justify-between p-4 border-b">
-                            <h2 class="text-lg font-semibold">"カード効果選択"</h2>
+                            <div class="flex items-center space-x-3">
+                                <h2 class="text-lg font-semibold">"カード効果選択"</h2>
+                                <Show when=move || has_active_features.get()>
+                                    <button
+                                        class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                                        on:click=move |_| {
+                                            selected_features.update(|f| f.clear());
+                                            set_selected_feature_names.set(Vec::new());
+                                            // オーバーレイを強制再描画
+                                            set_feature_overlay_key.update(|k| *k += 1);
+                                        }
+                                    >
+                                        "クリア"
+                                    </button>
+                                </Show>
+                            </div>
                             <button
                                 class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
                                 on:click=move |_| set_show_feature_overlay.set(false)
@@ -178,10 +197,15 @@ pub fn CardPage() -> impl IntoView {
                             </button>
                         </div>
                         <div class="p-4 overflow-y-auto max-h-[60vh]">
-                            <FeatureOverlay
-                                selected_features=selected_features
-                                on_feature_change=set_selected_feature_names
-                            />
+                            {move || {
+                                let _key = feature_overlay_key.get(); // キーを監視
+                                view! {
+                                    <FeatureOverlay
+                                        selected_features=selected_features
+                                        on_feature_change=set_selected_feature_names
+                                    />
+                                }
+                            }}
                         </div>
                     </div>
                 </div>
@@ -199,7 +223,21 @@ pub fn CardPage() -> impl IntoView {
                         on:click=|e| e.stop_propagation()
                     >
                         <div class="flex items-center justify-between p-4 border-b">
-                            <h2 class="text-lg font-semibold">"製品選択"</h2>
+                            <div class="flex items-center space-x-3">
+                                <h2 class="text-lg font-semibold">"製品選択"</h2>
+                                <Show when=move || has_active_products.get()>
+                                    <button
+                                        class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                                        on:click=move |_| {
+                                            product_filter.update(|f| f.clear_all());
+                                            // オーバーレイを強制再描画
+                                            set_product_overlay_key.update(|k| *k += 1);
+                                        }
+                                    >
+                                        "クリア"
+                                    </button>
+                                </Show>
+                            </div>
                             <button
                                 class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
                                 on:click=move |_| set_show_product_overlay.set(false)
@@ -208,9 +246,14 @@ pub fn CardPage() -> impl IntoView {
                             </button>
                         </div>
                         <div class="p-4 overflow-y-auto max-h-[60vh]">
-                            <ProductOverlay
-                                product_filter=product_filter
-                            />
+                            {move || {
+                                let _key = product_overlay_key.get(); // キーを監視
+                                view! {
+                                    <ProductOverlay
+                                        product_filter=product_filter
+                                    />
+                                }
+                            }}
                         </div>
                     </div>
                 </div>

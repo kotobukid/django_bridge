@@ -31,6 +31,10 @@ impl ProductFilter {
     pub fn is_selected(&self, product_id: u8) -> bool {
         self.selected_products.contains(&product_id)
     }
+    
+    pub fn clear_all(&mut self) {
+        self.selected_products.clear();
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
