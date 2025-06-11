@@ -64,7 +64,7 @@ pub fn ColorSelector(
 
     view! {
         <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex flex-wrap gap-2">
+            <div class="flex flex-wrap gap-1">
                 <ColorButton color="white" color_filter=color_filter on_click=toggle_color bg_class="bg-amber-100 border border-gray-300">
                     <IconWhite />
                 </ColorButton>
