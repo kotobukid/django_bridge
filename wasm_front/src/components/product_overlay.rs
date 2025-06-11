@@ -1,6 +1,6 @@
-use leptos::*;
-use leptos::prelude::*;
 use crate::types::ProductFilter;
+use leptos::prelude::*;
+use leptos::*;
 
 // 商品IDと名前のマッピング（静的データから生成）
 fn get_product_list() -> Vec<(u8, &'static str, &'static str)> {
@@ -8,37 +8,37 @@ fn get_product_list() -> Vec<(u8, &'static str, &'static str)> {
         .iter()
         .filter(|(id, _, _)| {
             // カードデータに実際に存在する商品のみ表示
-            datapack::gen::cards::CARD_LIST.iter().any(|card| card.18 == *id)
+            datapack::gen::cards::CARD_LIST
+                .iter()
+                .any(|card| card.18 == *id)
         })
         .copied()
         .collect()
 }
 
 #[component]
-pub fn ProductOverlay(
-    product_filter: RwSignal<ProductFilter>,
-) -> impl IntoView {
+pub fn ProductOverlay(product_filter: RwSignal<ProductFilter>) -> impl IntoView {
     let products = get_product_list();
-    
+
     // 商品タイプ別にグループ化
     let grouped_products = {
         let mut booster = Vec::new();
         let mut deck = Vec::new();
         let mut others = Vec::new();
-        
+
         for (id, code, name) in products {
             if code.contains("-P") || code.contains("-CP") {
                 booster.push((id, code, name));
-            } else if code.contains("-D") {
+            } else if code.contains("-D") || code.contains("-CD") {
                 deck.push((id, code, name));
             } else {
                 others.push((id, code, name));
             }
         }
-        
+
         vec![
             ("ブースターパック", booster),
-            ("デッキ", deck),
+            ("構築済みデッキ", deck),
             ("その他", others),
         ]
     };
@@ -57,7 +57,7 @@ pub fn ProductOverlay(
                                     let is_selected = move || product_filter.read().is_selected(id);
                                     let display_name = format!("{}", name);
                                     let code_display = code.to_string();
-                                    
+
                                     view! {
                                         <label class="flex items-start space-x-3 p-3 rounded-lg border hover:bg-gray-50 cursor-pointer transition-colors">
                                             <input
