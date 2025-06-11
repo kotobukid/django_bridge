@@ -475,3 +475,281 @@ fn test_complex_card_end_to_end_detection() {
         detected_features.len()
     );
 }
+
+/// 実際のRawCardレコードを模擬したワークフローテスト
+/// RawCardDbインスタンスから機能検出までの流れを検証
+#[tokio::test]
+async fn test_end_to_end_with_mock_raw_card() {
+    use models::r#gen::django_models::RawCardDb;
+    use chrono::Utc;
+    use analyzer::card_analyzer::SimpleRawCardAnalyzer;
+    use feature::feature::CardFeature;
+    use std::collections::HashSet;
+
+    // カードのHTMLデータ（実際のWEBサイトから取得したもの）
+    let full_text = r#"""
+    <!--<button class="close"><i class="fas fa-times"></i></button>-->
+<div class="cardDetailWrap">
+    <div class="cardttlwrap">
+        <p class="cardNum">WX24-D1-23</p>
+        <p class="cardName">コードハート　リメンバ//メモリア<br class="sp"><span>＜コードハートリメンバメモリア＞</span>
+        </p>
+        <div class="cardRarity">ST</div>
+    </div>
+    <div class="cardImg">
+        <img src="https://www.takaratomy.co.jp/products/wixoss/img/card/WX24/WX24-D1-23.jpg">
+        <p>Illust <span>れん</span></p>
+    </div>
+    <div class="cardData">
+        <dl>
+            <dt>カード種類</dt>
+            <dd>シグニ</dd>
+
+            <dt>カードタイプ</dt>
+            <dd>奏械：電機</dd>
+
+            <dt>色</dt>
+            <dd>白</dd>
+
+            <dt>レベル</dt>
+            <dd>3</dd>
+
+            <dt>グロウコスト</dt>
+            <dd>-</dd>
+
+            <dt>コスト</dt>
+            <dd>-</dd>
+
+            <dt>リミット</dt>
+            <dd>-</dd>
+
+            <dt>パワー</dt>
+            <dd>12000</dd>
+
+            <!-- チーム -->
+            <dt>限定条件</dt>
+            <dd>-</dd>
+            <!-- コイン -->
+            <dt>ガード</dt>
+            <dd>-</dd>
+
+            <dt>フォーマット</dt>
+            <dd><img alt="《キーアイコン》" height="23"
+                     src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_format_key.png"><img
+                    alt="《ディーヴァアイコン》" height="23"
+                    src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_format_diva.png"></dd>
+
+            <!-- 0205mao -->
+            <!-- 0205niimura -->
+            <dt>ストーリー</dt>
+            <dd>
+                -
+            </dd>
+        </dl>
+
+        <div class="cardSkill">
+            <img alt="【常】" height="23"
+                 src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_regular.png"><img
+                alt="《相手ターン》" height="23"
+                src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_opponent_turn.png">：対戦相手の、センタールリグとシグニの<img
+                alt="【起】" height="23"
+                src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_starting.png">能力の使用コストは<img
+                alt="《無》" height="23"
+                src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_null.png">増える。<br>
+            <img alt="【常】" height="23"
+                 src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_regular.png">：このシグニがダウン状態であるかぎり、このシグニのパワーは＋3000され、対戦相手は追加で<img
+                alt="《無》" height="23"
+                src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_null.png">を支払わないかぎり【ガード】ができない。<br>
+            <img alt="【起】" height="23"
+                 src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_starting.png"><img
+                alt="《ダウン》" height="23"
+                src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_down.png">：あなたのライフクロスの一番上を見る。
+        </div>
+        <div class="cardSkill">
+            <img alt="ライフバースト" height="24"
+                 src="https://www.takaratomy.co.jp/products/wixoss/img/card/icon/icon_txt_burst.png" width="26">：どちらか１つを選ぶ。①対戦相手のアップ状態のシグニ１体を対象とし、それを手札に戻す。②カードを１枚引く。
+        </div>
+
+        <div class="cardText mb20">
+            「あらあら、どこまでもついて来ますよ～。」
+        </div>
+
+        <div class="cardFaq">
+            <p class="faqTtl">FAQ</p>
+            <dl>
+                <dt>
+                    このシグニが2体場にある場合、常時能力で支払うコストは2体分増えますか？
+                </dt>
+                <dd>
+                    はい、それぞれ重複しますので増えます。2体ある場合は上の常時能力によって支払うコストは《無》《無》増えますし、それらがダウン状態であれば【ガード】するときに追加で《無》《無》を支払う必要があります。
+                </dd>
+                <dt>
+                    自分のライフクロスが0枚の場合、起動能力は使用できますか？
+                </dt>
+                <dd>
+                    はい、できます。このシグニはダウンしますが、効果は何も起こりません。
+                </dd>
+                <dt>
+                    このシグニがアタックした場合、正面のシグニとバトルする際のパワーはいくつですか？
+                </dt>
+                <dd>
+                    パワー 15000としてバトルします。常時能力によって+3000され、これは常にこのシグニがダウン状態かどうかをチェックしており、ダウン状態になると即座にプラスされます。
+                </dd>
+                <dt>
+                    このシグニがアタックした場合、《幻獣　フェネック》の「あなたのパワー15000以上のシグニ１体がアタックしたとき」という能力は発動しますか？
+                </dt>
+                <dd>
+                    いいえ、発動しません。「あなたのパワー15000以上のシグニ１体がアタックしたとき」というのは、パワー15000以上であるシグニをアタック宣言でアップからダウン状態にしたときにトリガーします。《コードハート　リメンバ//メモリア》はダウンしてから+3000され15000になるのであり、アップ状態のときには12000ですので《幻獣　フェネック》の能力はトリガーしません。
+                </dd>
+                <dt>
+                    対戦相手のターンの間、対戦相手のトラッシュにある《コードアンシエンツ　スチームパンク》の起動能力の使用コストは増えますか？
+                </dt>
+                <dd>
+                    はい、増えます。《コードハート　リメンバ//メモリア》は場以外であっても「シグニであるカード」の起動能力のコストを増やしますので、トラッシュにある《コードアンシエンツ　スチームパンク》の起動能力の使用コストは《無》増えます。
+                </dd>
+            </dl>
+        </div>
+    </div>
+</div>
+"""#;
+
+    // ステップ1: full_textからスクレイピングでスキルテキストとライフバーストテキストを抽出
+    use regex::Regex;
+
+    // IMGタグをalt属性の内容に置換する関数
+    fn replace_img_tags_with_alt(html: &str) -> String {
+        let re = Regex::new(r#"<img[^>]*alt="([^"]*)"[^>]*>"#).unwrap();
+        let replaced = re.replace_all(html, |caps: &regex::Captures| {
+            let alt_text = &caps[1];
+            alt_text.to_string()
+        });
+        replaced.into_owned()
+    }
+
+    // HTMLタグを除去してプレーンテキストを取得する関数
+    fn remove_html_tags(html: &str) -> String {
+        let re = Regex::new(r"<[^>]*>").unwrap();
+        let without_tags = re.replace_all(html, "");
+
+        // 改行とスペースを正規化
+        let normalized = without_tags
+            .lines()
+            .map(|line| line.trim())
+            .filter(|line| !line.is_empty())
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        normalized
+    }
+
+    // スキルテキストを抽出
+    let mut skill_text = String::new();
+    if let Some(card_skill_start) = full_text.find("<div class=\"cardSkill\">") {
+        if let Some(card_skill_end) = full_text[card_skill_start..].find("</div>") {
+            let card_skill_html = &full_text[card_skill_start..card_skill_start + card_skill_end + 6];
+            let processed_text = replace_img_tags_with_alt(card_skill_html);
+            skill_text = remove_html_tags(&processed_text).trim().to_string();
+        }
+    }
+
+    // ライフバーストテキストを抽出
+    let mut life_burst_text = String::new();
+    if let Some(life_burst_start) = full_text.find("icon_txt_burst.png") {
+        if let Some(div_start) = full_text[..life_burst_start].rfind("<div class=\"cardSkill\">") {
+            if let Some(div_end) = full_text[div_start..].find("</div>") {
+                let life_burst_html = &full_text[div_start..div_start + div_end + 6];
+                let processed_text = replace_img_tags_with_alt(life_burst_html);
+                let cleaned_text = remove_html_tags(&processed_text).trim().to_string();
+
+                // ライフバーストの後のテキストを抽出
+                if cleaned_text.contains('：') {
+                    let parts: Vec<&str> = cleaned_text.split('：').collect();
+                    if parts.len() > 1 {
+                        life_burst_text = parts[1].trim().to_string();
+                    }
+                } else if cleaned_text.contains("ライフバースト") {
+                    life_burst_text = cleaned_text;
+                }
+            }
+        }
+    }
+
+    // ステップ2: RawCardDbインスタンスの作成（実際のデータベースレコードを模擬）
+    let raw_card_db = RawCardDb {
+        id: 999999,
+        card_number: "WX24-D1-23".to_string(),
+        name: "コードハート　リメンバ//メモリア".to_string(),
+        raw_html: full_text.to_string(),
+        skill_text: skill_text.to_string(),
+        life_burst_text: life_burst_text.to_string(),
+        source_url: "https://www.takaratomy.co.jp/products/wixoss/card/".to_string(),
+        scraped_at: Utc::now(),
+        last_analyzed_at: None,
+        is_analyzed: false,
+        analysis_error: String::new(),
+    };
+
+    // ステップ3: SimpleRawCardAnalyzerを使用してカード解析
+    let card_analyzer = SimpleRawCardAnalyzer::new();
+    let create_card_result = card_analyzer
+        .analyze_with_product_id(&raw_card_db, Some(1))
+        .await;
+
+    // ステップ4: 解析結果の検証
+    match create_card_result {
+        Ok(create_card) => {
+            // フィーチャービットから検出された機能を復元
+            let all_features = CardFeature::create_vec();
+            let mut detected_features = HashSet::new();
+
+            for feature in all_features {
+                let (bit1, bit2) = feature.to_bit_shifts();
+                if (bit1 != 0 && (create_card.feature_bits1 & (1 << bit1)) != 0) ||
+                   (bit2 != 0 && (create_card.feature_bits2 & (1 << bit2)) != 0) {
+                    detected_features.insert(feature);
+                }
+            }
+
+            // 期待される機能の検証
+            assert!(!detected_features.is_empty(), "何らかのフィーチャーが検出されるべきです");
+            assert_eq!(create_card.has_burst, 1, "ライフバーストが検出されるべきです");
+            assert!(create_card.power.is_some(), "パワーが検出されるべきです");
+
+            // PowerUp機能の検証
+            assert!(
+                detected_features.contains(&CardFeature::PowerUp),
+                "パワー+3000の効果からPowerUp機能が検出されるべきです"
+            );
+
+            // UnGuardable機能の検証
+            assert!(
+                detected_features.contains(&CardFeature::UnGuardable),
+                "「ガードができない」効果からUnGuardable機能が検出されるべきです"
+            );
+
+            // ライフバースト関連機能の検証
+            assert!(
+                detected_features.contains(&CardFeature::Bounce) || 
+                detected_features.contains(&CardFeature::Draw),
+                "ライフバーストテキストからBounce（手札に戻す）またはDraw（カードを引く）機能が検出されるべきです"
+            );
+
+            // テキスト処理の確認（記号保持）
+            assert!(
+                raw_card_db.skill_text.contains("【常】"),
+                "【常】記号がスキルテキストに保持されているべきです"
+            );
+            assert!(
+                raw_card_db.skill_text.contains("【起】"),
+                "【起】記号がスキルテキストに保持されているべきです"
+            );
+            assert!(
+                raw_card_db.skill_text.contains("【ガード】"),
+                "【ガード】記号がスキルテキストに保持されているべきです"
+            );
+        },
+        Err(e) => {
+            panic!("カード解析に失敗しました: {}", e);
+        }
+    }
+}
