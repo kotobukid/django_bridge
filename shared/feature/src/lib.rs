@@ -73,7 +73,7 @@ macro_rules! detect_pattern {
 }
 
 pub const PATTERNS_AMOUNT_R: usize = 68;
-pub const PATTERNS_AMOUNT_D: usize = 143;
+pub const PATTERNS_AMOUNT_D: usize = 144;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -586,6 +586,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::AdditionalAttack
         ],
         detect_pattern![r"対戦相手は【ガード】ができない", CardFeature::UnGuardable],
+        detect_pattern![r"を支払わないかぎり【ガード】ができない", CardFeature::UnGuardable],
         detect_pattern![r"スペル\d+枚を.+手札に加え", CardFeature::SalvageSpell],
         detect_pattern![
             r"(シグニ|シグニを|シグニをそれぞれ)\d+枚(を|まで).+手札に加え",
