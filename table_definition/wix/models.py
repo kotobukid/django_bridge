@@ -189,3 +189,25 @@ class RawCard(models.Model):
     
     def __str__(self):
         return f"{self.card_number} - {self.name}"
+
+
+class RulePattern(models.Model):
+    """rule_editorで作成されたパターンを保存するモデル"""
+    
+    keyword = models.CharField(verbose_name="キーワード", max_length=256)
+    pattern = models.CharField(verbose_name="正規表現パターン", max_length=512)
+    features = models.JSONField(verbose_name="検出フィーチャー", default=list)
+    positive_examples = models.JSONField(verbose_name="マッチすべき例", default=list)
+    negative_examples = models.JSONField(verbose_name="マッチすべきでない例", default=list)
+    created_at = models.DateTimeField(verbose_name="作成日時", auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name="更新日時", auto_now=True)
+    is_active = models.BooleanField(verbose_name="有効", default=True)
+    
+    class Meta:
+        verbose_name = "ルールパターン"
+        verbose_name_plural = "ルールパターン"
+        db_table = 'wix_rule_pattern'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.keyword} - {self.pattern}"

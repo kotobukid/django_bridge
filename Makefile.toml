@@ -48,6 +48,39 @@ command = "npm"
 args = ["run", "dev"]
 env = { "WEB_PORT" = "${BACKEND_PORT}" }
 
+[tasks.rule_editor]
+description = "Run rule_editor in CLI mode"
+command = "cargo"
+args = ["run", "-p", "rule_editor"]
+
+[tasks.rule_editor_gui]
+description = "Run rule_editor Tauri application in development mode (requires system deps)"
+cwd = "./rule_editor"
+command = "cargo"
+args = ["tauri", "dev", "--features", "gui"]
+
+[tasks.rule_editor_build]
+description = "Build rule_editor for CLI mode"
+command = "cargo"
+args = ["build", "-p", "rule_editor", "--release"]
+
+[tasks.rule_editor_gui_build]
+description = "Build rule_editor Tauri application for production (requires system deps)"
+cwd = "./rule_editor"
+command = "cargo"
+args = ["tauri", "build", "--features", "gui"]
+
+[tasks.rule_editor_deps]
+description = "Install rule_editor frontend dependencies"
+cwd = "./rule_editor/ui"
+command = "npm"
+args = ["install"]
+
+[tasks.export_patterns]
+description = "Export rule patterns to Rust code"
+command = "cargo"
+args = ["run", "-p", "rule_editor", "--", "export"]
+
 [tasks.trunk_serve]
 description = "Leptosアプリ開発サーバーを起動"
 cwd = "./wasm_front"
