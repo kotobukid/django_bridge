@@ -1,0 +1,8 @@
+<!doctype html><html lang=ja><meta charset=UTF-8><meta content="width=device-width,initial-scale=1.0" name=viewport><title>WIXOSS Card Database</title><link href=/input-b8fe24395bb2be4.css integrity=sha384-Ksr8UMH0sSNVUrfFwOKfuNKDCVdiXBi7oQ7v+uxKoaVuSHONPulOQAWHUMML4A1t rel=stylesheet><link href=/wxdb_favicon-bbd6cc99218b0afb.ico integrity=sha384-y0xONiAqc7zj0HBFab34frSACmfbTC+lodYccwk7bEgrraTJ9SnXs91EpC7EorFP rel=icon><link crossorigin href=/wasm_front-25266b4c96396310.js integrity=sha384-i1dSl93CrUW0+DpzLz1tyP/s7f3nUxWm9q5wxjB4zEYfmnMHhmmvIxcLoWQeUcA0 rel=modulepreload><link as=fetch crossorigin href=/wasm_front-25266b4c96396310_bg.wasm integrity=sha384-/sJB9X1/1DglOIXufvKEEkoxsFLFOgZTdEEisRqNCJwvO5wghkZ9RsS06Slj41e+ rel=preload type=application/wasm></head><body><div id=app></div><script type=module>import init, * as bindings from '/wasm_front-25266b4c96396310.js';
+const wasm = await init({ module_or_path: '/wasm_front-25266b4c96396310_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));</script></body></html>
