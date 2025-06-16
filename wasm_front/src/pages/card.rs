@@ -1,8 +1,8 @@
 use crate::components::{
-    CardList, CardTypeSelector, ColorSelector, FeatureOverlay, OverlayButton, Pagination,
+    CardList, CardTypeSelector, ColorSelector, FeatureOverlay, LevelSelector, OverlayButton, Pagination,
     ProductOverlay,
 };
-use crate::types::{CardTypeFilter, ColorFilter, ProductFilter};
+use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, ProductFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
 use std::collections::HashMap;
@@ -11,6 +11,7 @@ use std::collections::HashMap;
 pub fn CardPage() -> impl IntoView {
     let (color_filter, set_color_filter) = signal(ColorFilter::new());
     let (card_type_filter, set_card_type_filter) = signal(CardTypeFilter::new());
+    let (level_filter, set_level_filter) = signal(LevelFilter::new());
     let product_filter = RwSignal::new(ProductFilter::new());
     let selected_features = RwSignal::new(HashMap::<String, bool>::new());
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new());
@@ -29,11 +30,12 @@ pub fn CardPage() -> impl IntoView {
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
 
-    // Apply filters when color, features, card types, or products change
+    // Apply filters when color, features, card types, products, or levels change
     Effect::new(move || {
         if let Some(Ok(cards)) = all_cards.get() {
             let color = color_filter.get();
             let card_type = card_type_filter.get();
+            let level = level_filter.get();
             let product = product_filter.read();
             let feature_names = selected_feature_names.get();
 
@@ -50,12 +52,19 @@ pub fn CardPage() -> impl IntoView {
                 Vec::new()
             };
 
-            let filtered = datapack::fetch_by_colors_features_card_types_and_products_native(
+            let levels = if level.has_any() {
+                level.selected_levels.clone()
+            } else {
+                Vec::new()
+            };
+
+            let filtered = datapack::fetch_by_colors_features_card_types_products_and_levels_native(
                 &cards,
                 color_bits,
                 &feature_names,
                 &card_types,
                 &products,
+                &levels,
             );
 
             set_filtered_cards.set(filtered);
@@ -105,6 +114,10 @@ pub fn CardPage() -> impl IntoView {
                         <ColorSelector
                             color_filter=color_filter
                             set_color_filter=set_color_filter
+                        />
+                        <LevelSelector
+                            level_filter=level_filter
+                            set_level_filter=set_level_filter
                         />
                         <CardTypeSelector
                             card_type_filter=card_type_filter

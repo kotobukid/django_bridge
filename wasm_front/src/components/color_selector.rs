@@ -89,7 +89,7 @@ pub fn ColorSelector(
                         class="color-selector-button bg-gray-300 text-gray-700"
                         on:click=clear_all
                     >
-                        "Clear All"
+                        "Clear"
                     </button>
                 </Show>
             </div>

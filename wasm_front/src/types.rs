@@ -156,6 +156,39 @@ impl CardTypeFilter {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct LevelFilter {
+    pub selected_levels: Vec<String>,
+}
+
+impl LevelFilter {
+    pub fn new() -> Self {
+        Self {
+            selected_levels: Vec::new(),
+        }
+    }
+    
+    pub fn has_any(&self) -> bool {
+        !self.selected_levels.is_empty()
+    }
+    
+    pub fn toggle_level(&mut self, level: String) {
+        if let Some(pos) = self.selected_levels.iter().position(|l| l == &level) {
+            self.selected_levels.remove(pos);
+        } else {
+            self.selected_levels.push(level);
+        }
+    }
+    
+    pub fn is_selected(&self, level: &str) -> bool {
+        self.selected_levels.iter().any(|l| l == level)
+    }
+    
+    pub fn clear_all(&mut self) {
+        self.selected_levels.clear();
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub struct Feature {
     pub id: i32,
