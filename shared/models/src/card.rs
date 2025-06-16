@@ -12,15 +12,6 @@ impl Display for Card {
     }
 }
 
-macro_rules! to_value {
-    ($x:expr) => {
-        $x.clone().to_string()
-    };
-    ($x:expr, $y:expr) => {
-        $y
-    };
-}
-
 impl Card {
     pub fn to_custom_string(&self) -> String {
         self.name.to_string()
