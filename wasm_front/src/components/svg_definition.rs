@@ -42,7 +42,7 @@ pub fn SvgDefinition() -> impl IntoView {
                 <stop offset="0.511" style="stop-color: rgb(49, 49, 49);"></stop>
                 <stop offset="1" style="stop-color: rgb(255, 255, 255);"></stop>
               </linearGradient>
-              <linearGradient gradientUnits="userSpaceOnUse" x1="7.163" y1="46.135" x2="7.163" y2="58.951" id="gradient-8" gradientTransform="matrix(-0.127014, -0.991902, 0.532222, -0.068152, -19.847138, 61.993986)">
+              <linearGradient gradientUnits="userSpaceOnUse" x1="7.163" y1="46.135" x2="7.163" y2="58.951" id="gradient-8" gradientTransform="matrix(-0.127014, -0.991902, 0.532222, -0.068152, -19.847133, 61.993992)">
                 <stop offset="0" style="stop-color: rgb(255, 255, 255);"></stop>
                 <stop offset="1" style="stop-color: rgb(49, 15, 15);"></stop>
               </linearGradient>
@@ -173,6 +173,12 @@ pub fn IconGreen() -> impl IntoView {
 pub fn IconColorless() -> impl IntoView {
     view! {
       <svg viewBox="0 0 32 32" width="32" height="32">
+
+        <g>
+          <ellipse style="stroke-width: 1; stroke: rgb(255, 255, 255);" cx="16" cy="16" rx="11.995" ry="11.995"></ellipse>
+          <rect x="0.755" y="46.135" width="12.816" height="12.816" style="stroke: url(#gradient-8); fill: url(#gradient-9); stroke-width: 0.8; transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 8.836999, -36.543025)"></rect>
+        </g>
+
         <g class="icon_colorless" transform="matrix(1, 0, 0, 1, -75.766999, -8.232001)">
           <ellipse style="stroke-width: 1; stroke: rgb(255, 255, 255);" cx="91.767" cy="24.232" rx="11.995" ry="11.995"></ellipse>
           <rect x="0.755" y="46.135" width="12.816" height="12.816" style="stroke: url(#gradient-8); fill: url(#gradient-9); stroke-width: 0.8px; transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 84.603999, -28.311009)"></rect>
