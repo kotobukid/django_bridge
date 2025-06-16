@@ -1,6 +1,6 @@
 use crate::components::{
     CardList, CardTypeSelector, ColorSelector, FeatureOverlay, LevelSelector, OverlayButton, Pagination,
-    ProductOverlay,
+    ProductOverlay, TextSearch,
 };
 use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, ProductFilter};
 use datapack::CardExport;
@@ -12,6 +12,7 @@ pub fn CardPage() -> impl IntoView {
     let (color_filter, set_color_filter) = signal(ColorFilter::new());
     let (card_type_filter, set_card_type_filter) = signal(CardTypeFilter::new());
     let (level_filter, set_level_filter) = signal(LevelFilter::new());
+    let (search_text, set_search_text) = signal(String::new());
     let product_filter = RwSignal::new(ProductFilter::new());
     let selected_features = RwSignal::new(HashMap::<String, bool>::new());
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new());
@@ -30,7 +31,7 @@ pub fn CardPage() -> impl IntoView {
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
 
-    // Apply filters when color, features, card types, products, or levels change
+    // Apply filters when color, features, card types, products, levels, or text search change
     Effect::new(move || {
         if let Some(Ok(cards)) = all_cards.get() {
             let color = color_filter.get();
@@ -38,6 +39,7 @@ pub fn CardPage() -> impl IntoView {
             let level = level_filter.get();
             let product = product_filter.read();
             let feature_names = selected_feature_names.get();
+            let text_search = search_text.get();
 
             // 複合フィルタリングを使用
             let color_bits = if color.has_any() { color.to_bits() } else { 0 };
@@ -58,13 +60,14 @@ pub fn CardPage() -> impl IntoView {
                 Vec::new()
             };
 
-            let filtered = datapack::fetch_by_colors_features_card_types_products_and_levels_native(
+            let filtered = datapack::fetch_by_colors_features_card_types_products_levels_and_text_native(
                 &cards,
                 color_bits,
                 &feature_names,
                 &card_types,
                 &products,
                 &levels,
+                &text_search,
             );
 
             set_filtered_cards.set(filtered);
@@ -109,8 +112,12 @@ pub fn CardPage() -> impl IntoView {
                         />
                     </div>
 
-                    // 常時表示フィルタ
+                    // 常時表示フィルタ  
                     <div class="space-y-3">
+                        <TextSearch
+                            search_text=search_text
+                            set_search_text=set_search_text
+                        />
                         <ColorSelector
                             color_filter=color_filter
                             set_color_filter=set_color_filter

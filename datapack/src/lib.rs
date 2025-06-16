@@ -1,5 +1,6 @@
 pub mod filter;
 pub mod gen;
+pub mod text_search;
 
 use color;
 use feature::feature::export_features;
@@ -662,6 +663,194 @@ pub fn fetch_by_colors_features_card_types_products_and_levels_native(
     }
 
     filtered_cards
+}
+
+
+// Japanese text normalization utilities
+fn normalize_japanese_text(text: &str) -> String {
+    // Convert Hiragana to Katakana for consistent searching
+    // This is a simplified version - in production you might want to use a proper Japanese text processing library
+    let mut result = String::new();
+    
+    for c in text.chars() {
+        if c >= 'ひ' && c <= 'ゔ' {
+            // Convert Hiragana to Katakana (approximate conversion)
+            let katakana_code = c as u32 + 0x60;
+            if let Some(katakana_char) = char::from_u32(katakana_code) {
+                result.push(katakana_char);
+            } else {
+                result.push(c);
+            }
+        } else {
+            result.push(c);
+        }
+    }
+    
+    result.to_lowercase()
+}
+
+fn text_matches(text: &str, search_term: &str) -> bool {
+    if search_term.is_empty() {
+        return true;
+    }
+    
+    let normalized_text = normalize_japanese_text(text);
+    let normalized_search = normalize_japanese_text(search_term);
+    
+    // Support both exact and partial matching
+    normalized_text.contains(&normalized_search)
+}
+
+// Text search function for card name, code, and pronunciation
+pub fn search_cards_by_text_native(
+    cards: &[CardExport],
+    search_term: &str,
+) -> Vec<CardExport> {
+    if search_term.trim().is_empty() {
+        return cards.to_vec();
+    }
+    
+    cards
+        .iter()
+        .filter(|card| {
+            text_matches(&card.name, search_term) ||
+            text_matches(&card.code, search_term) ||
+            text_matches(&card.pronunciation, search_term)
+        })
+        .cloned()
+        .collect()
+}
+
+// 色、feature、カード種別、商品、レベル、テキスト検索の複合フィルタリング関数（全てAND条件）
+pub fn fetch_by_colors_features_card_types_products_levels_and_text_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+    products: &[u8],
+    levels: &[String],
+    search_text: &str,
+) -> Vec<CardExport> {
+
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    // カード種別でフィルタリング
+    if !card_types.is_empty() {
+        let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| card_type_u8s.contains(&card.card_type))
+            .collect();
+    }
+
+    // 商品でフィルタリング
+    if !products.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| products.contains(&card.product))
+            .collect();
+    }
+
+    // レベルでフィルタリング（OR条件）
+    if !levels.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| levels.contains(&card.level))
+            .collect();
+    }
+
+    // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
+    if !search_text.trim().is_empty() {
+        filtered_cards = text_search::search_cards_by_text_optimized(&filtered_cards, search_text);
+    }
+
+    filtered_cards
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_normalize_japanese_text() {
+        // Test basic functionality
+        assert_eq!(normalize_japanese_text("hello"), "hello");
+        
+        // Test case conversion
+        assert_eq!(normalize_japanese_text("Hello World"), "hello world");
+        
+        // Test that the function doesn't crash with Japanese text
+        let japanese_text = "こんにちは";
+        let result = normalize_japanese_text(japanese_text);
+        assert!(!result.is_empty());
+    }
+
+    #[test]
+    fn test_text_matches() {
+        // Basic matching
+        assert!(text_matches("Hello World", "hello"));
+        assert!(text_matches("Test Card", "card"));
+        assert!(text_matches("WX24-001", "wx24"));
+        
+        // Empty search should match anything
+        assert!(text_matches("anything", ""));
+        
+        // Non-matching
+        assert!(!text_matches("hello", "world"));
+    }
+
+    #[test]
+    fn test_search_cards_by_text_empty_search() {
+        let cards = vec![
+            CardExport {
+                id: 1,
+                name: "Test Card".to_string(),
+                code: "WX24-001".to_string(),
+                pronunciation: "テストカード".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                power: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            }
+        ];
+        
+        // Empty search should return all cards
+        let result = search_cards_by_text_native(&cards, "");
+        assert_eq!(result.len(), 1);
+        
+        // Matching search
+        let result = search_cards_by_text_native(&cards, "test");
+        assert_eq!(result.len(), 1);
+        
+        // Non-matching search
+        let result = search_cards_by_text_native(&cards, "nonexistent");
+        assert_eq!(result.len(), 0);
+    }
 }
 
 impl Clone for CardExport {

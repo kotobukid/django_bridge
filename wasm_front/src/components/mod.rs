@@ -10,6 +10,7 @@ mod pagination;
 mod product_overlay;
 mod product_selector;
 mod svg_definition;
+mod text_search;
 
 // pub use card_item::CardItem;
 pub use card_list::CardList;
@@ -23,3 +24,4 @@ pub use pagination::Pagination;
 pub use product_overlay::ProductOverlay;
 pub use product_selector::ProductSelector;
 pub use svg_definition::{ColorIconWithNum, ColorIconsWithNum, IconRed, SvgDefinition};
+pub use text_search::TextSearch;
