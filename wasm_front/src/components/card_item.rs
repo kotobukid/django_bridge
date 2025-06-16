@@ -159,9 +159,13 @@ pub fn CardItem(
                         let has_burst = card.has_burst() > 0;
                         if has_burst && !burst_text.is_empty() {
                             view! {
-                                <div class="mt-2 text-sm" style="background: #374151; color: white; padding: 8px; border-radius: 4px;">
-                                    <span class="font-semibold">"【ライフバースト】"</span>
-                                    {burst_text}
+                                <div class="mt-2 text-sm" style="background: #374151; color: white; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 6px;">
+                                    <svg viewBox="0 0 32 32" width="20" height="20" style="flex-shrink: 0;">
+                                        <use href="#lb_white_wrapped" />
+                                    </svg>
+                                    <span style="line-height: 1.2;">
+                                        {burst_text}
+                                    </span>
                                 </div>
                             }.into_any()
                         } else {
