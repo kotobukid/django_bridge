@@ -1,4 +1,3 @@
 fn main() {
-    #[cfg(feature = "gui")]
-    tauri_build::build()
+    // Web版のみなのでビルドスクリプトは不要
 }

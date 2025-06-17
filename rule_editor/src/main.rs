@@ -3,13 +3,9 @@
     windows_subsystem = "windows"
 )]
 
-#[cfg(feature = "gui")]
-mod commands;
 mod models;
 mod web_server;
 
-#[cfg(feature = "gui")]
-use commands::{database, openai, pattern};
 use dotenvy::from_filename;
 use sqlx::postgres::PgPoolOptions;
 use sqlx::{Pool, Postgres};
@@ -17,8 +13,6 @@ use std::env;
 use std::sync::Arc;
 use std::time::Duration;
 use std::io::Write;
-#[cfg(feature = "gui")]
-use tauri::State;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -45,87 +39,10 @@ async fn main() {
         }
     }
 
-    // GUIモードの可用性をチェック
-    #[cfg(feature = "gui")]
-    {
-        run_gui_mode().await;
-    }
-    
-    #[cfg(not(feature = "gui"))]
-    {
-        println!("rule_editor: GUI mode is not available");
-        println!("Rebuild with --features gui to enable GUI mode");
-        println!("Available commands:");
-        println!("  cargo run -p rule_editor export  # Export patterns to Rust code");
-        println!("  cargo run -p rule_editor web     # Start web server at http://localhost:3030");
-    }
+    // デフォルトでWebモードを起動
+    run_web_mode().await;
 }
 
-#[cfg(feature = "gui")]
-async fn run_gui_mode() {
-    // .env ファイルの読み込み
-    let workspace_env = format!(
-        "{}/.env",
-        env::var("CARGO_WORKSPACE_DIR").unwrap_or_default()
-    );
-    let env_paths = [
-        ".env",
-        "../.env", 
-        "../../.env",
-        workspace_env.as_str(),
-    ];
-
-    for path in &env_paths {
-        if std::path::Path::new(path).exists() {
-            from_filename(path).ok();
-            break;
-        }
-    }
-
-    // データベース接続
-    let db_url = {
-        let host = env::var("DB_HOST").unwrap_or_else(|_| "192.168.56.10".to_string());
-        let port = env::var("DB_PORT").unwrap_or_else(|_| "5432".to_string());
-        let user = env::var("DB_USER").unwrap_or_else(|_| "wix".to_string());
-        let password = env::var("DB_PASSWORD").unwrap_or_else(|_| "wix".to_string());
-        let db_name = env::var("DB_NAME").unwrap_or_else(|_| "wixdb".to_string());
-        format!(
-            "postgres://{}:{}@{}:{}/{}",
-            user, password, host, port, db_name
-        )
-    };
-
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .acquire_timeout(Duration::from_secs(5))
-        .connect(&format!("{db_url}?connect_timeout=5"))
-        .await
-        .expect("Failed to connect to database");
-
-    let pool = Arc::new(pool);
-
-    // OpenAI クライアントの初期化
-    let openai_config = async_openai::config::OpenAIConfig::new()
-        .with_api_key(env::var("OPENAI_API_KEY").unwrap_or_default());
-    let openai_client = async_openai::Client::with_config(openai_config);
-
-    let app_state = AppState {
-        pool,
-        openai_client,
-    };
-
-    tauri::Builder::default()
-        .manage(app_state)
-        .invoke_handler(tauri::generate_handler![
-            database::search_and_split,
-            openai::generate_pattern,
-            pattern::save_pattern,
-            pattern::get_saved_patterns,
-            pattern::export_patterns,
-        ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
-}
 
 async fn run_export_mode() {
     // .env ファイルの読み込み

@@ -77,7 +77,7 @@ export const useApi = () => {
     return await response.json()
   }
   
-  const savePattern = async (request: SavePatternRequest): Promise<number> => {
+  const savePattern = async (request: SavePatternRequest): Promise<{success: boolean, id?: number, error?: string}> => {
     const response = await fetch(getApiUrl('/api/patterns'), {
       method: 'POST',
       headers: {
@@ -88,11 +88,7 @@ export const useApi = () => {
     if (!response.ok) {
       throw new Error(`Save pattern failed: ${response.statusText}`)
     }
-    const result = await response.json()
-    if (!result.success) {
-      throw new Error(result.error || 'Save failed')
-    }
-    return result.id
+    return await response.json()
   }
   
   const getSavedPatterns = async (): Promise<RulePattern[]> => {

@@ -31,9 +31,12 @@
     <PatternPreview 
       v-if="suggestion"
       :suggestion="suggestion"
+      :search_keyword="currentSearchKeyword"
+      :selected_feature="selectedFeature"
       :positive_examples="positiveExamples"
       :negative_examples="negativeExamples"
       @save="savePattern"
+      @cancel="suggestion = null"
     />
     
     <!-- 保存済みパターン一覧 -->
@@ -61,6 +64,7 @@ const savedPatternsRef = ref()
 const positiveExamples = ref<string[]>([])
 const negativeExamples = ref<string[]>([])
 const selectedFeature = ref<string>('')
+const currentSearchKeyword = ref<string>('')
 
 const hasClassifications = computed(() => {
   return classifications.value.some(c => c.type !== 'ignore')
@@ -68,6 +72,7 @@ const hasClassifications = computed(() => {
 
 const handleSearch = async (keyword: string) => {
   searching.value = true
+  currentSearchKeyword.value = keyword
   try {
     sentences.value = await searchAndSplit(keyword)
     classifications.value = sentences.value.map(s => ({
@@ -99,9 +104,8 @@ const generatePattern = async () => {
   
   generating.value = true
   try {
-    const keyword = sentences.value[0]?.text.match(/[^。]+/)?.[0] || ''
     suggestion.value = await generatePatternApi({
-      keyword,
+      keyword: currentSearchKeyword.value,
       positive_examples: positiveExamples.value,
       negative_examples: negativeExamples.value,
       features: selectedFeature.value ? [selectedFeature.value] : []
@@ -116,12 +120,26 @@ const generatePattern = async () => {
 
 const savePattern = async (patternData: any) => {
   try {
-    await savePatternApi(patternData)
-    alert('パターンを保存しました')
-    suggestion.value = null
-    sentences.value = []
-    classifications.value = []
-    await savedPatternsRef.value?.loadPatterns()
+    console.log('=== パターン保存リクエスト ===')
+    console.log('Keyword:', patternData.keyword)
+    console.log('Pattern:', patternData.pattern)
+    console.log('Features:', patternData.features)
+    console.log('Positive examples:', patternData.positive_examples.length, 'items')
+    console.log('Negative examples:', patternData.negative_examples.length, 'items')
+    
+    const result = await savePatternApi(patternData)
+    
+    if (result.success) {
+      alert(`パターンを保存しました！\n\nキーワード: ${patternData.keyword}\nパターン: ${patternData.pattern}`)
+      suggestion.value = null
+      sentences.value = []
+      classifications.value = []
+      currentSearchKeyword.value = ''
+      selectedFeature.value = ''
+      await savedPatternsRef.value?.loadPatterns()
+    } else {
+      alert('保存に失敗しました: ' + result.error)
+    }
   } catch (error) {
     console.error('Save error:', error)
     alert('保存エラー: ' + error)
