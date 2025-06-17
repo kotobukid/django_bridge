@@ -7,6 +7,8 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use tower_http::cors::CorsLayer;
+use std::collections::HashMap;
+use feature::feature::{export_features, ExportedCardFeature};
 
 use crate::{models::rule_pattern::RulePattern, AppState};
 
@@ -38,6 +40,11 @@ pub struct PatternSuggestion {
     pub features: Vec<String>,
 }
 
+#[derive(Debug, Serialize)]
+pub struct FeatureResponse {
+    pub features_by_tag: HashMap<String, Vec<ExportedCardFeature>>,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct SavePatternRequest {
     pub keyword: String,
@@ -55,6 +62,7 @@ pub fn create_router(app_state: AppState) -> Router {
         .route("/api/patterns", get(get_patterns))
         .route("/api/patterns", post(save_pattern))
         .route("/api/export", post(export_patterns))
+        .route("/api/features", get(get_features))
         .layer(
             CorsLayer::new()
                 .allow_origin("*".parse::<HeaderValue>().unwrap())
@@ -89,21 +97,15 @@ async fn search_rawcards(
         .unwrap_or_default();
     
     let mut results = Vec::new();
-    let mut id_counter = 0;
     
     for (card_number, card_name, skill_text) in rows {
-        let sentences: Vec<&str> = skill_text.split('。').collect();
-        
-        for sentence in sentences {
-            if sentence.contains(&query.keyword) && !sentence.trim().is_empty() {
-                id_counter += 1;
-                results.push(SentenceResult {
-                    id: format!("{}-{}", card_number, id_counter),
-                    text: format!("{}。", sentence.trim()),
-                    card_number: card_number.clone(),
-                    card_name: card_name.clone(),
-                });
-            }
+        if skill_text.contains(&query.keyword) {
+            results.push(SentenceResult {
+                id: card_number.clone(),
+                text: skill_text,
+                card_number: card_number.clone(),
+                card_name: card_name.clone(),
+            });
         }
     }
     
@@ -210,4 +212,9 @@ async fn export_patterns(State(app_state): State<AppState>) -> Json<serde_json::
             "error": e
         })),
     }
+}
+
+async fn get_features() -> Json<FeatureResponse> {
+    let features_by_tag = export_features();
+    Json(FeatureResponse { features_by_tag })
 }

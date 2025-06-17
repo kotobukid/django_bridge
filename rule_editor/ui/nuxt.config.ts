@@ -6,10 +6,26 @@ export default defineNuxtConfig({
   nitro: {
     output: {
       publicDir: '.output/public'
+    },
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:3030',
+        changeOrigin: true
+      }
     }
   },
   app: {
     baseURL: './',
     buildAssetsDir: 'assets'
+  },
+  vite: {
+    server: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3030',
+          changeOrigin: true
+        }
+      }
+    }
   }
 })

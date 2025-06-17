@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import type { PatternSuggestion } from '~/composables/useTauri'
+import type { PatternSuggestion } from '~/composables/useApi'
 
 interface Classification {
   id: string

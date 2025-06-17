@@ -3,7 +3,11 @@
     <h1 class="text-3xl font-bold mb-6">WXDB Rule Editor</h1>
     
     <!-- 検索セクション -->
-    <SearchInput @search="handleSearch" :loading="searching" />
+    <SearchInput 
+      @search="handleSearch" 
+      @update:selectedFeature="selectedFeature = $event"
+      :loading="searching" 
+    />
     
     <!-- 文リスト -->
     <SentenceList 
@@ -39,14 +43,14 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useTauri } from '~/composables/useTauri'
+import { useApi } from '~/composables/useApi'
 
 interface Classification {
   id: string
   type: 'positive' | 'negative' | 'ignore'
 }
 
-const { searchAndSplit, generatePattern: generatePatternApi, savePattern: savePatternApi } = useTauri()
+const { searchAndSplit, generatePattern: generatePatternApi, savePattern: savePatternApi } = useApi()
 
 const searching = ref(false)
 const generating = ref(false)
@@ -56,6 +60,7 @@ const suggestion = ref<any>(null)
 const savedPatternsRef = ref()
 const positiveExamples = ref<string[]>([])
 const negativeExamples = ref<string[]>([])
+const selectedFeature = ref<string>('')
 
 const hasClassifications = computed(() => {
   return classifications.value.some(c => c.type !== 'ignore')
@@ -99,7 +104,7 @@ const generatePattern = async () => {
       keyword,
       positive_examples: positiveExamples.value,
       negative_examples: negativeExamples.value,
-      features: [] // UIで選択できるようにする予定
+      features: selectedFeature.value ? [selectedFeature.value] : []
     })
   } catch (error) {
     console.error('Pattern generation error:', error)

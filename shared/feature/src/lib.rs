@@ -81,9 +81,9 @@ pub fn create_detect_patterns() -> (
 ) {
     let r_patterns: [ReplacePattern; PATTERNS_AMOUNT_R] = [
         replace_pattern![r"『", ""],
-        replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
+        replace_pattern![r"ライフバースト：", "LB：", CardFeature::LifeBurst],
         replace_pattern![r"』", ""],
-        replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
+        replace_pattern![r"ライフバースト：", "LB：", CardFeature::LifeBurst],
         replace_pattern![
             r"\(対戦相手のライフクロスが1枚以上ある場合、ライフクロス1枚をクラッシュし、0枚の場合、あなたはゲームに勝利する\)",
             "",
@@ -247,7 +247,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::Craft
         ],
         replace_pattern![
-            r"\(【出】能力の:の左側はコストである。コストを支払わず発動しないことを選んでもよい\)",
+            r"\(【出】能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい\)",
             "*CIP COST*"
         ],
         replace_pattern![

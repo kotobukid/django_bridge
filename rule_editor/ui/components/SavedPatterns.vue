@@ -75,10 +75,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useTauri } from '~/composables/useTauri'
-import type { RulePattern } from '~/composables/useTauri'
+import { useApi } from '~/composables/useApi'
+import type { RulePattern } from '~/composables/useApi'
 
-const { getSavedPatterns, exportPatterns: exportPatternsApi } = useTauri()
+const { getSavedPatterns, exportPatterns: exportPatternsApi } = useApi()
 
 const loading = ref(false)
 const patterns = ref<RulePattern[]>([])
