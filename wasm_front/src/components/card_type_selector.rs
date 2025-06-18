@@ -1,5 +1,34 @@
 use crate::types::CardTypeFilter;
 use leptos::prelude::*;
+use datapack::gen::card_types::{CARD_TYPES, PRIMARY_CARD_TYPES, EXTENDED_CARD_TYPES};
+
+// カードタイプチェックボックスを生成する関数
+fn create_card_type_checkbox(
+    code: &'static str,
+    name: &'static str,
+    card_type_filter: ReadSignal<CardTypeFilter>,
+    set_card_type_filter: WriteSignal<CardTypeFilter>,
+) -> impl IntoView {
+    view! {
+        <label class="flex items-center space-x-2 text-sm">
+            <input
+                type="checkbox"
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                prop:checked=move || {
+                    let filter = card_type_filter.get();
+                    filter.is_selected_by_code(code)
+                }
+                on:change=move |ev| {
+                    let checked = event_target_checked(&ev);
+                    set_card_type_filter.update(|filter| {
+                        filter.set_by_code(code, checked);
+                    });
+                }
+            />
+            <span>{name}</span>
+        </label>
+    }
+}
 
 #[component]
 pub fn CardTypeSelector(
@@ -66,210 +95,37 @@ pub fn CardTypeSelector(
                 </div>
             </div>
             
-            // デフォルト表示のカード種別
+            // デフォルト表示のカード種別（動的生成）
             <div class="grid grid-cols-3 gap-2">
-                <label class="flex items-center space-x-2 text-sm">
-                    <input
-                        type="checkbox"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        prop:checked=move || card_type_filter.get().lrig
-                        on:change=move |ev| {
-                            let checked = event_target_checked(&ev);
-                            set_card_type_filter.update(|filter| filter.lrig = checked);
+                {
+                    PRIMARY_CARD_TYPES.iter().map(|&code| {
+                        let card_type_info = CARD_TYPES.iter().find(|ct| ct.code == code);
+                        if let Some(info) = card_type_info {
+                            create_card_type_checkbox(info.code, info.name, card_type_filter, set_card_type_filter).into_any()
+                        } else {
+                            view! { <div /> }.into_any()
                         }
-                    />
-                    <span>"ルリグ"</span>
-                </label>
-
-                <label class="flex items-center space-x-2 text-sm">
-                    <input
-                        type="checkbox"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        prop:checked=move || card_type_filter.get().lrig_assist
-                        on:change=move |ev| {
-                            let checked = event_target_checked(&ev);
-                            set_card_type_filter.update(|filter| filter.lrig_assist = checked);
-                        }
-                    />
-                    <span>"アシスト"</span>
-                </label>
-
-                <label class="flex items-center space-x-2 text-sm">
-                    <input
-                        type="checkbox"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        prop:checked=move || card_type_filter.get().arts
-                        on:change=move |ev| {
-                            let checked = event_target_checked(&ev);
-                            set_card_type_filter.update(|filter| filter.arts = checked);
-                        }
-                    />
-                    <span>"アーツ"</span>
-                </label>
-
-                <label class="flex items-center space-x-2 text-sm">
-                    <input
-                        type="checkbox"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        prop:checked=move || card_type_filter.get().signi
-                        on:change=move |ev| {
-                            let checked = event_target_checked(&ev);
-                            set_card_type_filter.update(|filter| filter.signi = checked);
-                        }
-                    />
-                    <span>"シグニ"</span>
-                </label>
-
-                <label class="flex items-center space-x-2 text-sm">
-                    <input
-                        type="checkbox"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        prop:checked=move || card_type_filter.get().spell
-                        on:change=move |ev| {
-                            let checked = event_target_checked(&ev);
-                            set_card_type_filter.update(|filter| filter.spell = checked);
-                        }
-                    />
-                    <span>"スペル"</span>
-                </label>
-
-                <label class="flex items-center space-x-2 text-sm">
-                    <input
-                        type="checkbox"
-                        class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        prop:checked=move || card_type_filter.get().piece
-                        on:change=move |ev| {
-                            let checked = event_target_checked(&ev);
-                            set_card_type_filter.update(|filter| filter.piece = checked);
-                        }
-                    />
-                    <span>"ピース"</span>
-                </label>
+                    }).collect::<Vec<_>>()
+                }
             </div>
 
-            // 拡張カード種別（条件付き表示）
+            // 拡張カード種別（条件付き表示・動的生成）
             {move || {
                 if should_show_extended.get() {
                     view! {
                         <div class="mt-3 grid grid-cols-3 gap-2">
                             <hr class="col-span-3 border-gray-300 my-2" />
                             
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().key
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.key = checked);
+                            {
+                                EXTENDED_CARD_TYPES.iter().map(|&code| {
+                                    let card_type_info = CARD_TYPES.iter().find(|ct| ct.code == code);
+                                    if let Some(info) = card_type_info {
+                                        create_card_type_checkbox(info.code, info.name, card_type_filter, set_card_type_filter).into_any()
+                                    } else {
+                                        view! { <div /> }.into_any()
                                     }
-                                />
-                                <span>"キー"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().resona
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.resona = checked);
-                                    }
-                                />
-                                <span>"レゾナ"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().signi_craft
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.signi_craft = checked);
-                                    }
-                                />
-                                <span>"クラフトシグニ"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().spell_craft
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.spell_craft = checked);
-                                    }
-                                />
-                                <span>"クラフトスペル"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().arts_craft
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.arts_craft = checked);
-                                    }
-                                />
-                                <span>"クラフトアーツ"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().resona_craft
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.resona_craft = checked);
-                                    }
-                                />
-                                <span>"クラフトレゾナ"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().piece_relay
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.piece_relay = checked);
-                                    }
-                                />
-                                <span>"リレーピース"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().piece_craft
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.piece_craft = checked);
-                                    }
-                                />
-                                <span>"クラフトピース"</span>
-                            </label>
-
-                            <label class="flex items-center space-x-2 text-sm">
-                                <input
-                                    type="checkbox"
-                                    class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                                    prop:checked=move || card_type_filter.get().token
-                                    on:change=move |ev| {
-                                        let checked = event_target_checked(&ev);
-                                        set_card_type_filter.update(|filter| filter.token = checked);
-                                    }
-                                />
-                                <span>"トークン"</span>
-                            </label>
+                                }).collect::<Vec<_>>()
+                            }
                         </div>
                     }.into_any()
                 } else {

@@ -45,23 +45,24 @@ def update_color():
 
 
 def update_card_type():
+    # タプル形式: (code, name, sort_asc, is_primary)
     type_source = (
-        ('lrig', 'ルリグ', 0),
-        ('arts', 'アーツ', 1),
-        ('lrig_assist', 'アシストルリグ', 2),
-        ('piece', 'ピース', 3),
-        ('signi', 'シグニ', 4),
-        ('spell', 'スペル', 5),
-        ('resona', 'レゾナ', 6),
-        ('key', 'キー', 7),
-        ('arts_craft', 'クラフトアーツ', 8),
-        ('signi_craft', 'クラフトシグニ', 9),
-        ('spell_craft', 'クラフトスペル', 10),
-        ('piece_relay', 'リレーピース', 11),
-        ('piece_craft', 'クラフトピース', 12),
-        ('resona_craft', 'クラフトレゾナ', 13),
-        ('token', 'トークン', 100),
-        ('coin', 'コイン', 101),
+        ('lrig', 'ルリグ', 0, True),
+        ('arts', 'アーツ', 1, True),
+        ('lrig_assist', 'アシストルリグ', 2, True),
+        ('piece', 'ピース', 3, True),
+        ('signi', 'シグニ', 4, True),
+        ('spell', 'スペル', 5, True),
+        ('resona', 'レゾナ', 6, False),
+        ('key', 'キー', 7, False),
+        ('arts_craft', 'クラフトアーツ', 8, False),
+        ('signi_craft', 'クラフトシグニ', 9, False),
+        ('spell_craft', 'クラフトスペル', 10, False),
+        ('piece_relay', 'リレーピース', 11, False),
+        ('piece_craft', 'クラフトピース', 12, False),
+        ('resona_craft', 'クラフトレゾナ', 13, False),
+        ('token', 'トークン', 100, False),
+        ('coin', 'コイン', 101, False),
     )
     types_existing = CardType.objects.all()
     for _type in type_source:
@@ -69,13 +70,21 @@ def update_card_type():
         ctypes = types_existing.filter(code=_type[0])
 
         if ctypes.count() == 0:
-            new_type = CardType(code=_type[0], name=_type[1], sort_asc=_type[2])
+            new_type = CardType(code=_type[0], name=_type[1], sort_asc=_type[2], is_primary=_type[3])
             new_type.save()
         else:
-            if ctypes[0].name != _type[1]:
-                target_type = CardType.objects.get(code=_type[0])
+            target_type = ctypes[0]
+            needs_update = False
+            if target_type.name != _type[1]:
                 target_type.name = _type[1]
+                needs_update = True
+            if target_type.sort_asc != _type[2]:
                 target_type.sort_asc = _type[2]
+                needs_update = True
+            if target_type.is_primary != _type[3]:
+                target_type.is_primary = _type[3]
+                needs_update = True
+            if needs_update:
                 target_type.save()
     print('card type update complete.')
 

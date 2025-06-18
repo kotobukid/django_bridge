@@ -127,11 +127,69 @@ impl CardTypeFilter {
         }
     }
 
-    /// 拡張カードタイプが選択されているかチェック
+    /// 拡張カードタイプが選択されているかチェック（動的に判定）
     pub fn has_extended_selection(&self) -> bool {
-        self.key || self.resona || self.signi_craft || self.arts_craft || 
-        self.resona_craft || self.spell_craft || self.piece_relay || 
-        self.piece_craft || self.token
+        // 動的に拡張カードタイプを確認
+        self.is_selected_by_code("key") ||
+        self.is_selected_by_code("resona") ||
+        self.is_selected_by_code("signi_craft") ||
+        self.is_selected_by_code("arts_craft") ||
+        self.is_selected_by_code("resona_craft") ||
+        self.is_selected_by_code("spell_craft") ||
+        self.is_selected_by_code("piece_relay") ||
+        self.is_selected_by_code("piece_craft") ||
+        self.is_selected_by_code("token")
+    }
+
+    /// 特定のコードのカードタイプが選択されているかチェック
+    pub fn is_selected_by_code(&self, code: &str) -> bool {
+        match code {
+            "lrig" => self.lrig,
+            "lrig_assist" => self.lrig_assist,
+            "arts" => self.arts,
+            "key" => self.key,
+            "signi" => self.signi,
+            "spell" => self.spell,
+            "resona" => self.resona,
+            "signi_craft" => self.signi_craft,
+            "arts_craft" => self.arts_craft,
+            "resona_craft" => self.resona_craft,
+            "spell_craft" => self.spell_craft,
+            "piece" => self.piece,
+            "piece_relay" => self.piece_relay,
+            "piece_craft" => self.piece_craft,
+            "token" => self.token,
+            _ => false,
+        }
+    }
+
+    /// 選択されたカードタイプの中に拡張タイプがあるかチェック（生成されたデータを使用）
+    pub fn has_extended_selection_dynamic(&self) -> bool {
+        use datapack::gen::card_types::EXTENDED_CARD_TYPES;
+        
+        EXTENDED_CARD_TYPES.iter().any(|&code| self.is_selected_by_code(code))
+    }
+
+    /// 特定のコードのカードタイプの選択状態を設定
+    pub fn set_by_code(&mut self, code: &str, value: bool) {
+        match code {
+            "lrig" => self.lrig = value,
+            "lrig_assist" => self.lrig_assist = value,
+            "arts" => self.arts = value,
+            "key" => self.key = value,
+            "signi" => self.signi = value,
+            "spell" => self.spell = value,
+            "resona" => self.resona = value,
+            "signi_craft" => self.signi_craft = value,
+            "arts_craft" => self.arts_craft = value,
+            "resona_craft" => self.resona_craft = value,
+            "spell_craft" => self.spell_craft = value,
+            "piece" => self.piece = value,
+            "piece_relay" => self.piece_relay = value,
+            "piece_craft" => self.piece_craft = value,
+            "token" => self.token = value,
+            _ => {} // 未知のコードは無視
+        }
     }
 
     pub fn has_any(&self) -> bool {

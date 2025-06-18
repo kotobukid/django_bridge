@@ -38,6 +38,7 @@ class CardType(models.Model):  # シグニ、ルリグ…
     name = models.CharField(verbose_name="名前", max_length=8, null=False, blank=False)
     code = models.CharField(verbose_name="内部値", max_length=32, null=False, blank=False)
     sort_asc = models.IntegerField(verbose_name="ソート順(昇順)", null=False, blank=False, default=0)
+    is_primary = models.BooleanField(verbose_name="主要カードタイプ", default=False, help_text="デフォルト表示するカードタイプかどうか")
 
     def __str__(self):
         return self.name

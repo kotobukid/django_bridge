@@ -109,6 +109,7 @@ pub struct CardTypeDb {
     /// Max length: 32
     pub code: String,
     pub sort_asc: i32,
+    pub is_primary: bool,
 }
 
 #[allow(dead_code)]
@@ -119,6 +120,7 @@ pub struct CreateCardType {
     /// Max length: 32
     pub code: String,
     pub sort_asc: i32,
+    pub is_primary: bool,
 }
 
 
