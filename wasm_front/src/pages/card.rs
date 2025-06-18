@@ -1,5 +1,5 @@
 use crate::components::{
-    CardList, CardTypeSelector, ColorSelector, FeatureOverlay, LevelSelector, OverlayButton, Pagination,
+    CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, LevelSelector, OverlayButton, Pagination,
     ProductOverlay, TextSearch,
 };
 use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, ProductFilter};
@@ -93,6 +93,27 @@ pub fn CardPage() -> impl IntoView {
     let has_active_features = Memo::new(move |_| !selected_features.read().is_empty());
 
     let has_active_products = Memo::new(move |_| product_filter.read().has_any());
+    
+    // いずれかのフィルタがアクティブかどうかを判定
+    let has_any_active_filter = Memo::new(move |_| {
+        color_filter.get().has_any() ||
+        card_type_filter.get().has_any() ||
+        level_filter.get().has_any() ||
+        !search_text.get().is_empty() ||
+        has_active_features.get() ||
+        has_active_products.get()
+    });
+    
+    // 全クリア処理
+    let clear_all_filters = move |_| {
+        set_search_text.set(String::new());
+        set_color_filter.set(ColorFilter::new());
+        set_card_type_filter.set(CardTypeFilter::new());
+        set_level_filter.set(LevelFilter::new());
+        selected_features.update(|f| f.clear());
+        set_selected_feature_names.set(Vec::new());
+        product_filter.update(|f| f.clear_all());
+    };
 
     view! {
         <div class="min-h-screen bg-gray-100">
@@ -100,6 +121,10 @@ pub fn CardPage() -> impl IntoView {
                 // フィルタボタン行
                 <div class="mb-6 space-y-4">
                     <div class="flex flex-wrap gap-3">
+                        <ClearAllButton
+                            is_active=Signal::derive(move || has_any_active_filter.get())
+                            on_click=Callback::new(clear_all_filters)
+                        />
                         <OverlayButton
                             label="カード効果".to_string()
                             is_active=Signal::derive(move || has_active_features.get())
