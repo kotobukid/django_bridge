@@ -127,6 +127,13 @@ impl CardTypeFilter {
         }
     }
 
+    /// 拡張カードタイプが選択されているかチェック
+    pub fn has_extended_selection(&self) -> bool {
+        self.key || self.resona || self.signi_craft || self.arts_craft || 
+        self.resona_craft || self.spell_craft || self.piece_relay || 
+        self.piece_craft || self.token
+    }
+
     pub fn has_any(&self) -> bool {
         self.lrig || self.lrig_assist || self.arts || self.key || self.signi || self.spell 
             || self.resona || self.signi_craft || self.arts_craft || self.resona_craft 
