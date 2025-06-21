@@ -80,7 +80,6 @@ macro_rules! detect_pattern {
     };
 }
 
-
 // 置換対象にせず、機能検出もしないテキスト
 concerned![
     r"\(シグニの下に置かれるカードは表向きである\)",
@@ -98,7 +97,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 78;
-pub const PATTERNS_AMOUNT_D: usize = 148;
+pub const PATTERNS_AMOUNT_D: usize = 156;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -192,7 +191,8 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"\(【ソウル】はシグニに1枚まで付き、そのシグニが場を離れるとルリグトラッシュに置かれる\)",
-            "*SOUL*"
+            "*SOUL*",
+            CardFeature::Soul
         ],
         replace_pattern![
             r"\(【チャーム】や【アクセ】、【ソウル】はシグニに付く\)",
@@ -405,10 +405,7 @@ pub fn create_detect_patterns() -> (
             "*MULTI ENER*",
             CardFeature::DualColorEner
         ],
-        replace_pattern![
-            r"\(その生徒の【絆】能力が有効になる\)",
-            "*BOND*"
-        ],
+        replace_pattern![r"\(その生徒の【絆】能力が有効になる\)", "*BOND*"],
         replace_pattern![
             r"\(カード名1つを宣言する。宣言されたカード名のカードの【絆】能力が有効になる\)",
             "*BOND*"
@@ -417,10 +414,7 @@ pub fn create_detect_patterns() -> (
             r"\(生徒とは、ブルーアーカイブにおけるキャラクターのことです。生徒との絆を獲得すると、その生徒のカードが持つ【絆】能力が有効になります。場や手札にいない生徒との絆も獲得できます。ルリグである生徒との絆を獲得した場合は、その生徒のすべてのカードの【絆】能力が有効になります。生徒との絆の数に上限はなく、失われることはありません\!\)",
             "*BOND*"
         ],
-        replace_pattern![
-            r"\(無色は色に含まれない\)",
-            "*NO COLOR MEANS NO COLOR*"
-        ],
+        replace_pattern![r"\(無色は色に含まれない\)", "*NO COLOR MEANS NO COLOR*"],
     ];
 
     let d_patterns: [DetectPattern; PATTERNS_AMOUNT_D] = [
@@ -491,7 +485,10 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"アサシン", CardFeature::Assassin],
         detect_pattern![r"【リミットアッパー】", CardFeature::EnhanceLimit],
         detect_pattern![r"それのリミットを\+1", CardFeature::EnhanceLimit],
-        detect_pattern![r"あなたのグロウフェイズ開始時、このゲームの間、あなたの場にいる《夢限 -Q-》のリミットを\+1する", CardFeature::EnhanceLimit],
+        detect_pattern![
+            r"あなたのグロウフェイズ開始時、このゲームの間、あなたの場にいる《夢限 -Q-》のリミットを\+1する",
+            CardFeature::EnhanceLimit
+        ],
         detect_pattern![r"【シャドウ】", CardFeature::Shadow],
         detect_pattern![r"【シャドウ\(.+\)】", CardFeature::Shadow],
         detect_pattern![r"【マルチエナ】", CardFeature::DualColorEner],
@@ -766,6 +763,29 @@ pub fn create_detect_patterns() -> (
             CardFeature::OnArts
         ],
         detect_pattern![r"【ライフバースト】", CardFeature::LifeBurst],
+        detect_pattern![
+            r"このカードが【ソウル】として付いているシグニ",
+            CardFeature::Soul
+        ],
+        detect_pattern![
+            r"このルリグの下からカード１枚をそれの【ソウル】にする",
+            CardFeature::Soul
+        ],
+        detect_pattern![r"【ソウル】が付いているあなたのシグニ", CardFeature::Soul],
+        detect_pattern![
+            r"あなたのルリグトラッシュからルリグ１枚をそれの【ソウル】にする",
+            CardFeature::Soul
+        ],
+        detect_pattern![r"あなたの場に【ソウル】があり", CardFeature::Soul],
+        detect_pattern![
+            r"このシグニ(に|は)【ソウル】が付いている(場合|かぎり)",
+            CardFeature::Soul
+        ],
+        detect_pattern![
+            r"あなたのシグニ１体に【ソウル】が付いたとき",
+            CardFeature::Soul
+        ],
+        detect_pattern![r"このシグニに【ソウル】が付いたとき", CardFeature::Soul],
     ];
 
     (r_patterns, d_patterns)

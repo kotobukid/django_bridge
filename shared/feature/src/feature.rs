@@ -185,6 +185,7 @@ define_features! {
     Virus => { tag: Unique, bit_shift: (0, 21), label: "ウィルス" },
     FreeArts => { tag: Enhance, bit_shift: (0, 22), label: "アーツコスト軽減" },
     EnhanceLimit => { tag: Enhance, bit_shift: (0, 23), label: "リミット上昇" },
+    Soul => { tag: Unique, bit_shift: (0, 24), label: "ソウル" },
 }
 
 pub trait HashSetToBits {
