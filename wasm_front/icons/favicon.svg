@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" xmlns:bx="https://boxy-svg.com">
+  <rect x="0" y="0" width="500" height="500" style="stroke: rgb(0, 0, 0); fill: rgb(159, 169, 255);"/>
+  <path d="M 38.58 446.01 L 184.664 252.465 L 44.128 53.99 L 171.103 53.99 L 253.082 174.185 L 333.212 53.99 L 456.489 53.99 L 319.035 250.616 L 461.42 446.01 L 329.514 446.01 L 249.384 327.048 L 167.405 446.01 L 38.58 446.01 Z" style="text-wrap-mode: nowrap; stroke: rgb(0, 0, 0); fill: url(&quot;#gradient-0&quot;); stroke-width: 37px;"/>
+  <defs>
+    <linearGradient gradientUnits="userSpaceOnUse" x1="250" y1="34.587" x2="250" y2="465.413" id="gradient-0" gradientTransform="matrix(0.909928, 0, 0, 0.909928, 22.517941, 22.517943)">
+      <stop offset="0" style="stop-color: rgb(255, 251, 238);"/>
+      <stop offset="0.158" style="stop-color: rgb(255, 199, 0);"/>
+      <stop offset="0.814" style="stop-color: rgb(255, 196, 0);"/>
+      <stop offset="1" style="stop-color: rgb(59.795% 44.148% 0%)"/>
+    </linearGradient>
+    <bx:export>
+      <bx:file format="png" path="favicon-16x16.png" width="16" height="16"/>
+      <bx:file format="png" path="favicon-32x32.png" width="32" height="32"/>
+      <bx:file format="png" path="apple-touch-icon.png" width="180" height="180"/>
+      <bx:file format="png" path="android-chrome-192x192.png" width="192" height="192"/>
+      <bx:file format="png" path="android-chrome-512x512.png" width="512" height="512"/>
+    </bx:export>
+  </defs>
+</svg>
