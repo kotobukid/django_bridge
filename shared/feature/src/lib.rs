@@ -57,8 +57,9 @@ macro_rules! replace_pattern {
 
 // 置換ぜすテキストをそのまま残すが効果検出もしない、考慮漏れではないことを示すケース`
 macro_rules! concerned {
-    ($pat:expr) => {};
-    ($pat:expr,) => {};
+    // ($pat:expr) => {};
+    // ($pat:expr,*) => {};
+    ($( $x:expr ),*) => {};
 }
 
 macro_rules! detect_pattern {
@@ -79,19 +80,31 @@ macro_rules! detect_pattern {
     };
 }
 
-pub const PATTERNS_AMOUNT_R: usize = 73;
-pub const PATTERNS_AMOUNT_D: usize = 147;
 
 // 置換対象にせず、機能検出もしないテキスト
-concerned![r"\(シグニの下に置かれるカードは表向きである\)"];
-concerned![r"\(場に出せなかった場合はトラッシュに置く)\)"];
+concerned![
+    r"\(シグニの下に置かれるカードは表向きである\)",
+    r"\(場に出せなかった場合はトラッシュに置く\)",
+    r"\(このピースの後に場に出たシグニにも影響を与える\)",
+    r"\(そこにあるすべてをトラッシュに置く。プレイヤーはそこにシグニを配置できない\)",
+    r"\(場に出せなかった場合はトラッシュに置く\)",
+    r"\(他のシグニより先にアタックしなければならない\)",
+    r"\(対戦相手の場にあるカードも参照する\)",
+    r"\(両方の【使用条件】を満たさなければならない\)",
+    r"\(パワーが0以下になると、移動した後でルールによってバニッシュされる\)",
+    r"\(表向きで置く\)",
+    r"\(下のカードは場に残す\)",
+    r"\(この能力の発動後に場に出たシグニはこの効果の影響を受けない\)"
+];
+
+pub const PATTERNS_AMOUNT_R: usize = 78;
+pub const PATTERNS_AMOUNT_D: usize = 148;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
     [DetectPattern; PATTERNS_AMOUNT_D],
 ) {
     let r_patterns: [ReplacePattern; PATTERNS_AMOUNT_R] = [
-        // (シグニの下に置かれるカードは表向きである)
         replace_pattern![r"『", ""],
         replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
         replace_pattern![r"』", ""],
@@ -328,8 +341,13 @@ pub fn create_detect_patterns() -> (
             "*SHADOW*"
         ],
         replace_pattern![
-            r"\(【シャドウ\(.+\)】を持つシグニは対戦相手のレベル2以下のシグニによって対象にされない\)",
+            r"\(【シャドウ\(.+\)】を持つシグニは対戦相手の.*によって対象にされない\)",
             "*LIMITED SHADOW*",
+            CardFeature::Shadow
+        ],
+        replace_pattern![
+            r"\(【シャドウ】を持つシグニは対戦相手によって対象にされない\)",
+            "*SHADOW*",
             CardFeature::Shadow
         ],
         replace_pattern![
@@ -387,6 +405,22 @@ pub fn create_detect_patterns() -> (
             "*MULTI ENER*",
             CardFeature::DualColorEner
         ],
+        replace_pattern![
+            r"\(その生徒の【絆】能力が有効になる\)",
+            "*BOND*"
+        ],
+        replace_pattern![
+            r"\(カード名1つを宣言する。宣言されたカード名のカードの【絆】能力が有効になる\)",
+            "*BOND*"
+        ],
+        replace_pattern![
+            r"\(生徒とは、ブルーアーカイブにおけるキャラクターのことです。生徒との絆を獲得すると、その生徒のカードが持つ【絆】能力が有効になります。場や手札にいない生徒との絆も獲得できます。ルリグである生徒との絆を獲得した場合は、その生徒のすべてのカードの【絆】能力が有効になります。生徒との絆の数に上限はなく、失われることはありません\!\)",
+            "*BOND*"
+        ],
+        replace_pattern![
+            r"\(無色は色に含まれない\)",
+            "*NO COLOR MEANS NO COLOR*"
+        ],
     ];
 
     let d_patterns: [DetectPattern; PATTERNS_AMOUNT_D] = [
@@ -419,7 +453,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::GainCoin
         ],
         detect_pattern![
-            r"\(右下に【コイン】を持つルリグがグロウしたとき、それと同じ枚数の[《コインアイコン》]+を得る\)",
+            r"\(右下に【コイン】を持つルリグがグロウしたとき、それと同じ枚数の《コインアイコン》を得る\)", //　この記法では単数
             CardFeature::GainCoin
         ],
         detect_pattern![
@@ -457,6 +491,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"アサシン", CardFeature::Assassin],
         detect_pattern![r"【リミットアッパー】", CardFeature::EnhanceLimit],
         detect_pattern![r"それのリミットを\+1", CardFeature::EnhanceLimit],
+        detect_pattern![r"あなたのグロウフェイズ開始時、このゲームの間、あなたの場にいる《夢限 -Q-》のリミットを\+1する", CardFeature::EnhanceLimit],
         detect_pattern![r"【シャドウ】", CardFeature::Shadow],
         detect_pattern![r"【シャドウ\(.+\)】", CardFeature::Shadow],
         detect_pattern![r"【マルチエナ】", CardFeature::DualColorEner],
