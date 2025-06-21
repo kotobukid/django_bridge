@@ -184,6 +184,7 @@ define_features! {
     MagicBox => { tag: Unique, bit_shift: (0, 20), label: "マジックボックス" },
     Virus => { tag: Unique, bit_shift: (0, 21), label: "ウィルス" },
     FreeArts => { tag: Enhance, bit_shift: (0, 22), label: "アーツコスト軽減" },
+    EnhanceLimit => { tag: Enhance, bit_shift: (0, 23), label: "リミット上昇" },
 }
 
 pub trait HashSetToBits {

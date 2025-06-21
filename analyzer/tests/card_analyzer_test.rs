@@ -80,7 +80,7 @@ fn test_limit_detection_from_html() {
         <dt>リミット</dt><dd>5</dd>
     "#;
     
-    let limit = analyzer.detect_limit_from_html(lrig_html);
+    let (limit, feature) = analyzer.detect_limit_from_html(lrig_html);
     assert_eq!(limit, Some("5".to_string()));
     
     // シグニカード（リミットがないはず）
@@ -94,7 +94,7 @@ fn test_limit_detection_from_html() {
         <dt>リミット</dt><dd>-</dd>
     "#;
     
-    let signi_limit = analyzer.detect_limit_from_html(signi_html);
+    let (signi_limit, _feature) = analyzer.detect_limit_from_html(signi_html);
     assert_eq!(signi_limit, None); // シグニはリミット検出対象外
 }
 
@@ -227,7 +227,7 @@ fn test_card_type_conditional_extraction() {
         <dt>パワー</dt><dd>-</dd>
     "#;
     
-    let lrig_limit = analyzer.detect_limit_from_html(lrig_html);
+    let (lrig_limit, _detected_future) = analyzer.detect_limit_from_html(lrig_html);
     assert!(lrig_limit.is_some());
     
     let lrig_power = analyzer.detect_power_from_html(lrig_html);
@@ -248,6 +248,6 @@ fn test_card_type_conditional_extraction() {
     let signi_power = analyzer.detect_power_from_html(signi_html);
     assert!(signi_power.is_some());
     
-    let signi_limit = analyzer.detect_limit_from_html(signi_html);
+    let (signi_limit, _detected_future) = analyzer.detect_limit_from_html(signi_html);
     assert!(signi_limit.is_none()); // シグニは条件に含まれない
 }

@@ -89,7 +89,7 @@ mod field_extraction_tests {
         println!("✅ Level detection: {:?}", level);
         
         // リミット検出テスト（ルリグのみ）
-        let limit = analyzer.detect_limit_from_html(&lrig_test_html());
+        let (limit, _feature) = analyzer.detect_limit_from_html(&lrig_test_html());
         assert_eq!(limit, Some("5".to_string()));
         println!("✅ Limit detection: {:?}", limit);
         
@@ -113,11 +113,11 @@ mod field_extraction_tests {
         let analyzer = SimpleRawCardAnalyzer::new();
         
         // ルリグでリミットが取得できることを確認
-        let lrig_limit = analyzer.detect_limit_from_html(&lrig_test_html());
+        let (lrig_limit, _feature) = analyzer.detect_limit_from_html(&lrig_test_html());
         assert!(lrig_limit.is_some());
         
         // シグニでリミットが取得できないことを確認（シグニは条件に含まれない）
-        let signi_limit = analyzer.detect_limit_from_html(&signi_test_html());
+        let (signi_limit, _feature) = analyzer.detect_limit_from_html(&signi_test_html());
         assert!(signi_limit.is_none());
         
         // シグニでパワーが取得できることを確認

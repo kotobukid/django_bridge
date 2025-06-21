@@ -54,6 +54,13 @@ macro_rules! replace_pattern {
         }
     };
 }
+
+// 置換ぜすテキストをそのまま残すが効果検出もしない、考慮漏れではないことを示すケース`
+macro_rules! concerned {
+    ($pat:expr) => {};
+    ($pat:expr,) => {};
+}
+
 macro_rules! detect_pattern {
     ($pat:expr, $($feature:expr),*) => {
         DetectPattern {
@@ -72,14 +79,19 @@ macro_rules! detect_pattern {
     };
 }
 
-pub const PATTERNS_AMOUNT_R: usize = 69;
-pub const PATTERNS_AMOUNT_D: usize = 145;
+pub const PATTERNS_AMOUNT_R: usize = 73;
+pub const PATTERNS_AMOUNT_D: usize = 147;
+
+// 置換対象にせず、機能検出もしないテキスト
+concerned![r"\(シグニの下に置かれるカードは表向きである\)"];
+concerned![r"\(場に出せなかった場合はトラッシュに置く)\)"];
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
     [DetectPattern; PATTERNS_AMOUNT_D],
 ) {
     let r_patterns: [ReplacePattern; PATTERNS_AMOUNT_R] = [
+        // (シグニの下に置かれるカードは表向きである)
         replace_pattern![r"『", ""],
         replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
         replace_pattern![r"』", ""],
@@ -218,6 +230,10 @@ pub fn create_detect_patterns() -> (
             "*COMMON PIECE*"
         ],
         replace_pattern![
+            r"\(ピースはあなたの場にルリグが3体いると使用できる\)",
+            "*COMMON PIECE*"
+        ],
+        replace_pattern![
             r"\(あなたのルリグの下からカードを合計\d+枚ルリグトラッシュに置く\)",
             ""
         ],
@@ -312,6 +328,11 @@ pub fn create_detect_patterns() -> (
             "*SHADOW*"
         ],
         replace_pattern![
+            r"\(【シャドウ\(.+\)】を持つシグニは対戦相手のレベル2以下のシグニによって対象にされない\)",
+            "*LIMITED SHADOW*",
+            CardFeature::Shadow
+        ],
+        replace_pattern![
             r"\(ゲーム終了時にそのレゾナがルリグデッキにあれば公開する\)",
             "*RANDOM RESONA MUST BE EXPOSED*",
             CardFeature::Craft
@@ -337,11 +358,13 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"\(あなたの場にいるルリグが1体で、そのルリグがレベル3以上であるかぎり、そのルリグのリミットを+2する\)",
-            "*LIMIT UPPER EFFECTS*"
+            "*LIMIT UPPER EFFECTS*",
+            CardFeature::EnhanceLimit
         ],
         replace_pattern![
             r"\(【リミットアッパー】はあなたのルリグゾーンに1つまでしか置けない\)",
-            "*ONLY ONE LIMIT UPPER*"
+            "*ONLY ONE LIMIT UPPER*",
+            CardFeature::EnhanceLimit
         ],
         replace_pattern![
             r"\(あなたのデッキの一番上のカードをエナゾーンに置く\)",
@@ -354,6 +377,15 @@ pub fn create_detect_patterns() -> (
         replace_pattern![
             r"\(あなたのルリグトラッシュに[\(0-9\)]枚以上のアーツがあるかぎり《リコレクトアイコン》\[[\(0-9\)]枚以上\]に続く文章が有効になる\)",
             "*RECOLLECT*"
+        ],
+        replace_pattern![
+            r"\(《相手ターン》の能力は、対戦相手のターンの間にのみ有効になる\)",
+            "*OPPONENT TURN*"
+        ],
+        replace_pattern![
+            r"\(エナコストを支払う際、このカードは.+1つとして支払える\)",
+            "*MULTI ENER*",
+            CardFeature::DualColorEner
         ],
     ];
 
@@ -423,14 +455,13 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"ルリグバリア", CardFeature::Barrier],
         // (r"がアタックしたとき", do_remove:  "*ON ATTACK*", CardFeature::OnAttack]),
         detect_pattern![r"アサシン", CardFeature::Assassin],
-        detect_pattern![r"シャドウ", CardFeature::Shadow],
+        detect_pattern![r"【リミットアッパー】", CardFeature::EnhanceLimit],
+        detect_pattern![r"それのリミットを\+1", CardFeature::EnhanceLimit],
+        detect_pattern![r"【シャドウ】", CardFeature::Shadow],
+        detect_pattern![r"【シャドウ\(.+\)】", CardFeature::Shadow],
         detect_pattern![r"【マルチエナ】", CardFeature::DualColorEner],
         detect_pattern![
             r"\(エナコストを支払う際、このカードは好きな色1つとして支払える\)",
-            CardFeature::DualColorEner
-        ],
-        detect_pattern![
-            r"\(エナコストを支払う際、このカードは.+1つとして支払える\)",
             CardFeature::DualColorEner
         ],
         detect_pattern![r"チャーム", CardFeature::Charm],
@@ -591,7 +622,10 @@ pub fn create_detect_patterns() -> (
             CardFeature::AdditionalAttack
         ],
         detect_pattern![r"対戦相手は【ガード】ができない", CardFeature::UnGuardable],
-        detect_pattern![r"を支払わないかぎり【ガード】ができない", CardFeature::UnGuardable],
+        detect_pattern![
+            r"を支払わないかぎり【ガード】ができない",
+            CardFeature::UnGuardable
+        ],
         detect_pattern![r"スペル\d+枚を.+手札に加え", CardFeature::SalvageSpell],
         detect_pattern![
             r"あなたのトラッシュから.?(シグニ|シグニを|シグニをそれぞれ)\d+枚(を|まで).+手札に加え",

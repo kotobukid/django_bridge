@@ -1,10 +1,10 @@
 use crate::raw_card_analyzer::{AnalysisError, RawCardAnalyzer, to_half};
 use chrono::{DateTime, Utc};
-use models::card::CreateCard;
+use models::card::{Card, CreateCard};
 use models::r#gen::django_models::RawCardDb;
 use sqlx::{Pool, Postgres, Row};
 use std::sync::Arc;
-use feature::create_detect_patterns;
+use feature::{create_detect_patterns, CardFeature};
 use feature::feature::HashSetToBits;
 use std::collections::HashSet;
 use color::convert_cost;
@@ -53,7 +53,7 @@ impl SimpleRawCardAnalyzer {
     pub fn new() -> Self {
         Self
     }
-    
+
     /// HTMLからカード種別を簡易検出する
     /// データベースのwix_cardtypeテーブルのIDに対応
     fn detect_card_type_from_html(&self, html: &str) -> i32 {
@@ -86,9 +86,9 @@ impl SimpleRawCardAnalyzer {
                 ""
             }
         };
-        
+
         // println!("DEBUG: Extracted card type text: '{}'", card_type_text);
-        
+
         // 抽出したテキストから種別を判定
         if card_type_text.contains("ルリグ") {
             if card_type_text.contains("アシスト") {
@@ -154,18 +154,18 @@ impl SimpleRawCardAnalyzer {
             }
         }
     }
-    
+
     /// HTMLから色を検出する
     fn detect_color_from_html(&self, html: &str) -> i32 {
         let mut color = 0;
-        
+
         // <dt>色</dt><dd>○○</dd> パターンで色を検出
         if let Some(color_start) = html.find("<dt>色</dt>") {
             let after_dt = &html[color_start + 11..]; // "<dt>色</dt>"の後
             if let Some(dd_start) = after_dt.find("<dd>") {
                 if let Some(dd_end) = after_dt.find("</dd>") {
                     let color_text = &after_dt[dd_start + 4..dd_end];
-                    
+
                     // 各色をチェック（shared/color/lib.rsの定義に合わせる）
                     if color_text.contains("白") {
                         color |= 1 << 1; // White
@@ -174,7 +174,7 @@ impl SimpleRawCardAnalyzer {
                         color |= 1 << 2; // Blue
                     }
                     if color_text.contains("赤") {
-                        color |= 1 << 3; // Red  
+                        color |= 1 << 3; // Red
                     }
                     if color_text.contains("黒") {
                         color |= 1 << 4; // Black
@@ -188,33 +188,33 @@ impl SimpleRawCardAnalyzer {
                 }
             }
         }
-        
+
         // 何も検出されない場合はデフォルトで不明
         if color == 0 {
             color = 1 << 7; // Unknown
         }
-        
+
         color
     }
 
     /// HTMLから共通のdd要素を抽出するヘルパーメソッド
     fn extract_dd_elements(&self, html: &str) -> Vec<String> {
         let mut dd_elements = Vec::new();
-        
+
         // <dt>カード種類</dt> または <dt>種類</dt> 以降の<dd>要素を抽出
         let start_patterns = ["<dt>カード種類</dt>", "<dt>種類</dt>"];
         let mut start_index = None;
-        
+
         for pattern in &start_patterns {
             if let Some(index) = html.find(pattern) {
                 start_index = Some(index);
                 break;
             }
         }
-        
+
         if let Some(start) = start_index {
             let mut current_pos = start;
-            
+
             // <dd>要素を順番に収集
             while let Some(dd_start) = html[current_pos..].find("<dd>") {
                 let absolute_dd_start = current_pos + dd_start;
@@ -228,14 +228,14 @@ impl SimpleRawCardAnalyzer {
                 }
             }
         }
-        
+
         dd_elements
     }
 
     /// HTMLからレベル情報を検出する（dd[3]）
     pub fn detect_level_from_html(&self, html: &str) -> Option<String> {
         let dd_elements = self.extract_dd_elements(html);
-        
+
         if dd_elements.len() > 3 {
             let level_text = dd_elements[3].trim();
             if !level_text.is_empty() && level_text != "-" {
@@ -248,42 +248,53 @@ impl SimpleRawCardAnalyzer {
         }
     }
 
-    /// HTMLからリミット情報を検出する（dd[6]、ルリグのみ）
-    pub fn detect_limit_from_html(&self, html: &str) -> Option<String> {
+    /// HTMLからリミット情報を検出する（dd[6]、ルリグ、アシストルリグのみ）
+    pub fn detect_limit_from_html(&self, html: &str) -> (Option<String>, HashSet<CardFeature>) {
         let dd_elements = self.extract_dd_elements(html);
-        
+
+        let mut feature_set = HashSet::new();
+
         if dd_elements.is_empty() {
-            return None;
+            return (None, feature_set);
         }
-        
+
         // ルリグカードかどうかをチェック
         let card_type = &dd_elements[0];
-        let is_lrig = card_type.contains("ルリグ");
-        
+        let is_lrig = card_type.contains("ルリグ") || card_type.contains("アシストルリグ");
+
+
         if is_lrig && dd_elements.len() > 6 {
             let limit_text = dd_elements[6].trim();
             if !limit_text.is_empty() && limit_text != "-" {
-                Some(limit_text.to_string())
+
+
+                if card_type.contains("アシストルリグ") {
+                    if limit_text != "0" {
+                        feature_set.insert(CardFeature::EnhanceLimit);
+                    }
+                }
+                
+                (Some(limit_text.to_string()), feature_set)
             } else {
-                None
+                (None, feature_set)
             }
         } else {
-            None
+            (None, feature_set)
         }
     }
 
     /// HTMLからパワー情報を検出する（dd[7]、シグニ/クラフトのみ）
     pub fn detect_power_from_html(&self, html: &str) -> Option<String> {
         let dd_elements = self.extract_dd_elements(html);
-        
+
         if dd_elements.is_empty() {
             return None;
         }
-        
+
         // シグニまたはクラフトカードかどうかをチェック
         let card_type = &dd_elements[0];
         let is_signi_or_craft = card_type.contains("シグニ") || card_type.contains("クラフト");
-        
+
         if is_signi_or_craft && dd_elements.len() > 7 {
             let power_text = dd_elements[7].trim();
             if !power_text.is_empty() && power_text != "-" {
@@ -299,15 +310,15 @@ impl SimpleRawCardAnalyzer {
     /// HTMLから使用タイミング情報を検出する（dd[9]、アーツ/ピースのみ）
     pub fn detect_timing_from_html(&self, html: &str) -> Option<String> {
         let dd_elements = self.extract_dd_elements(html);
-        
+
         if dd_elements.is_empty() {
             return None;
         }
-        
+
         // アーツまたはピースカードかどうかをチェック
         let card_type = &dd_elements[0];
         let is_arts_or_piece = card_type.contains("アーツ") || card_type.contains("ピース");
-        
+
         if is_arts_or_piece && dd_elements.len() > 9 {
             let timing_text = dd_elements[9].trim();
             if !timing_text.is_empty() && timing_text != "-" {
@@ -323,7 +334,7 @@ impl SimpleRawCardAnalyzer {
     /// HTMLからリミット消費情報を検出する（dd[8]、将来対応）
     pub fn detect_limit_ex_from_html(&self, html: &str) -> Option<String> {
         let dd_elements = self.extract_dd_elements(html);
-        
+
         if dd_elements.len() > 8 {
             let limit_ex_text = dd_elements[8].trim();
             if !limit_ex_text.is_empty() && limit_ex_text != "-" {
@@ -339,10 +350,10 @@ impl SimpleRawCardAnalyzer {
     /// HTMLからストーリー情報を検出する（dd[11]のdissonaアイコンチェック）
     pub fn detect_story_from_html(&self, html: &str) -> Option<String> {
         let dd_elements = self.extract_dd_elements(html);
-        
+
         if dd_elements.len() > 11 {
             let story_html = &dd_elements[11];
-            
+
             // dd[11]内にdissonaアイコンがあるかチェック
             if story_html.contains("icon_txt_dissona.png") {
                 Some("dissona".to_string())
@@ -357,38 +368,38 @@ impl SimpleRawCardAnalyzer {
     /// HTMLからコスト情報を検出する（ルリグはグロウコスト、それ以外はコスト）
     pub fn detect_cost_from_html(&self, html: &str) -> Option<String> {
         let dd_elements = self.extract_dd_elements(html);
-        
+
         // dd要素が十分にない場合は早期リターン
         if dd_elements.is_empty() {
             return None;
         }
-        
+
         // カードタイプを確認（dd[0]がカード種類）
         let card_type = &dd_elements[0];
         let is_lrig = card_type.contains("ルリグ");
-        
+
         // ルリグの場合はグロウコスト（dd[4]）、それ以外はコスト（dd[5]）
         let cost_index = if is_lrig { 4 } else { 5 };
-        
+
         if dd_elements.len() > cost_index {
             let cost_html = &dd_elements[cost_index];
-            
+
             // HTMLタグを除去（flatten_breakと同等の処理）
             let cost_text = cost_html
                 .replace('\n', "")
                 .replace("<br>", "")
                 .replace("<br/>", "")
                 .replace("<br />", "");
-            
+
             if !cost_text.trim().is_empty() && cost_text.trim() != "-" {
                 // convert_cost関数を使って「《白》×１《青》×２」→「w1u2」形式に変換
                 match convert_cost(&cost_text) {
                     Ok(converted) => Some(converted),
                     Err(_) => {
                         // 変換に失敗した場合は元のテキストを返す
-                        println!("DEBUG: Failed to convert {} '{}' for {} card", 
-                                if is_lrig { "grow cost" } else { "cost" }, 
-                                cost_text, 
+                        println!("DEBUG: Failed to convert {} '{}' for {} card",
+                                if is_lrig { "grow cost" } else { "cost" },
+                                cost_text,
                                 if is_lrig { "Lrig" } else { "non-Lrig" });
                         Some(cost_text)
                     }
@@ -405,11 +416,11 @@ impl SimpleRawCardAnalyzer {
     fn detect_features_and_replace_text(&self, skill_text: &str, life_burst_text: &str) -> (i64, i64, String, String) {
         let (replace_patterns, detect_patterns) = create_detect_patterns();
         let mut detected_features = HashSet::new();
-        
+
         // 半角に変換
         let mut processed_skill_text = to_half(skill_text);
         let mut processed_burst_text = to_half(life_burst_text);
-        
+
         // 置換パターンを適用して特徴を検出
         for pattern in &replace_patterns {
             // スキルテキストに対して置換を適用
@@ -419,7 +430,7 @@ impl SimpleRawCardAnalyzer {
                     detected_features.insert(feature.clone());
                 }
             }
-            
+
             // ライフバーストテキストに対して置換を適用
             if pattern.pattern_r.is_match(&processed_burst_text) {
                 processed_burst_text = pattern.pattern_r.replace_all(&processed_burst_text, pattern.replace_to).to_string();
@@ -428,7 +439,7 @@ impl SimpleRawCardAnalyzer {
                 }
             }
         }
-        
+
         // 検出パターンで特徴を検出（置換後のテキストに対して）
         let combined_text = format!("{} {}", processed_skill_text, processed_burst_text);
         for pattern in &detect_patterns {
@@ -438,13 +449,13 @@ impl SimpleRawCardAnalyzer {
                 }
             }
         }
-        
+
         // HashSetからビットに変換（feature crateの標準実装を使用）
         let (bits1, bits2) = detected_features.to_bits();
-        
+
         (bits1, bits2, processed_skill_text, processed_burst_text)
     }
-    
+
 
     pub async fn analyze_with_product_id(
         &self,
@@ -454,27 +465,27 @@ impl SimpleRawCardAnalyzer {
         // HTMLからカード種別を検出
         let card_type = self.detect_card_type_from_html(&raw_card.raw_html);
         // println!("DEBUG: Card {} - Detected card_type: {}", raw_card.card_number, card_type);
-        
+
         // HTMLから色を検出
         let color = self.detect_color_from_html(&raw_card.raw_html);
         // println!("DEBUG: Card {} - Detected color: {}", raw_card.card_number, color);
-        
+
         // HTMLからコストを検出
         let cost = self.detect_cost_from_html(&raw_card.raw_html);
-        
+
         // HTMLから追加フィールドを検出
         let level_str = self.detect_level_from_html(&raw_card.raw_html);
-        let limit_str = self.detect_limit_from_html(&raw_card.raw_html);
+        let (limit_str, detected_feature_set) = self.detect_limit_from_html(&raw_card.raw_html);
         let power = self.detect_power_from_html(&raw_card.raw_html);
         let timing_str = self.detect_timing_from_html(&raw_card.raw_html);
         let limit_ex_str = self.detect_limit_ex_from_html(&raw_card.raw_html);
         let story = self.detect_story_from_html(&raw_card.raw_html);
-        
+
         // 数値フィールドの型変換（String → i32）
         let level: Option<i32> = level_str.and_then(|s| s.parse().ok());
         let limit: Option<i32> = limit_str.and_then(|s| s.parse().ok());
         let limit_ex: Option<i32> = limit_ex_str.and_then(|s| s.parse().ok());
-        
+
         // タイミングは数値ではなく文字列のままにしておく（"メインフェイズ"等）
         // 将来的に数値コード化が必要であれば別途マッピング処理を追加
         let timing: Option<i32> = timing_str.and_then(|s| {
@@ -485,11 +496,16 @@ impl SimpleRawCardAnalyzer {
                 _ => None,
             }
         });
-        
+
         // スキルテキストとライフバーストテキストから特徴を検出し、置換後のテキストを取得
-        let (feature_bits1, feature_bits2, replaced_skill_text, replaced_burst_text) = 
+        let (mut feature_bits1, mut feature_bits2, replaced_skill_text, replaced_burst_text) =
             self.detect_features_and_replace_text(&raw_card.skill_text, &raw_card.life_burst_text);
-        
+
+        // テキスト以外からのFeature検出
+        let bits = detected_feature_set.to_bits();
+        feature_bits1 = feature_bits1 | bits.0;
+        feature_bits2 = feature_bits2 | bits.1;
+
         // 基本的なCreateCardを作成
         Ok(CreateCard {
             name: to_half(&raw_card.name),
