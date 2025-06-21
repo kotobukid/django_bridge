@@ -1,5 +1,5 @@
 use crate::components::{
-    CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, LevelSelector, OverlayButton, Pagination,
+    CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, LevelSelector, OverlayButton, Pagination,
     ProductOverlay, TextSearch,
 };
 use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, ProductFilter};
@@ -143,10 +143,19 @@ pub fn CardPage() -> impl IntoView {
                             search_text=search_text
                             set_search_text=set_search_text
                         />
-                        <ColorSelector
-                            color_filter=color_filter
-                            set_color_filter=set_color_filter
-                        />
+                        
+                        // Color and Feature shortcuts in responsive grid
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <ColorSelector
+                                color_filter=color_filter
+                                set_color_filter=set_color_filter
+                            />
+                            <FeatureShortcuts
+                                selected_features=selected_features
+                                on_feature_change=set_selected_feature_names
+                            />
+                        </div>
+                        
                         <LevelSelector
                             level_filter=level_filter
                             set_level_filter=set_level_filter

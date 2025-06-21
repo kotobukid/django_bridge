@@ -188,6 +188,97 @@ pub fn IconColorless() -> impl IntoView {
 }
 
 #[component]
+pub fn IconPripara() -> impl IntoView {
+    view! {
+        <svg viewBox="0 0 32 32" wodth="32" height="32">
+          <defs>
+            <filter id="drop-shadow-filter-0" bx:preset="drop-shadow 1 0 0 2 0.5 #ffffff4d" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="2"></feGaussianBlur>
+              <feOffset dx="0" dy="0"></feOffset>
+              <feComponentTransfer result="offsetblur">
+                <feFuncA id="spread-ctrl" type="linear" slope="1"></feFuncA>
+              </feComponentTransfer>
+              <feFlood flood-color="#ffffff4d"></feFlood>
+              <feComposite in2="offsetblur" operator="in"></feComposite>
+              <feMerge>
+                <feMergeNode></feMergeNode>
+                <feMergeNode in="SourceGraphic"></feMergeNode>
+              </feMerge>
+            </filter>
+            <filter id="gaussian-blur-filter-0" bx:preset="gaussian-blur 1 0.8" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="0.8 0.8" edgeMode="none"></feGaussianBlur>
+            </filter>
+          </defs>
+          <path style="stroke: rgb(253, 12, 190); fill: rgb(247, 103, 194); filter: url(#drop-shadow-filter-0); transform-box: fill-box; transform-origin: 50% 50%;" d="M 16.284 28.485 L 16 28.627 L 15.716 28.485 C 2.113 19.127 0.502 11.298 3.135 6.981 C 5.765 2.663 12.639 1.86 16 6.553 C 19.363 1.86 26.235 2.663 28.865 6.981 C 31.498 11.298 29.887 19.127 16.284 28.485 Z" transform="matrix(0.994522, 0.104528, -0.104528, 0.994522, 0, 0.000001)"></path>
+          <path style="stroke-width: 1; fill: rgb(255, 164, 221); filter: url(#gaussian-blur-filter-0); transform-box: fill-box; transform-origin: 50% 50%;" d="M 7.61 15.228 C 6.313 12.755 6.472 11.213 7.385 9.924 C 8.038 8.569 9.174 8.063 10.772 8.016 C 12.375 7.867 13.561 8.205 14.423 9.72 L 16.071 12.152 L 16.624 11.337 L 17.732 9.701 C 18.594 8.186 19.789 7.868 21.392 8.017 C 22.987 8.063 24.151 8.649 24.807 10.006 C 25.719 11.292 25.824 12.764 24.528 15.239 C 23.239 17.958 20.811 20.711 16.071 24.072 C 11.332 20.711 8.898 17.946 7.61 15.228 Z" transform="matrix(0.994522, 0.104528, -0.104528, 0.994522, 0, 0)"></path>
+        </svg>
+    }
+}
+
+#[component]
+pub fn IconNijisanji() -> impl IntoView {
+    view! {
+        <svg viewBox="0 0 32 32" width="32" height="32">
+          <defs>
+            <radialGradient gradientUnits="userSpaceOnUse" cx="18.611" cy="50.113" r="9.094" id="gradient-0" gradientTransform="matrix(0.901401, -0.901401, 0.911898, 0.911898, -44.795008, -14.39729)">
+              <stop offset="0" style="stop-color: rgb(222, 0, 255);"></stop>
+              <stop offset="0.201" style="stop-color: rgb(7, 0, 255);"></stop>
+              <stop offset="0.349" style="stop-color: rgb(0, 225, 255);"></stop>
+              <stop offset="0.488" style="stop-color: rgb(26, 255, 3);"></stop>
+              <stop offset="0.66" style="stop-color: rgb(255, 227, 0);"></stop>
+              <stop offset="0.817" style="stop-color: rgb(255, 145, 0);"></stop>
+              <stop offset="1" style="stop-color: rgb(255, 0, 0);"></stop>
+            </radialGradient>
+          </defs>
+          <path style="fill: rgb(0, 50, 113);" d="M 27.328 16.448 C 27.328 25.69 17.322 31.468 9.317 26.846 C 8.999 26.662 8.692 26.467 8.399 26.262 L 3.458 28.89 L 5.534 23.436 C 1.62 17.964 2.881 9.766 9.317 6.049 C 11.142 4.995 13.213 4.441 15.321 4.441 L 15.321 16.448 L 27.328 16.448 Z"></path>
+          <path d="M 17.574 14.444 L 17.574 2.441 C 24.009 2.64 29.164 7.918 29.164 14.402 C 29.164 14.415 29.164 14.429 29.164 14.444 L 17.574 14.444 Z" style="fill: url(#gradient-0);"></path>
+          <path style="fill: rgb(255, 255, 255); transform-box: fill-box; transform-origin: 50% 50%;" d="M -16.483 37.285 A 3.289 3.289 0 1 1 -16.483 40.574 A 1.91 1.91 0 1 0 -16.483 37.285 Z" bx:shape="crescent -13.635 38.929 3.289 300 0.505 1@3d693c5e" transform="matrix(-0.707107, 0.707107, -0.707107, -0.707107, 23.308246, -25.833031)"></path>
+        </svg>
+    }
+}
+#[component]
+pub fn IconDissona() -> impl IntoView {
+    view! {
+      <svg viewBox="0 0 32 32" width="32" height="32">
+        <path d="M 18.435 8 L 18.435 2.931 L 13.565 2.931 L 13.565 8 L 8.198 8 L 8.198 13.565 L 2.931 13.565 L 2.931 18.435 L 8.198 18.435 L 8.198 23.95 L 13.565 23.95 L 13.565 29.069 L 18.435 29.069 L 18.435 23.95 L 24.149 23.95 L 24.149 18.435 L 29.069 18.435 L 29.069 13.565 L 24.149 13.565 L 24.149 8 L 18.435 8 Z" style="stroke: rgb(3, 0, 0); stroke-width: 5.552;"></path>
+        <path d="M 18.435 8 L 18.435 2.931 L 13.565 2.931 L 13.565 8 L 8.198 8 L 8.198 13.565 L 2.931 13.565 L 2.931 18.435 L 8.198 18.435 L 8.198 23.95 L 13.565 23.95 L 13.565 29.069 L 18.435 29.069 L 18.435 23.95 L 24.149 23.95 L 24.149 18.435 L 29.069 18.435 L 29.069 13.565 L 24.149 13.565 L 24.149 8 L 18.435 8 Z" style="stroke: rgb(255, 164, 164); stroke-width: 2.06; stroke-linejoin: miter; stroke-miterlimit: 1;"></path>
+        <path d="M 19.758 12.477 C 20.532 12.157 21.275 12.101 21.867 12.289 C 21.446 13.243 20.658 14.166 19.657 14.769 C 18.699 15.347 17.742 15.518 16.994 15.322 C 16.978 15.33 16.961 15.337 16.944 15.345 C 16.94 15.332 16.936 15.318 16.932 15.304 C 16.918 15.3 16.905 15.297 16.891 15.292 C 16.899 15.275 16.906 15.258 16.913 15.241 C 16.718 14.494 16.888 13.537 17.466 12.579 C 18.07 11.578 18.993 10.79 19.947 10.368 C 20.135 10.961 20.079 11.704 19.758 12.477 Z" style="fill: rgb(255, 173, 173); stroke-width: 0.324; transform-origin: 82.914px 293.35px;"></path>
+        <path d="M 12.242 12.477 C 11.467 12.156 10.725 12.101 10.132 12.289 C 10.554 13.243 11.341 14.165 12.343 14.769 C 13.3 15.347 14.258 15.518 15.004 15.322 C 15.022 15.33 15.039 15.337 15.056 15.345 C 15.06 15.332 15.064 15.318 15.068 15.304 C 15.082 15.3 15.095 15.297 15.109 15.292 C 15.101 15.275 15.094 15.258 15.085 15.241 C 15.282 14.494 15.111 13.536 14.534 12.579 C 13.928 11.577 13.007 10.79 12.053 10.369 C 11.865 10.962 11.92 11.704 12.242 12.477 Z" style="fill: rgb(255, 173, 173); stroke-width: 0.324; transform-origin: 76.753px 293.35px;"></path>
+        <path d="M 19.758 19.524 C 20.532 19.844 21.275 19.9 21.867 19.711 C 21.446 18.758 20.658 17.835 19.657 17.232 C 18.699 16.654 17.742 16.483 16.994 16.679 C 16.978 16.671 16.961 16.663 16.944 16.656 C 16.94 16.669 16.936 16.682 16.932 16.697 C 16.918 16.7 16.905 16.705 16.891 16.709 C 16.899 16.726 16.906 16.743 16.913 16.76 C 16.718 17.506 16.888 18.464 17.466 19.422 C 18.07 20.424 18.993 21.211 19.947 21.632 C 20.135 21.039 20.079 20.297 19.758 19.524 Z" style="fill: rgb(255, 173, 173); stroke-width: 0.324; transform-origin: 82.914px 300.048px;"></path>
+        <path d="M 12.241 19.524 C 11.467 19.845 10.725 19.9 10.132 19.711 C 10.554 18.758 11.341 17.836 12.343 17.232 C 13.3 16.654 14.258 16.483 15.004 16.679 C 15.022 16.671 15.039 16.663 15.056 16.656 C 15.06 16.67 15.064 16.682 15.068 16.697 C 15.082 16.7 15.095 16.705 15.109 16.709 C 15.101 16.726 15.094 16.743 15.085 16.76 C 15.282 17.506 15.111 18.465 14.534 19.422 C 13.928 20.424 13.007 21.211 12.053 21.632 C 11.865 21.039 11.92 20.298 12.241 19.524 Z" style="fill: rgb(255, 173, 173); stroke-width: 0.324; transform-origin: 76.753px 300.048px;"></path>
+      </svg>
+    }
+}
+#[component]
+pub fn IconDenonbu() -> impl IntoView {
+    view! {
+      <svg viewBox="0 0 32 32" width="32" height="32">
+        <rect x="-4.039" y="-3.323" width="40.078" height="38.647" style=""></rect>
+        <path style="fill: rgb(255, 255, 255);" d="M 2.469 14.531 L 1.7 13.418 L 7.728 13.418 L 4.813 8.889 L 2.124 8.889 L 1.275 7.89 L 14.062 7.89 L 11.911 5.011 L 12.871 4.013 L 19.129 4.013 L 20.089 5.011 L 17.938 7.89 L 30.725 7.89 L 29.876 8.889 L 27.187 8.889 L 24.272 13.418 L 30.3 13.418 L 29.531 14.531 L 2.469 14.531 Z"></path>
+        <path d="M 3.768 15.028 L 28.097 15.028 L 29.018 15.911 L 23.788 24.971 L 8.077 24.971 L 2.846 15.911 L 3.768 15.028 Z" style="stroke-width: 1; fill: rgb(255, 255, 255);"></path>
+        <path d="M 15.991 12.723 L 13.486 8.701 L 18.496 8.701 L 15.991 12.723 Z" style=""></path>
+        <path d="M 20.072 16.729 L 18.942 18.546 L 17.499 18.546 L 18.514 17.343 L 17.711 17.343 L 15.634 18.689 L 16.059 17.839 L 12.613 17.839 L 11.929 16.753 L 12.605 16.075 L 19.62 16.075 L 20.072 16.729 Z" style=""></path>
+        <polygon style="" points="14.911 18.618 13.137 18.618 16.185 23.74 18.546 19.821 16.208 19.821 17.106 18.57 14.415 20.034"></polygon>
+      </svg>
+    }
+}
+#[component]
+pub fn IconBlueArchive() -> impl IntoView {
+    view! {
+      <svg viewBox="0 0 32 32" width="32" height="32">
+        <defs>
+          <pattern id="pattern-0" viewBox="0 0 79.685 79.685" patternUnits="userSpaceOnUse" preserveAspectRatio="none" width="100" ight="100" bx:pinned="true">
+            <rect x="-59.734" y="87.839" width="79.685" height="79.685" style="fill: rgb(0, 208, 255);" transform="matrix(1, 0, 0, 1, 59.73400115966797, -87.83900451660156)"></rect>
+            </pattern>
+          </defs>
+          <rect x="0.024" y="0.137" width="31.951" height="31.727" style=""></rect>
+          <path d="M 33.544 15.056 C 33.544 15.65 33.402 16.227 33.133 16.782 C 33.27 16.391 33.342 15.99 33.342 15.581 C 33.342 11.635 26.673 8.436 18.446 8.436 C 10.219 8.436 3.55 11.635 3.55 15.581 C 3.55 18.075 6.854 19.065 10.891 20.343 C 5.564 19.607 2.54 17.827 2.54 15.056 C 2.54 10.91 9.443 7.397 18.005 7.397 C 26.566 7.397 33.544 10.91 33.544 15.056 Z" style="fill: rgb(255, 255, 255); transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.866025, 0.5, -0.5, 0.866025, 0.000001, 0.000002)"></path>
+          <path d="M 12.45 35.521 L 13.569 13.331 L -2.002 13.641 L 13.682 12.279 L 15.437 -2.103 L 14.886 12.221 L 30.817 12.027 L 14.8 13.27 L 12.45 35.521 Z" style="stroke-width: 1; fill: rgb(154, 228, 255); transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.866025, 0.5, -0.5, 0.866025, 0.000002, -0.000002)"></path>
+      </svg>
+    }
+}
+
+#[component]
 pub fn ColorIconWithNum(code: String) -> impl IntoView {
     // Parse the code to extract color and number
     let (color_char, number_str) = if code.len() >= 2 {

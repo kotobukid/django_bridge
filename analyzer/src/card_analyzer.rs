@@ -348,21 +348,40 @@ impl SimpleRawCardAnalyzer {
     }
 
     /// HTMLからストーリー情報を検出する（dd[11]のdissonaアイコンチェック）
-    pub fn detect_story_from_html(&self, html: &str) -> Option<String> {
+    pub fn detect_story_from_html(&self, html: &str) -> (Option<String>, HashSet<CardFeature>) {
         let dd_elements = self.extract_dd_elements(html);
+
+        let mut s: HashSet<CardFeature> = HashSet::new();
 
         if dd_elements.len() > 11 {
             let story_html = &dd_elements[11];
 
             // dd[11]内にdissonaアイコンがあるかチェック
             if story_html.contains("icon_txt_dissona.png") {
-                Some("dissona".to_string())
+                s.insert(CardFeature::Dissona);
+                (Some("dissona".to_string()), s)
             } else {
-                None
+                (None, s)
             }
         } else {
-            None
+            (None, s)
         }
+    }
+
+    pub fn detect_story_from_name(name: &str) -> HashSet<CardFeature> {
+        let mut s: HashSet<CardFeature> = HashSet::new();
+        if name.starts_with("電音部") {
+            s.insert(CardFeature::Denonbu);
+            return s;
+        }
+        if name.starts_with("プリパラアイドル") { 
+            s.insert(CardFeature::Pripara);
+            return s;
+        }
+        if name.starts_with("コード2434") {
+            s.insert(CardFeature::Nijisanji);
+        }
+        s
     }
 
     /// HTMLからコスト情報を検出する（ルリグはグロウコスト、それ以外はコスト）
@@ -479,7 +498,7 @@ impl SimpleRawCardAnalyzer {
         let power = self.detect_power_from_html(&raw_card.raw_html);
         let timing_str = self.detect_timing_from_html(&raw_card.raw_html);
         let limit_ex_str = self.detect_limit_ex_from_html(&raw_card.raw_html);
-        let story = self.detect_story_from_html(&raw_card.raw_html);
+        let (story, story_as_skill) = self.detect_story_from_html(&raw_card.raw_html);
 
         // 数値フィールドの型変換（String → i32）
         let level: Option<i32> = level_str.and_then(|s| s.parse().ok());
@@ -500,15 +519,30 @@ impl SimpleRawCardAnalyzer {
         // スキルテキストとライフバーストテキストから特徴を検出し、置換後のテキストを取得
         let (mut feature_bits1, mut feature_bits2, replaced_skill_text, replaced_burst_text) =
             self.detect_features_and_replace_text(&raw_card.skill_text, &raw_card.life_burst_text);
+        {
+            // テキスト以外からのFeature検出
+            let bits = detected_feature_set.to_bits();
+            feature_bits1 = feature_bits1 | bits.0;
+            feature_bits2 = feature_bits2 | bits.1;
+        }
 
-        // テキスト以外からのFeature検出
-        let bits = detected_feature_set.to_bits();
-        feature_bits1 = feature_bits1 | bits.0;
-        feature_bits2 = feature_bits2 | bits.1;
+        {
+            let bits = story_as_skill.to_bits();
+            feature_bits1 = feature_bits1 | bits.0;
+            feature_bits2 = feature_bits2 | bits.1;
+        }
 
+        let name = to_half(&raw_card.name);
+        {
+            let skills = Self::detect_story_from_name(&name);
+            let bits = skills.to_bits();
+            feature_bits1 = feature_bits1 | bits.0;
+            feature_bits2 = feature_bits2 | bits.1;
+        }
+        
         // 基本的なCreateCardを作成
         Ok(CreateCard {
-            name: to_half(&raw_card.name),
+            name,
             code: to_half(&raw_card.card_number),
             pronunciation: to_half(&raw_card.name), // デフォルトで名前を使用
             color,

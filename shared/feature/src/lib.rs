@@ -97,7 +97,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 78;
-pub const PATTERNS_AMOUNT_D: usize = 156;
+pub const PATTERNS_AMOUNT_D: usize = 160;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -786,6 +786,10 @@ pub fn create_detect_patterns() -> (
             CardFeature::Soul
         ],
         detect_pattern![r"このシグニに【ソウル】が付いたとき", CardFeature::Soul],
+        detect_pattern![r"<プリパラ>", CardFeature::Pripara],
+        detect_pattern![r"<電音部>", CardFeature::Denonbu],
+        detect_pattern![r"<ブルアカ>", CardFeature::BlueArchive],
+        detect_pattern![r"<バーチャル>", CardFeature::Nijisanji],
     ];
 
     (r_patterns, d_patterns)

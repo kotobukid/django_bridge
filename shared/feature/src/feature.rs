@@ -186,6 +186,11 @@ define_features! {
     FreeArts => { tag: Enhance, bit_shift: (0, 22), label: "アーツコスト軽減" },
     EnhanceLimit => { tag: Enhance, bit_shift: (0, 23), label: "リミット上昇" },
     Soul => { tag: Unique, bit_shift: (0, 24), label: "ソウル" },
+    Pripara => { tag: Unique, bit_shift: (0, 25), label: "プリパラ" },
+    Nijisanji => { tag: Unique, bit_shift: (0, 26), label: "にじさんじ" },
+    Dissona => { tag: Unique, bit_shift: (0, 27), label: "ディソナ" },
+    Denonbu => { tag: Unique, bit_shift: (0, 28), label: "電音部" },
+    BlueArchive => { tag: Unique, bit_shift: (0, 29), label: "ブルーアーカイブ" },
 }
 
 pub trait HashSetToBits {

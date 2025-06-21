@@ -1,4 +1,5 @@
 use analyzer::card_analyzer::SimpleRawCardAnalyzer;
+use feature::CardFeature;
 
 #[test]
 fn test_level_detection_from_html() {
@@ -157,8 +158,9 @@ fn test_story_detection_from_html() {
         <dt>ストーリー</dt><dd><img src="/path/to/icon_txt_dissona.png" alt="dissona"></dd>
     "#;
     
-    let story = analyzer.detect_story_from_html(dissona_html);
+    let (story, feature) = analyzer.detect_story_from_html(dissona_html);
     assert_eq!(story, Some("dissona".to_string()));
+    assert!(feature.contains(&CardFeature::Dissona));
     
     // dissonaアイコンがない場合
     let no_story_html = r#"
@@ -176,7 +178,7 @@ fn test_story_detection_from_html() {
         <dt>ストーリー</dt><dd>-</dd>
     "#;
     
-    let no_story = analyzer.detect_story_from_html(no_story_html);
+    let (no_story, _feature) = analyzer.detect_story_from_html(no_story_html);
     assert_eq!(no_story, None);
 }
 
