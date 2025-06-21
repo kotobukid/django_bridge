@@ -401,48 +401,48 @@ impl SimpleRawCardAnalyzer {
         }
     }
 
-    /// スキルテキストとライフバーストテキストから特徴を検出する
-    fn detect_features_from_text(&self, skill_text: &str, life_burst_text: &str) -> (i64, i64) {
+    /// スキルテキストとライフバーストテキストから特徴を検出し、置換後のテキストも返す
+    fn detect_features_and_replace_text(&self, skill_text: &str, life_burst_text: &str) -> (i64, i64, String, String) {
         let (replace_patterns, detect_patterns) = create_detect_patterns();
         let mut detected_features = HashSet::new();
         
-        // 半角に変換してから結合
-        let combined_text = format!("{} {}", to_half(skill_text), to_half(life_burst_text));
+        // 半角に変換
+        let mut processed_skill_text = to_half(skill_text);
+        let mut processed_burst_text = to_half(life_burst_text);
         
-        // デバッグ出力を追加
-        if !skill_text.is_empty() || !life_burst_text.is_empty() {
-            // println!("DEBUG: Combined text: '{}'", combined_text);
-        }
-        
-        // 置換パターンで特徴を検出
+        // 置換パターンを適用して特徴を検出
         for pattern in &replace_patterns {
-            if pattern.pattern_r.is_match(&combined_text) {
+            // スキルテキストに対して置換を適用
+            if pattern.pattern_r.is_match(&processed_skill_text) {
+                processed_skill_text = pattern.pattern_r.replace_all(&processed_skill_text, pattern.replace_to).to_string();
                 for feature in pattern.features_detected {
-                    // println!("DEBUG: Replace pattern '{}' matched, adding feature: {:?}", pattern.pattern, feature);
+                    detected_features.insert(feature.clone());
+                }
+            }
+            
+            // ライフバーストテキストに対して置換を適用
+            if pattern.pattern_r.is_match(&processed_burst_text) {
+                processed_burst_text = pattern.pattern_r.replace_all(&processed_burst_text, pattern.replace_to).to_string();
+                for feature in pattern.features_detected {
                     detected_features.insert(feature.clone());
                 }
             }
         }
         
-        // 検出パターンで特徴を検出
+        // 検出パターンで特徴を検出（置換後のテキストに対して）
+        let combined_text = format!("{} {}", processed_skill_text, processed_burst_text);
         for pattern in &detect_patterns {
             if pattern.pattern_r.is_match(&combined_text) {
                 for feature in pattern.features_detected {
-                    // println!("DEBUG: Detect pattern '{}' matched, adding feature: {:?}", pattern.pattern, feature);
                     detected_features.insert(feature.clone());
                 }
             }
         }
         
         // HashSetからビットに変換（feature crateの標準実装を使用）
-        let result = detected_features.to_bits();
+        let (bits1, bits2) = detected_features.to_bits();
         
-        // デバッグ出力を追加
-        if result.0 != 0 || result.1 != 0 {
-            // println!("DEBUG: Final feature bits: {:b} / {:b}", result.0, result.1);
-        }
-        
-        result
+        (bits1, bits2, processed_skill_text, processed_burst_text)
     }
     
 
@@ -486,8 +486,9 @@ impl SimpleRawCardAnalyzer {
             }
         });
         
-        // スキルテキストとライフバーストテキストから特徴を検出
-        let (feature_bits1, feature_bits2) = self.detect_features_from_text(&raw_card.skill_text, &raw_card.life_burst_text);
+        // スキルテキストとライフバーストテキストから特徴を検出し、置換後のテキストを取得
+        let (feature_bits1, feature_bits2, replaced_skill_text, replaced_burst_text) = 
+            self.detect_features_and_replace_text(&raw_card.skill_text, &raw_card.life_burst_text);
         
         // 基本的なCreateCardを作成
         Ok(CreateCard {
@@ -507,8 +508,8 @@ impl SimpleRawCardAnalyzer {
             } else {
                 1
             },
-            skill_text: Some(to_half(&raw_card.skill_text)),
-            burst_text: Some(to_half(&raw_card.life_burst_text)),
+            skill_text: Some(replaced_skill_text),
+            burst_text: Some(replaced_burst_text),
             format: 7, // デフォルトオールスター
             story,
             rarity: None,

@@ -72,7 +72,7 @@ macro_rules! detect_pattern {
     };
 }
 
-pub const PATTERNS_AMOUNT_R: usize = 68;
+pub const PATTERNS_AMOUNT_R: usize = 69;
 pub const PATTERNS_AMOUNT_D: usize = 145;
 
 pub fn create_detect_patterns() -> (
@@ -81,9 +81,9 @@ pub fn create_detect_patterns() -> (
 ) {
     let r_patterns: [ReplacePattern; PATTERNS_AMOUNT_R] = [
         replace_pattern![r"『", ""],
-        replace_pattern![r"ライフバースト：", "LB：", CardFeature::LifeBurst],
+        replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
         replace_pattern![r"』", ""],
-        replace_pattern![r"ライフバースト：", "LB：", CardFeature::LifeBurst],
+        replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
         replace_pattern![
             r"\(対戦相手のライフクロスが1枚以上ある場合、ライフクロス1枚をクラッシュし、0枚の場合、あなたはゲームに勝利する\)",
             "",
@@ -96,6 +96,11 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"\(アタックによるダメージでライフクロスを2枚クラッシュする\)",
+            "*DOUBLE CRUSH*",
+            CardFeature::DoubleCrush
+        ],
+        replace_pattern![
+            r"\(【ダブルクラッシュ】を持つシグニがアタックによってダメージを与えた場合ライフクロスを1枚ではなく2枚クラッシュする\)",
             "*DOUBLE CRUSH*"
         ],
         replace_pattern![
@@ -120,7 +125,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::Lancer
         ],
         replace_pattern![
-            r"\(【Ｓランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスがある場合はそれを1枚クラッシュする。無い場合は対戦相手にダメージを与える\)",
+            r"\(【Sランサー】を持つシグニがバトルでシグニをバニッシュしたとき、対戦相手のライフクロスがある場合はそれを1枚クラッシュする。無い場合は対戦相手にダメージを与える\)",
             "*S LANCER*",
             CardFeature::SLancer
         ],
@@ -247,7 +252,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::Craft
         ],
         replace_pattern![
-            r"\(【出】能力の：の左側はコストである。コストを支払わず発動しないことを選んでもよい\)",
+            r"\(【出】能力の:の左側はコストである。コストを支払わず発動しないことを選んでもよい\)",
             "*CIP COST*"
         ],
         replace_pattern![
@@ -267,7 +272,7 @@ pub fn create_detect_patterns() -> (
             "*TOTAL COST*"
         ],
         replace_pattern![
-            r"\(コストのない【出】能力は発動しないことを選べない。.+\)",
+            r"\(コストのない【出】能力は発動しないことを選べない\)",
             "*MUST APPLY CIP*"
         ],
         replace_pattern![
@@ -347,7 +352,7 @@ pub fn create_detect_patterns() -> (
             "*SHOOT LIKE*"
         ],
         replace_pattern![
-            r"\(あなたのルリグトラッシュに[\(\u{FF10}-\u{FF19}\)]枚以上のアーツがあるかぎり《リコレクトアイコン》\[[\(\u{FF10}-\u{FF19}\)]枚以上\]に続く文章が有効になる\)",
+            r"\(あなたのルリグトラッシュに[\(0-9\)]枚以上のアーツがあるかぎり《リコレクトアイコン》\[[\(0-9\)]枚以上\]に続く文章が有効になる\)",
             "*RECOLLECT*"
         ],
     ];
@@ -443,7 +448,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"ベット―", CardFeature::BetCoin],
         detect_pattern![r"コインアイコン", CardFeature::BetCoin],
         detect_pattern![r"Sランサー", CardFeature::SLancer, CardFeature::Lancer],
-        detect_pattern![r"Ｓランサー", CardFeature::SLancer, CardFeature::Lancer],
+        detect_pattern![r"Sランサー", CardFeature::SLancer, CardFeature::Lancer],
         detect_pattern![r"【マジックボックス】", CardFeature::MagicBox],
         detect_pattern![
             r"対戦相手のシグニ\d+体を対象とし、それをゲームから除外する",

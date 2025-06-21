@@ -14,37 +14,37 @@ pub const CARD_TYPES: &[CardTypeInfo] = &[
         code: "lrig",
         name: "ルリグ",
         sort_asc: 0,
-        is_primary: true,
+        is_primary: false,
     },
     CardTypeInfo {
         code: "arts",
         name: "アーツ",
         sort_asc: 1,
-        is_primary: true,
+        is_primary: false,
     },
     CardTypeInfo {
         code: "lrig_assist",
         name: "アシストルリグ",
         sort_asc: 2,
-        is_primary: true,
+        is_primary: false,
     },
     CardTypeInfo {
         code: "piece",
         name: "ピース",
         sort_asc: 3,
-        is_primary: true,
+        is_primary: false,
     },
     CardTypeInfo {
         code: "signi",
         name: "シグニ",
         sort_asc: 4,
-        is_primary: true,
+        is_primary: false,
     },
     CardTypeInfo {
         code: "spell",
         name: "スペル",
         sort_asc: 5,
-        is_primary: true,
+        is_primary: false,
     },
     CardTypeInfo {
         code: "resona",
@@ -109,15 +109,16 @@ pub const CARD_TYPES: &[CardTypeInfo] = &[
 ];
 
 pub const PRIMARY_CARD_TYPES: &[&str] = &[
+
+];
+
+pub const EXTENDED_CARD_TYPES: &[&str] = &[
     "lrig",
     "arts",
     "lrig_assist",
     "piece",
     "signi",
-    "spell"
-];
-
-pub const EXTENDED_CARD_TYPES: &[&str] = &[
+    "spell",
     "resona",
     "key",
     "arts_craft",
