@@ -357,10 +357,13 @@ python scripts/test_field_extraction.py
 # Development server with hot reload (port 8080)
 cargo make trunk_serve
 
-# Build for production
+# Build for development (unoptimized, faster builds)
+cargo make trunk_build
+
+# Build for production (optimized and minified)
 cargo make trunk_release
 
-# Build for GitHub Pages deployment
+# Build for GitHub Pages deployment (if configured)
 cargo make trunk_pages
 ```
 
@@ -373,13 +376,45 @@ cargo make trunk_pages
 - **Styling**: Tailwind CSS with custom components in `input.css`
 - **Data filtering**: Uses `datapack` WASM module for client-side card filtering
 
-### Component State Management
-When creating interactive components:
-- Use `signal()` for local state
-- Consider extraction to separate components when adding features like:
-  - Card flip animations
-  - Feature reporting UI
-  - Expandable details view
+### Frontend UI Patterns & Architecture
+
+#### Filter System Design
+The frontend implements a two-tier filter system:
+- **Always Visible Filters**: Color, CardType, Level, Text search, and Feature shortcuts
+- **Overlay Filters**: Complex feature selection and product selection (accessed via overlay buttons)
+
+#### Component State Management
+- Use `RwSignal<T>` for shared mutable state across components
+- Use `Signal::derive()` for computed/reactive values
+- Use `WriteSignal<T>` for callback-based state updates
+- Minimize reactive updates by batching state changes in single `update()` calls
+
+#### Feature Integration Patterns
+**Color vs CardFeature Distinction**: The system separates basic card colors (white, red, blue, green, black, colorless) from CardFeature-based filtering:
+- **ColorSelector**: Handles basic 6-color filtering via `ColorFilter` struct
+- **FeatureShortcuts**: Provides quick access to collaboration features (プリパラ, にじさんじ, ディソナ, 電音部, ブルーアーカイブ) with mutual exclusion behavior
+- **FeatureOverlay**: Full feature selection organized by categories
+
+**IMPORTANT - CardFeature Naming**: When working with CardFeatures, always use the Japanese display names as defined in `shared/feature/src/feature.rs`:
+- Enum variants: `CardFeature::Pripara`, `CardFeature::Nijisanji`, `CardFeature::Dissona`, etc.
+- Display labels (used in UI): "プリパラ", "にじさんじ", "ディソナ", "電音部", "ブルーアーカイブ"
+- The filtering system uses the Japanese display labels, not the enum names
+
+#### Responsive Design Patterns
+Use Tailwind CSS responsive prefixes for adaptive layouts:
+```rust
+// Example: Side-by-side on PC, stacked on mobile
+<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+```
+
+#### Accessibility Considerations
+Always include proper ARIA labels and titles for interactive elements:
+```rust
+aria-label=feature_name
+title=feature_name
+```
+
+**Additional Frontend Documentation**: See `wasm_front/CLAUDE.md` for detailed UI design patterns, overlay system implementation, and specific Leptos component architecture decisions.
 
 ## Nuxt.js Frontend (Legacy)
 ```bash
