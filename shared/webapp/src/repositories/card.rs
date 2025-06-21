@@ -1,7 +1,8 @@
 use crate::analyze::wixoss;
 use models::card::{Card, CardDb, CreateCard};
 use serde::{Deserialize, Serialize};
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Row};
+use std::collections::HashMap;
 use std::fmt::{Display, Formatter};
 use std::future::Future;
 use std::pin::Pin;
@@ -201,10 +202,34 @@ impl StaticCodeGenerator for CardRepository {
     }
 
     async fn get_all_as_code(&self) -> Vec<String> {
+        // まずすべてのカードを取得
         let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card")
             .fetch_all(&*self.db_connector)
             .await
             .unwrap(); // エラー処理は適宜修正してください
+        
+        // 商品の sort_asc 値を取得するためのマップを作成
+        let products = sqlx::query("SELECT id, sort_asc FROM wix_product")
+            .fetch_all(&*self.db_connector)
+            .await
+            .unwrap();
+        
+        let product_sort_map: HashMap<i64, i32> = products
+            .into_iter()
+            .map(|row| {
+                let id: i64 = row.get("id");
+                let sort_asc: i32 = row.get("sort_asc");
+                (id, sort_asc)
+            })
+            .collect();
+        
+        // カードをソート
+        let mut cards = cards;
+        cards.sort_by(|a, b| {
+            let sort_a = product_sort_map.get(&(a.product as i64)).unwrap_or(&999999);
+            let sort_b = product_sort_map.get(&(b.product as i64)).unwrap_or(&999999);
+            sort_a.cmp(sort_b).then_with(|| a.code.cmp(&b.code))
+        });
 
         cards
             .into_iter()

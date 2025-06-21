@@ -43,7 +43,7 @@ impl ProductRepository {
     ) -> Pin<Box<dyn Future<Output = Result<Vec<Product>, sqlx::Error>> + Send + 'a>> {
         Box::pin(async move {
             let query_future = sqlx::query_as::<_, ProductDb>(
-                "SELECT id, name, product_code, url, product_type, sort_asc FROM wix_product ORDER BY id",
+                "SELECT id, name, product_code, url, product_type, sort_asc FROM wix_product ORDER BY sort_asc, id",
             )
             .fetch_all(&*self.db_connector);
 
