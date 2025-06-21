@@ -1,5 +1,5 @@
 pub type ProductStatic = (u8, &'static str, &'static str);
-pub const PRODUCT_LIST: &[ProductStatic; 162] = &[
+pub const PRODUCT_LIST: &[ProductStatic; 165] = &[
     (1_u8, "WX25-CD1", "ブルーアーカイブ〔WX25-CD1〕"),
     (2_u8, "WX24-D5", "BLACK ALT DESIRE〔WX24-D5〕"),
     (3_u8, "WX24-D4", "GREEN ALT WANNA〔WX24-D4〕"),
@@ -161,4 +161,7 @@ pub const PRODUCT_LIST: &[ProductStatic; 162] = &[
     (159_u8, "WX-04", "インフェクテッドセレクター"),
     (160_u8, "WX-03", "スプレッドセレクター"),
     (161_u8, "WX-02", "ステアード セレクター"),
-    (162_u8, "WX-01", "サーブドセレクター"),];
+    (162_u8, "WX-01", "サーブドセレクター"),
+    (163_u8, "WX25-P1", "PRIMAL SELECTOR"),
+    (164_u8, "SPDi42", "スペシャルカード42"),
+    (165_u8, "SPDi43", "スペシャルカード43"),];

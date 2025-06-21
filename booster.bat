@@ -24,3 +24,4 @@ cargo make scraper booster WX24-P2 --cache-dir ./custom_cache --min-delay 500 --
 cargo make scraper booster WX24-P3 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
 cargo make scraper booster WX24-P4 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
 cargo make scraper booster WX25-CP1 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
+cargo make scraper booster WX25-P1 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
