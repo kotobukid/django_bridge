@@ -5,16 +5,15 @@
   <title>Redirecting...</title>
   <script>
     // GitHub Pages 404 fallback for SPA routing
-    // This script redirects any 404 to the main index.html
-    // and preserves the path as a query parameter
-    const path = window.location.pathname.slice(1);
-    if (path) {
-      // Redirect to root with the path as a query parameter
-      window.location.replace('/?path=' + encodeURIComponent(path));
-    } else {
-      // Just redirect to root
-      window.location.replace('/');
-    }
+    // This script redirects 404s to the correct path immediately
+    const pathSegments = window.location.pathname.slice(1).split('/');
+    const path = '/' + pathSegments.join('/');
+
+    // Store the original path in sessionStorage for the app to pick up
+    sessionStorage.setItem('spa_redirect_path', path);
+
+    // Redirect to index.html (root)
+    window.location.replace('/');
   </script>
 </head>
 <body>

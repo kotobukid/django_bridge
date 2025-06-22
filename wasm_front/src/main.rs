@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use leptos::task::spawn_local;
 use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
@@ -13,6 +14,7 @@ use pages::{CardPage, CardDetailPage, HomePage};
 fn App() -> impl IntoView {
     view! {
         <Router>
+            <SpaRedirectHandler />
             <SvgDefinition />
             <div class="min-h-screen bg-gray-100">
                 <Routes fallback=|| "Page not found.">
@@ -23,6 +25,32 @@ fn App() -> impl IntoView {
             </div>
         </Router>
     }
+}
+
+#[component]
+fn SpaRedirectHandler() -> impl IntoView {
+    use leptos_router::hooks::use_navigate;
+    
+    // Handle GitHub Pages 404 fallback using sessionStorage
+    spawn_local(async {
+        if let Some(window) = web_sys::window() {
+            if let Ok(storage) = window.session_storage() {
+                if let Some(storage) = storage {
+                    if let Ok(Some(redirect_path)) = storage.get_item("spa_redirect_path") {
+                        // Clear the stored path
+                        let _ = storage.remove_item("spa_redirect_path");
+                        
+                        // Navigate to the stored path
+                        let navigate = use_navigate();
+                        navigate(&redirect_path, Default::default());
+                    }
+                }
+            }
+        }
+    });
+
+    // This component doesn't render anything
+    view! { <span style="display: none;"></span> }
 }
 
 fn main() {
