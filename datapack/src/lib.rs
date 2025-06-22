@@ -26,6 +26,7 @@ pub enum CardType {
     PieceRelay,
     PieceCraft,
     Token,
+    Coin,
     Unknown,
 }
 
@@ -47,6 +48,7 @@ impl CardType {
             13 => CardType::PieceCraft,    // クラフトピース
             14 => CardType::ResonaCraft,   // クラフトレゾナ
             15 => CardType::Token,         // トークン
+            16 => CardType::Coin,          // コイン
             _ => CardType::Unknown,
         }
     }
@@ -68,6 +70,7 @@ impl CardType {
             CardType::PieceCraft => 13,    // クラフトピース
             CardType::ResonaCraft => 14,   // クラフトレゾナ
             CardType::Token => 15,         // トークン
+            CardType::Coin => 16,          // コイン
             CardType::Unknown => 0,
         }
     }
@@ -89,6 +92,7 @@ impl CardType {
             CardType::PieceRelay => "ピースリレー",
             CardType::PieceCraft => "ピースクラフト",
             CardType::Token => "トークン",
+            CardType::Coin => "コイン",
             CardType::Unknown => "不明",
         }
     }

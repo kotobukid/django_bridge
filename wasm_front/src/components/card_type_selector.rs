@@ -10,7 +10,7 @@ fn create_card_type_checkbox(
     set_card_type_filter: WriteSignal<CardTypeFilter>,
 ) -> impl IntoView {
     view! {
-        <label class="flex items-center space-x-2 text-sm">
+        <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 rounded px-1 py-1">
             <input
                 type="checkbox"
                 class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"

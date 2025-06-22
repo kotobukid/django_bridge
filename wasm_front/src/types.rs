@@ -104,6 +104,7 @@ pub struct CardTypeFilter {
     pub piece_relay: bool,
     pub piece_craft: bool,
     pub token: bool,
+    pub coin: bool,
 }
 
 impl CardTypeFilter {
@@ -124,6 +125,7 @@ impl CardTypeFilter {
             piece_relay: false,
             piece_craft: false,
             token: false,
+            coin: false,
         }
     }
 
@@ -138,7 +140,8 @@ impl CardTypeFilter {
         self.is_selected_by_code("spell_craft") ||
         self.is_selected_by_code("piece_relay") ||
         self.is_selected_by_code("piece_craft") ||
-        self.is_selected_by_code("token")
+        self.is_selected_by_code("token") ||
+        self.is_selected_by_code("coin")
     }
 
     /// 特定のコードのカードタイプが選択されているかチェック
@@ -159,6 +162,7 @@ impl CardTypeFilter {
             "piece_relay" => self.piece_relay,
             "piece_craft" => self.piece_craft,
             "token" => self.token,
+            "coin" => self.coin,
             _ => false,
         }
     }
@@ -188,6 +192,7 @@ impl CardTypeFilter {
             "piece_relay" => self.piece_relay = value,
             "piece_craft" => self.piece_craft = value,
             "token" => self.token = value,
+            "coin" => self.coin = value,
             _ => {} // 未知のコードは無視
         }
     }
@@ -195,7 +200,7 @@ impl CardTypeFilter {
     pub fn has_any(&self) -> bool {
         self.lrig || self.lrig_assist || self.arts || self.key || self.signi || self.spell 
             || self.resona || self.signi_craft || self.arts_craft || self.resona_craft 
-            || self.spell_craft || self.piece || self.piece_relay || self.piece_craft || self.token
+            || self.spell_craft || self.piece || self.piece_relay || self.piece_craft || self.token || self.coin
     }
 
     pub fn get_selected_card_types(&self) -> Vec<CardType> {
@@ -216,6 +221,7 @@ impl CardTypeFilter {
         if self.piece_relay { selected.push(CardType::PieceRelay); }
         if self.piece_craft { selected.push(CardType::PieceCraft); }
         if self.token { selected.push(CardType::Token); }
+        if self.coin { selected.push(CardType::Coin); }
         
         selected
     }
