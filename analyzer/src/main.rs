@@ -145,12 +145,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     .analyze_with_product_id(&raw_card, raw_card_with_product.product_id)
                     .await
                 {
-                    Ok(create_card) => {
+                    Ok(create_card_with_klass) => {
                         println!("    ✓ 解析成功");
                         if args.verbose {
+                            let create_card = &create_card_with_klass.create_card;
                             println!(
                                 "      - パワー: {}",
-                                create_card.power.unwrap_or_else(|| "N/A".to_string())
+                                create_card.power.as_ref().unwrap_or(&"N/A".to_string())
                             );
                             println!(
                                 "      - ライフバースト: {}",
@@ -164,6 +165,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 "      - 特徴ビット: {:#b} / {:#b}",
                                 create_card.feature_bits1, create_card.feature_bits2
                             );
+                            if !create_card_with_klass.detected_klasses.is_empty() {
+                                println!("      - 検出されたKlass:");
+                                for (cat1, cat2, cat3) in &create_card_with_klass.detected_klasses {
+                                    let klass_str = if let Some(cat3) = cat3 {
+                                        format!("{}:{}/{}", cat1, cat2.as_ref().unwrap_or(&"".to_string()), cat3)
+                                    } else if let Some(cat2) = cat2 {
+                                        format!("{}:{}", cat1, cat2)
+                                    } else {
+                                        cat1.clone()
+                                    };
+                                    println!("        - {}", klass_str);
+                                }
+                            }
                         }
 
                         match analyze_and_save_card_with_product_id(

@@ -1,6 +1,6 @@
 use crate::raw_card_analyzer::{AnalysisError, RawCardAnalyzer, to_half};
 use chrono::{DateTime, Utc};
-use models::card::{Card, CreateCard};
+use models::card::CreateCard;
 use models::r#gen::django_models::RawCardDb;
 use sqlx::{Pool, Postgres, Row};
 use std::sync::Arc;
@@ -8,6 +8,13 @@ use feature::{create_detect_patterns, CardFeature};
 use feature::feature::HashSetToBits;
 use std::collections::HashSet;
 use color::convert_cost;
+
+/// CreateCard with detected Klass information
+#[derive(Debug, Clone)]
+pub struct CreateCardWithKlass {
+    pub create_card: CreateCard,
+    pub detected_klasses: Vec<(String, Option<String>, Option<String>)>,
+}
 
 /// RawCardDb with product_id included
 #[derive(sqlx::FromRow, Debug, Clone)]
@@ -199,36 +206,33 @@ impl SimpleRawCardAnalyzer {
 
     /// HTMLから共通のdd要素を抽出するヘルパーメソッド
     fn extract_dd_elements(&self, html: &str) -> Vec<String> {
+        use regex::Regex;
+        
+        // dt-dd ペアを正しく抽出するための正規表現
+        let dt_dd_regex = Regex::new(r"<dt>([^<]+)</dt>\s*<dd>(.*?)</dd>").unwrap();
         let mut dd_elements = Vec::new();
-
-        // <dt>カード種類</dt> または <dt>種類</dt> 以降の<dd>要素を抽出
+        
+        // まず最初のdt要素（カード種類または種類）を見つける
         let start_patterns = ["<dt>カード種類</dt>", "<dt>種類</dt>"];
-        let mut start_index = None;
-
+        let mut search_start = 0;
+        
         for pattern in &start_patterns {
             if let Some(index) = html.find(pattern) {
-                start_index = Some(index);
+                search_start = index;
                 break;
             }
         }
-
-        if let Some(start) = start_index {
-            let mut current_pos = start;
-
-            // <dd>要素を順番に収集
-            while let Some(dd_start) = html[current_pos..].find("<dd>") {
-                let absolute_dd_start = current_pos + dd_start;
-                if let Some(dd_end) = html[absolute_dd_start..].find("</dd>") {
-                    let absolute_dd_end = absolute_dd_start + dd_end;
-                    let dd_content = &html[absolute_dd_start + 4..absolute_dd_end];
-                    dd_elements.push(dd_content.to_string());
-                    current_pos = absolute_dd_end + 5; // "</dd>"の後
-                } else {
-                    break;
-                }
+        
+        // search_start以降でdt-ddペアを抽出
+        let search_html = &html[search_start..];
+        
+        for caps in dt_dd_regex.captures_iter(search_html) {
+            if let Some(dd_content) = caps.get(2) {
+                let content = dd_content.as_str().trim();
+                dd_elements.push(content.to_string());
             }
         }
-
+        
         dd_elements
     }
 
@@ -291,11 +295,11 @@ impl SimpleRawCardAnalyzer {
             return None;
         }
 
-        // シグニまたはクラフトカードかどうかをチェック
+        // シグニ、クラフト、レゾナカードかどうかをチェック
         let card_type = &dd_elements[0];
-        let is_signi_or_craft = card_type.contains("シグニ") || card_type.contains("クラフト");
+        let has_power = card_type.contains("シグニ") || card_type.contains("クラフト") || card_type.contains("レゾナ");
 
-        if is_signi_or_craft && dd_elements.len() > 7 {
+        if has_power && dd_elements.len() > 7 {
             let power_text = dd_elements[7].trim();
             if !power_text.is_empty() && power_text != "-" {
                 Some(power_text.to_string())
@@ -366,6 +370,79 @@ impl SimpleRawCardAnalyzer {
         } else {
             (None, s)
         }
+    }
+
+    /// HTMLからKlass情報を検出する（dd[1]のカードタイプから）
+    pub fn detect_klass_from_html(&self, html: &str) -> Vec<(String, Option<String>, Option<String>)> {
+        let dd_elements = self.extract_dd_elements(html);
+        let mut klasses = Vec::new();
+
+        // dd[1]にカードタイプがある（シグニの場合は種族情報を含む）
+        if dd_elements.len() > 1 {
+            let card_type_text = &dd_elements[1];
+            
+            // HTMLタグを除去
+            let clean_text = card_type_text
+                .replace("<br>", "")
+                .replace("<br/>", "")
+                .replace("<br />", "");
+
+            // eprintln!("DEBUG: Klass detection - clean_text: '{}'", clean_text);
+
+            // パターン1: "奏羅：宇宙" のような形式（全角コロンも対応）
+            if let Some(colon_pos) = clean_text.find(':') {
+                let cat1 = clean_text[..colon_pos].trim();
+                let rest = clean_text[colon_pos + 1..].trim();
+                
+                // eprintln!("DEBUG: Found half-width colon - cat1: '{}', rest: '{}'", cat1, rest);
+                
+                // パターン1a: "空獣／地獣" のような複数cat2を持つ場合
+                if let Some(slash_pos) = rest.find('/') {
+                    let cat2 = rest[..slash_pos].trim();
+                    let cat3 = rest[slash_pos + 1..].trim();
+                    // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
+                    klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
+                } else {
+                    // パターン1b: "奏羅：宇宙" のような単一cat2の場合
+                    // eprintln!("DEBUG: Colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
+                    klasses.push((cat1.to_string(), Some(rest.to_string()), None));
+                }
+            }
+            // パターン1.5: 全角コロン "奏羅：宇宙" のような形式
+            else if let Some(colon_pos) = clean_text.find('：') {
+                let cat1 = clean_text[..colon_pos].trim();
+                let rest = clean_text[colon_pos + '：'.len_utf8()..].trim();
+                
+                // eprintln!("DEBUG: Found full-width colon - cat1: '{}', rest: '{}'", cat1, rest);
+                
+                // パターン1a: "空獣／地獣" のような複数cat2を持つ場合
+                if let Some(slash_pos) = rest.find('/') {
+                    let cat2 = rest[..slash_pos].trim();
+                    let cat3 = rest[slash_pos + 1..].trim();
+                    // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
+                    klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
+                } else {
+                    // パターン1b: "奏羅：宇宙" のような単一cat2の場合
+                    // eprintln!("DEBUG: Full-width colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
+                    klasses.push((cat1.to_string(), Some(rest.to_string()), None));
+                }
+            }
+            // パターン2: 単純な種族名のみ（ルリグのカードタイプなど）
+            else if !clean_text.is_empty() && clean_text != "-" {
+                // カードタイプがシグニ、クラフト、レゾナの場合のみ種族情報として扱う
+                let dd0 = if !dd_elements.is_empty() { &dd_elements[0] } else { "" };
+                if dd0.contains("シグニ") || dd0.contains("クラフト") || dd0.contains("レゾナ") {
+                    // シグニ、クラフト、レゾナで単純な種族名の場合（まれなケース）
+                    // eprintln!("DEBUG: Simple pattern - cat1: '{}'", clean_text);
+                    klasses.push((clean_text.to_string(), None, None));
+                }
+            } else {
+                // eprintln!("DEBUG: No klass pattern matched for: '{}'", clean_text);
+            }
+        }
+
+        // eprintln!("DEBUG: Final detected klasses: {:?}", klasses);
+        klasses
     }
 
     pub fn detect_story_from_name(name: &str) -> HashSet<CardFeature> {
@@ -480,7 +557,7 @@ impl SimpleRawCardAnalyzer {
         &self,
         raw_card: &RawCardDb,
         product_id: Option<i64>,
-    ) -> Result<CreateCard, AnalysisError> {
+    ) -> Result<CreateCardWithKlass, AnalysisError> {
         // HTMLからカード種別を検出
         let card_type = self.detect_card_type_from_html(&raw_card.raw_html);
         // println!("DEBUG: Card {} - Detected card_type: {}", raw_card.card_number, card_type);
@@ -499,6 +576,7 @@ impl SimpleRawCardAnalyzer {
         let timing_str = self.detect_timing_from_html(&raw_card.raw_html);
         let limit_ex_str = self.detect_limit_ex_from_html(&raw_card.raw_html);
         let (story, story_as_skill) = self.detect_story_from_html(&raw_card.raw_html);
+        let detected_klasses = self.detect_klass_from_html(&raw_card.raw_html);
 
         // 数値フィールドの型変換（String → i32）
         let level: Option<i32> = level_str.and_then(|s| s.parse().ok());
@@ -532,7 +610,22 @@ impl SimpleRawCardAnalyzer {
             feature_bits2 = feature_bits2 | bits.1;
         }
 
-        let name = to_half(&raw_card.name);
+        let mut name = to_half(&raw_card.name);
+        // nameが256バイトを超える場合は切り詰める
+        if name.len() > 256 {
+            name = name.chars()
+                .scan(0, |acc, c| {
+                    let char_len = c.len_utf8();
+                    if *acc + char_len <= 256 {
+                        *acc += char_len;
+                        Some(c)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+        }
+        
         {
             let skills = Self::detect_story_from_name(&name);
             let bits = skills.to_bits();
@@ -541,10 +634,31 @@ impl SimpleRawCardAnalyzer {
         }
         
         // 基本的なCreateCardを作成
-        Ok(CreateCard {
+        let mut pronunciation = to_half(&raw_card.name);
+        // pronunciation が128文字を超える場合は切り詰める（バイト長ベース）
+        if pronunciation.len() > 128 {
+            // eprintln!("DEBUG: Truncating pronunciation from {} to 128 bytes", pronunciation.len());
+            // UTF-8文字の境界を考慮して切り詰める
+            pronunciation = pronunciation.chars()
+                .collect::<String>()
+                .chars()
+                .scan(0, |acc, c| {
+                    let char_len = c.len_utf8();
+                    if *acc + char_len <= 128 {
+                        *acc += char_len;
+                        Some(c)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            // eprintln!("DEBUG: After truncation: {} bytes", pronunciation.len());
+        }
+        
+        let create_card = CreateCard {
             name,
             code: to_half(&raw_card.card_number),
-            pronunciation: to_half(&raw_card.name), // デフォルトで名前を使用
+            pronunciation,
             color,
             cost,
             level,
@@ -568,6 +682,11 @@ impl SimpleRawCardAnalyzer {
             feature_bits1,
             feature_bits2,
             ex1: None,
+        };
+
+        Ok(CreateCardWithKlass {
+            create_card,
+            detected_klasses,
         })
     }
 }
@@ -575,7 +694,8 @@ impl SimpleRawCardAnalyzer {
 #[async_trait::async_trait]
 impl RawCardAnalyzer for SimpleRawCardAnalyzer {
     async fn analyze(&self, raw_card: &RawCardDb) -> Result<CreateCard, AnalysisError> {
-        self.analyze_with_product_id(raw_card, None).await
+        let result = self.analyze_with_product_id(raw_card, None).await?;
+        Ok(result.create_card)
     }
 }
 
@@ -589,10 +709,287 @@ impl CardRepository {
         Self { pool }
     }
 
+    /// Klass情報をもとにwix_klassテーブルからIDを取得（既存データを優先）
+    async fn get_or_create_klass(
+        &self,
+        cat1: &str,
+        cat2: Option<&str>,
+        cat3: Option<&str>,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
+        // eprintln!("DEBUG: Looking for Klass: '{}', '{:?}', '{:?}'", cat1, cat2, cat3);
+        
+        // まず正確なマッチを試行（既存データを優先）
+        let existing_klass = sqlx::query(
+            r#"
+            SELECT id FROM wix_klass 
+            WHERE cat1 = $1 AND 
+                  COALESCE(cat2, '') = COALESCE($2, '') AND 
+                  COALESCE(cat3, '') = COALESCE($3, '')
+            "#
+        )
+        .bind(cat1)
+        .bind(cat2)
+        .bind(cat3)
+        .fetch_optional(self.pool.as_ref())
+        .await?;
+
+        if let Some(row) = existing_klass {
+            let id: i64 = row.get("id");
+            // eprintln!("DEBUG: Found existing Klass with ID: {}", id);
+            return Ok(id);
+        }
+        
+        // 正確なマッチがない場合、5バイト制限で切り詰めて再試行
+        let cat1_truncated = if cat1.len() > 5 {
+            cat1.chars()
+                .scan(0, |acc, c| {
+                    let char_len = c.len_utf8();
+                    if *acc + char_len <= 5 {
+                        *acc += char_len;
+                        Some(c)
+                    } else {
+                        None
+                    }
+                })
+                .collect::<String>()
+        } else {
+            cat1.to_string()
+        };
+        
+        let cat2_truncated = cat2.map(|s| {
+            if s.len() > 5 {
+                s.chars()
+                    .scan(0, |acc, c| {
+                        let char_len = c.len_utf8();
+                        if *acc + char_len <= 5 {
+                            *acc += char_len;
+                            Some(c)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<String>()
+            } else {
+                s.to_string()
+            }
+        });
+        
+        let cat3_truncated = cat3.map(|s| {
+            if s.len() > 5 {
+                s.chars()
+                    .scan(0, |acc, c| {
+                        let char_len = c.len_utf8();
+                        if *acc + char_len <= 5 {
+                            *acc += char_len;
+                            Some(c)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<String>()
+            } else {
+                s.to_string()
+            }
+        });
+        
+        // eprintln!("DEBUG: Fallback - looking for truncated Klass: '{}', '{:?}', '{:?}'", 
+        //           cat1_truncated, cat2_truncated, cat3_truncated);
+        
+        // 切り詰められた値で検索
+        let truncated_klass = sqlx::query(
+            r#"
+            SELECT id FROM wix_klass 
+            WHERE cat1 = $1 AND 
+                  COALESCE(cat2, '') = COALESCE($2, '') AND 
+                  COALESCE(cat3, '') = COALESCE($3, '')
+            "#
+        )
+        .bind(&cat1_truncated)
+        .bind(cat2_truncated.as_deref())
+        .bind(cat3_truncated.as_deref())
+        .fetch_optional(self.pool.as_ref())
+        .await?;
+
+        if let Some(row) = truncated_klass {
+            let id: i64 = row.get("id");
+            // eprintln!("DEBUG: Found truncated Klass with ID: {}", id);
+            Ok(id)
+        } else {
+            // 既存データにない場合のみ新規作成（切り詰められた値で）
+            // eprintln!("WARNING: Creating new Klass entry for '{}:{:?}' - this might indicate missing master data", cat1, cat2);
+            let result = sqlx::query(
+                r#"
+                INSERT INTO wix_klass (cat1, cat2, cat3, sort_asc)
+                VALUES ($1, $2, $3, 0)
+                RETURNING id
+                "#
+            )
+            .bind(&cat1_truncated)
+            .bind(cat2_truncated.as_deref())
+            .bind(cat3_truncated.as_deref())
+            .fetch_one(self.pool.as_ref())
+            .await?;
+
+            let id: i64 = result.get("id");
+            // eprintln!("DEBUG: Created new Klass with ID: {}", id);
+            Ok(id)
+        }
+    }
+
+    /// wix_card_klassテーブルにリレーションを追加（重複回避）
+    async fn assign_klass_to_card(
+        &self,
+        card_id: i64,
+        klass_id: i64,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        sqlx::query(
+            r#"
+            INSERT INTO wix_card_klass (card_id, klass_id)
+            VALUES ($1, $2)
+            ON CONFLICT (card_id, klass_id) DO NOTHING
+            "#
+        )
+        .bind(card_id)
+        .bind(klass_id)
+        .execute(self.pool.as_ref())
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn save_card(
         &self,
         create_card: CreateCard,
     ) -> Result<i64, Box<dyn std::error::Error>> {
+        // フィールド長チェック（デバッグ用）
+        // if let Some(ref power) = create_card.power {
+        //     if power.len() > 5 {
+        //         // eprintln!("WARNING: Power field too long: '{}' (length: {})", power, power.len());
+        //     }
+        // }
+        // if let Some(ref cost) = create_card.cost {
+        //     if cost.len() > 16 {
+        //         // eprintln!("WARNING: Cost field too long: '{}' (length: {})", cost, cost.len());
+        //     }
+        // }
+        // if let Some(ref story) = create_card.story {
+        //     if story.len() > 16 {
+        //         eprintln!("WARNING: Story field too long: '{}' (length: {})", story, story.len());
+        //     }
+        // }
+        // if let Some(ref rarity) = create_card.rarity {
+        //     if rarity.len() > 8 {
+        //         eprintln!("WARNING: Rarity field too long: '{}' (length: {})", rarity, rarity.len());
+        //     }
+        // }
+        // // デバッグ：全てのフィールド値をログ出力
+        // eprintln!("DEBUG: All field values for card {}:", create_card.code);
+        // eprintln!("  name: '{}' ({} bytes)", create_card.name, create_card.name.len());
+        // eprintln!("  code: '{}' ({} bytes)", create_card.code, create_card.code.len());
+        // eprintln!("  pronunciation: '{}' ({} bytes)", create_card.pronunciation, create_card.pronunciation.len());
+        // eprintln!("  color: {}", create_card.color);
+        // if let Some(ref cost) = create_card.cost {
+        //     eprintln!("  cost: '{}' ({} bytes)", cost, cost.len());
+        // } else {
+        //     eprintln!("  cost: None");
+        // }
+        // eprintln!("  level: {:?}", create_card.level);
+        // eprintln!("  limit: {:?}", create_card.limit);
+        // eprintln!("  limit_ex: {:?}", create_card.limit_ex);
+        // eprintln!("  product: {}", create_card.product);
+        // eprintln!("  card_type: {}", create_card.card_type);
+        // if let Some(ref power) = create_card.power {
+        //     eprintln!("  power: '{}' ({} bytes)", power, power.len());
+        // } else {
+        //     eprintln!("  power: None");
+        // }
+        // eprintln!("  has_burst: {}", create_card.has_burst);
+        // if let Some(ref skill_text) = create_card.skill_text {
+        //     eprintln!("  skill_text: '{}' ({} bytes)", skill_text, skill_text.len());
+        // } else {
+        //     eprintln!("  skill_text: None");
+        // }
+        // if let Some(ref burst_text) = create_card.burst_text {
+        //     eprintln!("  burst_text: '{}' ({} bytes)", burst_text, burst_text.len());
+        // } else {
+        //     eprintln!("  burst_text: None");
+        // }
+        // eprintln!("  format: {}", create_card.format);
+        // if let Some(ref story) = create_card.story {
+        //     eprintln!("  story: '{}' ({} bytes)", story, story.len());
+        // } else {
+        //     eprintln!("  story: None");
+        // }
+        // if let Some(ref rarity) = create_card.rarity {
+        //     eprintln!("  rarity: '{}' ({} bytes)", rarity, rarity.len());
+        // } else {
+        //     eprintln!("  rarity: None");
+        // }
+        // eprintln!("  timing: {:?}", create_card.timing);
+        // if let Some(ref url) = create_card.url {
+        //     eprintln!("  url: '{}' ({} bytes)", url, url.len());
+        // } else {
+        //     eprintln!("  url: None");
+        // }
+        // eprintln!("  feature_bits1: {}", create_card.feature_bits1);
+        // eprintln!("  feature_bits2: {}", create_card.feature_bits2);
+        // if let Some(ref ex1) = create_card.ex1 {
+        //     eprintln!("  ex1: '{}' ({} bytes)", ex1, ex1.len());
+        // } else {
+        //     eprintln!("  ex1: None");
+        // }
+        
+        // デバッグ：制限違反をチェック（修正後の値で）
+        let mut violations = Vec::new();
+        
+        if create_card.name.len() > 256 {
+            violations.push(format!("name too long: {} > 256", create_card.name.len()));
+        }
+        if create_card.code.len() > 16 {
+            violations.push(format!("code too long: {} > 16", create_card.code.len()));
+        }
+        if create_card.pronunciation.len() > 128 {
+            violations.push(format!("pronunciation too long: {} > 128", create_card.pronunciation.len()));
+        }
+        if let Some(ref cost) = create_card.cost {
+            if cost.len() > 16 {
+                violations.push(format!("cost too long: {} > 16", cost.len()));
+            }
+        }
+        if let Some(ref power) = create_card.power {
+            if power.len() > 5 {
+                violations.push(format!("power too long: {} > 5", power.len()));
+            }
+        }
+        if let Some(ref story) = create_card.story {
+            if story.len() > 16 {
+                violations.push(format!("story too long: {} > 16", story.len()));
+            }
+        }
+        if let Some(ref rarity) = create_card.rarity {
+            if rarity.len() > 8 {
+                violations.push(format!("rarity too long: {} > 8", rarity.len()));
+            }
+        }
+        if let Some(ref url) = create_card.url {
+            if url.len() > 200 {
+                violations.push(format!("url too long: {} > 200", url.len()));
+            }
+        }
+        if let Some(ref ex1) = create_card.ex1 {
+            if ex1.len() > 256 {
+                violations.push(format!("ex1 too long: {} > 256", ex1.len()));
+            }
+        }
+        
+        if !violations.is_empty() {
+            eprintln!("FIELD LENGTH VIOLATIONS:");
+            for violation in &violations {
+                eprintln!("  {}", violation);
+            }
+            return Err(format!("Field length violations: {}", violations.join(", ")).into());
+        }
+
         let result = sqlx::query(
             r#"
             INSERT INTO wix_card (
@@ -654,6 +1051,27 @@ impl CardRepository {
         let id: i64 = result.get("id");
         Ok(id)
     }
+
+    pub async fn save_card_with_klass(
+        &self,
+        create_card_with_klass: CreateCardWithKlass,
+    ) -> Result<i64, Box<dyn std::error::Error>> {
+        // まずCardを保存
+        let card_id = self.save_card(create_card_with_klass.create_card).await?;
+
+        // 検出されたKlassを処理
+        for (cat1, cat2, cat3) in create_card_with_klass.detected_klasses {
+            let klass_id = self.get_or_create_klass(
+                &cat1,
+                cat2.as_deref(),
+                cat3.as_deref(),
+            ).await?;
+
+            self.assign_klass_to_card(card_id, klass_id).await?;
+        }
+
+        Ok(card_id)
+    }
 }
 
 /// RawCardを解析してDBに保存する
@@ -673,13 +1091,13 @@ pub async fn analyze_and_save_card_with_product_id(
     let analyzer = SimpleRawCardAnalyzer::new();
 
     // RawCardを解析
-    let create_card = analyzer
+    let create_card_with_klass = analyzer
         .analyze_with_product_id(raw_card, product_id)
         .await?;
 
-    // DBに保存
+    // DBに保存（Klass情報も含む）
     let card_repo = CardRepository::new(Arc::new(pool.clone()));
-    let card_id = card_repo.save_card(create_card).await?;
+    let card_id = card_repo.save_card_with_klass(create_card_with_klass).await?;
 
     // RawCardを解析済みにマーク
     sqlx::query(
