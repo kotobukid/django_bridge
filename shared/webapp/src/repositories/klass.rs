@@ -1,8 +1,9 @@
 use models::gen::django_models::{CreateKlass, KlassDb, WixCardKlassRel};
-use sqlx::{Pool, Postgres};
+use sqlx::{Pool, Postgres, Row};
 use std::collections::HashMap;
 use std::sync::Arc;
 use thiserror::Error;
+use super::StaticCodeGenerator;
 
 /// クラスリポジトリのエラー型
 #[derive(Debug, Error)]
@@ -165,5 +166,131 @@ impl KlassRelRepository {
         }
 
         Ok(())
+    }
+}
+
+/// KlassRepository for static code generation
+#[derive(Clone)]
+pub struct KlassRepository {
+    db_connector: Arc<Pool<Postgres>>,
+}
+
+impl KlassRepository {
+    pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
+        Self { db_connector: pool }
+    }
+
+    /// Get all Klass entries ordered by sort_asc
+    pub async fn get_all_klasses(&self) -> Result<Vec<KlassDb>, sqlx::Error> {
+        sqlx::query_as::<_, KlassDb>("SELECT * FROM wix_klass ORDER BY sort_asc")
+            .fetch_all(&*self.db_connector)
+            .await
+    }
+
+    /// Get card-klass relationships for bit flag generation
+    pub async fn get_card_klass_relationships(&self) -> Result<Vec<(i64, Vec<i64>)>, sqlx::Error> {
+        let rows = sqlx::query(
+            r#"
+            SELECT c.id as card_id, array_agg(k.id ORDER BY k.sort_asc) as klass_ids
+            FROM wix_card c
+            LEFT JOIN wix_card_klass ck ON c.id = ck.card_id
+            LEFT JOIN wix_klass k ON ck.klass_id = k.id
+            GROUP BY c.id
+            ORDER BY c.id
+            "#,
+        )
+        .fetch_all(&*self.db_connector)
+        .await?;
+
+        let mut relationships = Vec::new();
+        for row in rows {
+            let card_id: i64 = row.get("card_id");
+            let klass_ids: Option<Vec<i64>> = row.get("klass_ids");
+            let klass_ids = klass_ids.unwrap_or_default();
+            // Filter out NULL values that come from LEFT JOIN
+            let klass_ids: Vec<i64> = klass_ids.into_iter().filter(|&id| id != 0).collect();
+            relationships.push((card_id, klass_ids));
+        }
+
+        Ok(relationships)
+    }
+}
+
+impl StaticCodeGenerator for KlassRepository {
+    async fn code(&self) -> String {
+        let lines = self.get_all_as_code().await;
+        format!(
+            "{}{}{}",
+            KlassRepository::headline(lines.len() as i32),
+            lines.join("\n"),
+            KlassRepository::tail()
+        )
+    }
+
+    async fn get_all_as_code(&self) -> Vec<String> {
+        let klasses = self.get_all_klasses().await.unwrap_or_default();
+        
+        klasses
+            .into_iter()
+            .enumerate()
+            .map(|(index, klass)| {
+                let cat2_str = klass.cat2.as_deref().unwrap_or("");
+                let cat3_str = klass.cat3.as_deref().unwrap_or("");
+                
+                format!(
+                    r#"({}, "{}", "{}", "{}", {}),"#,
+                    klass.id,
+                    klass.cat1,
+                    cat2_str,
+                    cat3_str,
+                    index // bit position
+                )
+            })
+            .collect()
+    }
+
+    fn headline(length: i32) -> String {
+        format!(
+            r#"// Klass data: (id, cat1, cat2, cat3, bit_position)
+pub type KlassStatic = (i64, &'static str, &'static str, &'static str, u32);
+pub const KLASS_LIST: &[KlassStatic; {}] = &["#,
+            length
+        )
+    }
+
+    fn tail() -> &'static str {
+        r#"];
+
+// Klass bit flag utilities
+pub fn klass_ids_to_bits(klass_ids: &[i64]) -> u64 {
+    let mut bits = 0u64;
+    for &klass_id in klass_ids {
+        if let Some(bit_pos) = get_klass_bit_position(klass_id) {
+            bits |= 1u64 << bit_pos;
+        }
+    }
+    bits
+}
+
+pub fn get_klass_bit_position(klass_id: i64) -> Option<u32> {
+    KLASS_LIST.iter().find(|k| k.0 == klass_id).map(|k| k.4)
+}
+
+pub fn has_klass_bits(card_klass_bits: u64, filter_klass_bits: u64) -> bool {
+    (card_klass_bits & filter_klass_bits) != 0
+}
+
+// Generate bit mask for display labels
+pub fn get_klass_display_name(klass_id: i64) -> Option<String> {
+    KLASS_LIST.iter().find(|k| k.0 == klass_id).map(|k| {
+        if !k.2.is_empty() && !k.3.is_empty() {
+            format!("{}:{}/{}", k.1, k.2, k.3)
+        } else if !k.2.is_empty() {
+            format!("{}:{}", k.1, k.2)
+        } else {
+            k.1.to_string()
+        }
+    })
+}"#
     }
 }

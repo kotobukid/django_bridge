@@ -222,6 +222,36 @@ impl StaticCodeGenerator for CardRepository {
                 (id, sort_asc)
             })
             .collect();
+
+        // Klass relationships と bit positions を取得
+        let klass_rows = sqlx::query("SELECT id, sort_asc FROM wix_klass ORDER BY sort_asc")
+            .fetch_all(&*self.db_connector)
+            .await
+            .unwrap();
+        
+        let klass_bit_map: HashMap<i64, u32> = klass_rows
+            .into_iter()
+            .enumerate()
+            .map(|(index, row)| {
+                let id: i64 = row.get("id");
+                (id, index as u32)
+            })
+            .collect();
+
+        // Card-Klass relationships を取得
+        let card_klass_rows = sqlx::query(
+            "SELECT card_id, klass_id FROM wix_card_klass"
+        )
+        .fetch_all(&*self.db_connector)
+        .await
+        .unwrap();
+        
+        let mut card_klass_map: HashMap<i64, Vec<i64>> = HashMap::new();
+        for row in card_klass_rows {
+            let card_id: i64 = row.get("card_id");
+            let klass_id: i64 = row.get("klass_id");
+            card_klass_map.entry(card_id).or_default().push(klass_id);
+        }
         
         // カードをソート
         let mut cards = cards;
@@ -233,14 +263,27 @@ impl StaticCodeGenerator for CardRepository {
 
         cards
             .into_iter()
-            .map(Card::from)
-            .map(|c| c.to_rust_code())
+            .map(|card| {
+                let card_obj = Card::from(card);
+                
+                // Calculate klass_bits for this card
+                let empty_vec = vec![];
+                let klass_ids = card_klass_map.get(&card_obj.id).unwrap_or(&empty_vec);
+                let mut klass_bits = 0u64;
+                for &klass_id in klass_ids {
+                    if let Some(&bit_pos) = klass_bit_map.get(&klass_id) {
+                        klass_bits |= 1u64 << bit_pos;
+                    }
+                }
+                
+                card_obj.to_rust_code_with_klass_bits(klass_bits)
+            })
             .collect()
     }
 
     fn headline(length: i32) -> String {
         format!(
-            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, &'static str, u8, u8, u8, i64, i64, &'static str);pub const CARD_LIST: &[CardStatic; {}] = &[",
+            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, &'static str, u8, u8, u8, i64, i64, u64, &'static str);pub const CARD_LIST: &[CardStatic; {}] = &[",
             length
         )
     }

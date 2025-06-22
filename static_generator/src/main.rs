@@ -7,7 +7,7 @@ use std::path::Path;
 use std::sync::Arc;
 use std::time::Duration;
 use std::{env, fs};
-use webapp::repositories::{CardRepository, CardTypeRepository, ProductRepository, StaticCodeGenerator};
+use webapp::repositories::{CardRepository, CardTypeRepository, KlassRepository, ProductRepository, StaticCodeGenerator};
 
 #[tokio::main]
 async fn main() {
@@ -53,6 +53,7 @@ async fn main() {
     let card_repo = CardRepository::new(pool.clone());
     let product_repo = ProductRepository::new(pool.clone());
     let cardtype_repo = CardTypeRepository::new(pool.clone());
+    let klass_repo = KlassRepository::new(pool.clone());
 
     write_to_file(
         "../datapack/src/gen/cards.rs",
@@ -69,7 +70,12 @@ async fn main() {
         cardtype_repo.code().await.as_str(),
     );
     
-    println!("extract cards, products, and card types")
+    write_to_file(
+        "../datapack/src/gen/klasses.rs",
+        klass_repo.code().await.as_str(),
+    );
+    
+    println!("extract cards, products, card types, and klasses")
 }
 
 fn write_to_file(file_name: &str, content: &str) {

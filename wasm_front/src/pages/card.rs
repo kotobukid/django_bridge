@@ -1,8 +1,8 @@
 use crate::components::{
-    CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, LevelSelector, OverlayButton, Pagination,
+    CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination,
     PowerSelector, ProductOverlay, ScrollToTopButton, TextSearch,
 };
-use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, PowerFilter, ProductFilter};
+use crate::types::{CardTypeFilter, ColorFilter, KlassFilter, LevelFilter, PowerFilter, ProductFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
 use std::collections::HashMap;
@@ -15,6 +15,7 @@ pub fn CardPage() -> impl IntoView {
     let (power_filter, set_power_filter) = signal(PowerFilter::new());
     let (search_text, set_search_text) = signal(String::new());
     let product_filter = RwSignal::new(ProductFilter::new());
+    let klass_filter = RwSignal::new(KlassFilter::new());
     let selected_features = RwSignal::new(HashMap::<String, bool>::new());
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new());
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
@@ -24,6 +25,7 @@ pub fn CardPage() -> impl IntoView {
     // オーバーレイ表示状態
     let (show_feature_overlay, set_show_feature_overlay) = signal(false);
     let (show_product_overlay, set_show_product_overlay) = signal(false);
+    let (show_klass_overlay, set_show_klass_overlay) = signal(false);
     
     // オーバーレイの強制再描画用
     let (feature_overlay_key, set_feature_overlay_key) = signal(0u32);
@@ -32,7 +34,7 @@ pub fn CardPage() -> impl IntoView {
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
 
-    // Apply filters when color, features, card types, products, levels, or text search change
+    // Apply filters when color, features, card types, products, levels, klass, or text search change
     Effect::new(move || {
         if let Some(Ok(cards)) = all_cards.get() {
             let color = color_filter.get();
@@ -40,6 +42,7 @@ pub fn CardPage() -> impl IntoView {
             let level = level_filter.get();
             let power = power_filter.get();
             let product = product_filter.read();
+            let klass = klass_filter.read();
             let feature_names = selected_feature_names.get();
             let text_search = search_text.get();
 
@@ -62,7 +65,9 @@ pub fn CardPage() -> impl IntoView {
                 Vec::new()
             };
 
-            let filtered = datapack::fetch_by_colors_features_card_types_products_levels_power_threshold_and_text_native(
+            let klass_bits = klass.selected_bits;
+
+            let filtered = datapack::fetch_by_colors_features_card_types_products_levels_power_threshold_klass_and_text_native(
                 &cards,
                 color_bits,
                 &feature_names,
@@ -70,6 +75,7 @@ pub fn CardPage() -> impl IntoView {
                 &products,
                 &levels,
                 power.min_power,
+                klass_bits,
                 &text_search,
             );
 
@@ -97,6 +103,8 @@ pub fn CardPage() -> impl IntoView {
 
     let has_active_products = Memo::new(move |_| product_filter.read().has_any());
     
+    let has_active_klass = Memo::new(move |_| klass_filter.read().has_any());
+    
     // いずれかのフィルタがアクティブかどうかを判定
     let has_any_active_filter = Memo::new(move |_| {
         color_filter.get().has_any() ||
@@ -105,7 +113,8 @@ pub fn CardPage() -> impl IntoView {
         power_filter.get().has_any() ||
         !search_text.get().is_empty() ||
         has_active_features.get() ||
-        has_active_products.get()
+        has_active_products.get() ||
+        has_active_klass.get()
     });
     
     // 全クリア処理
@@ -118,6 +127,7 @@ pub fn CardPage() -> impl IntoView {
         selected_features.update(|f| f.clear());
         set_selected_feature_names.set(Vec::new());
         product_filter.update(|f| f.clear_all());
+        klass_filter.update(|f| f.clear_all());
     };
 
     view! {
@@ -139,6 +149,11 @@ pub fn CardPage() -> impl IntoView {
                             label="製品".to_string()
                             is_active=Signal::derive(move || has_active_products.get())
                             on_click=Callback::new(move |_| set_show_product_overlay.set(true))
+                        />
+                        <OverlayButton
+                            label="クラス".to_string()
+                            is_active=Signal::derive(move || has_active_klass.get())
+                            on_click=Callback::new(move |_| set_show_klass_overlay.set(true))
                         />
                     </div>
 
@@ -321,6 +336,13 @@ pub fn CardPage() -> impl IntoView {
                     </div>
                 </div>
             </Show>
+
+            // Klassオーバーレイ
+            <KlassOverlay
+                klass_filter=klass_filter
+                is_open=show_klass_overlay.into()
+                on_close=set_show_klass_overlay.into()
+            />
             
             // スクロールトップボタン
             <ScrollToTopButton />

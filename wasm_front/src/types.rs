@@ -317,3 +317,156 @@ impl PowerFilter {
         format!("{}+", threshold)
     }
 }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct KlassFilter {
+    pub selected_bits: u64,
+}
+
+impl KlassFilter {
+    pub fn new() -> Self {
+        Self {
+            selected_bits: 0,
+        }
+    }
+    
+    pub fn has_any(&self) -> bool {
+        self.selected_bits != 0
+    }
+    
+    pub fn toggle_klass(&mut self, klass_id: i64) {
+        use datapack::gen::klasses::get_klass_bit_position;
+        
+        if let Some(bit_position) = get_klass_bit_position(klass_id) {
+            let bit_mask = 1u64 << bit_position;
+            self.selected_bits ^= bit_mask;
+        }
+    }
+    
+    pub fn is_klass_selected(&self, klass_id: i64) -> bool {
+        use datapack::gen::klasses::get_klass_bit_position;
+        
+        if let Some(bit_position) = get_klass_bit_position(klass_id) {
+            let bit_mask = 1u64 << bit_position;
+            (self.selected_bits & bit_mask) != 0
+        } else {
+            false
+        }
+    }
+    
+    pub fn clear_all(&mut self) {
+        self.selected_bits = 0;
+    }
+}
+
+// Klassマトリックス用のデータ構造
+#[derive(Debug, Clone, PartialEq)]
+pub struct KlassInfo {
+    pub id: i64,
+    pub cat1: String,    // システム（奏像、奏武など）
+    pub cat2: String,    // タイプ（天使、ウェポンなど）
+    pub cat3: String,    // サブタイプ（ほとんど空）
+    pub bit_position: u32,
+}
+
+impl KlassInfo {
+    pub fn display_name(&self) -> String {
+        if !self.cat2.is_empty() && !self.cat3.is_empty() {
+            // cat2とcat3がある場合: "cat2/cat3"
+            format!("{}/{}", self.cat2, self.cat3)
+        } else if !self.cat2.is_empty() {
+            // cat2がある場合: "cat2"
+            self.cat2.clone()
+        } else {
+            // cat1のみの場合: "cat1" (解放派、闘争派、防衛派、奏元、精元)
+            self.cat1.clone()
+        }
+    }
+}
+
+// Klassマトリックス構築用の関数
+pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
+    use datapack::gen::klasses::KLASS_LIST;
+    use std::collections::HashMap;
+    
+    let mut result = Vec::new();
+    
+    // cat1のみのエントリ（解放派、闘争派、防衛派、奏元、精元）を個別に処理
+    let mut standalone_klasses = Vec::new();
+    let mut cat1_systems: HashMap<String, Vec<KlassInfo>> = HashMap::new();
+    
+    for &(id, cat1, cat2, cat3, bit_position) in KLASS_LIST.iter() {
+        let klass_info = KlassInfo {
+            id,
+            cat1: cat1.to_string(),
+            cat2: cat2.to_string(),
+            cat3: cat3.to_string(),
+            bit_position,
+        };
+        
+        if cat2.is_empty() {
+            // cat1のみ（解放派、闘争派、防衛派、奏元、精元）
+            standalone_klasses.push(klass_info);
+        } else {
+            // cat1+cat2のシステム（奏像、奏武など）
+            cat1_systems
+                .entry(cat1.to_string())
+                .or_insert_with(Vec::new)
+                .push(klass_info);
+        }
+    }
+    
+    // cat1+cat2システムを追加（奏→精の順）
+    let mut sorted_systems: Vec<(String, Vec<KlassInfo>)> = cat1_systems.into_iter().collect();
+    sorted_systems.sort_by(|a, b| {
+        let order_a = get_system_order(&a.0);
+        let order_b = get_system_order(&b.0);
+        order_a.cmp(&order_b)
+    });
+    
+    // 各システム内のタイプも並び替え
+    for (_, types) in &mut sorted_systems {
+        types.sort_by(|a, b| a.cat2.cmp(&b.cat2));
+    }
+    
+    result.extend(sorted_systems);
+    
+    // standalone klassesを最後に追加（独立したカテゴリとして）
+    if !standalone_klasses.is_empty() {
+        standalone_klasses.sort_by(|a, b| {
+            let order_a = get_system_order(&a.cat1);
+            let order_b = get_system_order(&b.cat1);
+            order_a.cmp(&order_b)
+        });
+        result.push(("その他".to_string(), standalone_klasses));
+    }
+    
+    result
+}
+
+fn get_system_order(system: &str) -> usize {
+    match system {
+        "奏像" => 0,
+        "奏武" => 1,
+        "奏羅" => 2,
+        "奏械" => 3,
+        "奏生" => 4,
+        "奏元" => 5,
+        "精像" => 6,
+        "精武" => 7,
+        "精羅" => 8,
+        "精械" => 9,
+        "精生" => 10,
+        "精元" => 11,
+        "解放派" => 12,
+        "闘争派" => 13,
+        "防衛派" => 14,
+        // 色単体
+        "白" => 15,
+        "赤" => 16,
+        "青" => 17,
+        "緑" => 18,
+        "黒" => 19,
+        _ => 999,
+    }
+}

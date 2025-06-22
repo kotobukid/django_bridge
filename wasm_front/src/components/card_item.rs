@@ -220,7 +220,7 @@ pub fn CardItem(
                                             </span>
                                         }.into_any()
                                     } else {
-                                        view! { <span></span> }.into_any()
+                                        view! {}.into_any()
                                     }
                                 }
                                 {
@@ -233,7 +233,7 @@ pub fn CardItem(
                                             </span>
                                         }.into_any()
                                     } else {
-                                        view! { <span></span> }.into_any()
+                                        view! {}.into_any()
                                     }
                                 }
                                 {
@@ -246,7 +246,24 @@ pub fn CardItem(
                                             </span>
                                         }.into_any()
                                     } else {
-                                        view! { <span></span> }.into_any()
+                                        view! {}.into_any()
+                                    }
+                                }
+                                {
+                                    // クラス表示
+                                    let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
+                                    if !klass_names.is_empty() {
+                                        view! {
+                                            {klass_names.into_iter().map(|klass_name| {
+                                                view! {
+                                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                                                        {klass_name}
+                                                    </span>
+                                                }
+                                            }).collect_view()}
+                                        }.into_any()
+                                    } else {
+                                        view! {}.into_any()
                                     }
                                 }
                             </div>
@@ -363,7 +380,7 @@ pub fn CardItem(
                                                     </span>
                                                 }.into_any()
                                             } else {
-                                                view! { <span></span> }.into_any()
+                                                view! {}.into_any()
                                             }
                                         }
                                         {
@@ -375,7 +392,7 @@ pub fn CardItem(
                                                     </span>
                                                 }.into_any()
                                             } else {
-                                                view! { <span></span> }.into_any()
+                                                view! {}.into_any()
                                             }
                                         }
                                         {
@@ -387,7 +404,23 @@ pub fn CardItem(
                                                     </span>
                                                 }.into_any()
                                             } else {
-                                                view! { <span></span> }.into_any()
+                                                view! {}.into_any()
+                                            }
+                                        }
+                                        {
+                                            let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
+                                            if !klass_names.is_empty() {
+                                                view! {
+                                                    {klass_names.into_iter().map(|klass_name| {
+                                                        view! {
+                                                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                                {klass_name}
+                                                            </span>
+                                                        }
+                                                    }).collect_view()}
+                                                }.into_any()
+                                            } else {
+                                                view! {}.into_any()
                                             }
                                         }
                                     </div>

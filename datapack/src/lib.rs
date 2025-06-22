@@ -7,6 +7,7 @@ use feature::feature::{export_features, CardFeature, FeatureTag};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
+use gen::klasses::{KLASS_LIST, get_klass_display_name};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CardType {
@@ -127,6 +128,7 @@ struct CardCompact(
         u8,           // timing
         i64,          // feature_bits1
         i64,          // feature_bits2
+        u64,          // klass_bits
         &'static str, // ex1
     ),
 );
@@ -156,6 +158,7 @@ pub struct CardExport {
     timing: u8,            // timing
     feature_bits1: i64,    // feature_bits1
     feature_bits2: i64,    // feature_bits2
+    klass_bits: u64,       // klass_bits
     ex1: String,
 }
 
@@ -272,6 +275,11 @@ impl CardExport {
     }
 
     #[wasm_bindgen(getter)]
+    pub fn klass_bits(&self) -> u64 {
+        self.klass_bits
+    }
+
+    #[wasm_bindgen(getter)]
     pub fn ex1(&self) -> String {
         self.ex1.clone()
     }
@@ -301,6 +309,7 @@ impl
         u8,           // timing
         i64,          // feature_bits1
         i64,          // feature_bits2
+        u64,          // klass_bits
         &'static str, // ex1
     )> for CardExport
 {
@@ -328,6 +337,7 @@ impl
             u8,           // timing
             i64,          // feature_bits1
             i64,          // feature_bits2
+            u64,          // klass_bits
             &'static str, // ex1
         ),
     ) -> Self {
@@ -355,7 +365,8 @@ impl
             timing: v.19,
             feature_bits1: v.20,
             feature_bits2: v.21,
-            ex1: v.22.to_string(),
+            klass_bits: v.22,
+            ex1: v.23.to_string(),
         }
     }
 }
@@ -365,7 +376,7 @@ impl Display for CardCompact {
         let c = self.0;
         write!(
             f,
-            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n ex1: {}\n",
+            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n klass_bits: {}\n ex1: {}\n",
             c.0,    // id
             c.1,    // name
             c.2,    // code
@@ -388,7 +399,8 @@ impl Display for CardCompact {
             c.19,   // timing
             c.20,   // feature_bits1
             c.21,   // feature_bits2
-            c.22,   // ex1
+            c.22,   // klass_bits
+            c.23,   // ex1
         )
     }
 }
@@ -742,6 +754,30 @@ pub fn get_card_features_from_bits(feature_bits1: i64, feature_bits2: i64) -> Js
     serde_wasm_bindgen::to_value(&features).unwrap()
 }
 
+// Helper function to extract klass names from bit flags
+pub fn extract_klass_names_from_bits(klass_bits: u64) -> Vec<String> {
+    let mut klass_names = Vec::new();
+    
+    for klass_static in KLASS_LIST.iter() {
+        let (klass_id, _, _, _, bit_position) = *klass_static;
+        
+        // Check if this klass bit is set
+        if (klass_bits & (1u64 << bit_position)) != 0 {
+            if let Some(display_name) = get_klass_display_name(klass_id) {
+                klass_names.push(display_name);
+            }
+        }
+    }
+    
+    klass_names
+}
+
+#[wasm_bindgen]
+pub fn get_klass_names_from_bits(klass_bits: u64) -> JsValue {
+    let klass_names = extract_klass_names_from_bits(klass_bits);
+    serde_wasm_bindgen::to_value(&klass_names).unwrap()
+}
+
 // Text search function for card name, code, and pronunciation
 pub fn search_cards_by_text_native(
     cards: &[CardExport],
@@ -819,7 +855,8 @@ pub fn fetch_by_colors_features_card_types_products_levels_and_text_native(
 }
 
 // 色、feature、カード種別、商品、レベル、パワー閾値、テキスト検索の複合フィルタリング関数（全てAND条件）
-pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_and_text_native(
+// Klass対応版の複合フィルタリング関数
+pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_klass_and_text_native(
     cards: &[CardExport],
     color_bits: u32,
     feature_names: &[String],
@@ -827,9 +864,9 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_and_t
     products: &[u8],
     levels: &[String],
     min_power: Option<i32>,
+    klass_bits: u64,
     search_text: &str,
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -872,19 +909,8 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_and_t
         filtered_cards = filtered_cards
             .into_iter()
             .filter(|card| {
-                // 空文字列やnullはパワー0として扱い、フィルタリング対象外
-                if card.power.is_empty() || card.power == "-" {
-                    return false;
-                }
-                
-                // 無限大は最大値として扱う
-                if card.power == "∞" {
-                    return true;
-                }
-                
-                // 数値として解析
-                if let Ok(power_value) = card.power.parse::<i32>() {
-                    power_value >= threshold
+                if let Ok(power) = card.power.parse::<i32>() {
+                    power >= threshold
                 } else {
                     false
                 }
@@ -892,13 +918,55 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_and_t
             .collect();
     }
 
-    // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
-    if !search_text.trim().is_empty() {
-        filtered_cards = text_search::search_cards_by_text_optimized(&filtered_cards, search_text);
+    // Klassでフィルタリング（OR条件 - 選択されたKlassのいずれかに該当）
+    if klass_bits != 0 {
+        use crate::gen::klasses::has_klass_bits;
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| has_klass_bits(card.klass_bits, klass_bits))
+            .collect();
+    }
+
+    // テキスト検索でフィルタリング
+    if !search_text.is_empty() {
+        let search_lower = search_text.to_lowercase();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| {
+                card.name.to_lowercase().contains(&search_lower)
+                    || card.skill_text.to_lowercase().contains(&search_lower)
+                    || card.burst_text.to_lowercase().contains(&search_lower)
+            })
+            .collect();
     }
 
     filtered_cards
 }
+
+// 後方互換性のための旧関数（新しい関数に転送）
+pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_and_text_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+    products: &[u8],
+    levels: &[String],
+    min_power: Option<i32>,
+    search_text: &str,
+) -> Vec<CardExport> {
+    fetch_by_colors_features_card_types_products_levels_power_threshold_klass_and_text_native(
+        cards,
+        color_bits,
+        feature_names,
+        card_types,
+        products,
+        levels,
+        min_power,
+        0, // klass_bits = 0 (フィルタなし)
+        search_text,
+    )
+}
+
 
 // 色、feature、カード種別、商品、レベル、パワー、テキスト検索の複合フィルタリング関数（全てAND条件）
 pub fn fetch_by_colors_features_card_types_products_levels_powers_and_text_native(
@@ -1421,6 +1489,7 @@ impl Clone for CardExport {
             timing: self.timing,
             feature_bits1: self.feature_bits1,
             feature_bits2: self.feature_bits2,
+            klass_bits: self.klass_bits,
             ex1: self.ex1.clone(),
         }
     }

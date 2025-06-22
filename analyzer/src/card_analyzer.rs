@@ -372,6 +372,37 @@ impl SimpleRawCardAnalyzer {
         }
     }
 
+    /// 公式サイトの表記ゆれ・誤字を修正する
+    fn normalize_klass(&self, cat1: &str, cat2: Option<&str>, cat3: Option<&str>) -> (String, Option<String>, Option<String>) {
+        let mut normalized_cat1 = cat1.to_string();
+        let mut normalized_cat2 = cat2.map(|s| s.to_string());
+        let mut normalized_cat3 = cat3.map(|s| s.to_string());
+        
+        // 公式誤字修正: 奏生：植物 → 奏羅：植物
+        if cat1 == "奏生" && cat2 == Some("植物") {
+            eprintln!("DEBUG: Correcting official typo: 奏生：植物 → 奏羅：植物");
+            normalized_cat1 = "奏羅".to_string();
+        }
+        
+        // 表記ゆれ修正: ウエポン → ウェポン
+        if let Some(ref mut cat2_val) = normalized_cat2 {
+            if cat2_val == "ウエポン" {
+                eprintln!("DEBUG: Normalizing notation: ウエポン → ウェポン");
+                *cat2_val = "ウェポン".to_string();
+            }
+        }
+        
+        // バーチャル/世怜音女学院 → バーチャルのみ
+        if let Some(ref cat2_val) = normalized_cat2 {
+            if cat2_val == "バーチャル" && cat3 == Some("世怜音女学院") {
+                eprintln!("DEBUG: Simplifying Klass: バーチャル/世怜音女学院 → バーチャル");
+                normalized_cat3 = None;
+            }
+        }
+        
+        (normalized_cat1, normalized_cat2, normalized_cat3)
+    }
+
     /// HTMLからKlass情報を検出する（dd[1]のカードタイプから）
     pub fn detect_klass_from_html(&self, html: &str) -> Vec<(String, Option<String>, Option<String>)> {
         let dd_elements = self.extract_dd_elements(html);
@@ -381,68 +412,81 @@ impl SimpleRawCardAnalyzer {
         if dd_elements.len() > 1 {
             let card_type_text = &dd_elements[1];
             
-            // HTMLタグを除去
-            let clean_text = card_type_text
-                .replace("<br>", "")
-                .replace("<br/>", "")
-                .replace("<br />", "");
+            // <br>タグで分割してそれぞれ処理
+            let lines: Vec<&str> = card_type_text
+                .split("<br>")
+                .flat_map(|line| line.split("<br/>"))
+                .flat_map(|line| line.split("<br />"))
+                .collect();
 
-            // eprintln!("DEBUG: Klass detection - clean_text: '{}'", clean_text);
+            eprintln!("DEBUG: Klass detection - lines: {:?}", lines);
 
-            // パターン1: "奏羅：宇宙" のような形式（全角コロンも対応）
-            if let Some(colon_pos) = clean_text.find(':') {
-                let cat1 = clean_text[..colon_pos].trim();
-                let rest = clean_text[colon_pos + 1..].trim();
-                
-                // eprintln!("DEBUG: Found half-width colon - cat1: '{}', rest: '{}'", cat1, rest);
-                
-                // パターン1a: "空獣／地獣" のような複数cat2を持つ場合
-                if let Some(slash_pos) = rest.find('/') {
-                    let cat2 = rest[..slash_pos].trim();
-                    let cat3 = rest[slash_pos + 1..].trim();
-                    // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
-                    klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
-                } else {
-                    // パターン1b: "奏羅：宇宙" のような単一cat2の場合
-                    // eprintln!("DEBUG: Colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
-                    klasses.push((cat1.to_string(), Some(rest.to_string()), None));
+            for line in lines {
+                let clean_text = line.trim();
+                if clean_text.is_empty() || clean_text == "-" {
+                    continue;
                 }
-            }
-            // パターン1.5: 全角コロン "奏羅：宇宙" のような形式
-            else if let Some(colon_pos) = clean_text.find('：') {
-                let cat1 = clean_text[..colon_pos].trim();
-                let rest = clean_text[colon_pos + '：'.len_utf8()..].trim();
-                
-                // eprintln!("DEBUG: Found full-width colon - cat1: '{}', rest: '{}'", cat1, rest);
-                
-                // パターン1a: "空獣／地獣" のような複数cat2を持つ場合
-                if let Some(slash_pos) = rest.find('/') {
-                    let cat2 = rest[..slash_pos].trim();
-                    let cat3 = rest[slash_pos + 1..].trim();
-                    // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
-                    klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
-                } else {
-                    // パターン1b: "奏羅：宇宙" のような単一cat2の場合
-                    // eprintln!("DEBUG: Full-width colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
-                    klasses.push((cat1.to_string(), Some(rest.to_string()), None));
+
+                eprintln!("DEBUG: Processing line: '{}'", clean_text);
+
+                // パターン1: "奏羅：宇宙" のような形式（半角コロン）
+                if let Some(colon_pos) = clean_text.find(':') {
+                    let cat1 = clean_text[..colon_pos].trim();
+                    let rest = clean_text[colon_pos + 1..].trim();
+                    
+                    // eprintln!("DEBUG: Found half-width colon - cat1: '{}', rest: '{}'", cat1, rest);
+                    
+                    // パターン1a: "空獣／地獣" のような複数cat2を持つ場合
+                    if let Some(slash_pos) = rest.find('/') {
+                        let cat2 = rest[..slash_pos].trim();
+                        let cat3 = rest[slash_pos + 1..].trim();
+                        // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
+                        klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
+                    } else {
+                        // パターン1b: "奏羅：宇宙" のような単一cat2の場合
+                        // eprintln!("DEBUG: Colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
+                        klasses.push((cat1.to_string(), Some(rest.to_string()), None));
+                    }
                 }
-            }
-            // パターン2: 単純な種族名のみ（ルリグのカードタイプなど）
-            else if !clean_text.is_empty() && clean_text != "-" {
-                // カードタイプがシグニ、クラフト、レゾナの場合のみ種族情報として扱う
-                let dd0 = if !dd_elements.is_empty() { &dd_elements[0] } else { "" };
-                if dd0.contains("シグニ") || dd0.contains("クラフト") || dd0.contains("レゾナ") {
-                    // シグニ、クラフト、レゾナで単純な種族名の場合（まれなケース）
+                // パターン2: 全角コロン "奏羅：宇宙" のような形式
+                else if let Some(colon_pos) = clean_text.find('：') {
+                    let cat1 = clean_text[..colon_pos].trim();
+                    let rest = clean_text[colon_pos + '：'.len_utf8()..].trim();
+                    
+                    // eprintln!("DEBUG: Found full-width colon - cat1: '{}', rest: '{}'", cat1, rest);
+                    
+                    // パターン2a: "空獣／地獣" のような複数cat2を持つ場合
+                    if let Some(slash_pos) = rest.find('/') {
+                        let cat2 = rest[..slash_pos].trim();
+                        let cat3 = rest[slash_pos + 1..].trim();
+                        // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
+                        klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
+                    } else {
+                        // パターン2b: "奏羅：宇宙" のような単一cat2の場合
+                        // eprintln!("DEBUG: Full-width colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
+                        klasses.push((cat1.to_string(), Some(rest.to_string()), None));
+                    }
+                }
+                // パターン3: 単純な種族名のみ（解放派、闘争派、防衛派、奏元、精元など）
+                else {
                     // eprintln!("DEBUG: Simple pattern - cat1: '{}'", clean_text);
                     klasses.push((clean_text.to_string(), None, None));
                 }
-            } else {
-                // eprintln!("DEBUG: No klass pattern matched for: '{}'", clean_text);
             }
         }
 
-        // eprintln!("DEBUG: Final detected klasses: {:?}", klasses);
-        klasses
+        eprintln!("DEBUG: Raw detected klasses: {:?}", klasses);
+        
+        // 正規化処理を適用
+        let normalized_klasses: Vec<(String, Option<String>, Option<String>)> = klasses
+            .into_iter()
+            .map(|(cat1, cat2, cat3)| {
+                self.normalize_klass(&cat1, cat2.as_deref(), cat3.as_deref())
+            })
+            .collect();
+        
+        eprintln!("DEBUG: Normalized klasses: {:?}", normalized_klasses);
+        normalized_klasses
     }
 
     pub fn detect_story_from_name(name: &str) -> HashSet<CardFeature> {
@@ -708,15 +752,58 @@ impl CardRepository {
     pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
         Self { pool }
     }
+    
+    /// 不正なKlass形式を検証
+    fn is_invalid_klass(&self, cat1: &str, cat2: Option<&str>) -> bool {
+        // 色のみのKlass（白、赤、青、緑、黒）は除外
+        if cat2.is_none() && matches!(cat1, "白" | "赤" | "青" | "緑" | "黒") {
+            return true;
+        }
+        
+        // 1文字だけのcat1（解析ミス）を除外
+        if cat2.is_none() && cat1.chars().count() == 1 {
+            return true;
+        }
+        
+        // 正しい形式のcat1をチェック
+        let valid_cat1_prefixes = [
+            "奏像", "奏武", "奏羅", "奏械", "奏生", "奏元",
+            "精像", "精武", "精羅", "精械", "精生", "精元",
+            "解放派", "闘争派", "防衛派"
+        ];
+        
+        // cat2がない場合は、有効なcat1のリストに含まれている必要がある
+        if cat2.is_none() {
+            return !valid_cat1_prefixes.contains(&cat1);
+        }
+        
+        // cat2がある場合は、cat1が適切なプレフィックスである必要がある
+        let valid_cat1_with_cat2 = [
+            "奏像", "奏武", "奏羅", "奏械", "奏生",
+            "精像", "精武", "精羅", "精械", "精生"
+        ];
+        
+        if !valid_cat1_with_cat2.contains(&cat1) {
+            return true;
+        }
+        
+        false
+    }
 
-    /// Klass情報をもとにwix_klassテーブルからIDを取得（既存データを優先）
-    async fn get_or_create_klass(
+    /// Klass情報をもとにwix_klassテーブルからIDを取得（既存データのみ）
+    async fn get_existing_klass(
         &self,
         cat1: &str,
         cat2: Option<&str>,
         cat3: Option<&str>,
-    ) -> Result<i64, Box<dyn std::error::Error>> {
+    ) -> Result<Option<i64>, Box<dyn std::error::Error>> {
         // eprintln!("DEBUG: Looking for Klass: '{}', '{:?}', '{:?}'", cat1, cat2, cat3);
+        
+        // 不正なKlass形式を検証して除外
+        if self.is_invalid_klass(cat1, cat2) {
+            eprintln!("DEBUG: Skipping invalid Klass: '{}', '{:?}', '{:?}'", cat1, cat2, cat3);
+            return Ok(None);
+        }
         
         // まず正確なマッチを試行（既存データを優先）
         let existing_klass = sqlx::query(
@@ -736,7 +823,7 @@ impl CardRepository {
         if let Some(row) = existing_klass {
             let id: i64 = row.get("id");
             // eprintln!("DEBUG: Found existing Klass with ID: {}", id);
-            return Ok(id);
+            return Ok(Some(id));
         }
         
         // 正確なマッチがない場合、5バイト制限で切り詰めて再試行
@@ -813,26 +900,11 @@ impl CardRepository {
         if let Some(row) = truncated_klass {
             let id: i64 = row.get("id");
             // eprintln!("DEBUG: Found truncated Klass with ID: {}", id);
-            Ok(id)
+            Ok(Some(id))
         } else {
-            // 既存データにない場合のみ新規作成（切り詰められた値で）
-            // eprintln!("WARNING: Creating new Klass entry for '{}:{:?}' - this might indicate missing master data", cat1, cat2);
-            let result = sqlx::query(
-                r#"
-                INSERT INTO wix_klass (cat1, cat2, cat3, sort_asc)
-                VALUES ($1, $2, $3, 0)
-                RETURNING id
-                "#
-            )
-            .bind(&cat1_truncated)
-            .bind(cat2_truncated.as_deref())
-            .bind(cat3_truncated.as_deref())
-            .fetch_one(self.pool.as_ref())
-            .await?;
-
-            let id: i64 = result.get("id");
-            // eprintln!("DEBUG: Created new Klass with ID: {}", id);
-            Ok(id)
+            // 既存データにない場合は None を返す（新規作成しない）
+            eprintln!("DEBUG: No matching Klass found for '{}', '{:?}', '{:?}' - skipping", cat1, cat2, cat3);
+            Ok(None)
         }
     }
 
@@ -1061,13 +1133,14 @@ impl CardRepository {
 
         // 検出されたKlassを処理
         for (cat1, cat2, cat3) in create_card_with_klass.detected_klasses {
-            let klass_id = self.get_or_create_klass(
+            if let Some(klass_id) = self.get_existing_klass(
                 &cat1,
                 cat2.as_deref(),
                 cat3.as_deref(),
-            ).await?;
-
-            self.assign_klass_to_card(card_id, klass_id).await?;
+            ).await? {
+                self.assign_klass_to_card(card_id, klass_id).await?;
+            }
+            // 既存のKlassが見つからない場合はスキップ（エラーにしない）
         }
 
         Ok(card_id)
