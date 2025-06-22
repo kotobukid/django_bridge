@@ -188,7 +188,7 @@ pub fn CardPage() -> impl IntoView {
                                     <div>
                                         // Top Pagination
                                         <Show when=move || !filtered_cards.get().is_empty()>
-                                            <div class="mb-4">
+                                            <div class="mb-4" data-pagination-top="true">
                                                 <Pagination
                                                     current_page=current_page
                                                     total_pages=total_pages
