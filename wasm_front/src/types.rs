@@ -284,3 +284,36 @@ pub struct Feature {
 //         ("トリガー能力", FEATURES.iter().filter(|f| f.id >= 10).collect()),
 //     ]
 // }
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct PowerFilter {
+    pub min_power: Option<i32>,
+}
+
+impl PowerFilter {
+    pub fn new() -> Self {
+        Self {
+            min_power: None,
+        }
+    }
+    
+    pub fn has_any(&self) -> bool {
+        self.min_power.is_some()
+    }
+    
+    pub fn set_threshold(&mut self, threshold: Option<i32>) {
+        self.min_power = threshold;
+    }
+    
+    pub fn clear_all(&mut self) {
+        self.min_power = None;
+    }
+    
+    pub fn threshold_options() -> Vec<i32> {
+        vec![2000, 3000, 4000, 5000, 7000, 8000, 10000, 12000, 13000, 15000]
+    }
+    
+    pub fn label_for_threshold(threshold: i32) -> String {
+        format!("{}+", threshold)
+    }
+}

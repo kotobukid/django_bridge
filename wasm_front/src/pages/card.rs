@@ -1,8 +1,8 @@
 use crate::components::{
     CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, LevelSelector, OverlayButton, Pagination,
-    ProductOverlay, TextSearch,
+    PowerSelector, ProductOverlay, TextSearch,
 };
-use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, ProductFilter};
+use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, PowerFilter, ProductFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
 use std::collections::HashMap;
@@ -12,6 +12,7 @@ pub fn CardPage() -> impl IntoView {
     let (color_filter, set_color_filter) = signal(ColorFilter::new());
     let (card_type_filter, set_card_type_filter) = signal(CardTypeFilter::new());
     let (level_filter, set_level_filter) = signal(LevelFilter::new());
+    let (power_filter, set_power_filter) = signal(PowerFilter::new());
     let (search_text, set_search_text) = signal(String::new());
     let product_filter = RwSignal::new(ProductFilter::new());
     let selected_features = RwSignal::new(HashMap::<String, bool>::new());
@@ -37,6 +38,7 @@ pub fn CardPage() -> impl IntoView {
             let color = color_filter.get();
             let card_type = card_type_filter.get();
             let level = level_filter.get();
+            let power = power_filter.get();
             let product = product_filter.read();
             let feature_names = selected_feature_names.get();
             let text_search = search_text.get();
@@ -60,13 +62,14 @@ pub fn CardPage() -> impl IntoView {
                 Vec::new()
             };
 
-            let filtered = datapack::fetch_by_colors_features_card_types_products_levels_and_text_native(
+            let filtered = datapack::fetch_by_colors_features_card_types_products_levels_power_threshold_and_text_native(
                 &cards,
                 color_bits,
                 &feature_names,
                 &card_types,
                 &products,
                 &levels,
+                power.min_power,
                 &text_search,
             );
 
@@ -99,6 +102,7 @@ pub fn CardPage() -> impl IntoView {
         color_filter.get().has_any() ||
         card_type_filter.get().has_any() ||
         level_filter.get().has_any() ||
+        power_filter.get().has_any() ||
         !search_text.get().is_empty() ||
         has_active_features.get() ||
         has_active_products.get()
@@ -110,6 +114,7 @@ pub fn CardPage() -> impl IntoView {
         set_color_filter.set(ColorFilter::new());
         set_card_type_filter.set(CardTypeFilter::new());
         set_level_filter.set(LevelFilter::new());
+        set_power_filter.set(PowerFilter::new());
         selected_features.update(|f| f.clear());
         set_selected_feature_names.set(Vec::new());
         product_filter.update(|f| f.clear_all());
@@ -159,6 +164,10 @@ pub fn CardPage() -> impl IntoView {
                         <LevelSelector
                             level_filter=level_filter
                             set_level_filter=set_level_filter
+                        />
+                        <PowerSelector
+                            power_filter=power_filter
+                            set_power_filter=set_power_filter
                         />
                         <CardTypeSelector
                             card_type_filter=card_type_filter

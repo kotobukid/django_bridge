@@ -777,6 +777,259 @@ pub fn fetch_by_colors_features_card_types_products_levels_and_text_native(
     filtered_cards
 }
 
+// 色、feature、カード種別、商品、レベル、パワー閾値、テキスト検索の複合フィルタリング関数（全てAND条件）
+pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_and_text_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+    products: &[u8],
+    levels: &[String],
+    min_power: Option<i32>,
+    search_text: &str,
+) -> Vec<CardExport> {
+
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    // カード種別でフィルタリング
+    if !card_types.is_empty() {
+        let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| card_type_u8s.contains(&card.card_type))
+            .collect();
+    }
+
+    // 商品でフィルタリング
+    if !products.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| products.contains(&card.product))
+            .collect();
+    }
+
+    // レベルでフィルタリング（OR条件）
+    if !levels.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| levels.contains(&card.level))
+            .collect();
+    }
+
+    // パワー閾値でフィルタリング
+    if let Some(threshold) = min_power {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| {
+                // 空文字列やnullはパワー0として扱い、フィルタリング対象外
+                if card.power.is_empty() || card.power == "-" {
+                    return false;
+                }
+                
+                // 無限大は最大値として扱う
+                if card.power == "∞" {
+                    return true;
+                }
+                
+                // 数値として解析
+                if let Ok(power_value) = card.power.parse::<i32>() {
+                    power_value >= threshold
+                } else {
+                    false
+                }
+            })
+            .collect();
+    }
+
+    // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
+    if !search_text.trim().is_empty() {
+        filtered_cards = text_search::search_cards_by_text_optimized(&filtered_cards, search_text);
+    }
+
+    filtered_cards
+}
+
+// 色、feature、カード種別、商品、レベル、パワー、テキスト検索の複合フィルタリング関数（全てAND条件）
+pub fn fetch_by_colors_features_card_types_products_levels_powers_and_text_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+    products: &[u8],
+    levels: &[String],
+    powers: &[String],
+    search_text: &str,
+) -> Vec<CardExport> {
+
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    // カード種別でフィルタリング
+    if !card_types.is_empty() {
+        let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| card_type_u8s.contains(&card.card_type))
+            .collect();
+    }
+
+    // 商品でフィルタリング
+    if !products.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| products.contains(&card.product))
+            .collect();
+    }
+
+    // レベルでフィルタリング（OR条件）
+    if !levels.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| levels.contains(&card.level))
+            .collect();
+    }
+
+    // パワーでフィルタリング（OR条件）
+    if !powers.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| powers.contains(&card.power))
+            .collect();
+    }
+
+    // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
+    if !search_text.trim().is_empty() {
+        filtered_cards = text_search::search_cards_by_text_optimized(&filtered_cards, search_text);
+    }
+
+    filtered_cards
+}
+
+// パワー範囲でフィルタリングする関数
+pub fn filter_by_power_range_native(
+    cards: &[CardExport],
+    min_power: Option<i32>,
+    max_power: Option<i32>,
+    include_infinity: bool,
+) -> Vec<CardExport> {
+    cards
+        .iter()
+        .filter(|card| {
+            // 空の文字列や"-"の場合はスキップ
+            if card.power.is_empty() || card.power == "-" {
+                return false;
+            }
+            
+            // 無限大のケース
+            if card.power == "∞" {
+                return include_infinity;
+            }
+            
+            // 数値として解析
+            if let Ok(power_value) = card.power.parse::<i32>() {
+                let above_min = min_power.map_or(true, |min| power_value >= min);
+                let below_max = max_power.map_or(true, |max| power_value <= max);
+                above_min && below_max
+            } else {
+                false
+            }
+        })
+        .cloned()
+        .collect()
+}
+
+// 完全なフィルタリング関数（パワー範囲フィルタリング付き）
+pub fn fetch_by_all_filters_with_power_range_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+    products: &[u8],
+    levels: &[String],
+    powers: &[String],
+    min_power: Option<i32>,
+    max_power: Option<i32>,
+    include_infinity: bool,
+    search_text: &str,
+) -> Vec<CardExport> {
+
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    // カード種別でフィルタリング
+    if !card_types.is_empty() {
+        let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| card_type_u8s.contains(&card.card_type))
+            .collect();
+    }
+
+    // 商品でフィルタリング
+    if !products.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| products.contains(&card.product))
+            .collect();
+    }
+
+    // レベルでフィルタリング（OR条件）
+    if !levels.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| levels.contains(&card.level))
+            .collect();
+    }
+
+    // パワーの特定値でフィルタリング（OR条件）
+    if !powers.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| powers.contains(&card.power))
+            .collect();
+    }
+
+    // パワーの範囲でフィルタリング
+    if min_power.is_some() || max_power.is_some() {
+        filtered_cards = filter_by_power_range_native(&filtered_cards, min_power, max_power, include_infinity);
+    }
+
+    // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
+    if !search_text.trim().is_empty() {
+        filtered_cards = text_search::search_cards_by_text_optimized(&filtered_cards, search_text);
+    }
+
+    filtered_cards
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -850,6 +1103,255 @@ mod tests {
         // Non-matching search
         let result = search_cards_by_text_native(&cards, "nonexistent");
         assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    fn test_filter_by_power_range() {
+        let cards = vec![
+            CardExport {
+                id: 1,
+                name: "Low Power".to_string(),
+                power: "1000".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+            CardExport {
+                id: 2,
+                name: "Mid Power".to_string(),
+                power: "5000".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+            CardExport {
+                id: 3,
+                name: "High Power".to_string(),
+                power: "10000".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+            CardExport {
+                id: 4,
+                name: "Infinity Power".to_string(),
+                power: "∞".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+            CardExport {
+                id: 5,
+                name: "No Power".to_string(),
+                power: "-".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+        ];
+        
+        // Test range filtering
+        let result = filter_by_power_range_native(&cards, Some(3000), Some(8000), false);
+        assert_eq!(result.len(), 1);
+        assert_eq!(result[0].id, 2);
+        
+        // Test minimum only
+        let result = filter_by_power_range_native(&cards, Some(5000), None, false);
+        assert_eq!(result.len(), 2);
+        
+        // Test maximum only
+        let result = filter_by_power_range_native(&cards, None, Some(5000), false);
+        assert_eq!(result.len(), 2);
+        
+        // Test including infinity
+        let result = filter_by_power_range_native(&cards, Some(8000), None, true);
+        assert_eq!(result.len(), 2); // 10000 and ∞
+        
+        // Test excluding infinity
+        let result = filter_by_power_range_native(&cards, Some(8000), None, false);
+        assert_eq!(result.len(), 1); // only 10000
+    }
+
+    #[test]
+    fn test_fetch_by_powers() {
+        let cards = vec![
+            CardExport {
+                id: 1,
+                name: "Card 1".to_string(),
+                power: "3000".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+            CardExport {
+                id: 2,
+                name: "Card 2".to_string(),
+                power: "5000".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+            CardExport {
+                id: 3,
+                name: "Card 3".to_string(),
+                power: "10000".to_string(),
+                code: "".to_string(),
+                pronunciation: "".to_string(),
+                color: 0,
+                cost: "".to_string(),
+                level: "".to_string(),
+                limit: "".to_string(),
+                limit_ex: "".to_string(),
+                has_burst: 0,
+                skill_text: "".to_string(),
+                burst_text: "".to_string(),
+                format: 0,
+                story: "".to_string(),
+                rarity: "".to_string(),
+                url: "".to_string(),
+                card_type: 0,
+                product: 0,
+                timing: 0,
+                feature_bits1: 0,
+                feature_bits2: 0,
+                ex1: "".to_string(),
+            },
+        ];
+        
+        // Test specific power filtering (OR condition)
+        let powers = vec!["3000".to_string(), "10000".to_string()];
+        let result = fetch_by_colors_features_card_types_products_levels_powers_and_text_native(
+            &cards,
+            0,
+            &[],
+            &[],
+            &[],
+            &[],
+            &powers,
+            "",
+        );
+        assert_eq!(result.len(), 2);
+        assert!(result.iter().any(|c| c.id == 1));
+        assert!(result.iter().any(|c| c.id == 3));
     }
 }
 
