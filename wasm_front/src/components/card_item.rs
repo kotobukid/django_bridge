@@ -4,6 +4,7 @@ use crate::components::svg_definition::{
 use datapack::CardExport;
 use leptos::prelude::*;
 
+
 fn get_colors_from_bits(bits: i32) -> Vec<i32> {
     let mut colors = Vec::new();
     if bits & (1 << 1) != 0 {
@@ -323,6 +324,28 @@ pub fn CardItem(
                                 </div>
                             </div>
                             <div class="space-y-3">
+                                {
+                                    // CardFeatures display
+                                    let card_features = datapack::extract_card_features_from_bits(card.feature_bits1(), card.feature_bits2());
+                                    if !card_features.is_empty() {
+                                        view! {
+                                            <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                                                <h4 class="font-medium text-sm text-blue-800 mb-2">Card Features</h4>
+                                                <div class="flex flex-wrap gap-1">
+                                                    {card_features.into_iter().map(|(tag_label, feature_label)| {
+                                                        view! {
+                                                            <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300">
+                                                                {format!("{} > {}", tag_label, feature_label)}
+                                                            </span>
+                                                        }
+                                                    }).collect_view()}
+                                                </div>
+                                            </div>
+                                        }.into_any()
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }
                                 {
                                     let skill_text = card.skill_text();
                                     if !skill_text.is_empty() {

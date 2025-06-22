@@ -3,7 +3,7 @@ pub mod gen;
 pub mod text_search;
 
 use color;
-use feature::feature::export_features;
+use feature::feature::{export_features, CardFeature, FeatureTag};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
@@ -699,6 +699,47 @@ fn text_matches(text: &str, search_term: &str) -> bool {
     
     // Support both exact and partial matching
     normalized_text.contains(&normalized_search)
+}
+
+// Helper function to extract card features from bit flags
+pub fn extract_card_features_from_bits(feature_bits1: i64, feature_bits2: i64) -> Vec<(String, String)> {
+    let mut features = Vec::new();
+    
+    // Get all CardFeatures and check which ones are set
+    let all_features = CardFeature::create_vec();
+    
+    for feature in all_features {
+        let (bit_pos1, bit_pos2) = feature.to_bit_shifts();
+        
+        let has_feature = if bit_pos2 == 0 {
+            (feature_bits1 & (1_i64 << bit_pos1)) != 0
+        } else {
+            (feature_bits2 & (1_i64 << bit_pos2)) != 0
+        };
+        
+        if has_feature {
+            let feature_label = feature.to_string();
+            let tag = feature.tag();
+            let tag_label = tag.to_string();
+            
+            // Remove the sort prefix (first 2 characters) from tag label
+            let display_tag_label = if tag_label.len() > 2 {
+                tag_label[2..].to_string()
+            } else {
+                tag_label
+            };
+            
+            features.push((display_tag_label, feature_label));
+        }
+    }
+    
+    features
+}
+
+#[wasm_bindgen]
+pub fn get_card_features_from_bits(feature_bits1: i64, feature_bits2: i64) -> JsValue {
+    let features = extract_card_features_from_bits(feature_bits1, feature_bits2);
+    serde_wasm_bindgen::to_value(&features).unwrap()
 }
 
 // Text search function for card name, code, and pronunciation
