@@ -371,6 +371,32 @@ impl SimpleRawCardAnalyzer {
         }
     }
 
+    /// HTMLからフォーマット情報を検出する（dd[10]）
+    /// 包含関係: オールスター（空文字）> キーセレクション > ディーヴァセレクション
+    /// 対応値: 7（オールスター）, 3（キーセレクション）, 1（ディーヴァセレクション）
+    pub fn detect_format_from_html(&self, html: &str) -> i32 {
+        let dd_elements = self.extract_dd_elements(html);
+
+        if dd_elements.len() > 10 {
+            let format_html = &dd_elements[10];
+
+            // フォーマットアイコンをチェック
+            let has_key_icon = format_html.contains("icon_txt_format_key.png");
+            let has_diva_icon = format_html.contains("icon_txt_format_diva.png");
+
+            // 包含関係に基づいて値を決定
+            if has_diva_icon {
+                1 // ディーヴァセレクション（001）
+            } else if has_key_icon {
+                3 // キーセレクション（011）
+            } else {
+                7 // オールスター（111）- デフォルト（空文字の場合）
+            }
+        } else {
+            7 // デフォルトはオールスター
+        }
+    }
+
     /// 公式サイトの表記ゆれ・誤字を修正する
     fn normalize_klass(&self, cat1: &str, cat2: Option<&str>, cat3: Option<&str>) -> (String, Option<String>, Option<String>) {
         let mut normalized_cat1 = cat1.to_string();
@@ -601,6 +627,7 @@ impl SimpleRawCardAnalyzer {
         let limit_ex_str = self.detect_limit_ex_from_html(&raw_card.raw_html);
         let (story, story_as_skill) = self.detect_story_from_html(&raw_card.raw_html);
         let detected_klasses = self.detect_klass_from_html(&raw_card.raw_html);
+        let format = self.detect_format_from_html(&raw_card.raw_html);
 
         // 数値フィールドの型変換（String → i32）
         let level: Option<i32> = level_str.and_then(|s| s.parse().ok());
@@ -698,7 +725,7 @@ impl SimpleRawCardAnalyzer {
             },
             skill_text: Some(replaced_skill_text),
             burst_text: Some(replaced_burst_text),
-            format: 7, // デフォルトオールスター
+            format,
             story,
             rarity: None,
             timing,

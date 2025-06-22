@@ -203,7 +203,7 @@ impl StaticCodeGenerator for CardRepository {
 
     async fn get_all_as_code(&self) -> Vec<String> {
         // まずすべてのカードを取得
-        let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card")
+        let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card where format = 1")  // 現在Diva(1)のみ
             .fetch_all(&*self.db_connector)
             .await
             .unwrap(); // エラー処理は適宜修正してください
