@@ -32,7 +32,9 @@ fn SpaRedirectHandler() -> impl IntoView {
     use leptos_router::hooks::use_navigate;
     
     // Handle GitHub Pages 404 fallback using sessionStorage
-    spawn_local(async {
+    let navigate = use_navigate();
+    
+    Effect::new(move |_| {
         if let Some(window) = web_sys::window() {
             if let Ok(storage) = window.session_storage() {
                 if let Some(storage) = storage {
@@ -41,7 +43,6 @@ fn SpaRedirectHandler() -> impl IntoView {
                         let _ = storage.remove_item("spa_redirect_path");
                         
                         // Navigate to the stored path
-                        let navigate = use_navigate();
                         navigate(&redirect_path, Default::default());
                     }
                 }
