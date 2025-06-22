@@ -1,4 +1,4 @@
-mod card_item;
+pub mod card_item;
 mod card_list;
 mod card_type_selector;
 mod clear_all_button;
@@ -15,7 +15,7 @@ mod product_selector;
 mod svg_definition;
 mod text_search;
 
-// pub use card_item::CardItem;
+pub use card_item::CardItem;
 pub use card_list::CardList;
 pub use card_type_selector::CardTypeSelector;
 pub use clear_all_button::ClearAllButton;

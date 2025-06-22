@@ -7,7 +7,7 @@ mod pages;
 mod types;
 
 use components::SvgDefinition;
-use pages::{CardPage, HomePage};
+use pages::{CardPage, CardDetailPage, HomePage};
 
 #[component]
 fn App() -> impl IntoView {
@@ -18,6 +18,7 @@ fn App() -> impl IntoView {
                 <Routes fallback=|| "Page not found.">
                     <Route path=path!("/") view=HomePage/>
                     <Route path=path!("/card") view=CardPage/>
+                    <Route path=path!("/card/:param") view=CardDetailPage/>
                 </Routes>
             </div>
         </Router>

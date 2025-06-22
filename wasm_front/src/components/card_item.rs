@@ -345,7 +345,13 @@ pub fn CardItem(
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2 text-sm" style="color: #374151;">
                                         <span class="font-medium">Code:</span>
-                                        <span class="bg-gray-100 px-2 py-1 rounded">{card.code()}</span>
+                                        <a 
+                                            href=format!("/card/{}", card.code()) 
+                                            target="_blank"
+                                            class="bg-gray-100 hover:bg-blue-100 px-2 py-1 rounded text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                                        >
+                                            {card.code()}
+                                        </a>
                                     </div>
                                     <div class="flex flex-wrap gap-2">
                                         {

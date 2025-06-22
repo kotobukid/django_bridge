@@ -4,8 +4,20 @@
   <meta charset="utf-8">
   <title>Redirecting...</title>
   <script>
-    window.location.replace('/');
+    // GitHub Pages 404 fallback for SPA routing
+    // This script redirects any 404 to the main index.html
+    // and preserves the path as a query parameter
+    const path = window.location.pathname.slice(1);
+    if (path) {
+      // Redirect to root with the path as a query parameter
+      window.location.replace('/?path=' + encodeURIComponent(path));
+    } else {
+      // Just redirect to root
+      window.location.replace('/');
+    }
   </script>
 </head>
-<body></body>
+<body>
+<p>Redirecting...</p>
+</body>
 </html>
