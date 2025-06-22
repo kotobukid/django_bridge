@@ -1,6 +1,6 @@
 use crate::components::{
     CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, LevelSelector, OverlayButton, Pagination,
-    PowerSelector, ProductOverlay, TextSearch,
+    PowerSelector, ProductOverlay, ScrollToTopButton, TextSearch,
 };
 use crate::types::{CardTypeFilter, ColorFilter, LevelFilter, PowerFilter, ProductFilter};
 use datapack::CardExport;
@@ -321,6 +321,9 @@ pub fn CardPage() -> impl IntoView {
                     </div>
                 </div>
             </Show>
+            
+            // スクロールトップボタン
+            <ScrollToTopButton />
         </div>
     }
 }

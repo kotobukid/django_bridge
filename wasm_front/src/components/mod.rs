@@ -12,6 +12,7 @@ mod pagination;
 mod power_selector;
 mod product_overlay;
 mod product_selector;
+mod scroll_to_top_button;
 mod svg_definition;
 mod text_search;
 
@@ -29,5 +30,6 @@ pub use pagination::Pagination;
 pub use power_selector::PowerSelector;
 pub use product_overlay::ProductOverlay;
 pub use product_selector::ProductSelector;
+pub use scroll_to_top_button::ScrollToTopButton;
 pub use svg_definition::{ColorIconWithNum, ColorIconsWithNum, IconRed, SvgDefinition};
 pub use text_search::TextSearch;
