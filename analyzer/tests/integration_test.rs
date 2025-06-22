@@ -704,16 +704,16 @@ async fn test_end_to_end_with_mock_raw_card() {
 
             for feature in all_features {
                 let (bit1, bit2) = feature.to_bit_shifts();
-                if (bit1 != 0 && (create_card.feature_bits1 & (1 << bit1)) != 0) ||
-                   (bit2 != 0 && (create_card.feature_bits2 & (1 << bit2)) != 0) {
+                if (bit1 != 0 && (create_card.create_card.feature_bits1 & (1 << bit1)) != 0) ||
+                   (bit2 != 0 && (create_card.create_card.feature_bits2 & (1 << bit2)) != 0) {
                     detected_features.insert(feature);
                 }
             }
 
             // 期待される機能の検証
             assert!(!detected_features.is_empty(), "何らかのフィーチャーが検出されるべきです");
-            assert_eq!(create_card.has_burst, 1, "ライフバーストが検出されるべきです");
-            assert!(create_card.power.is_some(), "パワーが検出されるべきです");
+            assert_eq!(create_card.create_card.has_burst, 1, "ライフバーストが検出されるべきです");
+            assert!(create_card.create_card.power.is_some(), "パワーが検出されるべきです");
 
             // PowerUp機能の検証
             assert!(

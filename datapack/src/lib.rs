@@ -3,7 +3,7 @@ pub mod gen;
 pub mod text_search;
 
 use color;
-use feature::feature::{export_features, CardFeature, FeatureTag};
+use feature::feature::{export_features, CardFeature};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
@@ -759,7 +759,12 @@ pub fn extract_klass_names_from_bits(klass_bits: u64) -> Vec<String> {
     let mut klass_names = Vec::new();
     
     for klass_static in KLASS_LIST.iter() {
-        let (klass_id, _, _, _, bit_position) = *klass_static;
+        let (klass_id, cat1, _, _, bit_position) = *klass_static;
+        
+        // 精系クラス（精像、精武、精羅、精械、精生、精元）をUI上で非表示にする
+        if cat1.starts_with("精") {
+            continue;
+        }
         
         // Check if this klass bit is set
         if (klass_bits & (1u64 << bit_position)) != 0 {
@@ -1197,6 +1202,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             }
         ];
@@ -1240,6 +1246,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1265,6 +1272,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1290,6 +1298,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1315,6 +1324,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1340,6 +1350,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
         ];
@@ -1392,6 +1403,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1417,6 +1429,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1442,6 +1455,7 @@ mod tests {
                 timing: 0,
                 feature_bits1: 0,
                 feature_bits2: 0,
+                klass_bits: 0,
                 ex1: "".to_string(),
             },
         ];
