@@ -391,11 +391,16 @@ pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
     
     let mut result = Vec::new();
     
-    // cat1のみのエントリ（解放派、闘争派、防衛派、奏元、精元）を個別に処理
+    // cat1のみのエントリ（解放派、闘争派、防衛派、奏元）を個別に処理
     let mut standalone_klasses = Vec::new();
     let mut cat1_systems: HashMap<String, Vec<KlassInfo>> = HashMap::new();
     
     for &(id, cat1, cat2, cat3, bit_position) in KLASS_LIST.iter() {
+        // 精系クラス（精像、精武、精羅、精械、精生、精元）をUI上で非表示にする
+        if cat1.starts_with("精") {
+            continue;
+        }
+        
         let klass_info = KlassInfo {
             id,
             cat1: cat1.to_string(),
@@ -405,7 +410,7 @@ pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
         };
         
         if cat2.is_empty() {
-            // cat1のみ（解放派、闘争派、防衛派、奏元、精元）
+            // cat1のみ（解放派、闘争派、防衛派、奏元）
             standalone_klasses.push(klass_info);
         } else {
             // cat1+cat2のシステム（奏像、奏武など）
@@ -416,7 +421,7 @@ pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
         }
     }
     
-    // cat1+cat2システムを追加（奏→精の順）
+    // cat1+cat2システムを追加（奏系のみ）
     let mut sorted_systems: Vec<(String, Vec<KlassInfo>)> = cat1_systems.into_iter().collect();
     sorted_systems.sort_by(|a, b| {
         let order_a = get_system_order(&a.0);
