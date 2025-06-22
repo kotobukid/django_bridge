@@ -61,12 +61,85 @@ pub enum ViewMode {
     Detailed,
 }
 
+impl ViewMode {
+    pub fn from_string(s: &str) -> Self {
+        match s {
+            "detailed" => ViewMode::Detailed,
+            _ => ViewMode::Compact, // Default to Compact for unknown values
+        }
+    }
+    
+    pub fn to_string(&self) -> &'static str {
+        match self {
+            ViewMode::Compact => "compact",
+            ViewMode::Detailed => "detailed",
+        }
+    }
+}
+
+// localStorage utility functions
+impl ViewMode {
+    pub fn save_to_storage(&self) {
+        use wasm_bindgen::prelude::*;
+        
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_name = "eval")]
+            fn js_eval(code: &str) -> JsValue;
+        }
+        
+        let js_code = format!(
+            r#"
+            (function() {{
+                try {{
+                    localStorage.setItem('card_view_mode', '{}');
+                }} catch (e) {{
+                    console.warn('Failed to save view mode to localStorage:', e);
+                }}
+            }})();
+            "#,
+            self.to_string()
+        );
+        
+        js_eval(&js_code);
+    }
+
+    pub fn load_from_storage() -> Self {
+        use wasm_bindgen::prelude::*;
+        
+        #[wasm_bindgen]
+        extern "C" {
+            #[wasm_bindgen(js_name = "eval")]
+            fn js_eval(code: &str) -> JsValue;
+        }
+        
+        let js_code = r#"
+            (function() {
+                try {
+                    return localStorage.getItem('card_view_mode') || 'compact';
+                } catch (e) {
+                    console.warn('Failed to load view mode from localStorage:', e);
+                    return 'compact';
+                }
+            })();
+        "#;
+        
+        let result = js_eval(js_code);
+        if let Some(value) = result.as_string() {
+            ViewMode::from_string(&value)
+        } else {
+            ViewMode::Compact // Default to Compact
+        }
+    }
+}
+
 #[component]
 pub fn CardItem(
     card: CardExport,
+    #[prop(optional)] view_mode: Option<Signal<ViewMode>>,
 ) -> impl IntoView {
-    // State for future interactive features
-    let (view_mode, set_view_mode) = signal(ViewMode::Compact);
+    // Use provided view_mode or default to Compact
+    let view_mode = view_mode.unwrap_or_else(|| Signal::derive(|| ViewMode::Compact));
     
     // Calculate styles
     let color_style = datapack::bits_to_gradient_native(card.color() as i32);
@@ -80,100 +153,217 @@ pub fn CardItem(
     
     view! {
         <div class=format!("card-item {}", border_class) style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0;", color_style)>
-            <div class="flex justify-between items-start">
-                <div class="flex-1">
-                    <h3 class="font-semibold text-lg" style="color: #374151;">
-                        <a href=card_url target="_blank" class="flex items-center gap-1">
-                            <Icons colors={get_colors_from_bits(card.color() as i32)} />
-                            {card.name()}
+            {move || match view_mode.get() {
+                ViewMode::Compact => view! {
+                    <div class="flex justify-between items-start">
+                        <div class="flex-1">
+                            <h3 class="font-semibold text-lg" style="color: #374151;">
+                                <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
+                                    <Icons colors={get_colors_from_bits(card.color() as i32)} />
+                                    {card.name()}
+                                    {
+                                        let cost = card.cost();
+                                        if !cost.is_empty() {
+                                            view! {
+                                                <div class="ml-2">
+                                                    <ColorIconsWithNum code={cost} />
+                                                </div>
+                                            }.into_any()
+                                        } else {
+                                            view! { <span></span> }.into_any()
+                                        }
+                                    }
+                                </a>
+                            </h3>
+                            <div class="flex items-center gap-2 text-sm mt-1" style="color: #374151; opacity: 0.8;">
+                                <span>{card.code()}</span>
+                                {
+                                    // レベル表示
+                                    let level = card.level();
+                                    if !level.is_empty() {
+                                        view! {
+                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                                                "Lv: " {level}
+                                            </span>
+                                        }.into_any()
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }
+                                {
+                                    // パワー表示
+                                    let power = card.power();
+                                    if !power.is_empty() {
+                                        view! {
+                                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
+                                                "Pow: " {power}
+                                            </span>
+                                        }.into_any()
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }
+                                {
+                                    // リミット表示
+                                    let limit = card.limit();
+                                    if !limit.is_empty() {
+                                        view! {
+                                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
+                                                "Lim: " {limit}
+                                            </span>
+                                        }.into_any()
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }
+                            </div>
                             {
-                                let cost = card.cost();
-                                if !cost.is_empty() {
+                                let skill_text = card.skill_text();
+                                if !skill_text.is_empty() {
                                     view! {
-                                        <div class="ml-2">
-                                            <ColorIconsWithNum code={cost} />
+                                        <div class="mt-2 text-sm whitespace-pre-wrap" style="color: #374151;">
+                                            {skill_text}
                                         </div>
                                     }.into_any()
                                 } else {
                                     view! { <span></span> }.into_any()
                                 }
                             }
-                        </a>
-                    </h3>
-                    <div class="flex items-center gap-2 text-sm mt-1" style="color: #374151; opacity: 0.8;">
-                        <span>{card.code()}</span>
-                        {
-                            // レベル表示
-                            let level = card.level();
-                            if !level.is_empty() {
-                                view! {
-                                    <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                        "Lv: " {level}
-                                    </span>
-                                }.into_any()
-                            } else {
-                                view! { <span></span> }.into_any()
+                            {
+                                let burst_text = card.burst_text();
+                                let has_burst = card.has_burst() > 0;
+                                if has_burst && !burst_text.is_empty() {
+                                    view! {
+                                        <div class="mt-2 text-sm" style="background: #374151; color: white; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 6px;">
+                                            <svg viewBox="0 0 32 32" width="20" height="20" style="flex-shrink: 0;">
+                                                <use href="#lb_white_wrapped" />
+                                            </svg>
+                                            <span style="line-height: 1.2;">
+                                                {burst_text}
+                                            </span>
+                                        </div>
+                                    }.into_any()
+                                } else {
+                                    view! { <span></span> }.into_any()
+                                }
                             }
-                        }
-                        {
-                            // パワー表示
-                            let power = card.power();
-                            if !power.is_empty() {
-                                view! {
-                                    <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
-                                        "Pow: " {power}
-                                    </span>
-                                }.into_any()
-                            } else {
-                                view! { <span></span> }.into_any()
-                            }
-                        }
-                        {
-                            // リミット表示
-                            let limit = card.limit();
-                            if !limit.is_empty() {
-                                view! {
-                                    <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                        "Lim: " {limit}
-                                    </span>
-                                }.into_any()
-                            } else {
-                                view! { <span></span> }.into_any()
-                            }
-                        }
+                        </div>
                     </div>
-                    {
-                        let skill_text = card.skill_text();
-                        if !skill_text.is_empty() {
-                            view! {
-                                <div class="mt-2 text-sm whitespace-pre-wrap" style="color: #374151;">
-                                    {skill_text}
+                }.into_any(),
+                ViewMode::Detailed => view! {
+                    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-orange-400 p-4 rounded">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="text-orange-600 font-bold text-sm uppercase tracking-wide">
+                                "🔍 Detailed Mode"
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <h3 class="font-semibold text-lg mb-2" style="color: #374151;">
+                                    <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
+                                        <Icons colors={get_colors_from_bits(card.color() as i32)} />
+                                        {card.name()}
+                                        {
+                                            let cost = card.cost();
+                                            if !cost.is_empty() {
+                                                view! {
+                                                    <div class="ml-2">
+                                                        <ColorIconsWithNum code={cost} />
+                                                    </div>
+                                                }.into_any()
+                                            } else {
+                                                view! { <span></span> }.into_any()
+                                            }
+                                        }
+                                    </a>
+                                </h3>
+                                <div class="space-y-2">
+                                    <div class="flex items-center gap-2 text-sm" style="color: #374151;">
+                                        <span class="font-medium">Code:</span>
+                                        <span class="bg-gray-100 px-2 py-1 rounded">{card.code()}</span>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        {
+                                            let level = card.level();
+                                            if !level.is_empty() {
+                                                view! {
+                                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                        "Level: " {level}
+                                                    </span>
+                                                }.into_any()
+                                            } else {
+                                                view! { <span></span> }.into_any()
+                                            }
+                                        }
+                                        {
+                                            let power = card.power();
+                                            if !power.is_empty() {
+                                                view! {
+                                                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                        "Power: " {power}
+                                                    </span>
+                                                }.into_any()
+                                            } else {
+                                                view! { <span></span> }.into_any()
+                                            }
+                                        }
+                                        {
+                                            let limit = card.limit();
+                                            if !limit.is_empty() {
+                                                view! {
+                                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                        "Limit: " {limit}
+                                                    </span>
+                                                }.into_any()
+                                            } else {
+                                                view! { <span></span> }.into_any()
+                                            }
+                                        }
+                                    </div>
                                 </div>
-                            }.into_any()
-                        } else {
-                            view! { <span></span> }.into_any()
-                        }
-                    }
-                    {
-                        let burst_text = card.burst_text();
-                        let has_burst = card.has_burst() > 0;
-                        if has_burst && !burst_text.is_empty() {
-                            view! {
-                                <div class="mt-2 text-sm" style="background: #374151; color: white; padding: 8px; border-radius: 4px; display: flex; align-items: center; gap: 6px;">
-                                    <svg viewBox="0 0 32 32" width="20" height="20" style="flex-shrink: 0;">
-                                        <use href="#lb_white_wrapped" />
-                                    </svg>
-                                    <span style="line-height: 1.2;">
-                                        {burst_text}
-                                    </span>
-                                </div>
-                            }.into_any()
-                        } else {
-                            view! { <span></span> }.into_any()
-                        }
-                    }
-                </div>
-            </div>
+                            </div>
+                            <div class="space-y-3">
+                                {
+                                    let skill_text = card.skill_text();
+                                    if !skill_text.is_empty() {
+                                        view! {
+                                            <div class="bg-white p-3 rounded border">
+                                                <h4 class="font-medium text-sm text-gray-600 mb-2">Skill Text</h4>
+                                                <div class="text-sm whitespace-pre-wrap" style="color: #374151;">
+                                                    {skill_text}
+                                                </div>
+                                            </div>
+                                        }.into_any()
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }
+                                {
+                                    let burst_text = card.burst_text();
+                                    let has_burst = card.has_burst() > 0;
+                                    if has_burst && !burst_text.is_empty() {
+                                        view! {
+                                            <div class="bg-gray-800 text-white p-3 rounded border">
+                                                <div class="flex items-center gap-2 mb-2">
+                                                    <svg viewBox="0 0 32 32" width="20" height="20" style="flex-shrink: 0;">
+                                                        <use href="#lb_white_wrapped" />
+                                                    </svg>
+                                                    <h4 class="font-medium text-sm">Life Burst</h4>
+                                                </div>
+                                                <div class="text-sm" style="line-height: 1.4;">
+                                                    {burst_text}
+                                                </div>
+                                            </div>
+                                        }.into_any()
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }.into_any(),
+            }}
         </div>
     }
 }
