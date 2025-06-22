@@ -29,7 +29,7 @@ impl SearchQuery {
             card_kind: String::new(),
             rarelity: String::new(),
             tab_item: String::new(),
-            support_formats: "2".into(),
+            support_formats: "".into(),
             keyword_target: String::new(),
         }
     }
@@ -107,7 +107,7 @@ mod tests {
         assert_eq!(query.search, "1");
         assert_eq!(query.product_type, "booster");
         assert_eq!(query.card_page, "1");
-        assert_eq!(query.support_formats, "2");
+        assert_eq!(query.support_formats, "");
         assert!(query.keyword.is_empty());
         assert!(query.product_no.is_empty());
     }

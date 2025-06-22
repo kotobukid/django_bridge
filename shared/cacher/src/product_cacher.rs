@@ -247,7 +247,7 @@ mod tests {
         assert_eq!(query.product_no, "WXDi-P01");
         assert_eq!(query.card_page, "1");
         assert_eq!(query.search, "1");
-        assert_eq!(query.support_formats, "2");
+        assert_eq!(query.support_formats, "");
 
         Ok(())
     }

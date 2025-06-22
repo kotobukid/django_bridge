@@ -189,6 +189,7 @@ pub fn convert_cost(cost_string: &str) -> Result<String, String> {
         ('k', "黒"),
         ('g', "緑"),
         ('l', "無"),
+        ('c', "コイン"),
         ('x', "?"),
     ];
 
@@ -239,9 +240,14 @@ pub fn convert_cost(cost_string: &str) -> Result<String, String> {
             }
 
             // 対応する内部表記に変換
-            let internal = natural_to_internal
-                .get(color.as_str())
-                .ok_or_else(|| format!("Unexpected color '{}'", color))?;
+            let internal = if color.contains("コイン") {
+                // コインアイコンの場合
+                'c'
+            } else {
+                *natural_to_internal
+                    .get(color.as_str())
+                    .ok_or_else(|| format!("Unexpected color '{}'", color))?
+            };
 
             // 次が "×" か確認
             if chars.next() != Some('×') {
@@ -262,7 +268,7 @@ pub fn convert_cost(cost_string: &str) -> Result<String, String> {
             let count: usize = count
                 .parse()
                 .map_err(|_| "Failed to parse count".to_string())?;
-            result.push(*internal);
+            result.push(internal);
             result.push_str(&count.to_string());
         }
     }
@@ -291,6 +297,8 @@ mod tests {
             ("《黒》×4《緑》×２", Ok("k4g2".to_string())),
             ("《無》×5", Ok("l5".to_string())),
             ("《白》×1《青》×１《赤》×１", Ok("w1u1r1".to_string())),
+            ("《コインアイコン》×１", Ok("c1".to_string())),
+            ("《コインアイコン》×２", Ok("c2".to_string())),
             ("《黄》×１", Err("Unexpected color '黄'".to_string())),
         ];
 

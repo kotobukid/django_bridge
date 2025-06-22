@@ -144,7 +144,7 @@ impl SearchQuery {
             card_kind: "".into(),
             rarelity: "".into(),
             tab_item: "".into(),
-            support_formats: "2".into(),
+            support_formats: "".into(),
             keyword_target: "カードNo,カード名,カードタイプ,テキスト,イラストレーター,フレーバー"
                 .into(),
         }

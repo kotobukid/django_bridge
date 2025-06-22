@@ -188,6 +188,18 @@ pub fn IconColorless() -> impl IntoView {
 }
 
 #[component]
+pub fn IconCoin() -> impl IntoView {
+    view! {
+      <svg viewBox="0 0 32 32" width="32" height="32">
+          <defs>
+          </defs>
+          <circle style="fill: rgb(255, 200, 2); stroke: rgb(255, 228, 191);" cx="16" cy="16" r="14.525"></circle>
+          <circle style="stroke-width: 1; stroke: #ff9e21; fill: transparent;" cx="16" cy="16" r="12.686"></circle>
+      </svg>
+    }
+}
+
+#[component]
 pub fn IconPripara() -> impl IntoView {
     view! {
         <svg viewBox="0 0 32 32" wodth="32" height="32">
@@ -298,6 +310,7 @@ pub fn ColorIconWithNum(code: String) -> impl IntoView {
         'w' => view! { <IconWhite /> }.into_any(),
         'k' => view! { <IconBlack /> }.into_any(),
         'l' => view! { <IconColorless /> }.into_any(),
+        'c' => view! { <IconCoin /> }.into_any(),
         _ => view! { <IconWhite /> }.into_any(), // Default to white if unknown
     };
 
@@ -356,7 +369,7 @@ fn parse_multiple_color_codes(code: &str) -> Vec<String> {
     let mut current_number = String::new();
     
     for ch in code.chars() {
-        if "rgwkul".contains(ch.to_ascii_lowercase()) {
+        if "rgwkulc".contains(ch.to_ascii_lowercase()) {
             // If we have a previous color/number pair, save it
             if let Some(color) = current_color {
                 if current_number.is_empty() {

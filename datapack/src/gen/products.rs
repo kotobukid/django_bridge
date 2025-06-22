@@ -1,5 +1,5 @@
 pub type ProductStatic = (u8, &'static str, &'static str);
-pub const PRODUCT_LIST: &[ProductStatic; 165] = &[
+pub const PRODUCT_LIST: &[ProductStatic; 166] = &[
     (163_u8, "WX25-P1", "PRIMAL SELECTOR"),
     (66_u8, "WX25-CP1", "ブルーアーカイブ SELECTOR"),
     (67_u8, "WX24-P4", "FORTH SELECTOR"),
@@ -62,6 +62,7 @@ pub const PRODUCT_LIST: &[ProductStatic; 165] = &[
     (124_u8, "SPDi36", "スペシャルカード36"),
     (125_u8, "SPDi37", "スペシャルカード37"),
     (126_u8, "SPDi38", "スペシャルカード38"),
+    (166_u8, "SP38", "「ウィクロス 10th Anniversary Book」付録"),
     (127_u8, "SPDi39", "スペシャルカード39"),
     (164_u8, "SPDi42", "スペシャルカード42"),
     (165_u8, "SPDi43", "スペシャルカード43"),

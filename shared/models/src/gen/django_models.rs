@@ -12,7 +12,7 @@ pub struct CardDb {
     /// Default: N/A, Max length: 128
     pub pronunciation: String,
     pub color: i32,
-    /// Max length: 16
+    /// Max length: 32
     pub cost: Option<String>,
     pub level: Option<i32>,
     pub limit: Option<i32>,
@@ -47,7 +47,7 @@ pub struct CreateCard {
     /// Default: N/A, Max length: 128
     pub pronunciation: String,
     pub color: i32,
-    /// Max length: 16
+    /// Max length: 32
     pub cost: Option<String>,
     pub level: Option<i32>,
     pub limit: Option<i32>,

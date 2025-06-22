@@ -39,6 +39,7 @@ cargo make scraper sp SPDi35 --cache-dir ./custom_cache --min-delay 500 --max-de
 cargo make scraper sp SPDi36 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
 cargo make scraper sp SPDi37 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
 cargo make scraper sp SPDi38 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
+cargo make scraper sp SP38 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
 cargo make scraper sp SPDi39 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
 cargo make scraper sp SPDi40 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
 cargo make scraper sp SPDi43 --cache-dir ./custom_cache --min-delay 500 --max-delay 2000
