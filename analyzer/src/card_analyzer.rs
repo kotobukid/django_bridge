@@ -208,8 +208,8 @@ impl SimpleRawCardAnalyzer {
     fn extract_dd_elements(&self, html: &str) -> Vec<String> {
         use regex::Regex;
         
-        // dt-dd ペアを正しく抽出するための正規表現
-        let dt_dd_regex = Regex::new(r"<dt>([^<]+)</dt>\s*<dd>(.*?)</dd>").unwrap();
+        // dt-dd ペアを正しく抽出するための正規表現（複数行対応）
+        let dt_dd_regex = Regex::new(r"(?s)<dt>([^<]+)</dt>\s*<dd[^>]*>(.*?)</dd>").unwrap();
         let mut dd_elements = Vec::new();
         
         // まず最初のdt要素（カード種類または種類）を見つける
@@ -227,12 +227,11 @@ impl SimpleRawCardAnalyzer {
         let search_html = &html[search_start..];
         
         for caps in dt_dd_regex.captures_iter(search_html) {
-            if let Some(dd_content) = caps.get(2) {
-                let content = dd_content.as_str().trim();
-                dd_elements.push(content.to_string());
+            if let (Some(_dt_content), Some(dd_content)) = (caps.get(1), caps.get(2)) {
+                let dd_text = dd_content.as_str().trim();
+                dd_elements.push(dd_text.to_string());
             }
         }
-        
         dd_elements
     }
 
@@ -380,14 +379,12 @@ impl SimpleRawCardAnalyzer {
         
         // 公式誤字修正: 奏生：植物 → 奏羅：植物
         if cat1 == "奏生" && cat2 == Some("植物") {
-            eprintln!("DEBUG: Correcting official typo: 奏生：植物 → 奏羅：植物");
             normalized_cat1 = "奏羅".to_string();
         }
         
         // 表記ゆれ修正: ウエポン → ウェポン
         if let Some(ref mut cat2_val) = normalized_cat2 {
             if cat2_val == "ウエポン" {
-                eprintln!("DEBUG: Normalizing notation: ウエポン → ウェポン");
                 *cat2_val = "ウェポン".to_string();
             }
         }
@@ -395,7 +392,6 @@ impl SimpleRawCardAnalyzer {
         // バーチャル/世怜音女学院 → バーチャルのみ
         if let Some(ref cat2_val) = normalized_cat2 {
             if cat2_val == "バーチャル" && cat3 == Some("世怜音女学院") {
-                eprintln!("DEBUG: Simplifying Klass: バーチャル/世怜音女学院 → バーチャル");
                 normalized_cat3 = None;
             }
         }
@@ -419,32 +415,24 @@ impl SimpleRawCardAnalyzer {
                 .flat_map(|line| line.split("<br />"))
                 .collect();
 
-            eprintln!("DEBUG: Klass detection - lines: {:?}", lines);
-
             for line in lines {
                 let clean_text = line.trim();
                 if clean_text.is_empty() || clean_text == "-" {
                     continue;
                 }
 
-                eprintln!("DEBUG: Processing line: '{}'", clean_text);
-
                 // パターン1: "奏羅：宇宙" のような形式（半角コロン）
                 if let Some(colon_pos) = clean_text.find(':') {
                     let cat1 = clean_text[..colon_pos].trim();
                     let rest = clean_text[colon_pos + 1..].trim();
                     
-                    // eprintln!("DEBUG: Found half-width colon - cat1: '{}', rest: '{}'", cat1, rest);
-                    
                     // パターン1a: "空獣／地獣" のような複数cat2を持つ場合
                     if let Some(slash_pos) = rest.find('/') {
                         let cat2 = rest[..slash_pos].trim();
                         let cat3 = rest[slash_pos + 1..].trim();
-                        // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
                         klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
                     } else {
                         // パターン1b: "奏羅：宇宙" のような単一cat2の場合
-                        // eprintln!("DEBUG: Colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
                         klasses.push((cat1.to_string(), Some(rest.to_string()), None));
                     }
                 }
@@ -453,30 +441,23 @@ impl SimpleRawCardAnalyzer {
                     let cat1 = clean_text[..colon_pos].trim();
                     let rest = clean_text[colon_pos + '：'.len_utf8()..].trim();
                     
-                    // eprintln!("DEBUG: Found full-width colon - cat1: '{}', rest: '{}'", cat1, rest);
-                    
                     // パターン2a: "空獣／地獣" のような複数cat2を持つ場合
                     if let Some(slash_pos) = rest.find('/') {
                         let cat2 = rest[..slash_pos].trim();
                         let cat3 = rest[slash_pos + 1..].trim();
-                        // eprintln!("DEBUG: Slash pattern - cat1: '{}', cat2: '{}', cat3: '{}'", cat1, cat2, cat3);
                         klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
                     } else {
                         // パターン2b: "奏羅：宇宙" のような単一cat2の場合
-                        // eprintln!("DEBUG: Full-width colon pattern - cat1: '{}', cat2: '{}'", cat1, rest);
                         klasses.push((cat1.to_string(), Some(rest.to_string()), None));
                     }
                 }
                 // パターン3: 単純な種族名のみ（解放派、闘争派、防衛派、奏元、精元など）
                 else {
-                    // eprintln!("DEBUG: Simple pattern - cat1: '{}'", clean_text);
                     klasses.push((clean_text.to_string(), None, None));
                 }
             }
         }
 
-        eprintln!("DEBUG: Raw detected klasses: {:?}", klasses);
-        
         // 正規化処理を適用
         let normalized_klasses: Vec<(String, Option<String>, Option<String>)> = klasses
             .into_iter()
@@ -485,7 +466,6 @@ impl SimpleRawCardAnalyzer {
             })
             .collect();
         
-        eprintln!("DEBUG: Normalized klasses: {:?}", normalized_klasses);
         normalized_klasses
     }
 
@@ -797,11 +777,8 @@ impl CardRepository {
         cat2: Option<&str>,
         cat3: Option<&str>,
     ) -> Result<Option<i64>, Box<dyn std::error::Error>> {
-        // eprintln!("DEBUG: Looking for Klass: '{}', '{:?}', '{:?}'", cat1, cat2, cat3);
-        
         // 不正なKlass形式を検証して除外
         if self.is_invalid_klass(cat1, cat2) {
-            eprintln!("DEBUG: Skipping invalid Klass: '{}', '{:?}', '{:?}'", cat1, cat2, cat3);
             return Ok(None);
         }
         
@@ -822,7 +799,6 @@ impl CardRepository {
 
         if let Some(row) = existing_klass {
             let id: i64 = row.get("id");
-            // eprintln!("DEBUG: Found existing Klass with ID: {}", id);
             return Ok(Some(id));
         }
         
@@ -879,9 +855,6 @@ impl CardRepository {
             }
         });
         
-        // eprintln!("DEBUG: Fallback - looking for truncated Klass: '{}', '{:?}', '{:?}'", 
-        //           cat1_truncated, cat2_truncated, cat3_truncated);
-        
         // 切り詰められた値で検索
         let truncated_klass = sqlx::query(
             r#"
@@ -899,11 +872,9 @@ impl CardRepository {
 
         if let Some(row) = truncated_klass {
             let id: i64 = row.get("id");
-            // eprintln!("DEBUG: Found truncated Klass with ID: {}", id);
             Ok(Some(id))
         } else {
             // 既存データにない場合は None を返す（新規作成しない）
-            eprintln!("DEBUG: No matching Klass found for '{}', '{:?}', '{:?}' - skipping", cat1, cat2, cat3);
             Ok(None)
         }
     }
@@ -1055,10 +1026,6 @@ impl CardRepository {
         }
         
         if !violations.is_empty() {
-            eprintln!("FIELD LENGTH VIOLATIONS:");
-            for violation in &violations {
-                eprintln!("  {}", violation);
-            }
             return Err(format!("Field length violations: {}", violations.join(", ")).into());
         }
 
