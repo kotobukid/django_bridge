@@ -158,24 +158,56 @@ pub fn CardItem(
                 ViewMode::Compact => view! {
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
-                            <h3 class="font-semibold text-lg" style="color: #374151;">
-                                <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
-                                    <Icons colors={get_colors_from_bits(card.color() as i32)} />
-                                    {card.name()}
-                                    {
-                                        let cost = card.cost();
-                                        if !cost.is_empty() {
-                                            view! {
-                                                <div class="ml-2">
-                                                    <ColorIconsWithNum code={cost} />
-                                                </div>
-                                            }.into_any()
+                            <div>
+                                <h3 class="font-semibold text-lg" style="color: #374151;">
+                                    <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
+                                        <Icons colors={get_colors_from_bits(card.color() as i32)} />
+                                        {
+                                            let full_name = card.name();
+                                            // Extract card name part (before <> if present)
+                                            if let Some(bracket_pos) = full_name.find(" <") {
+                                                full_name[..bracket_pos].to_string()
+                                            } else {
+                                                full_name
+                                            }
+                                        }
+                                        {
+                                            let cost = card.cost();
+                                            if !cost.is_empty() {
+                                                view! {
+                                                    <div class="ml-2">
+                                                        <ColorIconsWithNum code={cost} />
+                                                    </div>
+                                                }.into_any()
+                                            } else {
+                                                view! { <span></span> }.into_any()
+                                            }
+                                        }
+                                    </a>
+                                </h3>
+                                {
+                                    let full_name = card.name();
+                                    // Extract pronunciation part (inside <> if present)
+                                    if let Some(start) = full_name.find(" <") {
+                                        if let Some(end) = full_name.find(">") {
+                                            let pronunciation = full_name[start + 2..end].to_string();
+                                            if !pronunciation.is_empty() {
+                                                view! {
+                                                    <div class="text-sm mt-1" style="color: #6b7280;">
+                                                        "<" {pronunciation} ">"
+                                                    </div>
+                                                }.into_any()
+                                            } else {
+                                                view! { <span></span> }.into_any()
+                                            }
                                         } else {
                                             view! { <span></span> }.into_any()
                                         }
+                                    } else {
+                                        view! { <span></span> }.into_any()
                                     }
-                                </a>
-                            </h3>
+                                }
+                            </div>
                             <div class="flex items-center gap-2 text-sm mt-1" style="color: #374151; opacity: 0.8;">
                                 <span>{card.code()}</span>
                                 {
@@ -260,24 +292,56 @@ pub fn CardItem(
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <h3 class="font-semibold text-lg mb-2" style="color: #374151;">
-                                    <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
-                                        <Icons colors={get_colors_from_bits(card.color() as i32)} />
-                                        {card.name()}
-                                        {
-                                            let cost = card.cost();
-                                            if !cost.is_empty() {
-                                                view! {
-                                                    <div class="ml-2">
-                                                        <ColorIconsWithNum code={cost} />
-                                                    </div>
-                                                }.into_any()
+                                <div class="mb-2">
+                                    <h3 class="font-semibold text-lg" style="color: #374151;">
+                                        <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
+                                            <Icons colors={get_colors_from_bits(card.color() as i32)} />
+                                            {
+                                                let full_name = card.name();
+                                                // Extract card name part (before <> if present)
+                                                if let Some(bracket_pos) = full_name.find(" <") {
+                                                    full_name[..bracket_pos].to_string()
+                                                } else {
+                                                    full_name
+                                                }
+                                            }
+                                            {
+                                                let cost = card.cost();
+                                                if !cost.is_empty() {
+                                                    view! {
+                                                        <div class="ml-2">
+                                                            <ColorIconsWithNum code={cost} />
+                                                        </div>
+                                                    }.into_any()
+                                                } else {
+                                                    view! { <span></span> }.into_any()
+                                                }
+                                            }
+                                        </a>
+                                    </h3>
+                                    {
+                                        let full_name = card.name();
+                                        // Extract pronunciation part (inside <> if present)
+                                        if let Some(start) = full_name.find(" <") {
+                                            if let Some(end) = full_name.find(">") {
+                                                let pronunciation = full_name[start + 2..end].to_string();
+                                                if !pronunciation.is_empty() {
+                                                    view! {
+                                                        <div class="text-sm mt-1" style="color: #6b7280;">
+                                                            "<" {pronunciation} ">"
+                                                        </div>
+                                                    }.into_any()
+                                                } else {
+                                                    view! { <span></span> }.into_any()
+                                                }
                                             } else {
                                                 view! { <span></span> }.into_any()
                                             }
+                                        } else {
+                                            view! { <span></span> }.into_any()
                                         }
-                                    </a>
-                                </h3>
+                                    }
+                                </div>
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2 text-sm" style="color: #374151;">
                                         <span class="font-medium">Code:</span>
