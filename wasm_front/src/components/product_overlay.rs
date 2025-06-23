@@ -46,7 +46,15 @@ pub fn ProductOverlay(product_filter: RwSignal<ProductFilter>) -> impl IntoView 
                 name: name.to_string(),
             };
             
-            if code.contains("-P") || code.contains("-CP") {
+            if code.starts_with("WDA-F")    // キーセレクションの500円構築済みデッキ
+                || code.starts_with("WDK-") // キーセレクションの構築済みデッキ
+                || code.starts_with("WXD-") // オールスターの構築済みデッキ
+                || code.starts_with("WXK-") // キーセレクションのブースター
+                || code.starts_with("WXEX-") // オールスターの特別なブースター
+                || code.starts_with("WX-") // オールスターの通常ブースター
+            {
+                // do nothing
+            } else if code.contains("-P") || code.contains("-CP") {
                 booster.push(item);
             } else if code.contains("-D") || code.contains("-CD") {
                 deck.push(item);
