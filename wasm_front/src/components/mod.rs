@@ -1,4 +1,5 @@
 pub mod card_item;
+mod burst_feature_overlay;
 mod card_list;
 mod card_type_selector;
 mod clear_all_button;
@@ -17,6 +18,7 @@ mod scroll_to_top_button;
 mod svg_definition;
 mod text_search;
 
+pub use burst_feature_overlay::BurstFeatureOverlay;
 pub use card_item::CardItem;
 pub use card_list::CardList;
 pub use card_type_selector::CardTypeSelector;

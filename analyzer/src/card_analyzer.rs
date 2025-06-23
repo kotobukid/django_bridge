@@ -682,6 +682,7 @@ impl SimpleRawCardAnalyzer {
 
         // ライフバーストテキストからバーストフィーチャーを検出
         let burst_bits = self.detect_burst_features(&raw_card.life_burst_text);
+        println!("DEBUG: burst_bits = {}, life_burst_text = {:?}", burst_bits, raw_card.life_burst_text);
         {
             // テキスト以外からのFeature検出
             let bits = detected_feature_set.to_bits();
@@ -1096,9 +1097,9 @@ impl CardRepository {
             INSERT INTO wix_card (
                 name, code, pronunciation, color, cost, level, "limit", limit_ex,
                 product, card_type, power, has_burst, skill_text, burst_text,
-                "format", story, rarity, timing, url, feature_bits1, feature_bits2, ex1
+                "format", story, rarity, timing, url, feature_bits1, feature_bits2, burst_bits, ex1
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
             ON CONFLICT (code) DO UPDATE SET
                 name = EXCLUDED.name,
                 pronunciation = EXCLUDED.pronunciation,
@@ -1120,6 +1121,7 @@ impl CardRepository {
                 url = EXCLUDED.url,
                 feature_bits1 = EXCLUDED.feature_bits1,
                 feature_bits2 = EXCLUDED.feature_bits2,
+                burst_bits = EXCLUDED.burst_bits,
                 ex1 = EXCLUDED.ex1
             RETURNING id
             "#
@@ -1145,6 +1147,7 @@ impl CardRepository {
         .bind(&create_card.url)
         .bind(&create_card.feature_bits1)
         .bind(&create_card.feature_bits2)
+        .bind(&create_card.burst_bits)
         .bind(&create_card.ex1)
         .fetch_one(self.pool.as_ref())
         .await?;

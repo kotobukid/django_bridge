@@ -125,3 +125,26 @@ pub fn filter_by_f_shifts(shift1: isize, shift2: isize) -> Vec<CardExport> {
         .map(|c| CardExport::from(c))
         .collect()
 }
+
+/// 内部フィルタリング関数：fetch_by_burst_bits のロジック
+pub fn filter_by_burst_bits(burst_bits: i64, mode: &str) -> Vec<CardExport> {
+    cards::CARD_LIST
+        .iter()
+        .filter(|c| {
+            let card_burst_bits = c.23; // burst_bitsフィールドのインデックス（23番目）
+
+            match mode {
+                "and" => {
+                    // AND条件: 指定されたビットが全て立っている
+                    burst_bits == 0 || (card_burst_bits & burst_bits) == burst_bits
+                }
+                "or" => {
+                    // OR条件: 指定されたビットのいずれかが立っている
+                    burst_bits == 0 || (card_burst_bits & burst_bits) != 0
+                }
+                _ => true,
+            }
+        })
+        .map(|c| CardExport::from(c))
+        .collect()
+}

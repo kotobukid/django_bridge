@@ -316,6 +316,7 @@ impl From<Card> for CreateCard {
             skill_text: Some(normal_skills.join("\n")),
             feature_bits1: val.feature_bits1,
             feature_bits2: val.feature_bits2,
+            burst_bits: 0, // Note: This conversion path doesn't implement burst feature detection - analyzer path does
             ex1: val.ex1.value,
         }
     }

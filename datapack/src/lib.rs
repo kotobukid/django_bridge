@@ -3,8 +3,9 @@ pub mod gen;
 pub mod text_search;
 
 use color::{self, Color};
-use feature::feature::{export_features, CardFeature};
+use feature::feature::{export_features, export_burst_features, CardFeature, BurstFeature};
 use serde::{Deserialize, Serialize};
+use serde_wasm_bindgen;
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
 use gen::klasses::{KLASS_LIST, get_klass_display_name};
@@ -134,6 +135,7 @@ struct CardCompact(
         i64,          // feature_bits1
         i64,          // feature_bits2
         u64,          // klass_bits
+        i64,          // burst_bits
         &'static str, // ex1
     ),
 );
@@ -164,6 +166,7 @@ pub struct CardExport {
     feature_bits1: i64,    // feature_bits1
     feature_bits2: i64,    // feature_bits2
     klass_bits: u64,       // klass_bits
+    burst_bits: i64,       // burst_bits
     ex1: String,
 }
 
@@ -285,6 +288,11 @@ impl CardExport {
     }
 
     #[wasm_bindgen(getter)]
+    pub fn burst_bits(&self) -> i64 {
+        self.burst_bits
+    }
+
+    #[wasm_bindgen(getter)]
     pub fn ex1(&self) -> String {
         self.ex1.clone()
     }
@@ -315,6 +323,7 @@ impl
         i64,          // feature_bits1
         i64,          // feature_bits2
         u64,          // klass_bits
+        i64,          // burst_bits
         &'static str, // ex1
     )> for CardExport
 {
@@ -343,6 +352,7 @@ impl
             i64,          // feature_bits1
             i64,          // feature_bits2
             u64,          // klass_bits
+            i64,          // burst_bits
             &'static str, // ex1
         ),
     ) -> Self {
@@ -371,7 +381,8 @@ impl
             feature_bits1: v.20,
             feature_bits2: v.21,
             klass_bits: v.22,
-            ex1: v.23.to_string(),
+            burst_bits: v.23,
+            ex1: v.24.to_string(),
         }
     }
 }
@@ -381,7 +392,7 @@ impl Display for CardCompact {
         let c = self.0;
         write!(
             f,
-            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n klass_bits: {}\n ex1: {}\n",
+            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n klass_bits: {}\n burst_bits: {}\n ex1: {}\n",
             c.0,    // id
             c.1,    // name
             c.2,    // code
@@ -405,7 +416,8 @@ impl Display for CardCompact {
             c.20,   // feature_bits1
             c.21,   // feature_bits2
             c.22,   // klass_bits
-            c.23,   // ex1
+            c.23,   // burst_bits
+            c.24,   // ex1
         )
     }
 }
@@ -786,6 +798,43 @@ pub fn extract_klass_names_from_bits(klass_bits: u64) -> Vec<String> {
 pub fn get_klass_names_from_bits(klass_bits: u64) -> JsValue {
     let klass_names = extract_klass_names_from_bits(klass_bits);
     serde_wasm_bindgen::to_value(&klass_names).unwrap()
+}
+
+// Helper function to extract burst features from bit flags
+pub fn extract_burst_features_from_bits(burst_bits: i64) -> Vec<(String, String)> {
+    let mut features = Vec::new();
+    
+    // Get all BurstFeatures and check which ones are set
+    let all_burst_features = BurstFeature::create_vec();
+    
+    for feature in all_burst_features {
+        let bit_pos = feature.to_bit_shift();
+        
+        let has_feature = (burst_bits & (1_i64 << bit_pos)) != 0;
+        
+        if has_feature {
+            let feature_label = feature.to_string();
+            let tag = feature.tag();
+            let tag_label = tag.to_string();
+            
+            // Remove the sort prefix (first 2 characters) from tag label  
+            let display_tag_label = if tag_label.len() > 2 {
+                tag_label[2..].to_string()
+            } else {
+                tag_label
+            };
+            
+            features.push((display_tag_label, feature_label));
+        }
+    }
+    
+    features
+}
+
+#[wasm_bindgen]
+pub fn get_burst_features_from_bits(burst_bits: i64) -> JsValue {
+    let features = extract_burst_features_from_bits(burst_bits);
+    serde_wasm_bindgen::to_value(&features).unwrap()
 }
 
 // カラーテーマを取得する関数
@@ -1246,6 +1295,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             }
         ];
@@ -1290,6 +1340,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1316,6 +1367,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1342,6 +1394,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1368,6 +1421,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1394,6 +1448,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
         ];
@@ -1447,6 +1502,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1473,6 +1529,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
             CardExport {
@@ -1499,6 +1556,7 @@ mod tests {
                 feature_bits1: 0,
                 feature_bits2: 0,
                 klass_bits: 0,
+                burst_bits: 0,
                 ex1: "".to_string(),
             },
         ];
@@ -1547,7 +1605,62 @@ impl Clone for CardExport {
             feature_bits1: self.feature_bits1,
             feature_bits2: self.feature_bits2,
             klass_bits: self.klass_bits,
+            burst_bits: self.burst_bits,
             ex1: self.ex1.clone(),
         }
     }
+}
+
+// BurstFeature条件を取得する関数（WASMバインディング用）
+#[wasm_bindgen]
+pub fn burst_feature_conditions() -> JsValue {
+    let features = export_burst_features();
+    serde_wasm_bindgen::to_value(&features).unwrap()
+}
+
+// BurstFeature名から対応するBurstFeatureを取得
+fn get_burst_feature_by_name(name: &str) -> Option<BurstFeature> {
+    feature::labels::BURST_FEATURE_LABELS.get(name).cloned()
+}
+
+// BurstFeature名のリストをビットに変換
+fn convert_burst_feature_names_to_bits(feature_names: &[String]) -> i64 {
+    let mut bits = 0_i64;
+    for name in feature_names {
+        if let Some(feature) = get_burst_feature_by_name(name) {
+            let shift = feature.to_bit_shift();
+            bits |= 1_i64 << shift;
+        }
+    }
+    bits
+}
+
+// BurstFeatureでフィルタリングする関数
+#[wasm_bindgen]
+pub fn fetch_by_burst_features_and(feature_names: JsValue) -> Vec<CardExport> {
+    let names: Vec<String> = serde_wasm_bindgen::from_value(feature_names).unwrap_or_default();
+    let burst_bits = convert_burst_feature_names_to_bits(&names);
+    filter::filter_by_burst_bits(burst_bits, "and")
+}
+
+// BurstFeatureでフィルタリングする関数（OR条件）
+#[wasm_bindgen]
+pub fn fetch_by_burst_features_or(feature_names: JsValue) -> Vec<CardExport> {
+    let names: Vec<String> = serde_wasm_bindgen::from_value(feature_names).unwrap_or_default();
+    let burst_bits = convert_burst_feature_names_to_bits(&names);
+    filter::filter_by_burst_bits(burst_bits, "or")
+}
+
+// BurstFeature名でネイティブフィルタリング
+pub fn fetch_by_burst_features_and_native(cards: &[CardExport], feature_names: &[String]) -> Vec<CardExport> {
+    let burst_bits = convert_burst_feature_names_to_bits(feature_names);
+    
+    cards
+        .iter()
+        .filter(|card| {
+            // AND条件: 指定されたビットが全て立っている
+            burst_bits == 0 || (card.burst_bits & burst_bits) == burst_bits
+        })
+        .cloned()
+        .collect()
 }

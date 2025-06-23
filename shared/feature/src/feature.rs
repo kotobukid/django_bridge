@@ -308,20 +308,21 @@ macro_rules! define_burst_features {
 
 // BurstFeature定義（プレースホルダー的な候補を含む）
 define_burst_features! {
-    Defend1 => { tag: Enhance, bit_shift: 0, label: "LB1点防御" },
-    Defend2 => { tag: Enhance, bit_shift: 1, label: "LB2点防御" },
-    BlockLrig => { tag: Enhance, bit_shift: 2, label: "LB対ルリグ防御" },
-    BlockSigni => { tag: Enhance, bit_shift: 3, label: "LB対シグニ防御" },
-    OffenciveDefend => { tag: Enhance, bit_shift: 4, label: "LB攻性防御" },
+    Defend1 => { tag: Endure, bit_shift: 0, label: "LB1点防御" },
+    Defend2 => { tag: Endure, bit_shift: 1, label: "LB2点防御" },
+    BlockLrig => { tag: Endure, bit_shift: 2, label: "LB対ルリグ防御" },
+    BlockSigni => { tag: Endure, bit_shift: 3, label: "LB対シグニ防御" },
+    OffenciveDefend => { tag: Endure, bit_shift: 4, label: "LB攻性防御" },
     Draw => { tag: Enhance, bit_shift: 5, label: "LB手札補充" },
     Guard => { tag: Endure, bit_shift: 6, label: "LBガード回収" },
     Salvage => { tag: Enhance, bit_shift: 7, label: "LBトラッシュ回収" },
     Charge => { tag: Enhance, bit_shift: 8, label: "LBエナチャージ" },
     Search => { tag: Enhance, bit_shift: 9, label: "LBサーチ" },
-    Freeze => { tag: Enhance, bit_shift: 10, label: "LB凍結" },
-    Discard => { tag: Enhance, bit_shift: 11, label: "LBハンデス" },
-    Heal => { tag: Enhance, bit_shift: 12, label: "ライフクロス回復" },
-    EraseSkill => { tag: Enhance, bit_shift: 13, label: "能力消去" },
+    Freeze => { tag: Disturb, bit_shift: 10, label: "LB凍結" },
+    Discard => { tag: Offensive, bit_shift: 11, label: "LBハンデス" },
+    Heal => { tag: Endure, bit_shift: 12, label: "LBライフクロス回復" },
+    EraseSkill => { tag: Endure, bit_shift: 13, label: "LB能力消去" },
+    Others => { tag: Others, bit_shift: 14, label: "LBその他" },
 }
 
 // BurstFeatureのHashSet用トレイト

@@ -1,5 +1,5 @@
 use crate::components::{
-    CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination,
+    BurstFeatureOverlay, CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination,
     PowerSelector, ProductOverlay, ScrollToTopButton, TextSearch,
 };
 use crate::types::{CardTypeFilter, ColorFilter, KlassFilter, LevelFilter, PowerFilter, ProductFilter};
@@ -18,6 +18,8 @@ pub fn CardPage() -> impl IntoView {
     let klass_filter = RwSignal::new(KlassFilter::new());
     let selected_features = RwSignal::new(HashMap::<String, bool>::new());
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new());
+    let selected_burst_features = RwSignal::new(HashMap::<String, bool>::new());
+    let (selected_burst_feature_names, set_selected_burst_feature_names) = signal(Vec::<String>::new());
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
     let (current_page, set_current_page) = signal(0usize);
     let cards_per_page = 20;
@@ -26,6 +28,7 @@ pub fn CardPage() -> impl IntoView {
     let (show_feature_overlay, set_show_feature_overlay) = signal(false);
     let (show_product_overlay, set_show_product_overlay) = signal(false);
     let (show_klass_overlay, set_show_klass_overlay) = signal(false);
+    let (show_burst_feature_overlay, set_show_burst_feature_overlay) = signal(false);
     
     // オーバーレイの強制再描画用
     let (feature_overlay_key, set_feature_overlay_key) = signal(0u32);
@@ -44,6 +47,7 @@ pub fn CardPage() -> impl IntoView {
             let product = product_filter.read();
             let klass = klass_filter.read();
             let feature_names = selected_feature_names.get();
+            let burst_feature_names = selected_burst_feature_names.get();
             let text_search = search_text.get();
 
             // 複合フィルタリングを使用
@@ -67,7 +71,7 @@ pub fn CardPage() -> impl IntoView {
 
             let klass_bits = klass.selected_bits;
 
-            let filtered = datapack::fetch_by_colors_features_card_types_products_levels_power_threshold_klass_and_text_native(
+            let mut filtered = datapack::fetch_by_colors_features_card_types_products_levels_power_threshold_klass_and_text_native(
                 &cards,
                 color_bits,
                 &feature_names,
@@ -78,6 +82,11 @@ pub fn CardPage() -> impl IntoView {
                 klass_bits,
                 &text_search,
             );
+
+            // BurstFeatureフィルタリングを追加適用
+            if !burst_feature_names.is_empty() {
+                filtered = datapack::fetch_by_burst_features_and_native(&filtered, &burst_feature_names);
+            }
 
             set_filtered_cards.set(filtered);
             set_current_page.set(0);
@@ -100,6 +109,7 @@ pub fn CardPage() -> impl IntoView {
 
     // フィルタの有効状態を判定
     let has_active_features = Memo::new(move |_| !selected_features.read().is_empty());
+    let has_active_burst_features = Memo::new(move |_| !selected_burst_features.read().is_empty());
 
     let has_active_products = Memo::new(move |_| product_filter.read().has_any());
     
@@ -113,6 +123,7 @@ pub fn CardPage() -> impl IntoView {
         power_filter.get().has_any() ||
         !search_text.get().is_empty() ||
         has_active_features.get() ||
+        has_active_burst_features.get() ||
         has_active_products.get() ||
         has_active_klass.get()
     });
@@ -126,6 +137,8 @@ pub fn CardPage() -> impl IntoView {
         set_power_filter.set(PowerFilter::new());
         selected_features.update(|f| f.clear());
         set_selected_feature_names.set(Vec::new());
+        selected_burst_features.update(|f| f.clear());
+        set_selected_burst_feature_names.set(Vec::new());
         product_filter.update(|f| f.clear_all());
         klass_filter.update(|f| f.clear_all());
     };
@@ -144,6 +157,11 @@ pub fn CardPage() -> impl IntoView {
                             label="カード効果".to_string()
                             is_active=Signal::derive(move || has_active_features.get())
                             on_click=Callback::new(move |_| set_show_feature_overlay.set(true))
+                        />
+                        <OverlayButton
+                            label="LB効果".to_string()
+                            is_active=Signal::derive(move || has_active_burst_features.get())
+                            on_click=Callback::new(move |_| set_show_burst_feature_overlay.set(true))
                         />
                         <OverlayButton
                             label="製品".to_string()
@@ -281,6 +299,49 @@ pub fn CardPage() -> impl IntoView {
                                     />
                                 }
                             }}
+                        </div>
+                    </div>
+                </div>
+            </Show>
+
+            // LB効果オーバーレイ
+            <Show when=move || show_burst_feature_overlay.get()>
+                <div
+                    class="fixed inset-0 z-50 flex items-center justify-center"
+                    style="background-color: rgba(0, 0, 0, 0.75);"
+                    on:click=move |_| set_show_burst_feature_overlay.set(false)
+                >
+                    <div
+                        class="bg-white rounded-lg shadow-lg max-w-4xl max-h-[80vh] w-full mx-4 overflow-hidden"
+                        on:click=|e| e.stop_propagation()
+                    >
+                        <div class="flex items-center justify-between p-4 border-b">
+                            <div class="flex items-center space-x-3">
+                                <h2 class="text-lg font-semibold">"ライフバースト効果選択"</h2>
+                                <Show when=move || has_active_burst_features.get()>
+                                    <button
+                                        class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
+                                        on:click=move |_| {
+                                            selected_burst_features.update(|f| f.clear());
+                                            set_selected_burst_feature_names.set(Vec::new());
+                                        }
+                                    >
+                                        "クリア"
+                                    </button>
+                                </Show>
+                            </div>
+                            <button
+                                class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
+                                on:click=move |_| set_show_burst_feature_overlay.set(false)
+                            >
+                                "×"
+                            </button>
+                        </div>
+                        <div class="overflow-y-auto max-h-[60vh]">
+                            <BurstFeatureOverlay
+                                selected_burst_features=selected_burst_features
+                                on_burst_feature_change=set_selected_burst_feature_names
+                            />
                         </div>
                     </div>
                 </div>

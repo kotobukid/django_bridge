@@ -102,6 +102,7 @@ fn create_mock_card(id: i32, name: &'static str, card_type: u8) -> CardExport {
         0i64,                  // feature_bits1
         0i64,                  // feature_bits2
         0u64,                  // klass_bits
+        0i64,                  // burst_bits
         "",                    // ex1
     ))
 }
