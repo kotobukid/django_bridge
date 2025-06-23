@@ -111,7 +111,7 @@ impl RawCardService {
     pub fn extract_life_burst_text(&self, document: &Html) -> String {
         let mut burst_texts = Vec::new();
 
-        // まず.cardSkillクラスから抽出を試す（詳細ページ用）
+        // .cardSkillクラスから抽出（ライフバーストは独立したcardSkill要素として存在）
         if let Ok(card_skill_selector) = ScraperSelector::parse(".cardSkill") {
             for element in document.select(&card_skill_selector) {
                 let html_content = element.inner_html();
@@ -119,27 +119,6 @@ impl RawCardService {
                 // この要素がライフバーストで始まっているかチェック
                 if self.starts_with_life_burst_icon(&html_content) {
                     burst_texts.extend(self.extract_burst_from_html_content(&html_content));
-                }
-            }
-        }
-
-        // テーブル行を検索してスキルテキストを見つける
-        if let Ok(tr_selector) = ScraperSelector::parse("tr") {
-            for tr in document.select(&tr_selector) {
-                // th要素を探す
-                if let Ok(th_selector) = ScraperSelector::parse("th") {
-                    if let Some(th) = tr.select(&th_selector).next() {
-                        let th_text = th.text().collect::<String>();
-                        if th_text.contains("テキスト") && !th_text.contains("ライフバースト") {
-                            // 対応するtd要素を取得
-                            if let Ok(td_selector) = ScraperSelector::parse("td") {
-                                if let Some(td) = tr.select(&td_selector).next() {
-                                    let html_content = td.inner_html();
-                                    burst_texts.extend(self.extract_burst_from_html_content(&html_content));
-                                }
-                            }
-                        }
-                    }
                 }
             }
         }
@@ -183,11 +162,16 @@ impl RawCardService {
         let trimmed = html.trim();
         
         // ライフバーストアイコンのIMGタグで始まっているかチェック
-        if trimmed.starts_with("<img") && 
-           (trimmed.contains("icon_txt_burst.png") || 
-            trimmed.contains("alt=\"ライフバースト\"") ||
-            trimmed.contains("alt='ライフバースト'")) {
-            return true;
+        if trimmed.starts_with("<img") {
+            // 最初のimgタグを抽出して、それがライフバーストアイコンかチェック
+            if let Some(end_pos) = trimmed.find('>') {
+                let img_tag = &trimmed[..=end_pos];
+                if img_tag.contains("icon_txt_burst.png") || 
+                   img_tag.contains("alt=\"ライフバースト\"") ||
+                   img_tag.contains("alt='ライフバースト'") {
+                    return true;
+                }
+            }
         }
         
         // 直接「ライフバースト」で始まっている場合（アイコンが既にテキストに変換されている場合）
