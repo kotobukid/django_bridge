@@ -204,7 +204,7 @@ pub fn IconPripara() -> impl IntoView {
     view! {
         <svg viewBox="0 0 32 32" wodth="32" height="32">
           <defs>
-            <filter id="drop-shadow-filter-0" bx:preset="drop-shadow 1 0 0 2 0.5 #ffffff4d" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="drop-shadow-filter-0" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur in="SourceAlpha" stdDeviation="2"></feGaussianBlur>
               <feOffset dx="0" dy="0"></feOffset>
               <feComponentTransfer result="offsetblur">
@@ -217,7 +217,7 @@ pub fn IconPripara() -> impl IntoView {
                 <feMergeNode in="SourceGraphic"></feMergeNode>
               </feMerge>
             </filter>
-            <filter id="gaussian-blur-filter-0" bx:preset="gaussian-blur 1 0.8" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%">
+            <filter id="gaussian-blur-filter-0" color-interpolation-filters="sRGB" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="0.8 0.8" edgeMode="none"></feGaussianBlur>
             </filter>
           </defs>
@@ -244,7 +244,7 @@ pub fn IconNijisanji() -> impl IntoView {
           </defs>
           <path style="fill: rgb(0, 50, 113);" d="M 27.328 16.448 C 27.328 25.69 17.322 31.468 9.317 26.846 C 8.999 26.662 8.692 26.467 8.399 26.262 L 3.458 28.89 L 5.534 23.436 C 1.62 17.964 2.881 9.766 9.317 6.049 C 11.142 4.995 13.213 4.441 15.321 4.441 L 15.321 16.448 L 27.328 16.448 Z"></path>
           <path d="M 17.574 14.444 L 17.574 2.441 C 24.009 2.64 29.164 7.918 29.164 14.402 C 29.164 14.415 29.164 14.429 29.164 14.444 L 17.574 14.444 Z" style="fill: url(#gradient-0);"></path>
-          <path style="fill: rgb(255, 255, 255); transform-box: fill-box; transform-origin: 50% 50%;" d="M -16.483 37.285 A 3.289 3.289 0 1 1 -16.483 40.574 A 1.91 1.91 0 1 0 -16.483 37.285 Z" bx:shape="crescent -13.635 38.929 3.289 300 0.505 1@3d693c5e" transform="matrix(-0.707107, 0.707107, -0.707107, -0.707107, 23.308246, -25.833031)"></path>
+          <path style="fill: rgb(255, 255, 255); transform-box: fill-box; transform-origin: 50% 50%;" d="M -16.483 37.285 A 3.289 3.289 0 1 1 -16.483 40.574 A 1.91 1.91 0 1 0 -16.483 37.285 Z" transform="matrix(-0.707107, 0.707107, -0.707107, -0.707107, 23.308246, -25.833031)"></path>
         </svg>
     }
 }
@@ -279,13 +279,31 @@ pub fn IconBlueArchive() -> impl IntoView {
     view! {
       <svg viewBox="0 0 32 32" width="32" height="32">
         <defs>
-          <pattern id="pattern-0" viewBox="0 0 79.685 79.685" patternUnits="userSpaceOnUse" preserveAspectRatio="none" width="100" ight="100" bx:pinned="true">
+          <pattern id="pattern-0" viewBox="0 0 79.685 79.685" patternUnits="userSpaceOnUse" preserveAspectRatio="none" width="100" ight="100">
             <rect x="-59.734" y="87.839" width="79.685" height="79.685" style="fill: rgb(0, 208, 255);" transform="matrix(1, 0, 0, 1, 59.73400115966797, -87.83900451660156)"></rect>
             </pattern>
           </defs>
           <rect x="0.024" y="0.137" width="31.951" height="31.727" style=""></rect>
           <path d="M 33.544 15.056 C 33.544 15.65 33.402 16.227 33.133 16.782 C 33.27 16.391 33.342 15.99 33.342 15.581 C 33.342 11.635 26.673 8.436 18.446 8.436 C 10.219 8.436 3.55 11.635 3.55 15.581 C 3.55 18.075 6.854 19.065 10.891 20.343 C 5.564 19.607 2.54 17.827 2.54 15.056 C 2.54 10.91 9.443 7.397 18.005 7.397 C 26.566 7.397 33.544 10.91 33.544 15.056 Z" style="fill: rgb(255, 255, 255); transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.866025, 0.5, -0.5, 0.866025, 0.000001, 0.000002)"></path>
           <path d="M 12.45 35.521 L 13.569 13.331 L -2.002 13.641 L 13.682 12.279 L 15.437 -2.103 L 14.886 12.221 L 30.817 12.027 L 14.8 13.27 L 12.45 35.521 Z" style="stroke-width: 1; fill: rgb(154, 228, 255); transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.866025, 0.5, -0.5, 0.866025, 0.000002, -0.000002)"></path>
+      </svg>
+    }
+}
+
+#[component]
+pub fn IconNext() -> impl IntoView {
+    view! {
+      <svg viewBox="0 0 32 32" width="32" height="32">
+          <path d="M 27.093 16.001 L 4.906 27.094 L 4.906 4.907 L 27.093 16.001 Z" style="paint-order: stroke; fill: rgb(255, 255, 255); stroke-width: 0px; transform-origin: 16px 16.001px;"></path>
+      </svg>
+    }
+}
+
+#[component]
+pub fn IconPrevious() -> impl IntoView {
+    view! {
+      <svg viewBox="0 0 32 32" width="32" height="32">
+          <path d="M 4.906 16.001 L 27.093 27.094 L 27.093 4.907 L 4.906 16.001 Z" style="paint-order: stroke; fill: rgb(255, 255, 255); transform-origin: 16px 16px; stroke-width: 0px;"></path>
       </svg>
     }
 }

@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use crate::components::svg_definition::{IconNext, IconPrevious};
 
 // Simple browser detection
 fn is_firefox() -> bool {
@@ -227,7 +228,7 @@ pub fn Pagination(
                     scroll_to_pagination();
                 }
             >
-                "Previous"
+                <IconPrevious />
             </button>
 
             <button 
@@ -261,7 +262,7 @@ pub fn Pagination(
                     scroll_to_pagination();
                 }
             >
-                "Next"
+                <IconNext />
             </button>
         </div>
     }
