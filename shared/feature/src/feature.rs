@@ -317,10 +317,10 @@ define_burst_features! {
     Guard => { tag: Endure, bit_shift: 6, label: "LBガード回収" },
     Salvage => { tag: Enhance, bit_shift: 7, label: "LBトラッシュ回収" },
     Charge => { tag: Enhance, bit_shift: 8, label: "LBエナチャージ" },
-    Search => { tag: Enhance, bit_shift: 9, label: "LBサーチ" },
+    Search => { tag: Enhance, bit_shift: 9, label: "LBシーク" },
     Freeze => { tag: Disturb, bit_shift: 10, label: "LB凍結" },
-    Discard => { tag: Offensive, bit_shift: 11, label: "LBハンデス" },
-    Heal => { tag: Endure, bit_shift: 12, label: "LBライフクロス回復" },
+    Discard => { tag: Disturb, bit_shift: 11, label: "LB手札破壊" },
+    Heal => { tag: Endure, bit_shift: 12, label: "LBライフクロス修復" },
     EraseSkill => { tag: Endure, bit_shift: 13, label: "LB能力消去" },
     Others => { tag: Others, bit_shift: 14, label: "LBその他" },
 }
