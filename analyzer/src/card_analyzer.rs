@@ -682,7 +682,7 @@ impl SimpleRawCardAnalyzer {
 
         // ライフバーストテキストからバーストフィーチャーを検出
         let burst_bits = self.detect_burst_features(&raw_card.life_burst_text);
-        println!("DEBUG: burst_bits = {}, life_burst_text = {:?}", burst_bits, raw_card.life_burst_text);
+        // println!("DEBUG: burst_bits = {}, life_burst_text = {:?}", burst_bits, raw_card.life_burst_text);
         {
             // テキスト以外からのFeature検出
             let bits = detected_feature_set.to_bits();

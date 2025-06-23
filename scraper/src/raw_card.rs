@@ -56,19 +56,23 @@ impl RawCardService {
     }
 
     /// スキルテキストを抽出
-    fn extract_skill_text(&self, document: &Html) -> String {
+    pub fn extract_skill_text(&self, document: &Html) -> String {
         // まず.cardSkillクラスから抽出を試す（詳細ページ用）
         if let Ok(card_skill_selector) = ScraperSelector::parse(".cardSkill") {
-            if let Some(element) = document.select(&card_skill_selector).next() {
+            for element in document.select(&card_skill_selector) {
                 // HTMLを取得してIMGタグを置換する
                 let html_content = element.inner_html();
-                let processed_text = self.replace_img_tags_with_alt(&html_content);
                 
-                // HTMLタグを除去してテキストのみ取得
-                let cleaned_text = self.remove_html_tags(&processed_text);
-                
-                if !cleaned_text.trim().is_empty() {
-                    return cleaned_text.trim().to_string();
+                // この要素がライフバーストで始まっていないかチェック
+                if !self.starts_with_life_burst_icon(&html_content) {
+                    let processed_text = self.replace_img_tags_with_alt(&html_content);
+                    
+                    // HTMLタグを除去してテキストのみ取得
+                    let cleaned_text = self.remove_html_tags(&processed_text);
+                    
+                    if !cleaned_text.trim().is_empty() {
+                        return cleaned_text.trim().to_string();
+                    }
                 }
             }
         }
@@ -104,56 +108,34 @@ impl RawCardService {
     }
 
     /// ライフバーストテキストを抽出
-    fn extract_life_burst_text(&self, document: &Html) -> String {
-        // HTMLからライフバーストアイコンを含むテキストを探す
-        let html_string = document.html();
+    pub fn extract_life_burst_text(&self, document: &Html) -> String {
+        let mut burst_texts = Vec::new();
 
-        // ライフバーストアイコンがある場合、その後のテキストを抽出
-        if html_string.contains("icon_txt_burst.png") {
-            // ライフバーストアイコンを含む行を抽出
-            if let Ok(img_selector) = ScraperSelector::parse("img[alt*='ライフバースト']") {
-                for img in document.select(&img_selector) {
-                    // 親要素から同じdiv内のテキストを取得
-                    if let Some(parent) = img.parent() {
-                        // ElementRefに変換してからHTMLを取得
-                        if let Some(parent_element) = scraper_html::ElementRef::wrap(parent) {
-                            let html_content = parent_element.inner_html();
-                            let processed_text = self.replace_img_tags_with_alt(&html_content);
-                            let cleaned_text = self.remove_html_tags(&processed_text);
-                            
-                            // ライフバーストアイコンの後のテキストを抽出（：の後）
-                            if let Some(colon_pos) = cleaned_text.find('：') {
-                                let burst_text = cleaned_text[colon_pos + 3..].trim(); // 3バイトは '：' の文字
-                                if !burst_text.is_empty() {
-                                    return burst_text.to_string();
-                                }
-                            }
-                            
-                            // ：が見つからない場合は全体をチェック
-                            if cleaned_text.contains("ライフバースト") {
-                                return cleaned_text.trim().to_string();
-                            }
-                        }
-                    }
+        // まず.cardSkillクラスから抽出を試す（詳細ページ用）
+        if let Ok(card_skill_selector) = ScraperSelector::parse(".cardSkill") {
+            for element in document.select(&card_skill_selector) {
+                let html_content = element.inner_html();
+                
+                // この要素がライフバーストで始まっているかチェック
+                if self.starts_with_life_burst_icon(&html_content) {
+                    burst_texts.extend(self.extract_burst_from_html_content(&html_content));
                 }
             }
         }
 
-        // テーブル行を検索してライフバーストテキストを見つける（フォールバック）
+        // テーブル行を検索してスキルテキストを見つける
         if let Ok(tr_selector) = ScraperSelector::parse("tr") {
             for tr in document.select(&tr_selector) {
+                // th要素を探す
                 if let Ok(th_selector) = ScraperSelector::parse("th") {
                     if let Some(th) = tr.select(&th_selector).next() {
                         let th_text = th.text().collect::<String>();
-                        if th_text.contains("ライフバースト") {
+                        if th_text.contains("テキスト") && !th_text.contains("ライフバースト") {
+                            // 対応するtd要素を取得
                             if let Ok(td_selector) = ScraperSelector::parse("td") {
                                 if let Some(td) = tr.select(&td_selector).next() {
-                                    // HTMLを取得してIMGタグを置換する
                                     let html_content = td.inner_html();
-                                    let processed_text = self.replace_img_tags_with_alt(&html_content);
-                                    let cleaned_text = self.remove_html_tags(&processed_text);
-                                    
-                                    return cleaned_text.trim().to_string();
+                                    burst_texts.extend(self.extract_burst_from_html_content(&html_content));
                                 }
                             }
                         }
@@ -161,7 +143,59 @@ impl RawCardService {
                 }
             }
         }
-        String::new()
+
+        // 抽出されたライフバーストテキストを結合
+        burst_texts.join("\n")
+    }
+
+    /// HTMLコンテンツからライフバーストテキストを抽出
+    /// スキル要素の先頭にライフバーストアイコンがある場合のみ抽出する
+    pub fn extract_burst_from_html_content(&self, html_content: &str) -> Vec<String> {
+        let mut burst_texts = Vec::new();
+        
+        // ライフバーストアイコンで始まっているかチェック
+        if self.starts_with_life_burst_icon(html_content) {
+            // IMGタグを置換してテキストを抽出
+            let processed_text = self.replace_img_tags_with_alt(html_content);
+            let cleaned_text = self.remove_html_tags(&processed_text);
+            
+            // ライフバーストの後のテキストを抽出
+            let burst_text = if let Some(colon_pos) = cleaned_text.find('：') {
+                cleaned_text[colon_pos + 3..].trim()
+            } else if cleaned_text.starts_with("ライフバースト") {
+                // 「ライフバースト」の後の部分を取得
+                cleaned_text.strip_prefix("ライフバースト").unwrap_or("").trim()
+            } else {
+                // ライフバーストアイコンが置換された場合の処理
+                cleaned_text.trim()
+            };
+            
+            if !burst_text.is_empty() {
+                burst_texts.push(burst_text.to_string());
+            }
+        }
+        
+        burst_texts
+    }
+
+    /// HTMLの先頭がライフバーストアイコンかどうかをチェック
+    pub fn starts_with_life_burst_icon(&self, html: &str) -> bool {
+        let trimmed = html.trim();
+        
+        // ライフバーストアイコンのIMGタグで始まっているかチェック
+        if trimmed.starts_with("<img") && 
+           (trimmed.contains("icon_txt_burst.png") || 
+            trimmed.contains("alt=\"ライフバースト\"") ||
+            trimmed.contains("alt='ライフバースト'")) {
+            return true;
+        }
+        
+        // 直接「ライフバースト」で始まっている場合（アイコンが既にテキストに変換されている場合）
+        if trimmed.starts_with("ライフバースト") {
+            return true;
+        }
+        
+        false
     }
 
     /// IMGタグをalt属性の内容に置換する
