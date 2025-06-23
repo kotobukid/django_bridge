@@ -3,7 +3,7 @@ use datapack::CardExport;
 use leptos::prelude::*;
 
 #[component]
-pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
+pub fn CardList(cards: Vec<CardExport>, total_count: usize) -> impl IntoView {
     let is_empty = cards.is_empty();
     let cards_count = cards.len();
     // Load initial view mode from localStorage, default to Compact
@@ -22,7 +22,7 @@ pub fn CardList(cards: Vec<CardExport>) -> impl IntoView {
                 <div class="px-4 py-3 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600">
-                            {format!("{} cards found", cards_count)}
+                            {format!("Found {} cards", total_count)}
                         </span>
                         <div class="flex items-center gap-2">
                             <span class="text-sm text-gray-600">View:</span>

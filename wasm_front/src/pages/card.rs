@@ -191,9 +191,6 @@ pub fn CardPage() -> impl IntoView {
                     </div>
                 </div>
 
-                <div class="mb-4 text-sm text-gray-600">
-                    {move || format!("Found {} cards", filtered_cards.get().len())}
-                </div>
 
                 <Suspense fallback=move || view! { <div>"Loading cards..."</div> }>
                     {move || {
@@ -212,7 +209,7 @@ pub fn CardPage() -> impl IntoView {
                                             </div>
                                         </Show>
 
-                                        <CardList cards=displayed_cards.get()/>
+                                        <CardList cards=displayed_cards.get() total_count=filtered_cards.get().len()/>
 
                                         // Bottom Pagination
                                         <Show when=move || !filtered_cards.get().is_empty()>
