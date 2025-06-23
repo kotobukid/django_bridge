@@ -2,12 +2,13 @@ pub mod filter;
 pub mod gen;
 pub mod text_search;
 
-use color;
+use color::{self, Color};
 use feature::feature::{export_features, CardFeature};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
 use gen::klasses::{KLASS_LIST, get_klass_display_name};
+use gen::colors::COLOR_THEMES;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CardType {
@@ -785,6 +786,44 @@ pub fn extract_klass_names_from_bits(klass_bits: u64) -> Vec<String> {
 pub fn get_klass_names_from_bits(klass_bits: u64) -> JsValue {
     let klass_names = extract_klass_names_from_bits(klass_bits);
     serde_wasm_bindgen::to_value(&klass_names).unwrap()
+}
+
+// カラーテーマを取得する関数
+pub fn get_color_theme_native(color_name: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    COLOR_THEMES
+        .iter()
+        .find(|(name, _, _, _)| *name == color_name)
+        .map(|(_, base, accent, light)| (*base, *accent, *light))
+}
+
+#[wasm_bindgen]
+pub fn get_color_theme(color_name: &str) -> JsValue {
+    let theme = get_color_theme_native(color_name);
+    serde_wasm_bindgen::to_value(&theme).unwrap()
+}
+
+// カードの色ビットから主要色名を取得する関数
+pub fn get_primary_color_name_from_bits(color_bits: u32) -> String {
+    let colors = color::from_bits(color_bits as i32);
+    if colors.is_empty() {
+        return "Unknown".to_string();
+    }
+    
+    // 最初の色を主要色として扱う
+    match colors[0] {
+        Color::White => "White".to_string(),
+        Color::Blue => "Blue".to_string(),
+        Color::Red => "Red".to_string(),
+        Color::Black => "Black".to_string(),
+        Color::Green => "Green".to_string(),
+        Color::Colorless => "Colorless".to_string(),
+        _ => "Unknown".to_string(),
+    }
+}
+
+#[wasm_bindgen]
+pub fn get_primary_color_name(color_bits: u32) -> String {
+    get_primary_color_name_from_bits(color_bits)
 }
 
 // Text search function for card name, code, and pronunciation

@@ -53,7 +53,59 @@ impl From<&str> for Color {
     }
 }
 
+/// カード色のテーマカラー定義
+#[derive(Debug, Clone, Serialize)]
+pub struct ColorTheme {
+    /// ベース色（メインカラー）
+    pub base: &'static str,
+    /// 強調色（ボーダーやアクセントに使用）
+    pub accent: &'static str,
+    /// うっすら色（背景色に使用）
+    pub light: &'static str,
+}
+
 impl Color {
+    /// 各色のテーマカラーを返す
+    pub fn theme(&self) -> ColorTheme {
+        match self {
+            Color::White => ColorTheme {
+                base: "#fff1b4",
+                accent: "#f5d872",  // より濃いクリーム色
+                light: "#fffdf0",   // より薄いクリーム色
+            },
+            Color::Blue => ColorTheme {
+                base: "#b4ceff",
+                accent: "#6b9eff",  // より濃い青
+                light: "#e6f0ff",   // より薄い青
+            },
+            Color::Red => ColorTheme {
+                base: "#ffb4b4",
+                accent: "#ff7a7a",  // より濃い赤
+                light: "#ffe6e6",   // より薄い赤
+            },
+            Color::Black => ColorTheme {
+                base: "rgb(176, 150, 255)",
+                accent: "rgb(139, 101, 255)",  // より濃い紫
+                light: "rgb(225, 217, 255)",   // より薄い紫
+            },
+            Color::Green => ColorTheme {
+                base: "#ccffb4",
+                accent: "#8eff66",  // より濃い緑
+                light: "#e8ffe0",   // より薄い緑
+            },
+            Color::Colorless => ColorTheme {
+                base: "#cfcfcf",
+                accent: "#a0a0a0",  // より濃いグレー
+                light: "#f0f0f0",   // より薄いグレー
+            },
+            Color::Unknown => ColorTheme {
+                base: "#ffffff",
+                accent: "#cccccc",
+                light: "#fafafa",
+            },
+        }
+    }
+
     #[allow(dead_code)]
     pub fn to_bit(&self) -> i32 {
         match self {

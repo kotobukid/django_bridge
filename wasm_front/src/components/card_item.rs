@@ -146,6 +146,17 @@ pub fn CardItem(
     let color_style = datapack::bits_to_gradient_native(card.color() as i32);
     let card_url = format!("https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no={}", card.code());
     
+    // Get color theme for this card
+    let primary_color_name = datapack::get_primary_color_name_from_bits(card.color());
+    let color_theme = datapack::get_color_theme_native(&primary_color_name);
+    
+    // Create dynamic styles based on card color
+    let (bg_color, border_color) = if let Some((_, accent, light)) = color_theme {
+        (light.to_string(), accent.to_string())
+    } else {
+        ("#f0f0f0".to_string(), "#cccccc".to_string())
+    };
+    
     // Determine border class based on card type
     let border_class = match card.card_type() {
         5 | 6 => "card-border-black", // Signi (5) or Spell (6)
@@ -193,7 +204,7 @@ pub fn CardItem(
                                             let pronunciation = full_name[start + 2..end].to_string();
                                             if !pronunciation.is_empty() {
                                                 view! {
-                                                    <div class="text-sm mt-1" style="color: #6b7280;">
+                                                    <div class="text-sm mt-1 ml-4" style="color: #6b7280;">
                                                         "<" {pronunciation} ">"
                                                     </div>
                                                 }.into_any()
@@ -301,9 +312,15 @@ pub fn CardItem(
                     </div>
                 }.into_any(),
                 ViewMode::Detailed => view! {
-                    <div class="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-orange-400 p-4 rounded">
+                    <div 
+                        class="border-l-4 p-4 rounded"
+                        style=format!("background-color: {}; border-left-color: {};", bg_color, border_color)
+                    >
                         <div class="flex items-center gap-2 mb-3">
-                            <span class="text-orange-600 font-bold text-sm uppercase tracking-wide">
+                            <span 
+                                class="font-bold text-sm uppercase tracking-wide"
+                                style="color: black;"
+                            >
                                 "🔍 Detailed Mode"
                             </span>
                         </div>
@@ -344,7 +361,7 @@ pub fn CardItem(
                                                 let pronunciation = full_name[start + 2..end].to_string();
                                                 if !pronunciation.is_empty() {
                                                     view! {
-                                                        <div class="text-sm mt-1" style="color: #6b7280;">
+                                                        <div class="text-sm mt-1 ml-4" style="color: #6b7280;">
                                                             "<" {pronunciation} ">"
                                                         </div>
                                                     }.into_any()
