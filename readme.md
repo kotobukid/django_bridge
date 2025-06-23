@@ -78,6 +78,17 @@
    cargo build
    ```
 
+3. **Gitフックのインストール（推奨）**  
+   マイグレーション関連の通知システムを有効にします。
+
+   ```bash
+   ./scripts/install-hooks.sh
+   ```
+
+   このスクリプトは以下のGitフックをインストールします：
+   - **post-merge**: `[MIGRATION REQUIRED]`を含むコミットを検出して通知
+   - **pre-commit**: マイグレーション関連ファイルの変更時に警告
+
 ### 初期セットアップ
 
 1. **Djangoマイグレーション**  

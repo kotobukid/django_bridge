@@ -1,0 +1,117 @@
+#!/bin/bash
+# pre-commit hook - マイグレーション要求の確認
+#
+# 特定のディレクトリにファイルが追加された場合、
+# コミットメッセージに[MIGRATION REQUIRED]が含まれているか確認します。
+
+# カラー定義（TTY環境でのみ使用）
+if [ -t 1 ]; then
+    RED='\033[0;31m'
+    YELLOW='\033[1;33m'
+    GREEN='\033[0;32m'
+    BLUE='\033[0;34m'
+    NC='\033[0m' # No Color
+else
+    RED=''
+    YELLOW=''
+    GREEN=''
+    BLUE=''
+    NC=''
+fi
+
+# 環境判定
+if [ -t 0 ] && [ -t 1 ]; then
+    INTERACTIVE=true
+    TIMEOUT=15
+else
+    INTERACTIVE=false
+    TIMEOUT=0
+fi
+
+# マイグレーションが必要なディレクトリパターン（glob対応）
+# これらのディレクトリへの変更があった場合、[MIGRATION REQUIRED]を推奨
+MIGRATION_DIRS=(
+    "table_definition/wix/models.py"
+    "table_definition/wix/models/*.py"
+    "table_definition/*/migrations/*.py"
+    "shared/models/*.rs"  # Rust側のモデル変更も含める
+)
+
+# ステージングされたファイルからマイグレーション対象をチェック
+check_migration_files() {
+    local migration_files=""
+    local staged_files=$(git diff --cached --name-only)
+    
+    # 各パターンに対してチェック
+    for pattern in "${MIGRATION_DIRS[@]}"; do
+        while IFS= read -r file; do
+            if [[ -n "$file" ]]; then
+                # パターンマッチング（globサポート）
+                if [[ "$file" == $pattern ]]; then
+                    migration_files+="  • $file\n"
+                fi
+            fi
+        done <<< "$staged_files"
+    done
+    
+    echo -e "$migration_files"
+}
+
+# コミットメッセージをチェック
+check_commit_message() {
+    # prepare-commit-msgフックがまだ実行されていないため、
+    # .git/COMMIT_EDITMSGは使えない。代わりに環境変数やgit configを確認
+    
+    # git commit -m で直接メッセージが指定されている場合は確認不可
+    # （prepare-commit-msgフックで処理する必要がある）
+    return 1
+}
+
+# メイン処理
+main() {
+    local migration_files=$(check_migration_files)
+    
+    if [ -n "$migration_files" ]; then
+        echo ""
+        echo "================================================"
+        echo -e "${YELLOW}⚠️  マイグレーション関連ファイルの変更を検出${NC}"
+        echo "================================================"
+        echo ""
+        echo "以下のファイルが変更されています："
+        echo ""
+        echo -e "$migration_files"
+        echo ""
+        echo -e "${BLUE}推奨事項:${NC}"
+        echo "コミットメッセージの先頭に ${GREEN}[MIGRATION REQUIRED]${NC} を追加してください。"
+        echo ""
+        echo "例:"
+        echo "  [MIGRATION REQUIRED] 新しいフィールドを追加"
+        echo "  [MIGRATION REQUIRED] モデルの構造を変更"
+        echo ""
+        echo -e "${RED}注意:${NC} この変更により、他の開発者はマイグレーションの実行が必要になる可能性があります。"
+        echo ""
+        
+        if [ "$INTERACTIVE" = true ]; then
+            echo -e "${YELLOW}このままコミットを続行しますか？${NC}"
+            echo "続行するにはEnterキーを押してください（${TIMEOUT}秒後に自動的に続行）..."
+            echo "中止する場合はCtrl+Cを押してください。"
+            
+            # タイムアウト付きread
+            if ! read -t $TIMEOUT -r; then
+                echo ""
+                echo "（タイムアウトしました。コミットを続行します）"
+            fi
+        else
+            echo "（非対話的環境のため自動的に続行します）"
+        fi
+        
+        echo "================================================"
+        echo ""
+    fi
+}
+
+# フックを実行
+main
+
+# pre-commitフックは常に正常終了（コミットをブロックしない）
+exit 0
