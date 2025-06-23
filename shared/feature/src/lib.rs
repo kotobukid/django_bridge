@@ -97,7 +97,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 78;
-pub const PATTERNS_AMOUNT_D: usize = 160;
+pub const PATTERNS_AMOUNT_D: usize = 161;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -613,7 +613,8 @@ pub fn create_detect_patterns() -> (
             CardFeature::OnLifeCrush
         ],
         detect_pattern![r"リコレクトアイコン", CardFeature::Recollect],
-        detect_pattern![r"\d+枚見", CardFeature::SeekTop],
+        detect_pattern![r"あなたのデッキの上からカードを\d+枚見(る。|て)", CardFeature::SeekTop],
+        detect_pattern![r"あなたのデッキの一番上を見", CardFeature::SeekTop],
         detect_pattern![r"デッキの一番上に(戻|置)", CardFeature::TopSet],
         detect_pattern![r"のシグニは能力を失う", CardFeature::EraseSkill],
         detect_pattern![r"それは能力を失う", CardFeature::EraseSkill],
