@@ -250,3 +250,128 @@ pub fn export_features() -> HashMap<String, Vec<ExportedCardFeature>> {
 
     feature_map
 }
+
+// BurstFeature用のマクロ定義
+macro_rules! define_burst_features {
+    (
+        $(
+            $feature:ident => { tag: $tag:ident, bit_shift: $shift:expr, label: $label:expr },
+        )*
+    ) => {
+        // 1. BurstFeature enumの定義
+        #[derive(Clone, PartialEq, Eq, Hash, Debug, Serialize)]
+        pub enum BurstFeature {
+            $($feature),*
+        }
+
+        // 2. 各フィーチャのタグを返す関数
+        impl BurstFeature {
+            pub fn tag(&self) -> FeatureTag {
+                match self {
+                    $(
+                        BurstFeature::$feature => FeatureTag::$tag,
+                    )*
+                }
+            }
+
+            // 3. 各フィーチャのビットシフト値を返す関数
+            pub fn to_bit_shift(&self) -> i64 {
+                match self {
+                    $(
+                        BurstFeature::$feature => $shift,
+                    )*
+                }
+            }
+
+            pub fn create_vec() -> Vec<BurstFeature> {
+                vec![
+                    $(
+                        BurstFeature::$feature,
+                    )*
+                ]
+            }
+        }
+
+        // Display implementation for Japanese labels
+        impl Display for BurstFeature {
+            fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+                let label = match self {
+                    $(
+                    BurstFeature::$feature => $label,
+                    )*
+                };
+                write!(f, "{}", label)
+            }
+        }
+    };
+}
+
+// BurstFeature定義（プレースホルダー的な候補を含む）
+define_burst_features! {
+    Defend1 => { tag: Enhance, bit_shift: 0, label: "LB1点防御" },
+    Defend2 => { tag: Enhance, bit_shift: 1, label: "LB2点防御" },
+    BlockLrig => { tag: Enhance, bit_shift: 2, label: "LB対ルリグ防御" },
+    BlockSigni => { tag: Enhance, bit_shift: 3, label: "LB対シグニ防御" },
+    OffenciveDefend => { tag: Enhance, bit_shift: 4, label: "LB攻性防御" },
+    Draw => { tag: Enhance, bit_shift: 5, label: "LB手札補充" },
+    Guard => { tag: Endure, bit_shift: 6, label: "LBガード回収" },
+    Salvage => { tag: Enhance, bit_shift: 7, label: "LBトラッシュ回収" },
+    Charge => { tag: Enhance, bit_shift: 8, label: "LBエナチャージ" },
+    Search => { tag: Enhance, bit_shift: 9, label: "LBサーチ" },
+    Freeze => { tag: Enhance, bit_shift: 10, label: "LB凍結" },
+    Discard => { tag: Enhance, bit_shift: 11, label: "LBハンデス" },
+    Heal => { tag: Enhance, bit_shift: 12, label: "ライフクロス回復" },
+    EraseSkill => { tag: Enhance, bit_shift: 13, label: "能力消去" },
+}
+
+// BurstFeatureのHashSet用トレイト
+pub trait BurstHashSetToBits {
+    fn to_burst_bits(&self) -> i64;
+}
+
+impl BurstHashSetToBits for HashSet<BurstFeature> {
+    fn to_burst_bits(&self) -> i64 {
+        let mut bits = 0_i64;
+        for feature in self {
+            bits |= 1_i64 << feature.to_bit_shift();
+        }
+        bits
+    }
+}
+
+// BurstFeature用のExport構造体
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct ExportedBurstFeature {
+    pub name: String,        // Feature名（例: "BurstDraw"）
+    pub bit_shift: i64,      // ビットシフト値
+    pub tag: FeatureTag,     // タグカテゴリ
+}
+
+// Export用の方法を実装
+impl BurstFeature {
+    pub fn export(&self) -> ExportedBurstFeature {
+        ExportedBurstFeature {
+            name: format!("{}", self),      // Enum名を文字列化
+            bit_shift: self.to_bit_shift(), // to_bit_shift の結果を使用
+            tag: self.tag(),                // タグカテゴリを取得
+        }
+    }
+}
+
+pub fn export_burst_features() -> HashMap<String, Vec<ExportedBurstFeature>> {
+    let mut feature_map: HashMap<String, Vec<ExportedBurstFeature>> = HashMap::new();
+
+    let all_features = BurstFeature::create_vec();
+
+    // 分類して値をマッピング
+    for feature in all_features.into_iter() {
+        let exported = feature.export();
+
+        feature_map
+            .entry(exported.tag.to_string()) // タグごとに分類
+            .or_default()
+            .push(exported);
+    }
+
+    feature_map
+}

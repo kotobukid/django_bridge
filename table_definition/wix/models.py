@@ -143,6 +143,7 @@ class Card(models.Model):
 
     feature_bits1 = models.BigIntegerField(verbose_name="効果1群", null=False, blank=False, default=0)
     feature_bits2 = models.BigIntegerField(verbose_name="効果2群", null=False, blank=False, default=0)
+    burst_bits = models.BigIntegerField(verbose_name="ライフバースト効果", null=False, blank=False, default=0)
     ex1 = models.CharField(verbose_name="カード種特殊", max_length=256, null=True, blank=True)
 
     def __str__(self):
