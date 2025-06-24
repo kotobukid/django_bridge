@@ -21,7 +21,6 @@ fn main() {
         1u8,                  // format
         "",                   // story
         "C",                  // rarity
-        "",                   // url
         5u8,                  // card_type
         1u8,                  // product
         0u8,                  // timing

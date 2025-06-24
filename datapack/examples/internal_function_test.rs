@@ -37,8 +37,8 @@ fn main() {
     let and_cards: Vec<CardExport> = cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // AND条件: 指定されたビットが全て立っている
             (bit1 == 0 || (feature_bits1 & bit1) == bit1)
@@ -69,8 +69,8 @@ fn main() {
     let or_cards: Vec<CardExport> = cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // OR条件: いずれかのビットが立っている
             (bit1 > 0 && (feature_bits1 & bit1) != 0) || (bit2 > 0 && (feature_bits2 & bit2) != 0)
@@ -105,8 +105,8 @@ fn main() {
     let features_and_cards: Vec<CardExport> = cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // 全てのフィーチャーを満たすかチェック（AND条件）
             for i in (0..features.len()).step_by(2) {

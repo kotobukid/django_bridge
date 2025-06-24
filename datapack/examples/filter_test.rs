@@ -23,8 +23,8 @@ fn main() {
     let assassin_cards: Vec<&_> = all_cards
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // OR条件での検索
             if assassin_bit2 == 0 || assassin_bit2 == 1 {
@@ -69,8 +69,8 @@ fn main() {
     let slancer_cards: Vec<&_> = all_cards
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // OR条件での検索
             if slancer_bit2 == 0 || slancer_bit2 == 1 {
@@ -115,8 +115,8 @@ fn main() {
     let combined_cards: Vec<&_> = all_cards
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // AND条件: 両方のビットが立っている
             (combined_bit1 == 0 || (feature_bits1 & combined_bit1) == combined_bit1)
@@ -151,8 +151,8 @@ fn main() {
     let or_cards: Vec<&_> = all_cards
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // OR条件: どちらかのビットが立っている
             (assassin_bit1 > 0 && (feature_bits1 & assassin_bit1) != 0)

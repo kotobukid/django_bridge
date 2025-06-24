@@ -161,7 +161,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 78;
-pub const PATTERNS_AMOUNT_D: usize = 165;
+pub const PATTERNS_AMOUNT_D: usize = 166;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -654,6 +654,10 @@ pub fn create_detect_patterns() -> (
             r"対戦相手のシグニ\d+体を対象とし、それを手札に戻",
             CardFeature::Bounce
         ],
+        detect_pattern![
+            r"対戦相手のアップ状態のシグニ\d+体を対象とし、それを手札に戻",
+            CardFeature::Bounce
+        ],
         // (    r"手札に加え", do_remove:  "*SALVAGE*", CardFeature::Salvage]),
         detect_pattern![r"ライフクロス\d+枚をトラッシュに置", CardFeature::LifeTrash],
         detect_pattern![
@@ -874,6 +878,7 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
         burst_replace_pattern![r"\(あなたのデッキの上からカードを\d+枚エナゾーンに置く\)", "", Charge],
         burst_replace_pattern![r"\(あなたのデッキの一番上のカードをエナゾーンに置く\)", "", Charge],
         burst_replace_pattern![r"\(《ガードアイコン》を持つシグニは【ガード】を得る\)", "", Guard],
+        burst_replace_pattern![r"\(このシグニがアタックすると正面のシグニとバトルをせず対戦相手にダメージを与える\)", "*SELF ASSASSIN*"],
     ];
 
     let d_patterns = vec![
