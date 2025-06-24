@@ -37,6 +37,18 @@ impl Card {
         let rarity_: String = self.rarity.clone().unwrap_or("".into());
         let url_: String = self.url.clone().unwrap_or("".into());
         let ex1_: String = self.ex1.clone().unwrap_or("".into());
+        
+        // Auto-calculate has_burst based on card_type and burst_text
+        let has_burst_calculated = match self.card_type {
+            5 | 6 | 10 | 11 => { // シグニ、スペル、クラフト系
+                if !burst_text_.is_empty() { 
+                    1 // LBあり
+                } else { 
+                    2 // LBなし
+                }
+            },
+            _ => 0 // 指定なし（ルリグ、アーツなど）
+        };
 
         format!(
             r###"({id}_i32,"{name}","{code}","{pronunciation}",{color}_u32,"{cost}","{level}","{limit}","{limit_ex}","{power}",{has_burst}_u8,"{skill_text}","{burst_text}",{format}_u8,"{story}","{rarity}","{url}",{card_type}_u8,{product}_u8,{timing}_u8,{feature_bits1}_i64,{feature_bits2}_i64,{klass_bits}_u64,{burst_bits}_i64,"{ex1}"),"###,
@@ -50,7 +62,7 @@ impl Card {
             limit = limit_,
             limit_ex = limit_ex_,
             power = power_,
-            has_burst = self.has_burst,
+            has_burst = has_burst_calculated,
             skill_text = skill_text_,
             burst_text = burst_text_,
             format = self.format,

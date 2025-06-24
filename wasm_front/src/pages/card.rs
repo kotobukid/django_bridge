@@ -2,7 +2,7 @@ use crate::components::{
     BurstFeatureOverlay, CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination,
     PowerSelector, ProductOverlay, ScrollToTopButton, TextSearch,
 };
-use crate::types::{CardTypeFilter, ColorFilter, KlassFilter, LevelFilter, PowerFilter, ProductFilter};
+use crate::types::{CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter};
 use datapack::CardExport;
 use leptos::prelude::*;
 use std::collections::HashMap;
@@ -13,6 +13,7 @@ pub fn CardPage() -> impl IntoView {
     let (card_type_filter, set_card_type_filter) = signal(CardTypeFilter::new());
     let (level_filter, set_level_filter) = signal(LevelFilter::new());
     let (power_filter, set_power_filter) = signal(PowerFilter::new());
+    let (lb_filter, set_lb_filter) = signal(LBFilter::new());
     let (search_text, set_search_text) = signal(String::new());
     let product_filter = RwSignal::new(ProductFilter::new());
     let klass_filter = RwSignal::new(KlassFilter::new());
@@ -44,6 +45,7 @@ pub fn CardPage() -> impl IntoView {
             let card_type = card_type_filter.get();
             let level = level_filter.get();
             let power = power_filter.get();
+            let lb = lb_filter.get();
             let product = product_filter.read();
             let klass = klass_filter.read();
             let feature_names = selected_feature_names.get();
@@ -88,6 +90,17 @@ pub fn CardPage() -> impl IntoView {
                 filtered = datapack::fetch_by_burst_features_and_native(&filtered, &burst_feature_names);
             }
 
+            // LBフィルタリングを追加適用
+            if lb.has_any() {
+                filtered = filtered.into_iter().filter(|card| {
+                    match lb.selection {
+                        1 => card.has_burst() == 1, // LBあり
+                        2 => card.has_burst() == 2, // LBなし
+                        _ => true,
+                    }
+                }).collect();
+            }
+
             set_filtered_cards.set(filtered);
             set_current_page.set(0);
         }
@@ -121,6 +134,7 @@ pub fn CardPage() -> impl IntoView {
         card_type_filter.get().has_any() ||
         level_filter.get().has_any() ||
         power_filter.get().has_any() ||
+        lb_filter.get().has_any() ||
         !search_text.get().is_empty() ||
         has_active_features.get() ||
         has_active_burst_features.get() ||
@@ -135,6 +149,7 @@ pub fn CardPage() -> impl IntoView {
         set_card_type_filter.set(CardTypeFilter::new());
         set_level_filter.set(LevelFilter::new());
         set_power_filter.set(PowerFilter::new());
+        set_lb_filter.set(LBFilter::new());
         selected_features.update(|f| f.clear());
         set_selected_feature_names.set(Vec::new());
         selected_burst_features.update(|f| f.clear());
@@ -341,6 +356,8 @@ pub fn CardPage() -> impl IntoView {
                             <BurstFeatureOverlay
                                 selected_burst_features=selected_burst_features
                                 on_burst_feature_change=set_selected_burst_feature_names
+                                lb_filter=lb_filter
+                                set_lb_filter=set_lb_filter
                             />
                         </div>
                     </div>

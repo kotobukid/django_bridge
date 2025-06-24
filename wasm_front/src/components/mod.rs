@@ -17,6 +17,7 @@ mod product_selector;
 mod scroll_to_top_button;
 mod svg_definition;
 mod text_search;
+mod toggle_switch;
 
 pub use burst_feature_overlay::BurstFeatureOverlay;
 pub use card_item::CardItem;
@@ -37,3 +38,4 @@ pub use product_selector::ProductSelector;
 pub use scroll_to_top_button::ScrollToTopButton;
 pub use svg_definition::{ColorIconWithNum, ColorIconsWithNum, IconRed, SvgDefinition};
 pub use text_search::TextSearch;
+pub use toggle_switch::ToggleSwitch;

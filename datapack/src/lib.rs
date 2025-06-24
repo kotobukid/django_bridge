@@ -1664,3 +1664,116 @@ pub fn fetch_by_burst_features_and_native(cards: &[CardExport], feature_names: &
         .cloned()
         .collect()
 }
+
+// has_burstでフィルタリングする関数（ネイティブ版）
+/// has_burst_value: 0 = 指定なし（全て表示）, 1 = LBあり, 2 = LBなし
+pub fn filter_by_has_burst_native(cards: &[CardExport], has_burst_value: u8) -> Vec<CardExport> {
+    match has_burst_value {
+        0 => cards.to_vec(), // 指定なし = 全て表示
+        1 => cards
+            .iter()
+            .filter(|card| card.has_burst == 1) // LBあり
+            .cloned()
+            .collect(),
+        2 => cards
+            .iter()
+            .filter(|card| card.has_burst == 2) // LBなし
+            .cloned()
+            .collect(),
+        _ => cards.to_vec(),
+    }
+}
+
+// 色、feature、カード種別、商品、レベル、パワー閾値、Klass、has_burst、テキスト検索の複合フィルタリング関数（全てAND条件）
+pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_klass_has_burst_and_text_native(
+    cards: &[CardExport],
+    color_bits: u32,
+    feature_names: &[String],
+    card_types: &[CardType],
+    products: &[u8],
+    levels: &[String],
+    min_power: Option<i32>,
+    klass_bits: u64,
+    has_burst: u8,
+    search_text: &str,
+) -> Vec<CardExport> {
+    // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
+    let mut filtered_cards = if color_bits == 0 {
+        cards.to_vec()
+    } else {
+        fetch_by_colors_and(cards, color_bits)
+    };
+
+    // 次にfeatureでフィルタリング
+    if !feature_names.is_empty() {
+        filtered_cards = fetch_by_features_and_native(&filtered_cards, feature_names);
+    }
+
+    // カード種別でフィルタリング
+    if !card_types.is_empty() {
+        let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| card_type_u8s.contains(&card.card_type))
+            .collect();
+    }
+
+    // 商品でフィルタリング
+    if !products.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| products.contains(&card.product))
+            .collect();
+    }
+
+    // レベルでフィルタリング（OR条件）
+    if !levels.is_empty() {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| levels.contains(&card.level))
+            .collect();
+    }
+
+    // パワー閾値でフィルタリング
+    if let Some(threshold) = min_power {
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| {
+                if let Ok(power) = card.power.parse::<i32>() {
+                    power >= threshold
+                } else {
+                    false
+                }
+            })
+            .collect();
+    }
+
+    // Klassでフィルタリング（OR条件 - 選択されたKlassのいずれかに該当）
+    if klass_bits != 0 {
+        use crate::gen::klasses::has_klass_bits;
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| has_klass_bits(card.klass_bits, klass_bits))
+            .collect();
+    }
+
+    // has_burstでフィルタリング
+    if has_burst != 0 {
+        filtered_cards = filter_by_has_burst_native(&filtered_cards, has_burst);
+    }
+
+    // テキスト検索でフィルタリング
+    if !search_text.is_empty() {
+        let search_lower = search_text.to_lowercase();
+        filtered_cards = filtered_cards
+            .into_iter()
+            .filter(|card| {
+                card.name.to_lowercase().contains(&search_lower)
+                    || card.skill_text.to_lowercase().contains(&search_lower)
+                    || card.burst_text.to_lowercase().contains(&search_lower)
+            })
+            .collect();
+    }
+
+    filtered_cards
+}

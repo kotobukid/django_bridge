@@ -148,3 +148,22 @@ pub fn filter_by_burst_bits(burst_bits: i64, mode: &str) -> Vec<CardExport> {
         .map(|c| CardExport::from(c))
         .collect()
 }
+
+/// 内部フィルタリング関数：has_burst によるフィルタリング
+/// has_burst_value: 0 = 指定なし, 1 = LBあり, 2 = LBなし
+pub fn filter_by_has_burst(has_burst_value: u8) -> Vec<CardExport> {
+    cards::CARD_LIST
+        .iter()
+        .filter(|c| {
+            let has_burst = c.10; // has_burstフィールドのインデックス（10番目）
+            
+            match has_burst_value {
+                0 => true, // 指定なし = 全て表示
+                1 => has_burst == 1, // LBあり
+                2 => has_burst == 2, // LBなし
+                _ => true,
+            }
+        })
+        .map(|c| CardExport::from(c))
+        .collect()
+}

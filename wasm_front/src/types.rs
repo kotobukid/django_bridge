@@ -365,6 +365,37 @@ impl KlassFilter {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct LBFilter {
+    pub selection: u8, // 0 = 指定なし, 1 = LBあり, 2 = LBなし
+}
+
+impl LBFilter {
+    pub fn new() -> Self {
+        Self { selection: 0 }
+    }
+    
+    pub fn has_any(&self) -> bool {
+        self.selection != 0
+    }
+    
+    pub fn set_selection(&mut self, value: u8) {
+        self.selection = value;
+    }
+    
+    pub fn clear(&mut self) {
+        self.selection = 0;
+    }
+    
+    pub fn get_label(&self) -> &'static str {
+        match self.selection {
+            1 => "LBあり",
+            2 => "LBなし",
+            _ => "指定なし",
+        }
+    }
+}
+
 // Klassマトリックス用のデータ構造
 #[derive(Debug, Clone, PartialEq)]
 pub struct KlassInfo {

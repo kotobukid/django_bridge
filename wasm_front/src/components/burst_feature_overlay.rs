@@ -1,6 +1,8 @@
 use leptos::*;
 use leptos::prelude::*;
 use std::collections::HashMap;
+use crate::types::LBFilter;
+use crate::components::ToggleSwitch;
 
 #[derive(Debug, Clone)]
 struct BurstFeatureTag {
@@ -65,6 +67,8 @@ fn get_burst_feature_data() -> (Vec<BurstFeatureTag>, HashMap<String, Vec<BurstF
 pub fn BurstFeatureOverlay(
     selected_burst_features: RwSignal<HashMap<String, bool>>,
     on_burst_feature_change: WriteSignal<Vec<String>>,
+    lb_filter: ReadSignal<LBFilter>,
+    set_lb_filter: WriteSignal<LBFilter>,
 ) -> impl IntoView {
     let (feature_tags, features_by_tag) = get_burst_feature_data();
 
@@ -82,14 +86,30 @@ pub fn BurstFeatureOverlay(
     };
 
     let toggle_burst_feature = move |feature_name: String| {
-        selected_burst_features.update(|features| {
-            let current = features.get(&feature_name).copied().unwrap_or(false);
-            if current {
-                features.remove(&feature_name);
-            } else {
-                features.insert(feature_name, true);
+        let feature_was_turned_on = {
+            let mut was_turned_on = false;
+            selected_burst_features.update(|features| {
+                let current = features.get(&feature_name).copied().unwrap_or(false);
+                if current {
+                    features.remove(&feature_name);
+                } else {
+                    features.insert(feature_name, true);
+                    was_turned_on = true; // フィーチャーがONになった
+                }
+            });
+            was_turned_on
+        };
+
+        // LBフィーチャーがONになった場合、LBフィルタを「LBあり」に自動切り替え
+        if feature_was_turned_on {
+            let current_lb_selection = lb_filter.get().selection;
+            if current_lb_selection != 1 { // 「LBあり」でない場合
+                set_lb_filter.update(|filter| {
+                    filter.set_selection(1); // 「LBあり」に設定
+                });
+                leptos::logging::log!("Auto-switched to LBあり due to burst feature selection");
             }
-        });
+        }
 
         // 親に現在選択されているburst feature名のリストを通知
         let selected_names: Vec<String> = selected_burst_features
@@ -100,9 +120,86 @@ pub fn BurstFeatureOverlay(
         on_burst_feature_change.set(selected_names);
     };
 
+    // LBフィルタの操作機能
+    let set_lb_selection = move |value: u8| {
+        let should_clear_burst_features = {
+            let current_selection = lb_filter.get().selection;
+            // トグル機能: 同じボタンをクリックしたらクリア、そうでなければ新しい値を設定
+            if current_selection == value {
+                // 同じボタンなのでクリア
+                set_lb_filter.update(|filter| filter.clear());
+                false
+            } else {
+                // 新しい値を設定
+                set_lb_filter.update(|filter| filter.set_selection(value));
+                value == 2 // LBなしの場合はバースト効果をクリア
+            }
+        };
+        
+        // 「LBなし」を選択した場合、バースト効果選択をクリア
+        if should_clear_burst_features {
+            // デバッグ: クリア前の状態をログ出力
+            leptos::logging::log!("Clearing burst features. Before: {:?}", selected_burst_features.read().len());
+            
+            selected_burst_features.set(HashMap::new());
+            on_burst_feature_change.set(Vec::new());
+            
+            // デバッグ: クリア後の状態をログ出力
+            leptos::logging::log!("Cleared burst features. After: {:?}", selected_burst_features.read().len());
+        }
+    };
+
+    // LBフィルタボタンコンポーネント
+    let lb_button = move |value: u8, label: &'static str, inactive_class: &'static str, active_class: &'static str| {
+        let is_active = Memo::new(move |_| {
+            lb_filter.get().selection == value
+        });
+
+        view! {
+            <button
+                class=move || {
+                    let base = "px-4 py-2 text-sm font-semibold rounded-md border-2 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2";
+                    if is_active.get() {
+                        format!("{} {} shadow-md transform scale-105", base, active_class)
+                    } else {
+                        format!("{} {} hover:shadow-sm hover:scale-102", base, inactive_class)
+                    }
+                }
+                on:click=move |_| set_lb_selection(value)
+            >
+                {label}
+            </button>
+        }
+    };
+
     view! {
         <div class="p-6 max-h-[60vh] overflow-y-auto">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">"ライフバースト効果で絞り込み"</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-bold text-gray-900">"ライフバースト効果で絞り込み"</h3>
+                
+                // LBフィルタ部分
+                <div class="flex items-center gap-3">
+                    <span class="text-sm font-bold text-gray-800">"LB:"</span>
+                    {lb_button(
+                        0, 
+                        "指定なし", 
+                        "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400 focus:ring-gray-300",
+                        "bg-gray-600 border-gray-600 text-white focus:ring-gray-400"
+                    )}
+                    {lb_button(
+                        1, 
+                        "LBあり", 
+                        "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 hover:border-blue-400 focus:ring-blue-300",
+                        "bg-blue-600 border-blue-600 text-white focus:ring-blue-400"
+                    )}
+                    {lb_button(
+                        2, 
+                        "LBなし", 
+                        "bg-red-50 border-red-300 text-red-700 hover:bg-red-100 hover:border-red-400 focus:ring-red-300",
+                        "bg-red-600 border-red-600 text-white focus:ring-red-400"
+                    )}
+                </div>
+            </div>
             
             <div class="space-y-2">
                 {feature_tags
@@ -118,14 +215,14 @@ pub fn BurstFeatureOverlay(
                         let tag_id_for_click = tag_id.clone();
                         
                         // このタグ内で選択されているBurstFeatureの数をカウント
-                        let selected_count = move || {
+                        let selected_count = Memo::new(move |_| {
                             selected_burst_features.read()
                                 .iter()
                                 .filter(|(feature_name, &is_selected)| {
                                     is_selected && features_for_count.iter().any(|f| &f.name == *feature_name)
                                 })
                                 .count()
-                        };
+                        });
 
                         // is_openをRcで共有可能にする代わりに、直接実装
                         let is_open_fn = {
@@ -143,7 +240,7 @@ pub fn BurstFeatureOverlay(
                                     <div class="flex items-center space-x-2">
                                         <span class="font-medium text-gray-700">{tag_display.clone()}</span>
                                         {move || {
-                                            let count = selected_count();
+                                            let count = selected_count.get();
                                             if count > 0 {
                                                 view! {
                                                     <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
@@ -183,23 +280,19 @@ pub fn BurstFeatureOverlay(
                                                                 let feature_name_for_click = feature_name.clone();
                                                                 let feature_name_for_selected = feature_name.clone();
                                                                 
-                                                                let is_selected = move || {
+                                                                let is_selected = Memo::new(move |_| {
                                                                     selected_burst_features.read()
                                                                         .get(&feature_name_for_selected)
                                                                         .copied()
                                                                         .unwrap_or(false)
-                                                                };
+                                                                });
 
                                                                 view! {
-                                                                    <label class="flex items-center space-x-2 cursor-pointer hover:bg-white rounded p-2 transition-colors">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                                                                            checked=is_selected
-                                                                            on:change=move |_| toggle_burst_feature(feature_name_for_click.clone())
-                                                                        />
-                                                                        <span class="text-sm text-gray-700">{feature_name}</span>
-                                                                    </label>
+                                                                    <ToggleSwitch
+                                                                        is_on=is_selected.get()
+                                                                        on_toggle=move |_new_state| toggle_burst_feature(feature_name_for_click.clone())
+                                                                        label=feature_name
+                                                                    />
                                                                 }
                                                             })
                                                             .collect::<Vec<_>>()
