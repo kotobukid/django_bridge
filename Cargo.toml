@@ -6,7 +6,7 @@ members = [
     "shared/webapp",
     "shared/models",
     "shared/feature", "shared/color", "shared/cacher", "shared/injector",
-    "wasm_front", "analyzer", "rule_editor"]
+    "wasm_front", "analyzer", "rule_editor", "icon_encoder"]
 
 resolver = "2"
 

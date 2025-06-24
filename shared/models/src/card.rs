@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter};
 // 再エクスポート
 pub use crate::gen::django_models::{CardDb, CreateCard};
 use crate::new_type;
+use icon_encoder::{encode_skill_text, encode_burst_text};
 
 new_type!(Card, CardDb);
 
@@ -31,8 +32,8 @@ impl Card {
         let limit_: String = self.limit.map(|l| l.to_string()).unwrap_or("".into());
         let limit_ex_: String = self.limit_ex.map(|l| l.to_string()).unwrap_or("".into());
         let power_: String = self.power.clone().unwrap_or("".into());
-        let skill_text_: String = self.skill_text.clone().unwrap_or("".into());
-        let burst_text_: String = self.burst_text.clone().unwrap_or("".into());
+        let skill_text_: String = encode_skill_text(&self.skill_text.clone().unwrap_or("".into()));
+        let burst_text_: String = encode_burst_text(&self.burst_text.clone().unwrap_or("".into()));
         let story_: String = self.story.clone().unwrap_or("".into());
         let rarity_: String = self.rarity.clone().unwrap_or("".into());
         let url_: String = self.url.clone().unwrap_or("".into());

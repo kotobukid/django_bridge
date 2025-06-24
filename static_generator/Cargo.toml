@@ -8,3 +8,4 @@ sqlx = { workspace = true }
 tokio = { workspace = true }
 dotenvy = { workspace = true }
 webapp = { path = "../shared/webapp" }
+icon_encoder = { path = "../icon_encoder" }

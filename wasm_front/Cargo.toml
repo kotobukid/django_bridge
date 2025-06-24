@@ -20,3 +20,4 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-wasm-bindgen = "0.6"
 datapack = { path = "../datapack" }
+icon_encoder = { path = "../icon_encoder" }

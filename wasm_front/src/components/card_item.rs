@@ -1,6 +1,7 @@
 use crate::components::svg_definition::{
     ColorIconsWithNum, IconBlack, IconBlue, IconColorless, IconGreen, IconRed, IconWhite,
 };
+use crate::components::{SkillTextRenderer, BurstTextRenderer};
 use datapack::CardExport;
 use leptos::prelude::*;
 
@@ -283,7 +284,7 @@ pub fn CardItem(
                                 if !skill_text.is_empty() {
                                     view! {
                                         <div class="mt-2 text-sm whitespace-pre-wrap" style="color: #374151;">
-                                            {skill_text}
+                                            <SkillTextRenderer skill_text={skill_text} />
                                         </div>
                                     }.into_any()
                                 } else {
@@ -300,7 +301,7 @@ pub fn CardItem(
                                                 <use href="#lb_white_wrapped" />
                                             </svg>
                                             <span style="line-height: 1.2;">
-                                                {burst_text}
+                                                <BurstTextRenderer burst_text={burst_text} />
                                             </span>
                                         </div>
                                     }.into_any()
@@ -484,7 +485,7 @@ pub fn CardItem(
                                             <div class="bg-white p-3 rounded border">
                                                 <h4 class="font-medium text-sm text-gray-600 mb-2">Skill Text</h4>
                                                 <div class="text-sm whitespace-pre-wrap" style="color: #374151;">
-                                                    {skill_text}
+                                                    <SkillTextRenderer skill_text={skill_text} />
                                                 </div>
                                             </div>
                                         }.into_any()
@@ -505,7 +506,7 @@ pub fn CardItem(
                                                     <h4 class="font-medium text-sm">Life Burst</h4>
                                                 </div>
                                                 <div class="text-sm" style="line-height: 1.4;">
-                                                    {burst_text}
+                                                    <BurstTextRenderer burst_text={burst_text} />
                                                 </div>
                                             </div>
                                         }.into_any()
