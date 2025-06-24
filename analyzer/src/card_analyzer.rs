@@ -4,10 +4,11 @@ use models::card::CreateCard;
 use models::r#gen::django_models::RawCardDb;
 use sqlx::{Pool, Postgres, Row};
 use std::sync::Arc;
-use feature::{create_detect_patterns, create_burst_detect_patterns, CardFeature};
+use feature::{create_detect_patterns, create_burst_detect_patterns, CardFeature, BurstFeature};
 use feature::feature::{HashSetToBits, BurstHashSetToBits};
 use std::collections::HashSet;
 use color::convert_cost;
+use rayon::prelude::*;
 
 /// CreateCard with detected Klass information
 #[derive(Debug, Clone)]
@@ -558,14 +559,13 @@ impl SimpleRawCardAnalyzer {
         }
     }
 
-    /// スキルテキストとライフバーストテキストから特徴を検出し、置換後のテキストも返す
-    fn detect_features_and_replace_text(&self, skill_text: &str, life_burst_text: &str) -> (i64, i64, String, String) {
+    /// スキルテキストから特徴を検出し、置換後のテキストも返す
+    fn detect_features_and_replace_text(&self, skill_text: &str) -> (i64, i64, String) {
         let (replace_patterns, detect_patterns) = create_detect_patterns();
         let mut detected_features = HashSet::new();
 
         // 半角に変換
         let mut processed_skill_text = to_half(skill_text);
-        let mut processed_burst_text = to_half(life_burst_text);
 
         // 置換パターンを適用して特徴を検出
         for pattern in &replace_patterns {
@@ -576,36 +576,27 @@ impl SimpleRawCardAnalyzer {
                     detected_features.insert(feature.clone());
                 }
             }
-
-            // ライフバーストテキストに対して置換を適用
-            if pattern.pattern_r.is_match(&processed_burst_text) {
-                processed_burst_text = pattern.pattern_r.replace_all(&processed_burst_text, pattern.replace_to).to_string();
-                for feature in pattern.features_detected {
-                    detected_features.insert(feature.clone());
-                }
-            }
         }
 
-        // 検出パターンで特徴を検出（置換後のテキストに対して）
-        let combined_text = format!("{} {}", processed_skill_text, processed_burst_text);
-        for pattern in &detect_patterns {
-            if pattern.pattern_r.is_match(&combined_text) {
-                for feature in pattern.features_detected {
-                    detected_features.insert(feature.clone());
-                }
-            }
-        }
+        // 検出パターンで特徴を検出（置換後のテキストに対して）- 並列処理
+        let additional_features: HashSet<CardFeature> = detect_patterns
+            .par_iter()
+            .filter(|pattern| pattern.pattern_r.is_match(&processed_skill_text))
+            .flat_map(|pattern| pattern.features_detected.par_iter().cloned())
+            .collect();
+        
+        detected_features.extend(additional_features);
 
         // HashSetからビットに変換（feature crateの標準実装を使用）
         let (bits1, bits2) = detected_features.to_bits();
 
-        (bits1, bits2, processed_skill_text, processed_burst_text)
+        (bits1, bits2, processed_skill_text)
     }
 
     /// ライフバーストテキストからバーストフィーチャーを検出（正規表現パターンシステム使用）
-    fn detect_burst_features(&self, life_burst_text: &str) -> i64 {
+    fn detect_burst_features(&self, life_burst_text: &str) -> (i64, String) {
         let (replace_patterns, detect_patterns) = create_burst_detect_patterns();
-        let mut detected_burst_features = HashSet::new();
+        let mut detected_burst_features: HashSet<BurstFeature> = HashSet::new();
 
         // 半角に変換
         let mut processed_text = to_half(life_burst_text);
@@ -620,17 +611,17 @@ impl SimpleRawCardAnalyzer {
             }
         }
 
-        // 検出パターンでバーストフィーチャーを検出
-        for pattern in &detect_patterns {
-            if pattern.pattern_r.is_match(&processed_text) {
-                for feature in pattern.features_detected {
-                    detected_burst_features.insert(feature.clone());
-                }
-            }
-        }
+        // 検出パターンでバーストフィーチャーを検出 - 並列処理
+        let additional_features: HashSet<BurstFeature> = detect_patterns
+            .par_iter()
+            .filter(|pattern| pattern.pattern_r.is_match(&processed_text))
+            .flat_map(|pattern| pattern.features_detected.par_iter().cloned())
+            .collect();
+        
+        detected_burst_features.extend(additional_features);
 
         // HashSetからビットに変換
-        detected_burst_features.to_burst_bits()
+        (detected_burst_features.to_burst_bits(), processed_text)
     }
 
 
@@ -677,12 +668,12 @@ impl SimpleRawCardAnalyzer {
         });
 
         // スキルテキストとライフバーストテキストから特徴を検出し、置換後のテキストを取得
-        let (mut feature_bits1, mut feature_bits2, replaced_skill_text, replaced_burst_text) =
-            self.detect_features_and_replace_text(&raw_card.skill_text, &raw_card.life_burst_text);
+        let (mut feature_bits1, mut feature_bits2, replaced_skill_text) =
+            self.detect_features_and_replace_text(&raw_card.skill_text);
 
         // ライフバーストテキストからバーストフィーチャーを検出
-        let burst_bits = self.detect_burst_features(&raw_card.life_burst_text);
-        // println!("DEBUG: burst_bits = {}, life_burst_text = {:?}", burst_bits, raw_card.life_burst_text);
+        let (burst_bits, replaced_burst_text) = self.detect_burst_features(&raw_card.life_burst_text);
+
         {
             // テキスト以外からのFeature検出
             let bits = detected_feature_set.to_bits();
