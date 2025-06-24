@@ -89,6 +89,7 @@ cargo make static && cargo make wasm_linux && cargo make trunk_build
 - `datapack/` - WebAssembly module for frontend filtering
 - `shared/feature/` - Card feature detection logic
 - `static_generator/` - Generates static Rust code from database
+- `icon_encoder/` - Icon encoding/decoding system for skill text rendering
 
 ## Development Workflow
 
@@ -299,6 +300,12 @@ cd rule_editor/ui && npm run typecheck
 ## Implementation Status
 
 ### ✅ Completed - RawCard System & Field Extraction
+
+**Icon Encoding/Decoding System**: Complete pipeline for replacing HTML icon images with Leptos components in WASM frontend:
+- `icon_encoder/` crate provides encoding (static_generator) and decoding (wasm_front) functions  
+- Pattern definitions in `icon_encoder/src/definitions.rs` map symbols like `【出】` to codes like `[c]`
+- Macro system in `wasm_front/src/components/skill_text_renderer.rs` auto-generates component mapping
+- 22+ icon types supported including timing, abilities, mechanics, and collaboration icons
 1. **RawCard Django Model**: Complete with product foreign key relationship
 2. **Database Migration**: Applied with proper constraints and indexing
 3. **Rust Model Generation**: Auto-synced via `syncdb`
@@ -331,8 +338,14 @@ cd rule_editor/ui && npm run typecheck
 # Run Rust tests
 cargo test
 
-# Test specific analyzer features
+# Test specific analyzer features  
 cargo test -p analyzer field_extraction_tests
+
+# Test icon encoder system
+cargo test -p icon_encoder
+
+# Test individual crate
+cargo test -p <crate_name>
 
 # Test scraper with small dataset
 cargo run --release -p wxdb-scraper -- booster WX24-P1
@@ -348,6 +361,9 @@ python manage.py shell -c "from wix.models import RawCard, Card; print(f'RawCard
 
 # Verify field extraction statistics
 python scripts/test_field_extraction.py
+
+# Run icon encoder integration tests
+table_definition/.venv/bin/python scripts/test_icon_encoder_integration.py
 ```
 
 ## Frontend Development (Leptos/WASM)
@@ -375,6 +391,20 @@ cargo make trunk_pages
   - `wasm_front/src/main.rs` - Router and app entry point
 - **Styling**: Tailwind CSS with custom components in `input.css`
 - **Data filtering**: Uses `datapack` WASM module for client-side card filtering
+
+### Icon Rendering System
+The frontend uses an advanced icon encoding/decoding system to replace HTML icon images with SVG Leptos components:
+
+**Pipeline Flow**:
+1. **Static Generation**: `static_generator` uses `icon_encoder::encode_skill_text()` to convert `【出】` → `[c]` in card data
+2. **Frontend Decoding**: `SkillTextRenderer` uses `icon_encoder::decode_skill_text()` to parse encoded text
+3. **Component Rendering**: Macro-generated `render_icon_component()` maps codes to SVG components
+
+**Adding New Icons**:
+1. Add rule to `icon_encoder/src/definitions.rs`: `["【新機能】", "[nf]", "IconNewFeature"]`
+2. Add component to `wasm_front/src/components/skill_text_renderer.rs`: `"IconNewFeature" => IconNewFeature()`
+3. Implement component function with SVG or styled span
+4. Regenerate static data: `cargo make static && cargo make wasm_linux && cargo make trunk_build`
 
 ### Frontend UI Patterns & Architecture
 
@@ -451,3 +481,11 @@ If new fields aren't being extracted properly:
 2. Check HTML structure: Use `scripts/analyze_html_structure.py`
 3. Verify card type detection: Ensure proper dd element extraction
 4. Run field extraction verification: `python scripts/test_field_extraction.py`
+
+### Icon System Issues
+If icons show as fallback text (e.g., `[c]` instead of icon):
+1. Check icon definition exists in `icon_encoder/src/definitions.rs`
+2. Verify component mapping in `wasm_front/src/components/skill_text_renderer.rs`
+3. Ensure static data regeneration: `cargo make static`
+4. Test encoding/decoding: `cargo test -p icon_encoder`
+5. Check browser console for component rendering errors
