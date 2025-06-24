@@ -2,7 +2,7 @@ use leptos::*;
 use leptos::prelude::*;
 use std::collections::HashMap;
 use crate::types::LBFilter;
-use crate::components::ToggleSwitch;
+use crate::components::SvgToggleSwitch;
 
 #[derive(Debug, Clone)]
 struct BurstFeatureTag {
@@ -86,6 +86,9 @@ pub fn BurstFeatureOverlay(
     };
 
     let toggle_burst_feature = move |feature_name: String| {
+        // トグル前の選択数を記録
+        let had_selections_before = selected_burst_features.read().values().any(|&v| v);
+        
         let feature_was_turned_on = {
             let mut was_turned_on = false;
             selected_burst_features.update(|features| {
@@ -99,6 +102,18 @@ pub fn BurstFeatureOverlay(
             });
             was_turned_on
         };
+
+        // トグル後の選択数を確認
+        let has_selections_after = selected_burst_features.read().values().any(|&v| v);
+        
+        // 1つ以上から0個になった場合のイベント
+        if had_selections_before && !has_selections_after {
+            leptos::logging::log!("All burst features were deselected - switching to 指定なし");
+            // LBフィルタを「指定なし」に自動切り替え
+            set_lb_filter.update(|filter| {
+                filter.set_selection(0); // 「指定なし」に設定
+            });
+        }
 
         // LBフィーチャーがONになった場合、LBフィルタを「LBあり」に自動切り替え
         if feature_was_turned_on {
@@ -288,8 +303,8 @@ pub fn BurstFeatureOverlay(
                                                                 });
 
                                                                 view! {
-                                                                    <ToggleSwitch
-                                                                        is_on=is_selected.get()
+                                                                    <SvgToggleSwitch
+                                                                        is_on=move || is_selected.get()
                                                                         on_toggle=move |_new_state| toggle_burst_feature(feature_name_for_click.clone())
                                                                         label=feature_name
                                                                     />

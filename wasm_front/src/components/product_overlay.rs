@@ -1,5 +1,6 @@
 use crate::types::ProductFilter;
 use leptos::prelude::*;
+use crate::components::SvgToggleSwitch;
 
 // 商品IDと名前のマッピング（静的データから生成）
 fn get_product_list() -> Vec<(u8, &'static str, &'static str)> {
@@ -164,20 +165,15 @@ pub fn ProductOverlay(product_filter: RwSignal<ProductFilter>) -> impl IntoView 
                                                 let code_display = item.code.clone();
 
                                                 view! {
-                                                    <label class="flex items-start space-x-3 p-2 rounded hover:bg-white cursor-pointer transition-colors">
-                                                        <input
-                                                            type="checkbox"
-                                                            class="form-checkbox h-4 w-4 text-blue-600 mt-1 flex-shrink-0"
-                                                            checked=is_selected
-                                                            on:change=move |_| {
+                                                    <div class="mb-2">
+                                                        <SvgToggleSwitch
+                                                            is_on=move || is_selected.get()
+                                                            on_toggle=move |_new_state| {
                                                                 product_filter.update(|f| f.toggle_product(item_id));
                                                             }
+                                                            label=format!("{} - {}", code_display, display_name)
                                                         />
-                                                        <div class="flex-1 min-w-0">
-                                                            <div class="font-medium text-sm text-blue-600">{code_display}</div>
-                                                            <div class="text-xs text-gray-600 mt-1 line-clamp-2">{display_name}</div>
-                                                        </div>
-                                                    </label>
+                                                    </div>
                                                 }
                                             }).collect_view().into_any()
                                         }

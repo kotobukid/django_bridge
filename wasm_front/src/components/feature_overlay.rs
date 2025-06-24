@@ -1,6 +1,7 @@
 use leptos::*;
 use leptos::prelude::*;
 use std::collections::HashMap;
+use crate::components::SvgToggleSwitch;
 
 #[derive(Debug, Clone)]
 struct FeatureTag {
@@ -170,15 +171,11 @@ pub fn FeatureOverlay(
                                                 });
 
                                                 view! {
-                                                    <label class="flex items-center space-x-3 p-2 rounded hover:bg-white cursor-pointer">
-                                                        <input 
-                                                            type="checkbox"
-                                                            class="form-checkbox h-4 w-4 text-blue-600 rounded"
-                                                            checked=is_selected
-                                                            on:change=move |_| toggle_card_feature(feature_name_for_toggle.clone())
-                                                        />
-                                                        <span class="text-sm">{feature_name}</span>
-                                                    </label>
+                                                    <SvgToggleSwitch
+                                                        is_on=move || is_selected.get()
+                                                        on_toggle=move |_new_state| toggle_card_feature(feature_name_for_toggle.clone())
+                                                        label=feature_name
+                                                    />
                                                 }
                                             }).collect_view().into_any()
                                         }

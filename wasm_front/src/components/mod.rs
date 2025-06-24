@@ -16,6 +16,7 @@ mod product_overlay;
 mod product_selector;
 mod scroll_to_top_button;
 mod svg_definition;
+mod svg_toggle_switch;
 mod text_search;
 mod toggle_switch;
 
@@ -37,5 +38,6 @@ pub use product_overlay::ProductOverlay;
 pub use product_selector::ProductSelector;
 pub use scroll_to_top_button::ScrollToTopButton;
 pub use svg_definition::{ColorIconWithNum, ColorIconsWithNum, IconRed, SvgDefinition};
+pub use svg_toggle_switch::SvgToggleSwitch;
 pub use text_search::TextSearch;
 pub use toggle_switch::ToggleSwitch;

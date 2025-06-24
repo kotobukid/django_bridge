@@ -1,32 +1,28 @@
 use crate::types::CardTypeFilter;
+use crate::components::SvgToggleSwitch;
 use leptos::prelude::*;
 use datapack::gen::card_types::{CARD_TYPES, PRIMARY_CARD_TYPES, EXTENDED_CARD_TYPES};
 
-// カードタイプチェックボックスを生成する関数
-fn create_card_type_checkbox(
+// カードタイプトグルスイッチを生成する関数
+fn create_card_type_toggle(
     code: &'static str,
     name: &'static str,
     card_type_filter: ReadSignal<CardTypeFilter>,
     set_card_type_filter: WriteSignal<CardTypeFilter>,
 ) -> impl IntoView {
     view! {
-        <label class="flex items-center space-x-2 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 rounded px-1 py-1">
-            <input
-                type="checkbox"
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                prop:checked=move || {
-                    let filter = card_type_filter.get();
-                    filter.is_selected_by_code(code)
-                }
-                on:change=move |ev| {
-                    let checked = event_target_checked(&ev);
-                    set_card_type_filter.update(|filter| {
-                        filter.set_by_code(code, checked);
-                    });
-                }
-            />
-            <span>{name}</span>
-        </label>
+        <SvgToggleSwitch
+            is_on=move || {
+                let filter = card_type_filter.get();
+                filter.is_selected_by_code(code)
+            }
+            on_toggle=move |new_state| {
+                set_card_type_filter.update(|filter| {
+                    filter.set_by_code(code, new_state);
+                });
+            }
+            label=name.to_string()
+        />
     }
 }
 
@@ -96,12 +92,12 @@ pub fn CardTypeSelector(
             </div>
             
             // デフォルト表示のカード種別（動的生成）
-            <div class="grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-3 gap-3">
                 {
                     PRIMARY_CARD_TYPES.iter().map(|&code| {
                         let card_type_info = CARD_TYPES.iter().find(|ct| ct.code == code);
                         if let Some(info) = card_type_info {
-                            create_card_type_checkbox(info.code, info.name, card_type_filter, set_card_type_filter).into_any()
+                            create_card_type_toggle(info.code, info.name, card_type_filter, set_card_type_filter).into_any()
                         } else {
                             view! { <div /> }.into_any()
                         }
@@ -113,14 +109,14 @@ pub fn CardTypeSelector(
             {move || {
                 if should_show_extended.get() {
                     view! {
-                        <div class="mt-3 grid grid-cols-3 gap-2">
+                        <div class="mt-3 grid grid-cols-3 gap-3">
                             <hr class="col-span-3 border-gray-300 my-2" />
                             
                             {
                                 EXTENDED_CARD_TYPES.iter().map(|&code| {
                                     let card_type_info = CARD_TYPES.iter().find(|ct| ct.code == code);
                                     if let Some(info) = card_type_info {
-                                        create_card_type_checkbox(info.code, info.name, card_type_filter, set_card_type_filter).into_any()
+                                        create_card_type_toggle(info.code, info.name, card_type_filter, set_card_type_filter).into_any()
                                     } else {
                                         view! { <div /> }.into_any()
                                     }
