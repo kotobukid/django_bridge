@@ -186,7 +186,7 @@ pub fn CardItem(
                                             let cost = card.cost();
                                             if !cost.is_empty() {
                                                 view! {
-                                                    <div class="ml-2">
+                                                    <div class="ml-2 flex items-center">
                                                         <ColorIconsWithNum code={cost} />
                                                     </div>
                                                 }.into_any()
@@ -343,7 +343,7 @@ pub fn CardItem(
                                                 let cost = card.cost();
                                                 if !cost.is_empty() {
                                                     view! {
-                                                        <div class="ml-2">
+                                                        <div class="ml-2 flex items-center">
                                                             <ColorIconsWithNum code={cost} />
                                                         </div>
                                                     }.into_any()
