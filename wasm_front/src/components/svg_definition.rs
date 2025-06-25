@@ -173,16 +173,8 @@ pub fn IconGreen() -> impl IntoView {
 pub fn IconColorless() -> impl IntoView {
     view! {
       <svg viewBox="0 0 32 32" width="32" height="32">
-
-        <g>
-          <ellipse style="stroke-width: 1; stroke: rgb(255, 255, 255);" cx="16" cy="16" rx="11.995" ry="11.995"></ellipse>
-          <rect x="0.755" y="46.135" width="12.816" height="12.816" style="stroke: url(#gradient-8); fill: url(#gradient-9); stroke-width: 0.8; transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 8.836999, -36.543025)"></rect>
-        </g>
-
-        <g class="icon_colorless" transform="matrix(1, 0, 0, 1, -75.766999, -8.232001)">
-          <ellipse style="stroke-width: 1; stroke: rgb(255, 255, 255);" cx="91.767" cy="24.232" rx="11.995" ry="11.995"></ellipse>
-          <rect x="0.755" y="46.135" width="12.816" height="12.816" style="stroke: url(#gradient-8); fill: url(#gradient-9); stroke-width: 0.8px; transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 84.603999, -28.311009)"></rect>
-        </g>
+          <ellipse style="stroke-width: 1; fill: rgb(255, 255, 255); stroke: rgb(0, 0, 0);" cx="16" cy="16" rx="11.995" ry="11.995"></ellipse>
+          <rect x="0.755" y="46.135" width="12.816" height="12.816" style="stroke-width: 0.8; stroke: rgb(0, 0, 0); fill: rgb(210, 210, 210); transform-box: fill-box; transform-origin: 50% 50%;" transform="matrix(0.707107, 0.707107, -0.707107, 0.707107, 8.836999, -36.543032)"></rect>
       </svg>
     }
 }
