@@ -29,7 +29,7 @@ pub struct IconRule {
 /// 
 /// define_icon_rules![
 ///     ["【出】", "[c]", "IconCip"],
-///     ["【自】", "[a]", "IconAuto"],
+///     ["【常】", "[a]", "IconAuto"],
 /// ];
 /// ```
 #[macro_export]
@@ -54,22 +54,11 @@ define_icon_rules![
     ["【起】", "[ac]", "IconActivated"],    // Activated
     ["【自】", "[p]", "IconPassive"],       // Passive
     
-    // アビリティアイコン
-    ["【アサシン】", "[as]", "IconAssassin"],
-    ["【チャーム】", "[ch]", "IconCharm"],
-    ["【ランサー】", "[la]", "IconLancer"],
-    ["【ダブルクラッシュ】", "[dc]", "IconDoubleCrash"],
-    ["【トリプルクラッシュ】", "[tc]", "IconTripleCrash"],
-    ["【バニッシュ】", "[ba]", "IconBanish"],
-    ["【フリーズ】", "[fr]", "IconFreeze"],
     ["【ライフバースト】", "[lb2]", "IconLifeBurst2"],  // 【】形式のライフバースト
     
     // ゲームメカニクスアイコン
     ["《ガードアイコン》", "[gi]", "IconGuard"],
-    ["《クラフト》", "[cr]", "IconCraft"],
-    ["《グロウ》", "[gr]", "IconGrow"],
     ["《チーム》", "[t]", "IconTeam"],
-    ["《サーバント》", "[sv]", "IconServant"],
     ["《ライフバースト》", "[lb]", "IconLifeBurst"],
     ["《リコレクトアイコン》", "[rc]", "IconRecollect"],
     

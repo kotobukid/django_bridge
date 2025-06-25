@@ -129,22 +129,12 @@ define_icon_components! {
     "IconPassive" => IconPassive(),
     
     // アビリティアイコン
-    "IconAssassin" => IconAssassin(),
-    "IconCharm" => IconCharm(),
     "IconGuard" => IconGuard(),
-    "IconLancer" => IconLancer(),
-    "IconDoubleCrash" => IconDoubleCrash(),
-    "IconTripleCrash" => IconTripleCrash(),
-    "IconBanish" => IconBanish(),
-    "IconFreeze" => IconFreeze(),
     "IconLifeBurst2" => IconLifeBurst2(),
     
     // ゲームメカニクスアイコン
     "IconGuardIcon" => IconGuardIcon(),
-    "IconCraft" => IconCraft(),
-    "IconGrow" => IconGrow(),
     "IconTeam" => IconTeam(),
-    "IconServant" => IconServant(),
     "IconLifeBurst" => IconLifeBurst(),
     "IconRecollect" => IconRecollect(),
     
@@ -221,27 +211,6 @@ fn IconPassive() -> impl IntoView {
     }
 }
 
-/// 【アサシン】アイコン
-#[component]
-fn IconAssassin() -> impl IntoView {
-    view! {
-        <span class="inline-block w-6 h-5 bg-red-600 text-white text-xs font-bold rounded text-center leading-5" title="【アサシン】">
-            "AS"
-        </span>
-    }
-}
-
-/// 【チャーム】アイコン
-#[component]
-fn IconCharm() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-pink-500 text-white text-xs font-bold rounded" title="【チャーム】">
-            "CH"
-        </span>
-    }
-}
-
-
 /// 【リコレクト】アイコン
 #[component]
 fn IconRecollect() -> impl IntoView {
@@ -266,56 +235,6 @@ fn IconGuard() -> impl IntoView {
     }
 }
 
-/// 【ランサー】アイコン
-#[component]
-fn IconLancer() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-yellow-600 text-white text-xs font-bold rounded" title="【ランサー】">
-            "LA"
-        </span>
-    }
-}
-
-/// 【ダブルクラッシュ】アイコン
-#[component]
-fn IconDoubleCrash() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-red-700 text-white text-xs font-bold rounded" title="【ダブルクラッシュ】">
-            "DC"
-        </span>
-    }
-}
-
-/// 【トリプルクラッシュ】アイコン
-#[component]
-fn IconTripleCrash() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-red-800 text-white text-xs font-bold rounded" title="【トリプルクラッシュ】">
-            "TC"
-        </span>
-    }
-}
-
-/// 【バニッシュ】アイコン
-#[component]
-fn IconBanish() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-purple-600 text-white text-xs font-bold rounded" title="【バニッシュ】">
-            "BA"
-        </span>
-    }
-}
-
-/// 【フリーズ】アイコン
-#[component]
-fn IconFreeze() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-cyan-500 text-white text-xs font-bold rounded" title="【フリーズ】">
-            "FR"
-        </span>
-    }
-}
-
 /// 【ライフバースト】アイコン（【】形式）
 #[component]
 fn IconLifeBurst2() -> impl IntoView {
@@ -336,47 +255,12 @@ fn IconGuardIcon() -> impl IntoView {
     }
 }
 
-/// 《クラフト》アイコン
-#[component]
-fn IconCraft() -> impl IntoView {
-    view! {
-        <svg class="inline-block" width="1rem" height="1rem" viewBox="0 0 24 24" style="vertical-align: middle;" title="《クラフト》">
-            // 背景（二重の境界線で《》形式を表現）
-            <rect width="22" height="22" x="1" y="1" rx="2" fill="#d97706" stroke="#92400e" stroke-width="1"/>
-            <rect width="18" height="18" x="3" y="3" rx="1" fill="#f59e0b" stroke="#d97706" stroke-width="0.5"/>
-            // ハンマーアイコン
-            <path d="M8 12 L12 8 L13 9 L16 6 L18 8 L15 11 L16 12 L12 16 L8 12 Z" fill="white"/>
-            <rect x="6" y="14" width="2" height="6" rx="1" fill="white"/>
-        </svg>
-    }
-}
-
-/// 《グロウ》アイコン
-#[component]
-fn IconGrow() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-emerald-600 text-white text-xs font-bold rounded border border-white" title="《グロウ》">
-            "GR"
-        </span>
-    }
-}
-
 /// 《チーム》アイコン
 #[component]
 fn IconTeam() -> impl IntoView {
     view! {
         <span class="inline-block text-center w-5 h-5 leading-5 bg-indigo-600 text-white text-xs font-bold rounded border border-white" title="《チーム》">
             "T"
-        </span>
-    }
-}
-
-/// 《サーバント》アイコン
-#[component]
-fn IconServant() -> impl IntoView {
-    view! {
-        <span class="inline-block text-center w-6 h-5 leading-5 bg-slate-600 text-white text-xs font-bold rounded border border-white" title="《サーバント》">
-            "SV"
         </span>
     }
 }
