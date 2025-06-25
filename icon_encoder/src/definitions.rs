@@ -50,14 +50,24 @@ define_icon_rules![
     // タイミングアイコン
     ["【出】", "[c]", "IconCip"],           // Comes into play（CIP）
     ["【絆出】", "[bc]", "IconBondCip"],     // Bond comes into play
+    ["【絆常】", "[ba]", "IconBondAuto"],     // Bond auto
+    ["【絆自】", "[bp]", "IconBondPassive"],     // Bond auto
+    ["【絆起】", "[bac]", "IconBondActivated"],     // Bond activated
     ["【常】", "[a]", "IconAuto"],          // Auto
     ["【起】", "[ac]", "IconActivated"],    // Activated
     ["【自】", "[p]", "IconPassive"],       // Passive
 
     ["《ターン1回》", "[t1]", "IconOnceTurn"],
     ["《ゲーム1回》", "[g1]", "IconOnceGame"],
+
+    ["《クロスアイコン》", "[cr]", "IconCross"],
+    ["《ダウン》", "[d]", "IconDown"],
     
+    ["《相手ターン》", "[ot]", "IconOpponentTurn"],
+    ["《自分ターン》", "[mt]", "IconMyTurn"],
+
     ["【ライフバースト】", "[lb2]", "IconLifeBurst2"],  // 【】形式のライフバースト
+    
     
     // ゲームメカニクスアイコン
     ["《ガードアイコン》", "[gi]", "IconGuard"],
