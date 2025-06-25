@@ -145,7 +145,7 @@ pub fn CardItem(
     
     // Calculate styles
     let color_style = datapack::bits_to_gradient_native(card.color() as i32);
-    let card_url = format!("https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no={}", card.code());
+    let card_url = card.build_url();
     
     // Get color theme for this card
     let primary_color_name = datapack::get_primary_color_name_from_bits(card.color());

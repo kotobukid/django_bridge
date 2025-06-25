@@ -6,8 +6,8 @@ pub fn filter_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> Vec<CardExpo
     cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             match mode {
                 "and" => {
@@ -36,8 +36,8 @@ pub fn filter_by_features_and(features: &[i32]) -> Vec<CardExport> {
     cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // 全てのフィーチャーを満たすかチェック（AND条件）
             for i in (0..features.len()).step_by(2) {
@@ -82,8 +82,8 @@ pub fn filter_by_f_bits(bit1: i64, bits2: i64) -> Vec<CardExport> {
     cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // 条件関数の確定
             if bit1 == 0 && bits2 == 0 {
@@ -108,8 +108,8 @@ pub fn filter_by_f_shifts(shift1: isize, shift2: isize) -> Vec<CardExport> {
     cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let feature_bits1 = c.20;
-            let feature_bits2 = c.21;
+            let feature_bits1 = c.19;
+            let feature_bits2 = c.20;
 
             // 条件関数の確定
             if bits1 == 0 && bits2 == 0 {
@@ -131,7 +131,7 @@ pub fn filter_by_burst_bits(burst_bits: i64, mode: &str) -> Vec<CardExport> {
     cards::CARD_LIST
         .iter()
         .filter(|c| {
-            let card_burst_bits = c.23; // burst_bitsフィールドのインデックス（23番目）
+            let card_burst_bits = c.22; // burst_bitsフィールドのインデックス（23番目）
 
             match mode {
                 "and" => {

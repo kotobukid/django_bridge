@@ -95,7 +95,6 @@ fn create_mock_card(id: i32, name: &'static str, card_type: u8) -> CardExport {
         1u8,                   // format
         "",                    // story
         "C",                   // rarity
-        "https://test.com",    // url
         card_type,             // card_type
         1u8,                   // product
         0u8,                   // timing

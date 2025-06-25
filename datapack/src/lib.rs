@@ -11,6 +11,9 @@ use wasm_bindgen::prelude::*;
 use gen::klasses::{KLASS_LIST, get_klass_display_name};
 use gen::colors::COLOR_THEMES;
 
+// WIXOSS card base URL for official site
+pub const CARD_BASE_URL: &str = "https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=";
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CardType {
     Lrig,
@@ -128,7 +131,6 @@ struct CardCompact(
         u8,           // format
         &'static str, // story
         &'static str, // rarity
-        &'static str, // url
         u8,           // card_type
         u8,           // product
         u8,           // timing
@@ -159,7 +161,6 @@ pub struct CardExport {
     format: u8,            // format
     story: String,         // story
     rarity: String,        // rarity
-    url: String,           // url
     card_type: u8,         // card_type
     product: u8,           // product
     timing: u8,            // timing
@@ -252,9 +253,10 @@ impl CardExport {
         self.rarity.clone()
     }
 
-    #[wasm_bindgen(getter)]
-    pub fn url(&self) -> String {
-        self.url.clone()
+    /// Build the official WIXOSS card URL using the card code
+    #[wasm_bindgen]
+    pub fn build_url(&self) -> String {
+        format!("{}{}", CARD_BASE_URL, self.code)
     }
 
     #[wasm_bindgen(getter)]
@@ -316,7 +318,6 @@ impl
         u8,           // format
         &'static str, // story
         &'static str, // rarity
-        &'static str, // url
         u8,           // card_type
         u8,           // product
         u8,           // timing
@@ -345,7 +346,6 @@ impl
             u8,           // format
             &'static str, // story
             &'static str, // rarity
-            &'static str, // url
             u8,           // card_type
             u8,           // product
             u8,           // timing
@@ -374,15 +374,14 @@ impl
             format: v.13,
             story: v.14.to_string(),
             rarity: v.15.to_string(),
-            url: v.16.to_string(),
-            card_type: v.17,
-            product: v.18,
-            timing: v.19,
-            feature_bits1: v.20,
-            feature_bits2: v.21,
-            klass_bits: v.22,
-            burst_bits: v.23,
-            ex1: v.24.to_string(),
+            card_type: v.16,
+            product: v.17,
+            timing: v.18,
+            feature_bits1: v.19,
+            feature_bits2: v.20,
+            klass_bits: v.21,
+            burst_bits: v.22,
+            ex1: v.23.to_string(),
         }
     }
 }
@@ -392,7 +391,7 @@ impl Display for CardCompact {
         let c = self.0;
         write!(
             f,
-            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n url: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n klass_bits: {}\n burst_bits: {}\n ex1: {}\n",
+            "id: {}\n name: {}\n code: {}\n pronunciation: {}\n color: {}\n cost:{}\n level:{}\n limit:{}\n limit_ex:{}\n power:{}\n has_burst:{}\n skill_text:{}\n burst_text:{}\n format:{}\n story: {}\n rarity: {}\n card_type: {}\n product: {}\n timing: {}\n feature1: {}\n feature2: {}\n klass_bits: {}\n burst_bits: {}\n ex1: {}\n",
             c.0,    // id
             c.1,    // name
             c.2,    // code
@@ -409,15 +408,14 @@ impl Display for CardCompact {
             c.13,   // format
             c.14,   // story
             c.15,   // rarity
-            c.16,   // url
-            c.17,   // card_type
-            c.18,   // product
-            c.19,   // timing
-            c.20,   // feature_bits1
-            c.21,   // feature_bits2
-            c.22,   // klass_bits
-            c.23,   // burst_bits
-            c.24,   // ex1
+            c.16,   // card_type
+            c.17,   // product
+            c.18,   // timing
+            c.19,   // feature_bits1
+            c.20,   // feature_bits2
+            c.21,   // klass_bits
+            c.22,   // burst_bits
+            c.23,   // ex1
         )
     }
 }
@@ -1288,7 +1286,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1333,7 +1330,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1360,7 +1356,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1387,7 +1382,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1414,7 +1408,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1441,7 +1434,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1495,7 +1487,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1522,7 +1513,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1549,7 +1539,6 @@ mod tests {
                 format: 0,
                 story: "".to_string(),
                 rarity: "".to_string(),
-                url: "".to_string(),
                 card_type: 0,
                 product: 0,
                 timing: 0,
@@ -1598,7 +1587,6 @@ impl Clone for CardExport {
             format: self.format,
             story: self.story.clone(),
             rarity: self.rarity.clone(),
-            url: self.url.clone(),
             card_type: self.card_type,
             product: self.product,
             timing: self.timing,
