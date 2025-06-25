@@ -1,5 +1,4 @@
 use analyzer::raw_card_analyzer::RawCardAnalyzer;
-use dotenvy;
 use models::gen::django_models::RawCardDb;
 use sqlx::PgPool;
 use webapp::analyze::raw_card_integration::{analyze_and_save_card, WebAppRawCardAnalyzer};

@@ -26,6 +26,12 @@ pub struct DigitDetectRule {
     pattern: Regex,
 }
 
+impl Default for DigitDetectRule {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DigitDetectRule {
     pub fn new() -> Self {
         Self {
@@ -51,6 +57,12 @@ impl AnalyzeRule<i32> for DigitDetectRule {
 /// A rule that detects even digits in text
 pub struct EvenNumberRule {
     pattern: Regex,
+}
+
+impl Default for EvenNumberRule {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl EvenNumberRule {
@@ -114,6 +126,12 @@ pub struct Analyzer<T> {
     rules: Vec<Box<dyn AnalyzeRule<T>>>,
 }
 
+impl<T> Default for Analyzer<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<T> Analyzer<T> {
     pub fn new() -> Self {
         Self { rules: Vec::new() }
@@ -148,6 +166,12 @@ pub fn example_digit_analysis(text: &str) -> HashSet<i32> {
 /// A rule that detects email addresses in text
 pub struct EmailDetectRule {
     pattern: Regex,
+}
+
+impl Default for EmailDetectRule {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl EmailDetectRule {
@@ -1051,11 +1075,17 @@ pub mod migration {
 }
 
 pub mod card_analyzer;
-pub mod test_field_extraction;
 pub mod raw_card_analyzer;
+pub mod test_field_extraction;
 
 /// 本番のフィーチャー検出パターンを使用するルール
 pub struct ProductionFeatureRule;
+
+impl Default for ProductionFeatureRule {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl ProductionFeatureRule {
     pub fn new() -> Self {
@@ -1066,7 +1096,7 @@ impl ProductionFeatureRule {
 impl AnalyzeRule<CardFeature> for ProductionFeatureRule {
     fn detect(&self, text: &str) -> HashSet<CardFeature> {
         use feature::create_detect_patterns;
-        
+
         let mut features = HashSet::new();
         let (replace_patterns, detect_patterns) = create_detect_patterns();
 
@@ -1089,18 +1119,18 @@ impl AnalyzeRule<CardFeature> for ProductionFeatureRule {
 
     fn preprocess(&self, text: &str) -> String {
         use feature::create_detect_patterns;
-        
+
         let (replace_patterns, _) = create_detect_patterns();
-        
+
         // 置換パターンを順番に適用
-        replace_patterns.iter().fold(
-            text.to_string(),
-            |current_text, pattern| {
-                pattern.pattern_r
+        replace_patterns
+            .iter()
+            .fold(text.to_string(), |current_text, pattern| {
+                pattern
+                    .pattern_r
                     .replace_all(&current_text, pattern.replace_to)
                     .into_owned()
-            }
-        )
+            })
     }
 }
 

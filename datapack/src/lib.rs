@@ -3,16 +3,16 @@ pub mod gen;
 pub mod text_search;
 
 use color::{self, Color};
-use feature::feature::{export_features, export_burst_features, CardFeature, BurstFeature};
+use feature::feature::{export_burst_features, export_features, BurstFeature, CardFeature};
+use gen::colors::COLOR_THEMES;
+use gen::klasses::{get_klass_display_name, KLASS_LIST};
 use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen;
 use std::fmt::{Display, Formatter};
 use wasm_bindgen::prelude::*;
-use gen::klasses::{KLASS_LIST, get_klass_display_name};
-use gen::colors::COLOR_THEMES;
 
 // WIXOSS card base URL for official site
-pub const CARD_BASE_URL: &str = "https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=";
+pub const CARD_BASE_URL: &str =
+    "https://www.takaratomy.co.jp/products/wixoss/card_list.php?card=card_detail&card_no=";
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum CardType {
@@ -38,44 +38,44 @@ pub enum CardType {
 impl CardType {
     pub fn from_u8(value: u8) -> Self {
         match value {
-            1 => CardType::Lrig,           // ルリグ
-            2 => CardType::Arts,           // アーツ  
-            3 => CardType::LrigAssist,     // アシストルリグ
-            4 => CardType::Piece,          // ピース
-            5 => CardType::Signi,          // シグニ
-            6 => CardType::Spell,          // スペル
-            7 => CardType::Resona,         // レゾナ
-            8 => CardType::Key,            // キー
-            9 => CardType::ArtsCraft,      // クラフトアーツ
-            10 => CardType::SigniCraft,    // クラフトシグニ
-            11 => CardType::SpellCraft,    // クラフトスペル
-            12 => CardType::PieceRelay,    // リレーピース
-            13 => CardType::PieceCraft,    // クラフトピース
-            14 => CardType::ResonaCraft,   // クラフトレゾナ
-            15 => CardType::Token,         // トークン
-            16 => CardType::Coin,          // コイン
+            1 => CardType::Lrig,         // ルリグ
+            2 => CardType::Arts,         // アーツ
+            3 => CardType::LrigAssist,   // アシストルリグ
+            4 => CardType::Piece,        // ピース
+            5 => CardType::Signi,        // シグニ
+            6 => CardType::Spell,        // スペル
+            7 => CardType::Resona,       // レゾナ
+            8 => CardType::Key,          // キー
+            9 => CardType::ArtsCraft,    // クラフトアーツ
+            10 => CardType::SigniCraft,  // クラフトシグニ
+            11 => CardType::SpellCraft,  // クラフトスペル
+            12 => CardType::PieceRelay,  // リレーピース
+            13 => CardType::PieceCraft,  // クラフトピース
+            14 => CardType::ResonaCraft, // クラフトレゾナ
+            15 => CardType::Token,       // トークン
+            16 => CardType::Coin,        // コイン
             _ => CardType::Unknown,
         }
     }
 
     pub fn to_u8(&self) -> u8 {
         match self {
-            CardType::Lrig => 1,           // ルリグ
-            CardType::Arts => 2,           // アーツ  
-            CardType::LrigAssist => 3,     // アシストルリグ
-            CardType::Piece => 4,          // ピース
-            CardType::Signi => 5,          // シグニ
-            CardType::Spell => 6,          // スペル
-            CardType::Resona => 7,         // レゾナ
-            CardType::Key => 8,            // キー
-            CardType::ArtsCraft => 9,      // クラフトアーツ
-            CardType::SigniCraft => 10,    // クラフトシグニ
-            CardType::SpellCraft => 11,    // クラフトスペル
-            CardType::PieceRelay => 12,    // リレーピース
-            CardType::PieceCraft => 13,    // クラフトピース
-            CardType::ResonaCraft => 14,   // クラフトレゾナ
-            CardType::Token => 15,         // トークン
-            CardType::Coin => 16,          // コイン
+            CardType::Lrig => 1,         // ルリグ
+            CardType::Arts => 2,         // アーツ
+            CardType::LrigAssist => 3,   // アシストルリグ
+            CardType::Piece => 4,        // ピース
+            CardType::Signi => 5,        // シグニ
+            CardType::Spell => 6,        // スペル
+            CardType::Resona => 7,       // レゾナ
+            CardType::Key => 8,          // キー
+            CardType::ArtsCraft => 9,    // クラフトアーツ
+            CardType::SigniCraft => 10,  // クラフトシグニ
+            CardType::SpellCraft => 11,  // クラフトスペル
+            CardType::PieceRelay => 12,  // リレーピース
+            CardType::PieceCraft => 13,  // クラフトピース
+            CardType::ResonaCraft => 14, // クラフトレゾナ
+            CardType::Token => 15,       // トークン
+            CardType::Coin => 16,        // コイン
             CardType::Unknown => 0,
         }
     }
@@ -481,10 +481,7 @@ pub fn fetch_by_combined_bits_or(bit1: i64, bit2: i64) -> String {
 
 // Native Rust functions for Leptos (not exposed to WASM)
 pub fn get_all_cards() -> Result<Vec<CardExport>, String> {
-    Ok(gen::cards::CARD_LIST
-        .iter()
-        .map(|c| CardExport::from(c))
-        .collect())
+    Ok(gen::cards::CARD_LIST.iter().map(CardExport::from).collect())
 }
 
 pub fn fetch_by_colors(cards: &[CardExport], color_bits: u32) -> Vec<CardExport> {
@@ -553,7 +550,6 @@ pub fn fetch_by_colors_and_features_native(
     color_bits: u32,
     feature_names: &[String],
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -576,7 +572,6 @@ pub fn fetch_by_colors_features_and_card_types_native(
     feature_names: &[String],
     card_types: &[CardType],
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -592,10 +587,7 @@ pub fn fetch_by_colors_features_and_card_types_native(
     // 最後にカード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     filtered_cards
@@ -609,7 +601,6 @@ pub fn fetch_by_colors_features_card_types_and_products_native(
     card_types: &[CardType],
     products: &[u8],
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -625,18 +616,12 @@ pub fn fetch_by_colors_features_card_types_and_products_native(
     // カード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     // 最後に商品でフィルタリング
     if !products.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| products.contains(&card.product))
-            .collect();
+        filtered_cards.retain(|card| products.contains(&card.product));
     }
 
     filtered_cards
@@ -651,7 +636,6 @@ pub fn fetch_by_colors_features_card_types_products_and_levels_native(
     products: &[u8],
     levels: &[String],
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -667,40 +651,30 @@ pub fn fetch_by_colors_features_card_types_products_and_levels_native(
     // カード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     // 商品でフィルタリング
     if !products.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| products.contains(&card.product))
-            .collect();
+        filtered_cards.retain(|card| products.contains(&card.product));
     }
 
     // 最後にレベルでフィルタリング（OR条件）
     if !levels.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| levels.contains(&card.level))
-            .collect();
+        filtered_cards.retain(|card| levels.contains(&card.level));
     }
 
     filtered_cards
 }
-
 
 // Japanese text normalization utilities
 fn normalize_japanese_text(text: &str) -> String {
     // Convert Hiragana to Katakana for consistent searching
     // This is a simplified version - in production you might want to use a proper Japanese text processing library
     let mut result = String::new();
-    
+
     for c in text.chars() {
-        if c >= 'ひ' && c <= 'ゔ' {
+        if ('ひ'..='ゔ').contains(&c) {
             // Convert Hiragana to Katakana (approximate conversion)
             let katakana_code = c as u32 + 0x60;
             if let Some(katakana_char) = char::from_u32(katakana_code) {
@@ -712,7 +686,7 @@ fn normalize_japanese_text(text: &str) -> String {
             result.push(c);
         }
     }
-    
+
     result.to_lowercase()
 }
 
@@ -720,46 +694,49 @@ fn text_matches(text: &str, search_term: &str) -> bool {
     if search_term.is_empty() {
         return true;
     }
-    
+
     let normalized_text = normalize_japanese_text(text);
     let normalized_search = normalize_japanese_text(search_term);
-    
+
     // Support both exact and partial matching
     normalized_text.contains(&normalized_search)
 }
 
 // Helper function to extract card features from bit flags
-pub fn extract_card_features_from_bits(feature_bits1: i64, feature_bits2: i64) -> Vec<(String, String)> {
+pub fn extract_card_features_from_bits(
+    feature_bits1: i64,
+    feature_bits2: i64,
+) -> Vec<(String, String)> {
     let mut features = Vec::new();
-    
+
     // Get all CardFeatures and check which ones are set
     let all_features = CardFeature::create_vec();
-    
+
     for feature in all_features {
         let (bit_pos1, bit_pos2) = feature.to_bit_shifts();
-        
+
         let has_feature = if bit_pos2 == 0 {
             (feature_bits1 & (1_i64 << bit_pos1)) != 0
         } else {
             (feature_bits2 & (1_i64 << bit_pos2)) != 0
         };
-        
+
         if has_feature {
             let feature_label = feature.to_string();
             let tag = feature.tag();
             let tag_label = tag.to_string();
-            
+
             // Remove the sort prefix (first 2 characters) from tag label
             let display_tag_label = if tag_label.len() > 2 {
                 tag_label[2..].to_string()
             } else {
                 tag_label
             };
-            
+
             features.push((display_tag_label, feature_label));
         }
     }
-    
+
     features
 }
 
@@ -772,15 +749,15 @@ pub fn get_card_features_from_bits(feature_bits1: i64, feature_bits2: i64) -> Js
 // Helper function to extract klass names from bit flags
 pub fn extract_klass_names_from_bits(klass_bits: u64) -> Vec<String> {
     let mut klass_names = Vec::new();
-    
+
     for klass_static in KLASS_LIST.iter() {
         let (klass_id, cat1, _, _, bit_position) = *klass_static;
-        
+
         // 精系クラス（精像、精武、精羅、精械、精生、精元）をUI上で非表示にする
         if cat1.starts_with("精") {
             continue;
         }
-        
+
         // Check if this klass bit is set
         if (klass_bits & (1u64 << bit_position)) != 0 {
             if let Some(display_name) = get_klass_display_name(klass_id) {
@@ -788,7 +765,7 @@ pub fn extract_klass_names_from_bits(klass_bits: u64) -> Vec<String> {
             }
         }
     }
-    
+
     klass_names
 }
 
@@ -801,31 +778,31 @@ pub fn get_klass_names_from_bits(klass_bits: u64) -> JsValue {
 // Helper function to extract burst features from bit flags
 pub fn extract_burst_features_from_bits(burst_bits: i64) -> Vec<(String, String)> {
     let mut features = Vec::new();
-    
+
     // Get all BurstFeatures and check which ones are set
     let all_burst_features = BurstFeature::create_vec();
-    
+
     for feature in all_burst_features {
         let bit_pos = feature.to_bit_shift();
-        
+
         let has_feature = (burst_bits & (1_i64 << bit_pos)) != 0;
-        
+
         if has_feature {
             let feature_label = feature.to_string();
             let tag = feature.tag();
             let tag_label = tag.to_string();
-            
-            // Remove the sort prefix (first 2 characters) from tag label  
+
+            // Remove the sort prefix (first 2 characters) from tag label
             let display_tag_label = if tag_label.len() > 2 {
                 tag_label[2..].to_string()
             } else {
                 tag_label
             };
-            
+
             features.push((display_tag_label, feature_label));
         }
     }
-    
+
     features
 }
 
@@ -836,7 +813,9 @@ pub fn get_burst_features_from_bits(burst_bits: i64) -> JsValue {
 }
 
 // カラーテーマを取得する関数
-pub fn get_color_theme_native(color_name: &str) -> Option<(&'static str, &'static str, &'static str)> {
+pub fn get_color_theme_native(
+    color_name: &str,
+) -> Option<(&'static str, &'static str, &'static str)> {
     COLOR_THEMES
         .iter()
         .find(|(name, _, _, _)| *name == color_name)
@@ -855,7 +834,7 @@ pub fn get_primary_color_name_from_bits(color_bits: u32) -> String {
     if colors.is_empty() {
         return "Unknown".to_string();
     }
-    
+
     // 最初の色を主要色として扱う
     match colors[0] {
         Color::White => "White".to_string(),
@@ -874,20 +853,17 @@ pub fn get_primary_color_name(color_bits: u32) -> String {
 }
 
 // Text search function for card name, code, and pronunciation
-pub fn search_cards_by_text_native(
-    cards: &[CardExport],
-    search_term: &str,
-) -> Vec<CardExport> {
+pub fn search_cards_by_text_native(cards: &[CardExport], search_term: &str) -> Vec<CardExport> {
     if search_term.trim().is_empty() {
         return cards.to_vec();
     }
-    
+
     cards
         .iter()
         .filter(|card| {
-            text_matches(&card.name, search_term) ||
-            text_matches(&card.code, search_term) ||
-            text_matches(&card.pronunciation, search_term)
+            text_matches(&card.name, search_term)
+                || text_matches(&card.code, search_term)
+                || text_matches(&card.pronunciation, search_term)
         })
         .cloned()
         .collect()
@@ -903,7 +879,6 @@ pub fn fetch_by_colors_features_card_types_products_levels_and_text_native(
     levels: &[String],
     search_text: &str,
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -919,26 +894,17 @@ pub fn fetch_by_colors_features_card_types_products_levels_and_text_native(
     // カード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     // 商品でフィルタリング
     if !products.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| products.contains(&card.product))
-            .collect();
+        filtered_cards.retain(|card| products.contains(&card.product));
     }
 
     // レベルでフィルタリング（OR条件）
     if !levels.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| levels.contains(&card.level))
-            .collect();
+        filtered_cards.retain(|card| levels.contains(&card.level));
     }
 
     // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
@@ -977,62 +943,44 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_klass
     // カード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     // 商品でフィルタリング
     if !products.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| products.contains(&card.product))
-            .collect();
+        filtered_cards.retain(|card| products.contains(&card.product));
     }
 
     // レベルでフィルタリング（OR条件）
     if !levels.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| levels.contains(&card.level))
-            .collect();
+        filtered_cards.retain(|card| levels.contains(&card.level));
     }
 
     // パワー閾値でフィルタリング
     if let Some(threshold) = min_power {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| {
-                if let Ok(power) = card.power.parse::<i32>() {
-                    power >= threshold
-                } else {
-                    false
-                }
-            })
-            .collect();
+        filtered_cards.retain(|card| {
+            if let Ok(power) = card.power.parse::<i32>() {
+                power >= threshold
+            } else {
+                false
+            }
+        });
     }
 
     // Klassでフィルタリング（OR条件 - 選択されたKlassのいずれかに該当）
     if klass_bits != 0 {
         use crate::gen::klasses::has_klass_bits;
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| has_klass_bits(card.klass_bits, klass_bits))
-            .collect();
+        filtered_cards.retain(|card| has_klass_bits(card.klass_bits, klass_bits));
     }
 
     // テキスト検索でフィルタリング
     if !search_text.is_empty() {
         let search_lower = search_text.to_lowercase();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| {
-                card.name.to_lowercase().contains(&search_lower)
-                    || card.skill_text.to_lowercase().contains(&search_lower)
-                    || card.burst_text.to_lowercase().contains(&search_lower)
-            })
-            .collect();
+        filtered_cards.retain(|card| {
+            card.name.to_lowercase().contains(&search_lower)
+                || card.skill_text.to_lowercase().contains(&search_lower)
+                || card.burst_text.to_lowercase().contains(&search_lower)
+        });
     }
 
     filtered_cards
@@ -1062,7 +1010,6 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_and_t
     )
 }
 
-
 // 色、feature、カード種別、商品、レベル、パワー、テキスト検索の複合フィルタリング関数（全てAND条件）
 pub fn fetch_by_colors_features_card_types_products_levels_powers_and_text_native(
     cards: &[CardExport],
@@ -1074,7 +1021,6 @@ pub fn fetch_by_colors_features_card_types_products_levels_powers_and_text_nativ
     powers: &[String],
     search_text: &str,
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -1090,34 +1036,22 @@ pub fn fetch_by_colors_features_card_types_products_levels_powers_and_text_nativ
     // カード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     // 商品でフィルタリング
     if !products.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| products.contains(&card.product))
-            .collect();
+        filtered_cards.retain(|card| products.contains(&card.product));
     }
 
     // レベルでフィルタリング（OR条件）
     if !levels.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| levels.contains(&card.level))
-            .collect();
+        filtered_cards.retain(|card| levels.contains(&card.level));
     }
 
     // パワーでフィルタリング（OR条件）
     if !powers.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| powers.contains(&card.power))
-            .collect();
+        filtered_cards.retain(|card| powers.contains(&card.power));
     }
 
     // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
@@ -1142,16 +1076,16 @@ pub fn filter_by_power_range_native(
             if card.power.is_empty() || card.power == "-" {
                 return false;
             }
-            
+
             // 無限大のケース
             if card.power == "∞" {
                 return include_infinity;
             }
-            
+
             // 数値として解析
             if let Ok(power_value) = card.power.parse::<i32>() {
-                let above_min = min_power.map_or(true, |min| power_value >= min);
-                let below_max = max_power.map_or(true, |max| power_value <= max);
+                let above_min = min_power.is_none_or(|min| power_value >= min);
+                let below_max = max_power.is_none_or(|max| power_value <= max);
                 above_min && below_max
             } else {
                 false
@@ -1175,7 +1109,6 @@ pub fn fetch_by_all_filters_with_power_range_native(
     include_infinity: bool,
     search_text: &str,
 ) -> Vec<CardExport> {
-
     // まず色でフィルタリング（color_bits が 0 の場合はフィルタしない）
     let mut filtered_cards = if color_bits == 0 {
         cards.to_vec()
@@ -1191,39 +1124,28 @@ pub fn fetch_by_all_filters_with_power_range_native(
     // カード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     // 商品でフィルタリング
     if !products.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| products.contains(&card.product))
-            .collect();
+        filtered_cards.retain(|card| products.contains(&card.product));
     }
 
     // レベルでフィルタリング（OR条件）
     if !levels.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| levels.contains(&card.level))
-            .collect();
+        filtered_cards.retain(|card| levels.contains(&card.level));
     }
 
     // パワーの特定値でフィルタリング（OR条件）
     if !powers.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| powers.contains(&card.power))
-            .collect();
+        filtered_cards.retain(|card| powers.contains(&card.power));
     }
 
     // パワーの範囲でフィルタリング
     if min_power.is_some() || max_power.is_some() {
-        filtered_cards = filter_by_power_range_native(&filtered_cards, min_power, max_power, include_infinity);
+        filtered_cards =
+            filter_by_power_range_native(&filtered_cards, min_power, max_power, include_infinity);
     }
 
     // 最後にテキスト検索でフィルタリング（最適化バージョン使用）
@@ -1242,10 +1164,10 @@ mod tests {
     fn test_normalize_japanese_text() {
         // Test basic functionality
         assert_eq!(normalize_japanese_text("hello"), "hello");
-        
+
         // Test case conversion
         assert_eq!(normalize_japanese_text("Hello World"), "hello world");
-        
+
         // Test that the function doesn't crash with Japanese text
         let japanese_text = "こんにちは";
         let result = normalize_japanese_text(japanese_text);
@@ -1258,53 +1180,51 @@ mod tests {
         assert!(text_matches("Hello World", "hello"));
         assert!(text_matches("Test Card", "card"));
         assert!(text_matches("WX24-001", "wx24"));
-        
+
         // Empty search should match anything
         assert!(text_matches("anything", ""));
-        
+
         // Non-matching
         assert!(!text_matches("hello", "world"));
     }
 
     #[test]
     fn test_search_cards_by_text_empty_search() {
-        let cards = vec![
-            CardExport {
-                id: 1,
-                name: "Test Card".to_string(),
-                code: "WX24-001".to_string(),
-                pronunciation: "テストカード".to_string(),
-                color: 0,
-                cost: "".to_string(),
-                level: "".to_string(),
-                limit: "".to_string(),
-                limit_ex: "".to_string(),
-                power: "".to_string(),
-                has_burst: 0,
-                skill_text: "".to_string(),
-                burst_text: "".to_string(),
-                format: 0,
-                story: "".to_string(),
-                rarity: "".to_string(),
-                card_type: 0,
-                product: 0,
-                timing: 0,
-                feature_bits1: 0,
-                feature_bits2: 0,
-                klass_bits: 0,
-                burst_bits: 0,
-                ex1: "".to_string(),
-            }
-        ];
-        
+        let cards = vec![CardExport {
+            id: 1,
+            name: "Test Card".to_string(),
+            code: "WX24-001".to_string(),
+            pronunciation: "テストカード".to_string(),
+            color: 0,
+            cost: "".to_string(),
+            level: "".to_string(),
+            limit: "".to_string(),
+            limit_ex: "".to_string(),
+            power: "".to_string(),
+            has_burst: 0,
+            skill_text: "".to_string(),
+            burst_text: "".to_string(),
+            format: 0,
+            story: "".to_string(),
+            rarity: "".to_string(),
+            card_type: 0,
+            product: 0,
+            timing: 0,
+            feature_bits1: 0,
+            feature_bits2: 0,
+            klass_bits: 0,
+            burst_bits: 0,
+            ex1: "".to_string(),
+        }];
+
         // Empty search should return all cards
         let result = search_cards_by_text_native(&cards, "");
         assert_eq!(result.len(), 1);
-        
+
         // Matching search
         let result = search_cards_by_text_native(&cards, "test");
         assert_eq!(result.len(), 1);
-        
+
         // Non-matching search
         let result = search_cards_by_text_native(&cards, "nonexistent");
         assert_eq!(result.len(), 0);
@@ -1444,24 +1364,24 @@ mod tests {
                 ex1: "".to_string(),
             },
         ];
-        
+
         // Test range filtering
         let result = filter_by_power_range_native(&cards, Some(3000), Some(8000), false);
         assert_eq!(result.len(), 1);
         assert_eq!(result[0].id, 2);
-        
+
         // Test minimum only
         let result = filter_by_power_range_native(&cards, Some(5000), None, false);
         assert_eq!(result.len(), 2);
-        
+
         // Test maximum only
         let result = filter_by_power_range_native(&cards, None, Some(5000), false);
         assert_eq!(result.len(), 2);
-        
+
         // Test including infinity
         let result = filter_by_power_range_native(&cards, Some(8000), None, true);
         assert_eq!(result.len(), 2); // 10000 and ∞
-        
+
         // Test excluding infinity
         let result = filter_by_power_range_native(&cards, Some(8000), None, false);
         assert_eq!(result.len(), 1); // only 10000
@@ -1549,7 +1469,7 @@ mod tests {
                 ex1: "".to_string(),
             },
         ];
-        
+
         // Test specific power filtering (OR condition)
         let powers = vec!["3000".to_string(), "10000".to_string()];
         let result = fetch_by_colors_features_card_types_products_levels_powers_and_text_native(
@@ -1640,9 +1560,12 @@ pub fn fetch_by_burst_features_or(feature_names: JsValue) -> Vec<CardExport> {
 }
 
 // BurstFeature名でネイティブフィルタリング
-pub fn fetch_by_burst_features_and_native(cards: &[CardExport], feature_names: &[String]) -> Vec<CardExport> {
+pub fn fetch_by_burst_features_and_native(
+    cards: &[CardExport],
+    feature_names: &[String],
+) -> Vec<CardExport> {
     let burst_bits = convert_burst_feature_names_to_bits(feature_names);
-    
+
     cards
         .iter()
         .filter(|card| {
@@ -1700,49 +1623,34 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_klass
     // カード種別でフィルタリング
     if !card_types.is_empty() {
         let card_type_u8s: Vec<u8> = card_types.iter().map(|ct| ct.to_u8()).collect();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| card_type_u8s.contains(&card.card_type))
-            .collect();
+        filtered_cards.retain(|card| card_type_u8s.contains(&card.card_type));
     }
 
     // 商品でフィルタリング
     if !products.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| products.contains(&card.product))
-            .collect();
+        filtered_cards.retain(|card| products.contains(&card.product));
     }
 
     // レベルでフィルタリング（OR条件）
     if !levels.is_empty() {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| levels.contains(&card.level))
-            .collect();
+        filtered_cards.retain(|card| levels.contains(&card.level));
     }
 
     // パワー閾値でフィルタリング
     if let Some(threshold) = min_power {
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| {
-                if let Ok(power) = card.power.parse::<i32>() {
-                    power >= threshold
-                } else {
-                    false
-                }
-            })
-            .collect();
+        filtered_cards.retain(|card| {
+            if let Ok(power) = card.power.parse::<i32>() {
+                power >= threshold
+            } else {
+                false
+            }
+        });
     }
 
     // Klassでフィルタリング（OR条件 - 選択されたKlassのいずれかに該当）
     if klass_bits != 0 {
         use crate::gen::klasses::has_klass_bits;
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| has_klass_bits(card.klass_bits, klass_bits))
-            .collect();
+        filtered_cards.retain(|card| has_klass_bits(card.klass_bits, klass_bits));
     }
 
     // has_burstでフィルタリング
@@ -1753,14 +1661,11 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_klass
     // テキスト検索でフィルタリング
     if !search_text.is_empty() {
         let search_lower = search_text.to_lowercase();
-        filtered_cards = filtered_cards
-            .into_iter()
-            .filter(|card| {
-                card.name.to_lowercase().contains(&search_lower)
-                    || card.skill_text.to_lowercase().contains(&search_lower)
-                    || card.burst_text.to_lowercase().contains(&search_lower)
-            })
-            .collect();
+        filtered_cards.retain(|card| {
+            card.name.to_lowercase().contains(&search_lower)
+                || card.skill_text.to_lowercase().contains(&search_lower)
+                || card.burst_text.to_lowercase().contains(&search_lower)
+        });
     }
 
     filtered_cards

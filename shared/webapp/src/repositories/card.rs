@@ -206,17 +206,17 @@ impl StaticCodeGenerator for CardRepository {
 
     async fn get_all_as_code(&self) -> Vec<String> {
         // まずすべてのカードを取得
-        let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card where format = 1")  // 現在Diva(1)のみ
+        let cards = sqlx::query_as::<_, CardDb>("SELECT * FROM wix_card where format = 1") // 現在Diva(1)のみ
             .fetch_all(&*self.db_connector)
             .await
             .unwrap(); // エラー処理は適宜修正してください
-        
+
         // 商品の sort_asc 値を取得するためのマップを作成
         let products = sqlx::query("SELECT id, sort_asc FROM wix_product")
             .fetch_all(&*self.db_connector)
             .await
             .unwrap();
-        
+
         let product_sort_map: HashMap<i64, i32> = products
             .into_iter()
             .map(|row| {
@@ -231,7 +231,7 @@ impl StaticCodeGenerator for CardRepository {
             .fetch_all(&*self.db_connector)
             .await
             .unwrap();
-        
+
         let klass_bit_map: HashMap<i64, u32> = klass_rows
             .into_iter()
             .enumerate()
@@ -242,20 +242,18 @@ impl StaticCodeGenerator for CardRepository {
             .collect();
 
         // Card-Klass relationships を取得
-        let card_klass_rows = sqlx::query(
-            "SELECT card_id, klass_id FROM wix_card_klass"
-        )
-        .fetch_all(&*self.db_connector)
-        .await
-        .unwrap();
-        
+        let card_klass_rows = sqlx::query("SELECT card_id, klass_id FROM wix_card_klass")
+            .fetch_all(&*self.db_connector)
+            .await
+            .unwrap();
+
         let mut card_klass_map: HashMap<i64, Vec<i64>> = HashMap::new();
         for row in card_klass_rows {
             let card_id: i64 = row.get("card_id");
             let klass_id: i64 = row.get("klass_id");
             card_klass_map.entry(card_id).or_default().push(klass_id);
         }
-        
+
         // カードをソート
         let mut cards = cards;
         cards.sort_by(|a, b| {
@@ -268,7 +266,7 @@ impl StaticCodeGenerator for CardRepository {
             .into_iter()
             .map(|card| {
                 let card_obj = Card::from(card);
-                
+
                 // Calculate klass_bits for this card
                 let empty_vec = vec![];
                 let klass_ids = card_klass_map.get(&card_obj.id).unwrap_or(&empty_vec);
@@ -278,7 +276,7 @@ impl StaticCodeGenerator for CardRepository {
                         klass_bits |= 1u64 << bit_pos;
                     }
                 }
-                
+
                 card_obj.to_rust_code_with_klass_bits(klass_bits)
             })
             .collect()

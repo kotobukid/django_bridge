@@ -1,5 +1,4 @@
 use leptos::prelude::*;
-use leptos::task::spawn_local;
 use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
@@ -8,7 +7,7 @@ mod pages;
 mod types;
 
 use components::SvgDefinition;
-use pages::{CardPage, CardDetailPage, HomePage};
+use pages::{CardDetailPage, CardPage, HomePage};
 
 #[component]
 fn App() -> impl IntoView {
@@ -30,10 +29,10 @@ fn App() -> impl IntoView {
 #[component]
 fn SpaRedirectHandler() -> impl IntoView {
     use leptos_router::hooks::use_navigate;
-    
+
     // Handle GitHub Pages 404 fallback using sessionStorage
     let navigate = use_navigate();
-    
+
     Effect::new(move |_| {
         if let Some(window) = web_sys::window() {
             if let Ok(storage) = window.session_storage() {
@@ -41,7 +40,7 @@ fn SpaRedirectHandler() -> impl IntoView {
                     if let Ok(Some(redirect_path)) = storage.get_item("spa_redirect_path") {
                         // Clear the stored path
                         let _ = storage.remove_item("spa_redirect_path");
-                        
+
                         // Navigate to the stored path
                         navigate(&redirect_path, Default::default());
                     }

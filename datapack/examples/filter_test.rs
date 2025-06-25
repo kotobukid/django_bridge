@@ -41,7 +41,7 @@ fn main() {
     println!("アサシンを持つカード数: {}", assassin_cards.len());
 
     // サンプルカードを表示
-    if assassin_cards.len() > 0 {
+    if !assassin_cards.is_empty() {
         println!("サンプルカード（最初の3件）:");
         for (i, card) in assassin_cards.iter().take(3).enumerate() {
             println!(
@@ -87,7 +87,7 @@ fn main() {
     println!("Sランサーを持つカード数: {}", slancer_cards.len());
 
     // サンプルカードを表示
-    if slancer_cards.len() > 0 {
+    if !slancer_cards.is_empty() {
         println!("サンプルカード（最初の3件）:");
         for (i, card) in slancer_cards.iter().take(3).enumerate() {
             println!(
@@ -130,7 +130,7 @@ fn main() {
     );
 
     // サンプルカードを表示
-    if combined_cards.len() > 0 {
+    if !combined_cards.is_empty() {
         println!("サンプルカード（全件）:");
         for (i, card) in combined_cards.iter().enumerate() {
             println!(

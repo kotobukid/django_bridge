@@ -9,12 +9,9 @@ use tokio::sync::Mutex;
 use tokio::time::{sleep, Duration};
 use url::Url;
 
-use models::card::CreateCard;
-use webapp::analyze::wixoss::Card;
 use webapp::analyze::{CardQuery, ProductType};
 use webapp::repositories::{CardTypeRepository, ProductRepository};
 
-use crate::db::save_card_to_database;
 use crate::raw_card::RawCardService;
 
 /// スクレイピングサービス
@@ -122,7 +119,7 @@ impl ScrapingService {
 
         // キャッシュディレクトリを指定
         let single_cache_dir = self.cache_dir.join("single");
-        let cq = CardQuery::new(card_no.clone().into(), Box::from(single_cache_dir));
+        let cq = CardQuery::new(card_no.clone(), Box::from(single_cache_dir));
 
         // テキストをキャッシュから取得するか、ダウンロードする
         let text = if cq.check_cache_file_exists() {

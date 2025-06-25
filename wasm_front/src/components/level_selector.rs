@@ -8,9 +8,7 @@ fn LevelButton(
     on_click: impl Fn(&'static str) + 'static,
     bg_class: &'static str,
 ) -> impl IntoView {
-    let is_active = Memo::new(move |_| {
-        level_filter.get().is_selected(level)
-    });
+    let is_active = Memo::new(move |_| level_filter.get().is_selected(level));
 
     view! {
         <button
@@ -57,7 +55,7 @@ pub fn LevelSelector(
                     >
                         "全Lv"
                     </button>
-                    
+
                     // レベル 0 から 4 のトグルボタン
                     <LevelButton level="0" level_filter=level_filter on_click=toggle_level bg_class="bg-gray-200" />
                     <LevelButton level="1" level_filter=level_filter on_click=toggle_level bg_class="bg-blue-100" />

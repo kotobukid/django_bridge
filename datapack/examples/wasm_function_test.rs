@@ -29,7 +29,7 @@ fn main() {
     let and_result = filter_by_features_and(&features_array);
     println!("AND結果: {}件", and_result.len());
 
-    if and_result.len() > 0 {
+    if !and_result.is_empty() {
         println!("該当カード:");
         for (i, card) in and_result.iter().enumerate() {
             println!(
@@ -55,7 +55,7 @@ fn main() {
     let and_cards = filter_by_combined_bits(combined_bits, 0, "and");
     println!("AND条件結果: {}件", and_cards.len());
 
-    if and_cards.len() > 0 {
+    if !and_cards.is_empty() {
         println!("該当カード:");
         for (i, card) in and_cards.iter().enumerate() {
             println!(

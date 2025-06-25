@@ -1,3 +1,13 @@
+use async_openai::{
+    config::OpenAIConfig,
+    types::{
+        ChatCompletionRequestMessage, ChatCompletionRequestSystemMessage,
+        ChatCompletionRequestSystemMessageContent, ChatCompletionRequestUserMessage,
+        ChatCompletionRequestUserMessageContent, ChatCompletionToolChoiceOption,
+        CreateChatCompletionRequest,
+    },
+    Client,
+};
 use axum::{
     extract::{Query, State},
     http::{HeaderValue, Method},
@@ -5,20 +15,11 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use serde::{Deserialize, Serialize};
-use tower_http::cors::CorsLayer;
-use std::collections::HashMap;
 use feature::feature::{export_features, ExportedCardFeature};
-use async_openai::{
-    types::{
-        CreateChatCompletionRequest, ChatCompletionRequestSystemMessage, 
-        ChatCompletionRequestUserMessage, ChatCompletionRequestMessage,
-        ChatCompletionToolChoiceOption, ChatCompletionRequestSystemMessageContent,
-        ChatCompletionRequestUserMessageContent
-    },
-    Client, config::OpenAIConfig
-};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
+use std::collections::HashMap;
+use tower_http::cors::CorsLayer;
 
 use crate::{models::rule_pattern::RulePattern, AppState};
 
@@ -98,23 +99,23 @@ async fn search_rawcards(
     State(app_state): State<AppState>,
 ) -> Json<Vec<SentenceResult>> {
     let pool = &app_state.pool;
-    
+
     let sql_query = r#"
         SELECT card_number, name, skill_text
         FROM wix_rawcard
         WHERE skill_text LIKE $1
         LIMIT 100
     "#;
-    
+
     let search_pattern = format!("%{}%", query.keyword);
     let rows = sqlx::query_as::<_, (String, String, String)>(sql_query)
         .bind(&search_pattern)
         .fetch_all(pool.as_ref())
         .await
         .unwrap_or_default();
-    
+
     let mut results = Vec::new();
-    
+
     for (card_number, card_name, skill_text) in rows {
         if skill_text.contains(&query.keyword) {
             results.push(SentenceResult {
@@ -125,7 +126,7 @@ async fn search_rawcards(
             });
         }
     }
-    
+
     Json(results)
 }
 
@@ -136,71 +137,94 @@ async fn generate_pattern(
     println!("=== AI パターン生成リクエスト（元データ） ===");
     println!("Search Keyword: {}", request.keyword);
     println!("Selected Features (context): {:?}", request.features);
-    println!("Positive Examples ({} items):", request.positive_examples.len());
+    println!(
+        "Positive Examples ({} items):",
+        request.positive_examples.len()
+    );
     for (i, example) in request.positive_examples.iter().enumerate() {
         println!("  [{}] {}", i + 1, example);
     }
     println!("================================");
-    
+
     // 前処理: ポジティブサンプルを句点で分割し、検索キーワードを含む文のみを抽出
     let mut filtered_sentences = Vec::new();
-    
+
     for skill_text in &request.positive_examples {
         let sentences: Vec<&str> = skill_text.split('。').collect();
-        
+
         for sentence in sentences {
             let trimmed = sentence.trim();
             if trimmed.is_empty() {
                 continue;
             }
-            
+
             if trimmed.contains(&request.keyword) {
                 filtered_sentences.push(trimmed.to_string());
             }
         }
     }
-    
+
     // CardFeatureの日本語ラベルから内部コードを逆引きする処理
-    let feature_context = request.features.iter().map(|feature_label| {
-        let internal_code = match feature_label.as_str() {
-            "トラッシュ回収" => "Salvage",
-            "バニッシュ" => "Banish", 
-            "ドロー" => "Draw",
-            "エナチャージ" => "Charge",
-            "アサシン" => "Assassin",
-            "ガード" => "Guard",
-            _ => "Unknown"
-        };
-        format!("{}({})", internal_code, feature_label)
-    }).collect::<Vec<String>>();
-    
+    let feature_context = request
+        .features
+        .iter()
+        .map(|feature_label| {
+            let internal_code = match feature_label.as_str() {
+                "トラッシュ回収" => "Salvage",
+                "バニッシュ" => "Banish",
+                "ドロー" => "Draw",
+                "エナチャージ" => "Charge",
+                "アサシン" => "Assassin",
+                "ガード" => "Guard",
+                _ => "Unknown",
+            };
+            format!("{}({})", internal_code, feature_label)
+        })
+        .collect::<Vec<String>>();
+
     println!("=== 前処理後（AI APIに送信予定のデータ） ===");
     println!("Target CardFeature (context): {:?}", feature_context);
     println!("Search Keyword: {}", request.keyword);
-    println!("Filtered Sentences containing '{}' ({} items):", request.keyword, filtered_sentences.len());
+    println!(
+        "Filtered Sentences containing '{}' ({} items):",
+        request.keyword,
+        filtered_sentences.len()
+    );
     for (i, sentence) in filtered_sentences.iter().enumerate() {
         println!("  [{}] {}", i + 1, sentence);
     }
-    
+
     if filtered_sentences.is_empty() {
-        println!("⚠️  警告: 検索キーワード「{}」を含む文が見つかりませんでした", request.keyword);
-        
+        println!(
+            "⚠️  警告: 検索キーワード「{}」を含む文が見つかりませんでした",
+            request.keyword
+        );
+
         return Json(PatternSuggestion {
             pattern: request.keyword.clone(),
-            explanation: "検索キーワードを含む例文が見つからないため、シンプルなパターンを返しました。".to_string(),
+            explanation:
+                "検索キーワードを含む例文が見つからないため、シンプルなパターンを返しました。"
+                    .to_string(),
             features: request.features,
         });
     }
-    
+
     // OpenAI APIを呼び出し
-    match call_openai_for_pattern(&app_state.openai_client, &request.keyword, &feature_context, &filtered_sentences).await {
+    match call_openai_for_pattern(
+        &app_state.openai_client,
+        &request.keyword,
+        &feature_context,
+        &filtered_sentences,
+    )
+    .await
+    {
         Ok(ai_response) => {
             println!("=== OpenAI API Response ===");
             println!("Success: {}", ai_response.success);
             println!("Patterns: {:?}", ai_response.patterns);
             println!("Explanation: {}", ai_response.explanation);
             println!("============================");
-            
+
             if ai_response.success && !ai_response.patterns.is_empty() {
                 // 複数パターンがある場合は最初のパターンを使用
                 // TODO: 複数パターンに対応した PatternSuggestion の設計変更を検討
@@ -212,7 +236,9 @@ async fn generate_pattern(
             } else {
                 Json(PatternSuggestion {
                     pattern: request.keyword.clone(),
-                    explanation: "AIによるパターン生成に失敗しました。シンプルなパターンを返します。".to_string(),
+                    explanation:
+                        "AIによるパターン生成に失敗しました。シンプルなパターンを返します。"
+                            .to_string(),
                     features: request.features,
                 })
             }
@@ -221,7 +247,10 @@ async fn generate_pattern(
             println!("OpenAI API Error: {}", e);
             Json(PatternSuggestion {
                 pattern: request.keyword.clone(),
-                explanation: format!("APIエラーのため、シンプルなパターンを返します。エラー: {}", e),
+                explanation: format!(
+                    "APIエラーのため、シンプルなパターンを返します。エラー: {}",
+                    e
+                ),
                 features: request.features,
             })
         }
@@ -261,7 +290,7 @@ async fn call_openai_for_pattern(
             }
         }
     });
-    
+
     let system_prompt = "あなたはWIXOSSトレーディングカードゲームのテキスト解析専門家です。\
     カードのスキルテキストから特定の機能を検出するための正規表現パターンを生成してください。\n\n\
     重要な原則：\n\
@@ -278,7 +307,7 @@ async fn call_openai_for_pattern(
     - アサシン: \"【アサシン】\"\n\
     - ガード: \"【ガード】\"\n\n\
     これらの例のように、機能を表す核心的なキーワードや記号に焦点を当ててください。";
-    
+
     let user_prompt = format!(
         "対象機能: {}\n検索キーワード: {}\n\n\
         以下の例文を参考に、機能を検出するためのシンプルな正規表現パターンを生成してください：\n{}\n\n\
@@ -296,46 +325,42 @@ async fn call_openai_for_pattern(
             .collect::<Vec<String>>()
             .join("\n")
     );
-    
+
     let request = CreateChatCompletionRequest {
         model: "gpt-4o-mini".to_string(),
         messages: vec![
-            ChatCompletionRequestMessage::System(
-                ChatCompletionRequestSystemMessage {
-                    content: ChatCompletionRequestSystemMessageContent::Text(system_prompt.to_string()),
-                    name: None,
-                }
-            ),
-            ChatCompletionRequestMessage::User(
-                ChatCompletionRequestUserMessage {
-                    content: ChatCompletionRequestUserMessageContent::Text(user_prompt),
-                    name: None,
-                }
-            ),
+            ChatCompletionRequestMessage::System(ChatCompletionRequestSystemMessage {
+                content: ChatCompletionRequestSystemMessageContent::Text(system_prompt.to_string()),
+                name: None,
+            }),
+            ChatCompletionRequestMessage::User(ChatCompletionRequestUserMessage {
+                content: ChatCompletionRequestUserMessageContent::Text(user_prompt),
+                name: None,
+            }),
         ],
         tools: Some(vec![serde_json::from_value(function)?]),
         tool_choice: Some(ChatCompletionToolChoiceOption::Required),
         ..Default::default()
     };
-    
+
     let response = client.chat().create(request).await?;
-    
+
     if let Some(choice) = response.choices.first() {
         if let Some(tool_calls) = &choice.message.tool_calls {
             if let Some(tool_call) = tool_calls.first() {
-                let regex_response: RegexPatternResponse = 
+                let regex_response: RegexPatternResponse =
                     serde_json::from_str(&tool_call.function.arguments)?;
                 return Ok(regex_response);
             }
         }
     }
-    
+
     Err("No valid response from OpenAI".into())
 }
 
 async fn get_patterns(State(app_state): State<AppState>) -> Json<Vec<RulePattern>> {
     let pool = &app_state.pool;
-    
+
     let query = r#"
         SELECT id, keyword, pattern, features, positive_examples, 
                negative_examples, created_at, updated_at, is_active
@@ -343,12 +368,12 @@ async fn get_patterns(State(app_state): State<AppState>) -> Json<Vec<RulePattern
         WHERE is_active = true
         ORDER BY created_at DESC
     "#;
-    
+
     let patterns = sqlx::query_as::<_, RulePattern>(query)
         .fetch_all(pool.as_ref())
         .await
         .unwrap_or_default();
-    
+
     Json(patterns)
 }
 
@@ -357,18 +382,18 @@ async fn save_pattern(
     Json(request): Json<SavePatternRequest>,
 ) -> Json<serde_json::Value> {
     let pool = &app_state.pool;
-    
+
     let query = r#"
         INSERT INTO wix_rule_pattern 
         (keyword, pattern, features, positive_examples, negative_examples)
         VALUES ($1, $2, $3, $4, $5)
         RETURNING id
     "#;
-    
+
     let features_json = serde_json::to_value(&request.features).unwrap();
     let positive_json = serde_json::to_value(&request.positive_examples).unwrap();
     let negative_json = serde_json::to_value(&request.negative_examples).unwrap();
-    
+
     match sqlx::query_as::<_, (i32,)>(query)
         .bind(&request.keyword)
         .bind(&request.pattern)
@@ -390,12 +415,12 @@ async fn export_patterns(State(app_state): State<AppState>) -> Json<serde_json::
             let output_path = "shared/feature/src/generated_patterns.rs";
             match std::fs::write(output_path, &code) {
                 Ok(_) => Json(serde_json::json!({
-                    "success": true, 
+                    "success": true,
                     "code": code,
                     "path": output_path
                 })),
                 Err(e) => Json(serde_json::json!({
-                    "success": false, 
+                    "success": false,
                     "error": format!("Failed to write file: {}", e)
                 })),
             }

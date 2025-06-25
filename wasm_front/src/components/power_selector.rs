@@ -1,5 +1,5 @@
-use leptos::prelude::*;
 use crate::types::PowerFilter;
+use leptos::prelude::*;
 
 #[component]
 pub fn PowerSelector(
@@ -7,12 +7,12 @@ pub fn PowerSelector(
     set_power_filter: WriteSignal<PowerFilter>,
 ) -> impl IntoView {
     let thresholds = PowerFilter::threshold_options();
-    
+
     // Clear button click handler
     let on_clear = move |_| {
         set_power_filter.update(|f| f.clear_all());
     };
-    
+
     view! {
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
             <div class="flex items-center justify-between mb-2">
@@ -25,7 +25,7 @@ pub fn PowerSelector(
                     "クリア"
                 </button>
             </div>
-            
+
             <div class="flex flex-wrap gap-1.5">
                 <button
                     on:click=move |_| {
@@ -42,12 +42,12 @@ pub fn PowerSelector(
                 >
                     "すべて"
                 </button>
-                
+
                 {thresholds.into_iter().map(|threshold| {
                     let is_selected = move || {
                         power_filter.get().min_power == Some(threshold)
                     };
-                    
+
                     view! {
                         <button
                             on:click=move |_| {

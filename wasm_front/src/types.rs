@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 pub use datapack::CardType;
+use serde::{Deserialize, Serialize};
 
 // Re-export CardExport from datapack as Card
 // pub use datapack::CardExport as Card;
@@ -15,11 +15,11 @@ impl ProductFilter {
             selected_products: Vec::new(),
         }
     }
-    
+
     pub fn has_any(&self) -> bool {
         !self.selected_products.is_empty()
     }
-    
+
     pub fn toggle_product(&mut self, product_id: u8) {
         if let Some(pos) = self.selected_products.iter().position(|&p| p == product_id) {
             self.selected_products.remove(pos);
@@ -27,11 +27,11 @@ impl ProductFilter {
             self.selected_products.push(product_id);
         }
     }
-    
+
     pub fn is_selected(&self, product_id: u8) -> bool {
         self.selected_products.contains(&product_id)
     }
-    
+
     pub fn clear_all(&mut self) {
         self.selected_products.clear();
     }
@@ -132,16 +132,16 @@ impl CardTypeFilter {
     /// 拡張カードタイプが選択されているかチェック（動的に判定）
     pub fn has_extended_selection(&self) -> bool {
         // 動的に拡張カードタイプを確認
-        self.is_selected_by_code("key") ||
-        self.is_selected_by_code("resona") ||
-        self.is_selected_by_code("signi_craft") ||
-        self.is_selected_by_code("arts_craft") ||
-        self.is_selected_by_code("resona_craft") ||
-        self.is_selected_by_code("spell_craft") ||
-        self.is_selected_by_code("piece_relay") ||
-        self.is_selected_by_code("piece_craft") ||
-        self.is_selected_by_code("token") ||
-        self.is_selected_by_code("coin")
+        self.is_selected_by_code("key")
+            || self.is_selected_by_code("resona")
+            || self.is_selected_by_code("signi_craft")
+            || self.is_selected_by_code("arts_craft")
+            || self.is_selected_by_code("resona_craft")
+            || self.is_selected_by_code("spell_craft")
+            || self.is_selected_by_code("piece_relay")
+            || self.is_selected_by_code("piece_craft")
+            || self.is_selected_by_code("token")
+            || self.is_selected_by_code("coin")
     }
 
     /// 特定のコードのカードタイプが選択されているかチェック
@@ -170,8 +170,10 @@ impl CardTypeFilter {
     /// 選択されたカードタイプの中に拡張タイプがあるかチェック（生成されたデータを使用）
     pub fn has_extended_selection_dynamic(&self) -> bool {
         use datapack::gen::card_types::EXTENDED_CARD_TYPES;
-        
-        EXTENDED_CARD_TYPES.iter().any(|&code| self.is_selected_by_code(code))
+
+        EXTENDED_CARD_TYPES
+            .iter()
+            .any(|&code| self.is_selected_by_code(code))
     }
 
     /// 特定のコードのカードタイプの選択状態を設定
@@ -198,31 +200,76 @@ impl CardTypeFilter {
     }
 
     pub fn has_any(&self) -> bool {
-        self.lrig || self.lrig_assist || self.arts || self.key || self.signi || self.spell 
-            || self.resona || self.signi_craft || self.arts_craft || self.resona_craft 
-            || self.spell_craft || self.piece || self.piece_relay || self.piece_craft || self.token || self.coin
+        self.lrig
+            || self.lrig_assist
+            || self.arts
+            || self.key
+            || self.signi
+            || self.spell
+            || self.resona
+            || self.signi_craft
+            || self.arts_craft
+            || self.resona_craft
+            || self.spell_craft
+            || self.piece
+            || self.piece_relay
+            || self.piece_craft
+            || self.token
+            || self.coin
     }
 
     pub fn get_selected_card_types(&self) -> Vec<CardType> {
         let mut selected = Vec::new();
-        
-        if self.lrig { selected.push(CardType::Lrig); }
-        if self.lrig_assist { selected.push(CardType::LrigAssist); }
-        if self.arts { selected.push(CardType::Arts); }
-        if self.key { selected.push(CardType::Key); }
-        if self.signi { selected.push(CardType::Signi); }
-        if self.spell { selected.push(CardType::Spell); }
-        if self.resona { selected.push(CardType::Resona); }
-        if self.signi_craft { selected.push(CardType::SigniCraft); }
-        if self.arts_craft { selected.push(CardType::ArtsCraft); }
-        if self.resona_craft { selected.push(CardType::ResonaCraft); }
-        if self.spell_craft { selected.push(CardType::SpellCraft); }
-        if self.piece { selected.push(CardType::Piece); }
-        if self.piece_relay { selected.push(CardType::PieceRelay); }
-        if self.piece_craft { selected.push(CardType::PieceCraft); }
-        if self.token { selected.push(CardType::Token); }
-        if self.coin { selected.push(CardType::Coin); }
-        
+
+        if self.lrig {
+            selected.push(CardType::Lrig);
+        }
+        if self.lrig_assist {
+            selected.push(CardType::LrigAssist);
+        }
+        if self.arts {
+            selected.push(CardType::Arts);
+        }
+        if self.key {
+            selected.push(CardType::Key);
+        }
+        if self.signi {
+            selected.push(CardType::Signi);
+        }
+        if self.spell {
+            selected.push(CardType::Spell);
+        }
+        if self.resona {
+            selected.push(CardType::Resona);
+        }
+        if self.signi_craft {
+            selected.push(CardType::SigniCraft);
+        }
+        if self.arts_craft {
+            selected.push(CardType::ArtsCraft);
+        }
+        if self.resona_craft {
+            selected.push(CardType::ResonaCraft);
+        }
+        if self.spell_craft {
+            selected.push(CardType::SpellCraft);
+        }
+        if self.piece {
+            selected.push(CardType::Piece);
+        }
+        if self.piece_relay {
+            selected.push(CardType::PieceRelay);
+        }
+        if self.piece_craft {
+            selected.push(CardType::PieceCraft);
+        }
+        if self.token {
+            selected.push(CardType::Token);
+        }
+        if self.coin {
+            selected.push(CardType::Coin);
+        }
+
         selected
     }
 }
@@ -238,11 +285,11 @@ impl LevelFilter {
             selected_levels: Vec::new(),
         }
     }
-    
+
     pub fn has_any(&self) -> bool {
         !self.selected_levels.is_empty()
     }
-    
+
     pub fn toggle_level(&mut self, level: String) {
         if let Some(pos) = self.selected_levels.iter().position(|l| l == &level) {
             self.selected_levels.remove(pos);
@@ -250,11 +297,11 @@ impl LevelFilter {
             self.selected_levels.push(level);
         }
     }
-    
+
     pub fn is_selected(&self, level: &str) -> bool {
         self.selected_levels.iter().any(|l| l == level)
     }
-    
+
     pub fn clear_all(&mut self) {
         self.selected_levels.clear();
     }
@@ -298,27 +345,27 @@ pub struct PowerFilter {
 
 impl PowerFilter {
     pub fn new() -> Self {
-        Self {
-            min_power: None,
-        }
+        Self { min_power: None }
     }
-    
+
     pub fn has_any(&self) -> bool {
         self.min_power.is_some()
     }
-    
+
     pub fn set_threshold(&mut self, threshold: Option<i32>) {
         self.min_power = threshold;
     }
-    
+
     pub fn clear_all(&mut self) {
         self.min_power = None;
     }
-    
+
     pub fn threshold_options() -> Vec<i32> {
-        vec![2000, 3000, 4000, 5000, 7000, 8000, 10000, 12000, 13000, 15000]
+        vec![
+            2000, 3000, 4000, 5000, 7000, 8000, 10000, 12000, 13000, 15000,
+        ]
     }
-    
+
     pub fn label_for_threshold(threshold: i32) -> String {
         format!("{}+", threshold)
     }
@@ -331,27 +378,25 @@ pub struct KlassFilter {
 
 impl KlassFilter {
     pub fn new() -> Self {
-        Self {
-            selected_bits: 0,
-        }
+        Self { selected_bits: 0 }
     }
-    
+
     pub fn has_any(&self) -> bool {
         self.selected_bits != 0
     }
-    
+
     pub fn toggle_klass(&mut self, klass_id: i64) {
         use datapack::gen::klasses::get_klass_bit_position;
-        
+
         if let Some(bit_position) = get_klass_bit_position(klass_id) {
             let bit_mask = 1u64 << bit_position;
             self.selected_bits ^= bit_mask;
         }
     }
-    
+
     pub fn is_klass_selected(&self, klass_id: i64) -> bool {
         use datapack::gen::klasses::get_klass_bit_position;
-        
+
         if let Some(bit_position) = get_klass_bit_position(klass_id) {
             let bit_mask = 1u64 << bit_position;
             (self.selected_bits & bit_mask) != 0
@@ -359,7 +404,7 @@ impl KlassFilter {
             false
         }
     }
-    
+
     pub fn clear_all(&mut self) {
         self.selected_bits = 0;
     }
@@ -374,19 +419,19 @@ impl LBFilter {
     pub fn new() -> Self {
         Self { selection: 0 }
     }
-    
+
     pub fn has_any(&self) -> bool {
         self.selection != 0
     }
-    
+
     pub fn set_selection(&mut self, value: u8) {
         self.selection = value;
     }
-    
+
     pub fn clear(&mut self) {
         self.selection = 0;
     }
-    
+
     pub fn get_label(&self) -> &'static str {
         match self.selection {
             1 => "LBあり",
@@ -400,9 +445,9 @@ impl LBFilter {
 #[derive(Debug, Clone, PartialEq)]
 pub struct KlassInfo {
     pub id: i64,
-    pub cat1: String,    // システム（奏像、奏武など）
-    pub cat2: String,    // タイプ（天使、ウェポンなど）
-    pub cat3: String,    // サブタイプ（ほとんど空）
+    pub cat1: String, // システム（奏像、奏武など）
+    pub cat2: String, // タイプ（天使、ウェポンなど）
+    pub cat3: String, // サブタイプ（ほとんど空）
     pub bit_position: u32,
 }
 
@@ -425,19 +470,19 @@ impl KlassInfo {
 pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
     use datapack::gen::klasses::KLASS_LIST;
     use std::collections::HashMap;
-    
+
     let mut result = Vec::new();
-    
+
     // cat1のみのエントリ（解放派、闘争派、防衛派、奏元）を個別に処理
     let mut standalone_klasses = Vec::new();
     let mut cat1_systems: HashMap<String, Vec<KlassInfo>> = HashMap::new();
-    
+
     for &(id, cat1, cat2, cat3, bit_position) in KLASS_LIST.iter() {
         // 精系クラス（精像、精武、精羅、精械、精生、精元）をUI上で非表示にする
         if cat1.starts_with("精") {
             continue;
         }
-        
+
         let klass_info = KlassInfo {
             id,
             cat1: cat1.to_string(),
@@ -445,7 +490,7 @@ pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
             cat3: cat3.to_string(),
             bit_position,
         };
-        
+
         if cat2.is_empty() {
             // cat1のみ（解放派、闘争派、防衛派、奏元）
             standalone_klasses.push(klass_info);
@@ -453,11 +498,11 @@ pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
             // cat1+cat2のシステム（奏像、奏武など）
             cat1_systems
                 .entry(cat1.to_string())
-                .or_insert_with(Vec::new)
+                .or_default()
                 .push(klass_info);
         }
     }
-    
+
     // cat1+cat2システムを追加（奏系のみ）
     let mut sorted_systems: Vec<(String, Vec<KlassInfo>)> = cat1_systems.into_iter().collect();
     sorted_systems.sort_by(|a, b| {
@@ -465,14 +510,14 @@ pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
         let order_b = get_system_order(&b.0);
         order_a.cmp(&order_b)
     });
-    
+
     // 各システム内のタイプも並び替え
     for (_, types) in &mut sorted_systems {
         types.sort_by(|a, b| a.cat2.cmp(&b.cat2));
     }
-    
+
     result.extend(sorted_systems);
-    
+
     // standalone klassesを最後に追加（独立したカテゴリとして）
     if !standalone_klasses.is_empty() {
         standalone_klasses.sort_by(|a, b| {
@@ -482,7 +527,7 @@ pub fn build_klass_matrix() -> Vec<(String, Vec<KlassInfo>)> {
         });
         result.push(("その他".to_string(), standalone_klasses));
     }
-    
+
     result
 }
 

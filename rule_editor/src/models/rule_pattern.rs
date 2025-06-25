@@ -17,26 +17,35 @@ pub struct RulePattern {
 
 impl RulePattern {
     pub fn features_as_vec(&self) -> Vec<String> {
-        self.features.as_array()
-            .map(|arr| arr.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect())
+        self.features
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default()
     }
-    
+
     pub fn positive_examples_as_vec(&self) -> Vec<String> {
-        self.positive_examples.as_array()
-            .map(|arr| arr.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect())
+        self.positive_examples
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default()
     }
-    
+
     pub fn negative_examples_as_vec(&self) -> Vec<String> {
-        self.negative_examples.as_array()
-            .map(|arr| arr.iter()
-                .filter_map(|v| v.as_str().map(String::from))
-                .collect())
+        self.negative_examples
+            .as_array()
+            .map(|arr| {
+                arr.iter()
+                    .filter_map(|v| v.as_str().map(String::from))
+                    .collect()
+            })
             .unwrap_or_default()
     }
 }

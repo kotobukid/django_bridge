@@ -1,7 +1,7 @@
-use crate::types::CardTypeFilter;
 use crate::components::SvgToggleSwitch;
+use crate::types::CardTypeFilter;
+use datapack::gen::card_types::{CARD_TYPES, EXTENDED_CARD_TYPES, PRIMARY_CARD_TYPES};
 use leptos::prelude::*;
-use datapack::gen::card_types::{CARD_TYPES, PRIMARY_CARD_TYPES, EXTENDED_CARD_TYPES};
 
 // カードタイプトグルスイッチを生成する関数
 fn create_card_type_toggle(
@@ -33,7 +33,7 @@ pub fn CardTypeSelector(
 ) -> impl IntoView {
     // 展開状態の管理
     let (is_expanded, set_is_expanded) = signal(false);
-    
+
     // 拡張項目が選択されている場合は展開状態を維持
     let should_show_extended = Signal::derive(move || {
         is_expanded.get() || card_type_filter.get().has_extended_selection()
@@ -43,7 +43,7 @@ pub fn CardTypeSelector(
         <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
             <div class="flex items-center mb-3">
                 <h3 class="text-lg font-semibold text-gray-800">"カード種別"</h3>
-                
+
                 // 展開/折りたたみボタン
                 <div class="flex items-center ml-4">
                     <button
@@ -75,7 +75,7 @@ pub fn CardTypeSelector(
                             }
                         }}</span>
                     </button>
-                    
+
                     // 拡張項目が選択されている場合の説明メッセージ
                     {move || {
                         if card_type_filter.get().has_extended_selection() {
@@ -90,7 +90,7 @@ pub fn CardTypeSelector(
                     }}
                 </div>
             </div>
-            
+
             // デフォルト表示のカード種別（動的生成）
             <div class="grid grid-cols-3 gap-3">
                 {
@@ -111,7 +111,7 @@ pub fn CardTypeSelector(
                     view! {
                         <div class="mt-3 grid grid-cols-3 gap-3">
                             <hr class="col-span-3 border-gray-300 my-2" />
-                            
+
                             {
                                 EXTENDED_CARD_TYPES.iter().map(|&code| {
                                     let card_type_info = CARD_TYPES.iter().find(|ct| ct.code == code);

@@ -25,19 +25,35 @@ pub struct SearchFields {
 
 impl SearchFields {
     pub fn all() -> Self {
-        Self { name: true, code: true, pronunciation: true }
+        Self {
+            name: true,
+            code: true,
+            pronunciation: true,
+        }
     }
-    
+
     pub fn name_only() -> Self {
-        Self { name: true, code: false, pronunciation: false }
+        Self {
+            name: true,
+            code: false,
+            pronunciation: false,
+        }
     }
-    
+
     pub fn code_and_name() -> Self {
-        Self { name: true, code: true, pronunciation: false }
+        Self {
+            name: true,
+            code: true,
+            pronunciation: false,
+        }
     }
-    
+
     pub fn pronunciation_and_name() -> Self {
-        Self { name: true, code: false, pronunciation: true }
+        Self {
+            name: true,
+            code: false,
+            pronunciation: true,
+        }
     }
 }
 
@@ -49,7 +65,7 @@ impl SearchFields {
 pub fn normalize_text(input: &str) -> String {
     let mut result = String::new();
     let mut prev_was_space = false;
-    
+
     for ch in input.chars() {
         match ch {
             // 全角英数字を半角に変換
@@ -66,7 +82,7 @@ pub fn normalize_text(input: &str) -> String {
                 prev_was_space = false;
             }
             // ひらがなをカタカナに変換（包括的処理）
-            ch if ch >= 'あ' && ch <= 'ゖ' => {
+            ch if ('あ'..='ゖ').contains(&ch) => {
                 let katakana_code = ch as u32 - 'あ' as u32 + 'ア' as u32;
                 if let Some(katakana_char) = char::from_u32(katakana_code) {
                     result.push(katakana_char);
@@ -89,7 +105,7 @@ pub fn normalize_text(input: &str) -> String {
             }
         }
     }
-    
+
     // 最後がスペースの場合は削除
     result.trim_end().to_string()
 }
@@ -109,23 +125,23 @@ pub fn detect_input_type(input: &str) -> InputType {
     if input.trim().is_empty() {
         return InputType::Empty;
     }
-    
+
     let mut has_alphanumeric = false;
     let mut has_katakana = false;
     let mut has_hiragana = false;
     let mut has_other = false;
-    
+
     for ch in input.chars() {
         match ch {
             'A'..='Z' | 'a'..='z' | '0'..='9' | '-' | '_' => has_alphanumeric = true,
             'Ａ'..='Ｚ' | 'ａ'..='ｚ' | '０'..='９' => has_alphanumeric = true,
             'ア'..='ン' | 'ァ'..='ヶ' => has_katakana = true,
             'あ'..='ん' | 'ぁ'..='ゖ' => has_hiragana = true,
-            ' ' | '　' => {}, // スペースは無視
+            ' ' | '　' => {} // スペースは無視
             _ => has_other = true,
         }
     }
-    
+
     if has_hiragana {
         InputType::Hiragana
     } else if has_other || (has_alphanumeric && has_katakana) {
@@ -156,9 +172,9 @@ pub fn field_matches_keywords(field_value: &str, keywords: &[String]) -> bool {
     if keywords.is_empty() {
         return true;
     }
-    
+
     let normalized_field = normalize_text(field_value).to_lowercase();
-    
+
     keywords.iter().all(|keyword| {
         let normalized_keyword = keyword.to_lowercase();
         normalized_field.contains(&normalized_keyword)
@@ -175,47 +191,44 @@ pub fn card_matches_text_search(
     if keywords.is_empty() {
         return true;
     }
-    
+
     let mut matches = false;
-    
+
     if search_fields.name {
         matches |= field_matches_keywords(&card.name(), keywords);
     }
-    
+
     if search_fields.code {
         matches |= field_matches_keywords(&card.code(), keywords);
     }
-    
+
     if search_fields.pronunciation {
         matches |= field_matches_keywords(&card.pronunciation(), keywords);
     }
-    
+
     matches
 }
 
 /// テキスト検索を実行する包括的な関数
 /// 入力の正規化、特性判定、検索フィールド決定、マッチング処理を一括実行
-pub fn search_cards_by_text_optimized(
-    cards: &[CardExport],
-    search_text: &str,
-) -> Vec<CardExport> {
+pub fn search_cards_by_text_optimized(cards: &[CardExport], search_text: &str) -> Vec<CardExport> {
     // 入力が空の場合は全カードを返す
     if search_text.trim().is_empty() {
         return cards.to_vec();
     }
-    
+
     // 1. 入力を正規化
     let normalized_input = normalize_text(search_text);
-    
+
     // 2. キーワードに分割
     let keywords = split_keywords(&normalized_input);
-    
+
     // 3. 入力特性を判定
     let input_type = detect_input_type(&normalized_input);
-    
+
     // 4. 検索対象フィールドを決定
     let search_fields = determine_search_fields(&input_type);
-    
+
     // 5. フィルタリング実行
     cards
         .iter()
@@ -232,16 +245,16 @@ mod tests {
     fn test_normalize_text() {
         // 全角英数字を半角に変換
         assert_eq!(normalize_text("ＡＢＣ１２３"), "ABC123");
-        
+
         // ひらがなをカタカナに変換
         assert_eq!(normalize_text("あいうえお"), "アイウエオ");
         assert_eq!(normalize_text("がぎぐげご"), "ガギグゲゴ");
         assert_eq!(normalize_text("ばびぶべぼ"), "バビブベボ");
-        
+
         // スペース正規化
         assert_eq!(normalize_text("hello　　world"), "hello world");
         assert_eq!(normalize_text("  trim  test  "), "trim test");
-        
+
         // 混在パターン
         assert_eq!(normalize_text("Ａｂｃ　あいう　１２３"), "Abc アイウ 123");
     }
@@ -269,10 +282,10 @@ mod tests {
     fn test_determine_search_fields() {
         let alpha_fields = determine_search_fields(&InputType::AlphaNumeric);
         assert!(alpha_fields.code && alpha_fields.name && !alpha_fields.pronunciation);
-        
+
         let katakana_fields = determine_search_fields(&InputType::Katakana);
         assert!(!katakana_fields.code && katakana_fields.name && katakana_fields.pronunciation);
-        
+
         let mixed_fields = determine_search_fields(&InputType::Mixed);
         assert!(mixed_fields.code && mixed_fields.name && mixed_fields.pronunciation);
     }
@@ -280,12 +293,12 @@ mod tests {
     #[test]
     fn test_field_matches_keywords() {
         let keywords = vec!["test".to_string(), "card".to_string()];
-        
+
         assert!(field_matches_keywords("This is a test card", &keywords));
         assert!(field_matches_keywords("CARD TEST NAME", &keywords));
         assert!(!field_matches_keywords("This is a test", &keywords)); // "card"が含まれない
         assert!(field_matches_keywords("Test Card", &keywords));
-        
+
         // 空のキーワード
         assert!(field_matches_keywords("any text", &[]));
     }
@@ -293,56 +306,118 @@ mod tests {
     #[test]
     fn test_card_matches_text_search() {
         let card = CardExport::from(&(
-            1,                    // id
-            "Test Card Name",     // name
-            "WX24-001",          // code
-            "テストカード",        // pronunciation
-            0,                   // color
-            "1",                 // cost
-            "1",                 // level
-            "3",                 // limit
-            "",                  // limit_ex
-            "1000",              // power
-            0,                   // has_burst
-            "Test skill",        // skill_text
-            "",                  // burst_text
-            1,                   // format
-            "",                  // story
-            "C",                 // rarity
-            5,                   // card_type (Signi)
-            1,                   // product
-            0,                   // timing
-            0,                   // feature_bits1
-            0,                   // feature_bits2
-            0,                   // klass_bits
-            0,                   // burst_bits
-            "",                  // ex1
+            1,                // id
+            "Test Card Name", // name
+            "WX24-001",       // code
+            "テストカード",   // pronunciation
+            0,                // color
+            "1",              // cost
+            "1",              // level
+            "3",              // limit
+            "",               // limit_ex
+            "1000",           // power
+            0,                // has_burst
+            "Test skill",     // skill_text
+            "",               // burst_text
+            1,                // format
+            "",               // story
+            "C",              // rarity
+            5,                // card_type (Signi)
+            1,                // product
+            0,                // timing
+            0,                // feature_bits1
+            0,                // feature_bits2
+            0,                // klass_bits
+            0,                // burst_bits
+            "",               // ex1
         ));
 
         let keywords = vec!["Test".to_string()];
-        
+
         // name検索
-        let name_fields = SearchFields { name: true, code: false, pronunciation: false };
+        let name_fields = SearchFields {
+            name: true,
+            code: false,
+            pronunciation: false,
+        };
         assert!(card_matches_text_search(&card, &keywords, &name_fields));
-        
+
         // code検索
-        let code_fields = SearchFields { name: false, code: true, pronunciation: false };
+        let code_fields = SearchFields {
+            name: false,
+            code: true,
+            pronunciation: false,
+        };
         assert!(!card_matches_text_search(&card, &keywords, &code_fields)); // codeに"Test"は含まれない
-        
+
         // pronunciation検索
         let keywords_jp = vec!["テスト".to_string()];
-        let pronunciation_fields = SearchFields { name: false, code: false, pronunciation: true };
-        assert!(card_matches_text_search(&card, &keywords_jp, &pronunciation_fields));
+        let pronunciation_fields = SearchFields {
+            name: false,
+            code: false,
+            pronunciation: true,
+        };
+        assert!(card_matches_text_search(
+            &card,
+            &keywords_jp,
+            &pronunciation_fields
+        ));
     }
 
     #[test]
     fn test_search_cards_by_text_optimized() {
         let cards = vec![
             CardExport::from(&(
-                1, "Fire Dragon", "WX24-001", "ファイアドラゴン", 0, "3", "2", "3", "", "2000", 0, "", "", 1, "", "R", 5, 1, 0, 0, 0, 0, 0, "",
+                1,
+                "Fire Dragon",
+                "WX24-001",
+                "ファイアドラゴン",
+                0,
+                "3",
+                "2",
+                "3",
+                "",
+                "2000",
+                0,
+                "",
+                "",
+                1,
+                "",
+                "R",
+                5,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "",
             )),
             CardExport::from(&(
-                2, "Water Spirit", "WX24-002", "ウォータースピリット", 0, "2", "1", "2", "", "1500", 0, "", "", 1, "", "C", 5, 1, 0, 0, 0, 0, 0, "",
+                2,
+                "Water Spirit",
+                "WX24-002",
+                "ウォータースピリット",
+                0,
+                "2",
+                "1",
+                "2",
+                "",
+                "1500",
+                0,
+                "",
+                "",
+                1,
+                "",
+                "C",
+                5,
+                1,
+                0,
+                0,
+                0,
+                0,
+                0,
+                "",
             )),
         ];
 

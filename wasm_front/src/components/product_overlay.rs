@@ -1,6 +1,6 @@
+use crate::components::SvgToggleSwitch;
 use crate::types::ProductFilter;
 use leptos::prelude::*;
-use crate::components::SvgToggleSwitch;
 
 // 商品IDと名前のマッピング（静的データから生成）
 fn get_product_list() -> Vec<(u8, &'static str, &'static str)> {
@@ -46,13 +46,14 @@ pub fn ProductOverlay(product_filter: RwSignal<ProductFilter>) -> impl IntoView 
                 code: code.to_string(),
                 name: name.to_string(),
             };
-            
+
             if code.starts_with("WDA-F")    // キーセレクションの500円構築済みデッキ
                 || code.starts_with("WDK-") // キーセレクションの構築済みデッキ
                 || code.starts_with("WXD-") // オールスターの構築済みデッキ
                 || code.starts_with("WXK-") // キーセレクションのブースター
                 || code.starts_with("WXEX-") // オールスターの特別なブースター
-                || code.starts_with("WX-") // オールスターの通常ブースター
+                || code.starts_with("WX-")
+            // オールスターの通常ブースター
             {
                 // do nothing
             } else if code.contains("-P") || code.contains("-CP") {
@@ -122,7 +123,7 @@ pub fn ProductOverlay(product_filter: RwSignal<ProductFilter>) -> impl IntoView 
 
                 view! {
                     <div class="border rounded-lg">
-                        <button 
+                        <button
                             class={move || {
                                 let base = "w-full px-4 py-3 text-left font-medium rounded-lg transition-colors";
                                 let state_class = if has_selected_products.get() {

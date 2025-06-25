@@ -167,20 +167,17 @@ fn test_python_with_django(python_path: &str) -> bool {
         .args(["-c", "import django; print('Django available')"])
         .output();
 
-    match test_cmd {
-        Ok(output) => {
-            if output.status.success() {
-                // さらに、manage.pyが動作するかテスト
-                let manage_test = Command::new(python_path)
-                    .args(["../table_definition/manage.py", "--help"])
-                    .output();
+    if let Ok(output) = test_cmd {
+        if output.status.success() {
+            // さらに、manage.pyが動作するかテスト
+            let manage_test = Command::new(python_path)
+                .args(["../table_definition/manage.py", "--help"])
+                .output();
 
-                if let Ok(manage_output) = manage_test {
-                    return manage_output.status.success();
-                }
+            if let Ok(manage_output) = manage_test {
+                return manage_output.status.success();
             }
         }
-        Err(_) => {}
     }
 
     false

@@ -1,5 +1,5 @@
-use leptos::*;
 use leptos::prelude::*;
+use leptos::*;
 
 #[component]
 pub fn OverlayButton(
@@ -8,7 +8,7 @@ pub fn OverlayButton(
     #[prop(into)] on_click: Callback<()>,
 ) -> impl IntoView {
     view! {
-        <button 
+        <button
             class={move || {
                 let base = "px-4 py-2 rounded-lg border transition-colors duration-200";
                 if is_active.get() {

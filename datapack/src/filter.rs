@@ -27,7 +27,7 @@ pub fn filter_by_combined_bits(bit1: i64, bit2: i64, mode: &str) -> Vec<CardExpo
                 _ => true,
             }
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect()
 }
 
@@ -73,7 +73,7 @@ pub fn filter_by_features_and(features: &[i32]) -> Vec<CardExport> {
 
             true
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect()
 }
 
@@ -96,7 +96,7 @@ pub fn filter_by_f_bits(bit1: i64, bits2: i64) -> Vec<CardExport> {
                 (feature_bits1 & bit1) == bit1 && (feature_bits2 & bits2) == bits2
             }
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect()
 }
 
@@ -122,7 +122,7 @@ pub fn filter_by_f_shifts(shift1: isize, shift2: isize) -> Vec<CardExport> {
                 (feature_bits1 & bits1) == bits1 && (feature_bits2 & bits2) == bits2
             }
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect()
 }
 
@@ -145,7 +145,7 @@ pub fn filter_by_burst_bits(burst_bits: i64, mode: &str) -> Vec<CardExport> {
                 _ => true,
             }
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect()
 }
 
@@ -156,14 +156,14 @@ pub fn filter_by_has_burst(has_burst_value: u8) -> Vec<CardExport> {
         .iter()
         .filter(|c| {
             let has_burst = c.10; // has_burstフィールドのインデックス（10番目）
-            
+
             match has_burst_value {
-                0 => true, // 指定なし = 全て表示
+                0 => true,           // 指定なし = 全て表示
                 1 => has_burst == 1, // LBあり
                 2 => has_burst == 2, // LBなし
                 _ => true,
             }
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect()
 }

@@ -1,12 +1,12 @@
 use analyzer::card_analyzer::SimpleRawCardAnalyzer;
 use analyzer::raw_card_analyzer::RawCardAnalyzer;
-use models::r#gen::django_models::RawCardDb;
 use chrono::Utc;
+use models::r#gen::django_models::RawCardDb;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Testing card type detection in SimpleRawCardAnalyzer");
-    
+
     // テスト用のHTMLサンプル（実際のHTMLから抜粋）
     let test_cases = vec![
         ("Test Lrig", "<td>種別</td><td>ルリグ</td>"),
@@ -16,9 +16,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ("Test LrigAssist", "<td>種別</td><td>アシストルリグ</td>"),
         ("Test Unknown", "<td>種別</td><td>その他</td>"),
     ];
-    
+
     let analyzer = SimpleRawCardAnalyzer::new();
-    
+
     for (name, html) in test_cases {
         // モックのRawCardDbを作成
         let raw_card = RawCardDb {
@@ -34,21 +34,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             is_analyzed: false,
             analysis_error: "".to_string(),
         };
-        
+
         // 解析実行
         match analyzer.analyze(&raw_card).await {
             Ok(create_card) => {
                 let type_name = match create_card.card_type {
                     0 => "Unknown",
                     1 => "Lrig",
-                    2 => "LrigAssist", 
+                    2 => "LrigAssist",
                     3 => "Arts",
                     4 => "Key",
                     5 => "Signi",
                     6 => "Spell",
                     _ => "Other",
                 };
-                println!("{}: card_type = {} ({})", name, create_card.card_type, type_name);
+                println!(
+                    "{}: card_type = {} ({})",
+                    name, create_card.card_type, type_name
+                );
                 println!("  HTML: {}", html);
                 println!();
             }
@@ -57,6 +60,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    
+
     Ok(())
 }

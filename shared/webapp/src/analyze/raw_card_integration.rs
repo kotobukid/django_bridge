@@ -6,6 +6,12 @@ use models::gen::django_models::RawCardDb;
 /// WebApp integrated RawCardAnalyzer that uses the full HTML parsing capabilities
 pub struct WebAppRawCardAnalyzer;
 
+impl Default for WebAppRawCardAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl WebAppRawCardAnalyzer {
     pub fn new() -> Self {
         Self
@@ -63,17 +69,18 @@ pub async fn analyze_and_save_card(
             return Err(format!("Failed to parse card HTML for card {}", raw_card.id).into());
         }
     };
-    
+
     // Convert Card to CreateCard
     let mut create_card: CreateCard = card.into();
     create_card.url = Some(raw_card.source_url.clone());
-    
+
     // Ensure the code matches what was scraped
     if create_card.code != raw_card.card_number {
         return Err(format!(
             "Card number mismatch: expected {}, got {}",
             raw_card.card_number, create_card.code
-        ).into());
+        )
+        .into());
     }
 
     // Save to database using the repository
@@ -108,20 +115,23 @@ pub async fn analyze_raw_cards_batch(
             let card = match Card::card_from_html(&raw_card.raw_html) {
                 Some(card) => card,
                 None => {
-                    return Err(format!("Failed to parse card HTML for card {}", raw_card.id).into());
+                    return Err(
+                        format!("Failed to parse card HTML for card {}", raw_card.id).into(),
+                    );
                 }
             };
-            
+
             // Convert Card to CreateCard
             let mut create_card: CreateCard = card.into();
             create_card.url = Some(raw_card.source_url.clone());
-            
+
             // Ensure the code matches what was scraped
             if create_card.code != raw_card.card_number {
                 return Err(format!(
                     "Card number mismatch: expected {}, got {}",
                     raw_card.card_number, create_card.code
-                ).into());
+                )
+                .into());
             }
 
             use crate::repositories::CardRepository;

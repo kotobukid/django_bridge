@@ -1,9 +1,9 @@
+use super::StaticCodeGenerator;
 use models::gen::django_models::{CreateKlass, KlassDb, WixCardKlassRel};
 use sqlx::{Pool, Postgres, Row};
 use std::collections::HashMap;
 use std::sync::Arc;
 use thiserror::Error;
-use super::StaticCodeGenerator;
 
 /// クラスリポジトリのエラー型
 #[derive(Debug, Error)]
@@ -229,14 +229,14 @@ impl StaticCodeGenerator for KlassRepository {
 
     async fn get_all_as_code(&self) -> Vec<String> {
         let klasses = self.get_all_klasses().await.unwrap_or_default();
-        
+
         klasses
             .into_iter()
             .enumerate()
             .map(|(index, klass)| {
                 let cat2_str = klass.cat2.as_deref().unwrap_or("");
                 let cat3_str = klass.cat3.as_deref().unwrap_or("");
-                
+
                 format!(
                     r#"({}, "{}", "{}", "{}", {}),"#,
                     klass.id,

@@ -1,12 +1,14 @@
-use leptos::*;
-use leptos::prelude::*;
 use crate::types::ProductFilter;
+use leptos::prelude::*;
+use leptos::*;
 
 // 商品の種類を判定する関数
 fn get_product_category(code: &str) -> &'static str {
     if code.starts_with("WX") && (code.contains("-D") || code.starts_with("WXDi-D")) {
         "構築済みデッキ"
-    } else if code.starts_with("WX") && (code.contains("-P") || code.starts_with("WXDi-P") || code.contains("-CP")) {
+    } else if code.starts_with("WX")
+        && (code.contains("-P") || code.starts_with("WXDi-P") || code.contains("-CP"))
+    {
         "ブースターパック"
     } else {
         "その他"
@@ -15,14 +17,22 @@ fn get_product_category(code: &str) -> &'static str {
 
 // 商品IDと名前のマッピング（カテゴリ別に分類）
 fn get_categorized_product_list() -> Vec<(&'static str, Vec<(u8, &'static str, &'static str)>)> {
-    leptos::logging::log!("Total products in PRODUCT_LIST: {}", datapack::gen::products::PRODUCT_LIST.len());
-    leptos::logging::log!("Total cards in CARD_LIST: {}", datapack::gen::cards::CARD_LIST.len());
-    
+    leptos::logging::log!(
+        "Total products in PRODUCT_LIST: {}",
+        datapack::gen::products::PRODUCT_LIST.len()
+    );
+    leptos::logging::log!(
+        "Total cards in CARD_LIST: {}",
+        datapack::gen::cards::CARD_LIST.len()
+    );
+
     let all_products: Vec<(u8, &'static str, &'static str)> = datapack::gen::products::PRODUCT_LIST
         .iter()
         .filter(|(id, _, _)| {
             // カードデータに実際に存在する商品のみ表示（正しい位置17を使用）
-            let has_cards = datapack::gen::cards::CARD_LIST.iter().any(|card| card.17 == *id);
+            let has_cards = datapack::gen::cards::CARD_LIST
+                .iter()
+                .any(|card| card.17 == *id);
             if has_cards {
                 leptos::logging::log!("Product {} has cards", id);
             }
@@ -30,7 +40,7 @@ fn get_categorized_product_list() -> Vec<(&'static str, Vec<(u8, &'static str, &
         })
         .copied()
         .collect();
-    
+
     leptos::logging::log!("Filtered products count: {}", all_products.len());
 
     let mut booster_packs = Vec::new();
@@ -77,7 +87,11 @@ fn ProductCategorySection(
     products: Vec<(u8, &'static str, &'static str)>,
     product_filter: RwSignal<ProductFilter>,
 ) -> impl IntoView {
-    leptos::logging::log!("ProductCategorySection rendering: {} with {} products", category_name, products.len());
+    leptos::logging::log!(
+        "ProductCategorySection rendering: {} with {} products",
+        category_name,
+        products.len()
+    );
     if products.is_empty() {
         leptos::logging::log!("EMPTY PRODUCTS for category: {}", category_name);
     } else {
@@ -85,7 +99,7 @@ fn ProductCategorySection(
             leptos::logging::log!("  Product: {} {} {}", id, code, name);
         }
     }
-    
+
     view! {
         <div class="category-section">
             <h4 class="text-xs font-medium text-gray-700 mb-1">{category_name}</h4>
@@ -120,13 +134,11 @@ fn ProductCategorySection(
 }
 
 #[component]
-pub fn ProductSelector(
-    product_filter: RwSignal<ProductFilter>,
-) -> impl IntoView {
+pub fn ProductSelector(product_filter: RwSignal<ProductFilter>) -> impl IntoView {
     leptos::logging::log!("ProductSelector component rendering...");
     let categorized_products = get_categorized_product_list();
     leptos::logging::log!("Got {} categories", categorized_products.len());
-    
+
     view! {
         <div class="product-selector">
             <h3 class="text-sm font-semibold mb-2">"商品"</h3>
@@ -134,7 +146,7 @@ pub fn ProductSelector(
                 {categorized_products.into_iter().map(|(category_name, products)| {
                     leptos::logging::log!("Rendering category: {} with {} products", category_name, products.len());
                     view! {
-                        <ProductCategorySection 
+                        <ProductCategorySection
                             category_name=category_name
                             products=products
                             product_filter=product_filter

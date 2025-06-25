@@ -1,10 +1,9 @@
 use crate::components::svg_definition::{
     ColorIconsWithNum, IconBlack, IconBlue, IconColorless, IconGreen, IconRed, IconWhite,
 };
-use crate::components::{SkillTextRenderer, BurstTextRenderer};
+use crate::components::{BurstTextRenderer, SkillTextRenderer};
 use datapack::CardExport;
 use leptos::prelude::*;
-
 
 fn get_colors_from_bits(bits: i32) -> Vec<i32> {
     let mut colors = Vec::new();
@@ -30,16 +29,14 @@ fn get_colors_from_bits(bits: i32) -> Vec<i32> {
 }
 
 #[component]
-pub fn Icons(
-    #[prop(into)] colors: Vec<i32>
-) -> impl IntoView {
+pub fn Icons(#[prop(into)] colors: Vec<i32>) -> impl IntoView {
     // Calculate width based on number of icons with 14px spacing (18px overlap from 32px)
     let width = if colors.is_empty() {
         0
     } else {
         32 + (colors.len() - 1) * 14
     };
-    
+
     view! {
         <div class="color-icons" style=format!("width: {}px; flex-shrink: 0;", width)>
             {colors.into_iter().map(|color| {
@@ -70,7 +67,7 @@ impl ViewMode {
             _ => ViewMode::Compact, // Default to Compact for unknown values
         }
     }
-    
+
     pub fn to_string(&self) -> &'static str {
         match self {
             ViewMode::Compact => "compact",
@@ -83,13 +80,13 @@ impl ViewMode {
 impl ViewMode {
     pub fn save_to_storage(&self) {
         use wasm_bindgen::prelude::*;
-        
+
         #[wasm_bindgen]
         extern "C" {
             #[wasm_bindgen(js_name = "eval")]
             fn js_eval(code: &str) -> JsValue;
         }
-        
+
         let js_code = format!(
             r#"
             (function() {{
@@ -102,19 +99,19 @@ impl ViewMode {
             "#,
             self.to_string()
         );
-        
+
         js_eval(&js_code);
     }
 
     pub fn load_from_storage() -> Self {
         use wasm_bindgen::prelude::*;
-        
+
         #[wasm_bindgen]
         extern "C" {
             #[wasm_bindgen(js_name = "eval")]
             fn js_eval(code: &str) -> JsValue;
         }
-        
+
         let js_code = r#"
             (function() {
                 try {
@@ -125,7 +122,7 @@ impl ViewMode {
                 }
             })();
         "#;
-        
+
         let result = js_eval(js_code);
         if let Some(value) = result.as_string() {
             ViewMode::from_string(&value)
@@ -142,28 +139,28 @@ pub fn CardItem(
 ) -> impl IntoView {
     // Use provided view_mode or default to Compact
     let view_mode = view_mode.unwrap_or_else(|| Signal::derive(|| ViewMode::Compact));
-    
+
     // Calculate styles
     let color_style = datapack::bits_to_gradient_native(card.color() as i32);
     let card_url = card.build_url();
-    
+
     // Get color theme for this card
     let primary_color_name = datapack::get_primary_color_name_from_bits(card.color());
     let color_theme = datapack::get_color_theme_native(&primary_color_name);
-    
+
     // Create dynamic styles based on card color
     let (bg_color, border_color) = if let Some((_, accent, light)) = color_theme {
         (light.to_string(), accent.to_string())
     } else {
         ("#f0f0f0".to_string(), "#cccccc".to_string())
     };
-    
+
     // Determine border class based on card type
     let border_class = match card.card_type() {
         5 | 6 => "card-border-black", // Signi (5) or Spell (6)
         _ => "card-border-white",
     };
-    
+
     view! {
         <div class=format!("card-item {}", border_class) style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0;", color_style)>
             {move || match view_mode.get() {
@@ -214,7 +211,8 @@ pub fn CardItem(
                                             </span>
                                         }.into_any()
                                     } else {
-                                        view! {}.into_any()
+                                        view! {};
+                                        ().into_any()
                                     }
                                 }
                                 {
@@ -227,7 +225,8 @@ pub fn CardItem(
                                             </span>
                                         }.into_any()
                                     } else {
-                                        view! {}.into_any()
+                                        view! {};
+                                        ().into_any()
                                     }
                                 }
                                 {
@@ -240,7 +239,8 @@ pub fn CardItem(
                                             </span>
                                         }.into_any()
                                     } else {
-                                        view! {}.into_any()
+                                        view! {};
+                                        ().into_any()
                                     }
                                 }
                                 {
@@ -257,7 +257,8 @@ pub fn CardItem(
                                             }).collect_view()}
                                         }.into_any()
                                     } else {
-                                        view! {}.into_any()
+                                        view! {};
+                                        ().into_any()
                                     }
                                 }
                             </div>
@@ -295,12 +296,12 @@ pub fn CardItem(
                     </div>
                 }.into_any(),
                 ViewMode::Detailed => view! {
-                    <div 
+                    <div
                         class="border-l-4 p-4 rounded"
                         style=format!("background-color: {}; border-left-color: {};", bg_color, border_color)
                     >
                         <div class="flex items-center gap-2 mb-3">
-                            <span 
+                            <span
                                 class="font-bold text-sm uppercase tracking-wide"
                                 style="color: black;"
                             >
@@ -344,8 +345,8 @@ pub fn CardItem(
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2 text-sm" style="color: #374151;">
                                         <span class="font-medium">Code:</span>
-                                        <a 
-                                            href=format!("/card/{}", card.code()) 
+                                        <a
+                                            href=format!("/card/{}", card.code())
                                             target="_blank"
                                             class="bg-gray-100 hover:bg-blue-100 px-2 py-1 rounded text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
                                         >
@@ -362,7 +363,8 @@ pub fn CardItem(
                                                     </span>
                                                 }.into_any()
                                             } else {
-                                                view! {}.into_any()
+                                                view! {};
+                                                ().into_any()
                                             }
                                         }
                                         {
@@ -374,7 +376,8 @@ pub fn CardItem(
                                                     </span>
                                                 }.into_any()
                                             } else {
-                                                view! {}.into_any()
+                                                view! {};
+                                                ().into_any()
                                             }
                                         }
                                         {
@@ -386,7 +389,8 @@ pub fn CardItem(
                                                     </span>
                                                 }.into_any()
                                             } else {
-                                                view! {}.into_any()
+                                                view! {};
+                                                ().into_any()
                                             }
                                         }
                                         {
@@ -402,7 +406,8 @@ pub fn CardItem(
                                                     }).collect_view()}
                                                 }.into_any()
                                             } else {
-                                                view! {}.into_any()
+                                                view! {};
+                                                ().into_any()
                                             }
                                         }
                                     </div>
@@ -413,7 +418,7 @@ pub fn CardItem(
                                     // CardFeatures display - combined with BurstFeatures
                                     let card_features = datapack::extract_card_features_from_bits(card.feature_bits1(), card.feature_bits2());
                                     let burst_features = datapack::extract_burst_features_from_bits(card.burst_bits());
-                                    
+
                                     if !card_features.is_empty() || !burst_features.is_empty() {
                                         view! {
                                             <div class="bg-blue-50 p-3 rounded border border-blue-200">

@@ -480,10 +480,10 @@ fn test_complex_card_end_to_end_detection() {
 /// RawCardDbインスタンスから機能検出までの流れを検証
 #[tokio::test]
 async fn test_end_to_end_with_mock_raw_card() {
-    use models::r#gen::django_models::RawCardDb;
-    use chrono::Utc;
     use analyzer::card_analyzer::SimpleRawCardAnalyzer;
+    use chrono::Utc;
     use feature::feature::CardFeature;
+    use models::r#gen::django_models::RawCardDb;
     use std::collections::HashSet;
 
     // カードのHTMLデータ（実際のWEBサイトから取得したもの）
@@ -632,21 +632,21 @@ async fn test_end_to_end_with_mock_raw_card() {
         let without_tags = re.replace_all(html, "");
 
         // 改行とスペースを正規化
-        let normalized = without_tags
+
+        without_tags
             .lines()
             .map(|line| line.trim())
             .filter(|line| !line.is_empty())
             .collect::<Vec<_>>()
-            .join("\n");
-
-        normalized
+            .join("\n")
     }
 
     // スキルテキストを抽出
     let mut skill_text = String::new();
     if let Some(card_skill_start) = full_text.find("<div class=\"cardSkill\">") {
         if let Some(card_skill_end) = full_text[card_skill_start..].find("</div>") {
-            let card_skill_html = &full_text[card_skill_start..card_skill_start + card_skill_end + 6];
+            let card_skill_html =
+                &full_text[card_skill_start..card_skill_start + card_skill_end + 6];
             let processed_text = replace_img_tags_with_alt(card_skill_html);
             skill_text = remove_html_tags(&processed_text).trim().to_string();
         }
@@ -704,16 +704,26 @@ async fn test_end_to_end_with_mock_raw_card() {
 
             for feature in all_features {
                 let (bit1, bit2) = feature.to_bit_shifts();
-                if (bit1 != 0 && (create_card.create_card.feature_bits1 & (1 << bit1)) != 0) ||
-                   (bit2 != 0 && (create_card.create_card.feature_bits2 & (1 << bit2)) != 0) {
+                if (bit1 != 0 && (create_card.create_card.feature_bits1 & (1 << bit1)) != 0)
+                    || (bit2 != 0 && (create_card.create_card.feature_bits2 & (1 << bit2)) != 0)
+                {
                     detected_features.insert(feature);
                 }
             }
 
             // 期待される機能の検証
-            assert!(!detected_features.is_empty(), "何らかのフィーチャーが検出されるべきです");
-            assert_eq!(create_card.create_card.has_burst, 1, "ライフバーストが検出されるべきです");
-            assert!(create_card.create_card.power.is_some(), "パワーが検出されるべきです");
+            assert!(
+                !detected_features.is_empty(),
+                "何らかのフィーチャーが検出されるべきです"
+            );
+            assert_eq!(
+                create_card.create_card.has_burst, 1,
+                "ライフバーストが検出されるべきです"
+            );
+            assert!(
+                create_card.create_card.power.is_some(),
+                "パワーが検出されるべきです"
+            );
 
             // PowerUp機能の検証
             assert!(
@@ -729,8 +739,8 @@ async fn test_end_to_end_with_mock_raw_card() {
 
             // ライフバースト関連機能の検証
             assert!(
-                detected_features.contains(&CardFeature::Bounce) || 
-                detected_features.contains(&CardFeature::Draw),
+                detected_features.contains(&CardFeature::Bounce)
+                    || detected_features.contains(&CardFeature::Draw),
                 "ライフバーストテキストからBounce（手札に戻す）またはDraw（カードを引く）機能が検出されるべきです"
             );
 
@@ -747,7 +757,7 @@ async fn test_end_to_end_with_mock_raw_card() {
                 raw_card_db.skill_text.contains("【ガード】"),
                 "【ガード】記号がスキルテキストに保持されているべきです"
             );
-        },
+        }
         Err(e) => {
             panic!("カード解析に失敗しました: {}", e);
         }

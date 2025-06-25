@@ -3,7 +3,6 @@ use analyzer::card_analyzer::{
     analyze_raw_cards_with_product_batch,
 };
 use clap::Parser;
-use dotenvy;
 use dotenvy::from_filename;
 use sqlx::PgPool;
 use std::env;
@@ -126,7 +125,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!(
             "\nバッチ {}/{} を処理中...",
             batch_index + 1,
-            (raw_cards.len() + args.batch_size - 1) / args.batch_size
+            raw_cards.len().div_ceil(args.batch_size)
         );
 
         if args.verbose {
@@ -169,7 +168,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 println!("      - 検出されたKlass:");
                                 for (cat1, cat2, cat3) in &create_card_with_klass.detected_klasses {
                                     let klass_str = if let Some(cat3) = cat3 {
-                                        format!("{}:{}/{}", cat1, cat2.as_ref().unwrap_or(&"".to_string()), cat3)
+                                        format!(
+                                            "{}:{}/{}",
+                                            cat1,
+                                            cat2.as_ref().unwrap_or(&"".to_string()),
+                                            cat3
+                                        )
                                     } else if let Some(cat2) = cat2 {
                                         format!("{}:{}", cat1, cat2)
                                     } else {

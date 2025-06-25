@@ -9,13 +9,13 @@ pub fn CardList(cards: Vec<CardExport>, total_count: usize) -> impl IntoView {
     // Load initial view mode from localStorage, default to Compact
     let initial_mode = ViewMode::load_from_storage();
     let (view_mode, set_view_mode) = signal(initial_mode);
-    
+
     // Create an effect to save to localStorage whenever view_mode changes
     Effect::new(move |_| {
         let current_mode = view_mode.get();
         current_mode.save_to_storage();
     });
-    
+
     view! {
         <div class="bg-white rounded-lg shadow">
             <Show when=move || !is_empty>
@@ -58,7 +58,7 @@ pub fn CardList(cards: Vec<CardExport>, total_count: usize) -> impl IntoView {
                     </div>
                 </div>
             </Show>
-            
+
             <div class="p-4">
                 {cards.into_iter().map(|card| {
                     view! {

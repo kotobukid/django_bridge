@@ -1,5 +1,5 @@
+use crate::types::{build_klass_matrix, KlassFilter};
 use leptos::prelude::*;
-use crate::types::{KlassFilter, build_klass_matrix};
 
 #[component]
 pub fn KlassOverlay(
@@ -11,7 +11,7 @@ pub fn KlassOverlay(
     let close_overlay = move || on_close.set(false);
     // Klassマトリックスデータを構築
     let klass_matrix = build_klass_matrix();
-    
+
     view! {
         <Show when=move || is_open.get()>
             <div
@@ -64,12 +64,12 @@ pub fn KlassOverlay(
                                     <h3 class="font-semibold text-lg mb-3 text-gray-700">
                                         {system.clone()}
                                     </h3>
-                                    
+
                                     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                                         {types.into_iter().map(|klass_info| {
                                             let klass_id = klass_info.id;
                                             let display_name = klass_info.display_name();
-                                            
+
                                             view! {
                                                 <button
                                                     class=move || {

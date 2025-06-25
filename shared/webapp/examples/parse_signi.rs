@@ -57,7 +57,7 @@ async fn db(
     item: CreateCard,
 ) -> Result<models::card::Card, sqlx::Error> {
     let card_repo = CardRepository::new(pool.clone());
-    Ok(card_repo.upsert(item).await?)
+    card_repo.upsert(item).await
 }
 
 #[tokio::main]

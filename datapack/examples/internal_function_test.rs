@@ -7,7 +7,7 @@ fn main() {
     // テスト1: CardExportの作成テスト
     println!("\n1. CardExport構造体テスト");
 
-    if cards::CARD_LIST.len() > 0 {
+    if !cards::CARD_LIST.is_empty() {
         let first_card = &cards::CARD_LIST[0];
         let card_export = CardExport::from(first_card);
 
@@ -44,13 +44,13 @@ fn main() {
             (bit1 == 0 || (feature_bits1 & bit1) == bit1)
                 && (bit2 == 0 || (feature_bits2 & bit2) == bit2)
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect();
 
     println!("\nAND条件結果:");
     println!("  該当カード数: {}", and_cards.len());
 
-    if and_cards.len() > 0 {
+    if !and_cards.is_empty() {
         println!("  該当カード一覧:");
         for (i, card) in and_cards.iter().enumerate() {
             println!(
@@ -75,7 +75,7 @@ fn main() {
             // OR条件: いずれかのビットが立っている
             (bit1 > 0 && (feature_bits1 & bit1) != 0) || (bit2 > 0 && (feature_bits2 & bit2) != 0)
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect();
 
     println!("OR条件結果:");
@@ -142,13 +142,13 @@ fn main() {
 
             true
         })
-        .map(|c| CardExport::from(c))
+        .map(CardExport::from)
         .collect();
 
     println!("fetch_by_features_and ロジック結果:");
     println!("  該当カード数: {}", features_and_cards.len());
 
-    if features_and_cards.len() > 0 {
+    if !features_and_cards.is_empty() {
         println!("  該当カード一覧:");
         for (i, card) in features_and_cards.iter().enumerate() {
             println!(

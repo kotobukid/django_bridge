@@ -81,7 +81,7 @@ async fn db(
     // カードリポジトリを初期化
     let card_repo = CardRepository::new(pool.clone());
     // カードデータをデータベースに挿入または更新
-    Ok(card_repo.upsert(item).await?)
+    card_repo.upsert(item).await
 }
 
 /// コマンドライン引数の構造体
@@ -172,7 +172,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // キャッシュディレクトリを指定
         let dir = Path::new("./text_cache/single");
-        let cq = CardQuery::new(card_no.clone().into(), Box::from(dir.to_path_buf()));
+        let cq = CardQuery::new(card_no.clone(), Box::from(dir.to_path_buf()));
 
         // テキストをキャッシュから取得するか、ダウンロードする
         let text = if cq.check_cache_file_exists() {

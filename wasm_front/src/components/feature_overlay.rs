@@ -1,7 +1,7 @@
-use leptos::*;
-use leptos::prelude::*;
-use std::collections::HashMap;
 use crate::components::SvgToggleSwitch;
+use leptos::prelude::*;
+use leptos::*;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 struct FeatureTag {
@@ -127,7 +127,7 @@ pub fn FeatureOverlay(
 
                 view! {
                     <div class="border rounded-lg">
-                        <button 
+                        <button
                             class={move || {
                                 let base = "w-full px-4 py-3 text-left font-medium rounded-lg transition-colors";
                                 let state_class = if has_selected_features.get() {

@@ -13,7 +13,7 @@ pub fn ToggleSwitch(
     disabled: bool,
 ) -> impl IntoView {
     view! {
-        <div 
+        <div
             class=move || format!(
                 "flex items-center space-x-3 cursor-pointer hover:bg-white rounded p-2 transition-colors {}",
                 if disabled { "opacity-50 cursor-not-allowed" } else { "" }
@@ -41,7 +41,7 @@ pub fn ToggleSwitch(
                     )></div>
                 </div>
             </div>
-            
+
             // ラベルテキスト
             <span class=move || format!(
                 "text-sm text-gray-700 select-none {}",

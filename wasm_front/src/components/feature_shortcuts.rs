@@ -1,4 +1,6 @@
-use crate::components::svg_definition::{IconBlueArchive, IconDenonbu, IconDissona, IconNijisanji, IconPripara};
+use crate::components::svg_definition::{
+    IconBlueArchive, IconDenonbu, IconDissona, IconNijisanji, IconPripara,
+};
 use leptos::prelude::*;
 use std::collections::HashMap;
 
@@ -43,7 +45,7 @@ pub fn FeatureShortcuts(
         "電音部",
         "ブルーアーカイブ",
     ];
-    
+
     let toggle_feature = move |feature_name: &'static str| {
         // Perform all updates in a single update call to minimize reactive updates
         selected_features.update(|features| {
@@ -79,7 +81,7 @@ pub fn FeatureShortcuts(
                 features.remove(feature_key);
             }
         });
-        
+
         // Notify parent
         let selected_names: Vec<String> = selected_features
             .read()
@@ -88,58 +90,58 @@ pub fn FeatureShortcuts(
             .collect();
         on_feature_change.set(selected_names);
     };
-    
+
     // Check if any shortcut features are active
     let has_any_shortcuts = Signal::derive(move || {
         let features = selected_features.read();
-        SHORTCUT_FEATURES.iter().any(|&key| {
-            features.get(key).copied().unwrap_or(false)
-        })
+        SHORTCUT_FEATURES
+            .iter()
+            .any(|&key| features.get(key).copied().unwrap_or(false))
     });
 
     view! {
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex flex-wrap gap-1">
-                <FeatureButton 
-                    feature="プリパラ" 
+                <FeatureButton
+                    feature="プリパラ"
                     is_active=Signal::derive(move || selected_features.read().get("プリパラ").copied().unwrap_or(false))
-                    on_click=toggle_feature 
+                    on_click=toggle_feature
                     bg_class="bg-fuchsia-300 border border-gray-300"
                 >
                     <IconPripara />
                 </FeatureButton>
-                
-                <FeatureButton 
-                    feature="にじさんじ" 
+
+                <FeatureButton
+                    feature="にじさんじ"
                     is_active=Signal::derive(move || selected_features.read().get("にじさんじ").copied().unwrap_or(false))
-                    on_click=toggle_feature 
+                    on_click=toggle_feature
                     bg_class="bg-blue-200 border border-gray-300"
                 >
                     <IconNijisanji />
                 </FeatureButton>
-                
-                <FeatureButton 
-                    feature="ディソナ" 
+
+                <FeatureButton
+                    feature="ディソナ"
                     is_active=Signal::derive(move || selected_features.read().get("ディソナ").copied().unwrap_or(false))
-                    on_click=toggle_feature 
+                    on_click=toggle_feature
                     bg_class="bg-fuchsia-900 border border-gray-300"
                 >
                     <IconDissona />
                 </FeatureButton>
-                
-                <FeatureButton 
-                    feature="電音部" 
+
+                <FeatureButton
+                    feature="電音部"
                     is_active=Signal::derive(move || selected_features.read().get("電音部").copied().unwrap_or(false))
-                    on_click=toggle_feature 
+                    on_click=toggle_feature
                     bg_class="bg-black border border-gray-300"
                 >
                     <IconDenonbu />
                 </FeatureButton>
-                
-                <FeatureButton 
-                    feature="ブルーアーカイブ" 
+
+                <FeatureButton
+                    feature="ブルーアーカイブ"
                     is_active=Signal::derive(move || selected_features.read().get("ブルーアーカイブ").copied().unwrap_or(false))
-                    on_click=toggle_feature 
+                    on_click=toggle_feature
                     bg_class="bg-black border border-gray-300"
                 >
                     <IconBlueArchive />

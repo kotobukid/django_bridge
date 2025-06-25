@@ -51,7 +51,7 @@ impl CardTypeRepository {
 
     pub async fn get_all(&self) -> Result<Vec<CardTypeInfo>, sqlx::Error> {
         let rows = sqlx::query_as::<_, (i64, String, String, i32, bool)>(
-            "SELECT id, name, code, sort_asc, is_primary FROM wix_cardtype ORDER BY sort_asc"
+            "SELECT id, name, code, sort_asc, is_primary FROM wix_cardtype ORDER BY sort_asc",
         )
         .fetch_all(&*self.db)
         .await?;
@@ -81,8 +81,10 @@ impl CardTypeRepository {
     }
 
     fn generate_card_type_code(&self, card_types: Vec<CardTypeInfo>) -> String {
-        let primary_types: Vec<&CardTypeInfo> = card_types.iter().filter(|ct| ct.is_primary).collect();
-        let extended_types: Vec<&CardTypeInfo> = card_types.iter().filter(|ct| !ct.is_primary).collect();
+        let primary_types: Vec<&CardTypeInfo> =
+            card_types.iter().filter(|ct| ct.is_primary).collect();
+        let extended_types: Vec<&CardTypeInfo> =
+            card_types.iter().filter(|ct| !ct.is_primary).collect();
 
         format!(
             r#"// カードタイプ情報

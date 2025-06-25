@@ -1,14 +1,14 @@
 use crate::raw_card_analyzer::{AnalysisError, RawCardAnalyzer, to_half};
 use chrono::{DateTime, Utc};
+use color::convert_cost;
+use feature::feature::{BurstHashSetToBits, HashSetToBits};
+use feature::{BurstFeature, CardFeature, create_burst_detect_patterns, create_detect_patterns};
 use models::card::CreateCard;
 use models::r#gen::django_models::RawCardDb;
-use sqlx::{Pool, Postgres, Row};
-use std::sync::Arc;
-use feature::{create_detect_patterns, create_burst_detect_patterns, CardFeature, BurstFeature};
-use feature::feature::{HashSetToBits, BurstHashSetToBits};
-use std::collections::HashSet;
-use color::convert_cost;
 use rayon::prelude::*;
+use sqlx::{Pool, Postgres, Row};
+use std::collections::HashSet;
+use std::sync::Arc;
 
 /// CreateCard with detected Klass information
 #[derive(Debug, Clone)]
@@ -56,6 +56,12 @@ impl RawCardWithProduct {
 /// シンプルなRawCardAnalyzer実装
 /// 基本的な解析を行う（色情報も含む）
 pub struct SimpleRawCardAnalyzer;
+
+impl Default for SimpleRawCardAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl SimpleRawCardAnalyzer {
     pub fn new() -> Self {
@@ -208,25 +214,25 @@ impl SimpleRawCardAnalyzer {
     /// HTMLから共通のdd要素を抽出するヘルパーメソッド
     fn extract_dd_elements(&self, html: &str) -> Vec<String> {
         use regex::Regex;
-        
+
         // dt-dd ペアを正しく抽出するための正規表現（複数行対応）
         let dt_dd_regex = Regex::new(r"(?s)<dt>([^<]+)</dt>\s*<dd[^>]*>(.*?)</dd>").unwrap();
         let mut dd_elements = Vec::new();
-        
+
         // まず最初のdt要素（カード種類または種類）を見つける
         let start_patterns = ["<dt>カード種類</dt>", "<dt>種類</dt>"];
         let mut search_start = 0;
-        
+
         for pattern in &start_patterns {
             if let Some(index) = html.find(pattern) {
                 search_start = index;
                 break;
             }
         }
-        
+
         // search_start以降でdt-ddペアを抽出
         let search_html = &html[search_start..];
-        
+
         for caps in dt_dd_regex.captures_iter(search_html) {
             if let (Some(_dt_content), Some(dd_content)) = (caps.get(1), caps.get(2)) {
                 let dd_text = dd_content.as_str().trim();
@@ -266,18 +272,13 @@ impl SimpleRawCardAnalyzer {
         let card_type = &dd_elements[0];
         let is_lrig = card_type.contains("ルリグ") || card_type.contains("アシストルリグ");
 
-
         if is_lrig && dd_elements.len() > 6 {
             let limit_text = dd_elements[6].trim();
             if !limit_text.is_empty() && limit_text != "-" {
-
-
-                if card_type.contains("アシストルリグ") {
-                    if limit_text != "0" {
-                        feature_set.insert(CardFeature::EnhanceLimit);
-                    }
+                if card_type.contains("アシストルリグ") && limit_text != "0" {
+                    feature_set.insert(CardFeature::EnhanceLimit);
                 }
-                
+
                 (Some(limit_text.to_string()), feature_set)
             } else {
                 (None, feature_set)
@@ -297,7 +298,9 @@ impl SimpleRawCardAnalyzer {
 
         // シグニ、クラフト、レゾナカードかどうかをチェック
         let card_type = &dd_elements[0];
-        let has_power = card_type.contains("シグニ") || card_type.contains("クラフト") || card_type.contains("レゾナ");
+        let has_power = card_type.contains("シグニ")
+            || card_type.contains("クラフト")
+            || card_type.contains("レゾナ");
 
         if has_power && dd_elements.len() > 7 {
             let power_text = dd_elements[7].trim();
@@ -399,42 +402,50 @@ impl SimpleRawCardAnalyzer {
     }
 
     /// 公式サイトの表記ゆれ・誤字を修正する
-    fn normalize_klass(&self, cat1: &str, cat2: Option<&str>, cat3: Option<&str>) -> (String, Option<String>, Option<String>) {
+    fn normalize_klass(
+        &self,
+        cat1: &str,
+        cat2: Option<&str>,
+        cat3: Option<&str>,
+    ) -> (String, Option<String>, Option<String>) {
         let mut normalized_cat1 = cat1.to_string();
         let mut normalized_cat2 = cat2.map(|s| s.to_string());
         let mut normalized_cat3 = cat3.map(|s| s.to_string());
-        
+
         // 公式誤字修正: 奏生：植物 → 奏羅：植物
         if cat1 == "奏生" && cat2 == Some("植物") {
             normalized_cat1 = "奏羅".to_string();
         }
-        
+
         // 表記ゆれ修正: ウエポン → ウェポン
         if let Some(ref mut cat2_val) = normalized_cat2 {
             if cat2_val == "ウエポン" {
                 *cat2_val = "ウェポン".to_string();
             }
         }
-        
+
         // バーチャル/世怜音女学院 → バーチャルのみ
         if let Some(ref cat2_val) = normalized_cat2 {
             if cat2_val == "バーチャル" && cat3 == Some("世怜音女学院") {
                 normalized_cat3 = None;
             }
         }
-        
+
         (normalized_cat1, normalized_cat2, normalized_cat3)
     }
 
     /// HTMLからKlass情報を検出する（dd[1]のカードタイプから）
-    pub fn detect_klass_from_html(&self, html: &str) -> Vec<(String, Option<String>, Option<String>)> {
+    pub fn detect_klass_from_html(
+        &self,
+        html: &str,
+    ) -> Vec<(String, Option<String>, Option<String>)> {
         let dd_elements = self.extract_dd_elements(html);
         let mut klasses = Vec::new();
 
         // dd[1]にカードタイプがある（シグニの場合は種族情報を含む）
         if dd_elements.len() > 1 {
             let card_type_text = &dd_elements[1];
-            
+
             // <br>タグで分割してそれぞれ処理
             let lines: Vec<&str> = card_type_text
                 .split("<br>")
@@ -452,12 +463,16 @@ impl SimpleRawCardAnalyzer {
                 if let Some(colon_pos) = clean_text.find(':') {
                     let cat1 = clean_text[..colon_pos].trim();
                     let rest = clean_text[colon_pos + 1..].trim();
-                    
+
                     // パターン1a: "空獣／地獣" のような複数cat2を持つ場合
                     if let Some(slash_pos) = rest.find('/') {
                         let cat2 = rest[..slash_pos].trim();
                         let cat3 = rest[slash_pos + 1..].trim();
-                        klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
+                        klasses.push((
+                            cat1.to_string(),
+                            Some(cat2.to_string()),
+                            Some(cat3.to_string()),
+                        ));
                     } else {
                         // パターン1b: "奏羅：宇宙" のような単一cat2の場合
                         klasses.push((cat1.to_string(), Some(rest.to_string()), None));
@@ -467,12 +482,16 @@ impl SimpleRawCardAnalyzer {
                 else if let Some(colon_pos) = clean_text.find('：') {
                     let cat1 = clean_text[..colon_pos].trim();
                     let rest = clean_text[colon_pos + '：'.len_utf8()..].trim();
-                    
+
                     // パターン2a: "空獣／地獣" のような複数cat2を持つ場合
                     if let Some(slash_pos) = rest.find('/') {
                         let cat2 = rest[..slash_pos].trim();
                         let cat3 = rest[slash_pos + 1..].trim();
-                        klasses.push((cat1.to_string(), Some(cat2.to_string()), Some(cat3.to_string())));
+                        klasses.push((
+                            cat1.to_string(),
+                            Some(cat2.to_string()),
+                            Some(cat3.to_string()),
+                        ));
                     } else {
                         // パターン2b: "奏羅：宇宙" のような単一cat2の場合
                         klasses.push((cat1.to_string(), Some(rest.to_string()), None));
@@ -488,11 +507,9 @@ impl SimpleRawCardAnalyzer {
         // 正規化処理を適用
         let normalized_klasses: Vec<(String, Option<String>, Option<String>)> = klasses
             .into_iter()
-            .map(|(cat1, cat2, cat3)| {
-                self.normalize_klass(&cat1, cat2.as_deref(), cat3.as_deref())
-            })
+            .map(|(cat1, cat2, cat3)| self.normalize_klass(&cat1, cat2.as_deref(), cat3.as_deref()))
             .collect();
-        
+
         normalized_klasses
     }
 
@@ -502,7 +519,7 @@ impl SimpleRawCardAnalyzer {
             s.insert(CardFeature::Denonbu);
             return s;
         }
-        if name.starts_with("プリパラアイドル") { 
+        if name.starts_with("プリパラアイドル") {
             s.insert(CardFeature::Pripara);
             return s;
         }
@@ -544,10 +561,12 @@ impl SimpleRawCardAnalyzer {
                     Ok(converted) => Some(converted),
                     Err(_) => {
                         // 変換に失敗した場合は元のテキストを返す
-                        println!("DEBUG: Failed to convert {} '{}' for {} card",
-                                if is_lrig { "grow cost" } else { "cost" },
-                                cost_text,
-                                if is_lrig { "Lrig" } else { "non-Lrig" });
+                        println!(
+                            "DEBUG: Failed to convert {} '{}' for {} card",
+                            if is_lrig { "grow cost" } else { "cost" },
+                            cost_text,
+                            if is_lrig { "Lrig" } else { "non-Lrig" }
+                        );
                         Some(cost_text)
                     }
                 }
@@ -571,7 +590,10 @@ impl SimpleRawCardAnalyzer {
         for pattern in &replace_patterns {
             // スキルテキストに対して置換を適用
             if pattern.pattern_r.is_match(&processed_skill_text) {
-                processed_skill_text = pattern.pattern_r.replace_all(&processed_skill_text, pattern.replace_to).to_string();
+                processed_skill_text = pattern
+                    .pattern_r
+                    .replace_all(&processed_skill_text, pattern.replace_to)
+                    .to_string();
                 for feature in pattern.features_detected {
                     detected_features.insert(feature.clone());
                 }
@@ -584,7 +606,7 @@ impl SimpleRawCardAnalyzer {
             .filter(|pattern| pattern.pattern_r.is_match(&processed_skill_text))
             .flat_map(|pattern| pattern.features_detected.par_iter().cloned())
             .collect();
-        
+
         detected_features.extend(additional_features);
 
         // HashSetからビットに変換（feature crateの標準実装を使用）
@@ -604,7 +626,10 @@ impl SimpleRawCardAnalyzer {
         // 置換パターンを適用してバーストフィーチャーを検出
         for pattern in &replace_patterns {
             if pattern.pattern_r.is_match(&processed_text) {
-                processed_text = pattern.pattern_r.replace_all(&processed_text, pattern.replace_to).to_string();
+                processed_text = pattern
+                    .pattern_r
+                    .replace_all(&processed_text, pattern.replace_to)
+                    .to_string();
                 for feature in pattern.features_detected {
                     detected_burst_features.insert(feature.clone());
                 }
@@ -617,13 +642,12 @@ impl SimpleRawCardAnalyzer {
             .filter(|pattern| pattern.pattern_r.is_match(&processed_text))
             .flat_map(|pattern| pattern.features_detected.par_iter().cloned())
             .collect();
-        
+
         detected_burst_features.extend(additional_features);
 
         // HashSetからビットに変換
         (detected_burst_features.to_burst_bits(), processed_text)
     }
-
 
     pub async fn analyze_with_product_id(
         &self,
@@ -672,30 +696,32 @@ impl SimpleRawCardAnalyzer {
             self.detect_features_and_replace_text(&raw_card.skill_text);
 
         // ライフバーストテキストからバーストフィーチャーを検出
-        let (burst_bits, replaced_burst_text) = self.detect_burst_features(&raw_card.life_burst_text);
-        
+        let (burst_bits, replaced_burst_text) =
+            self.detect_burst_features(&raw_card.life_burst_text);
+
         // ライフバーストテキストからもCardFeatureを検出
-        let (burst_feature_bits1, burst_feature_bits2, _) = self.detect_features_and_replace_text(&raw_card.life_burst_text);
-        feature_bits1 = feature_bits1 | burst_feature_bits1;
-        feature_bits2 = feature_bits2 | burst_feature_bits2;
+        let (burst_feature_bits1, burst_feature_bits2, _) =
+            self.detect_features_and_replace_text(&raw_card.life_burst_text);
+        feature_bits1 |= burst_feature_bits1;
+        feature_bits2 |= burst_feature_bits2;
 
         {
             // テキスト以外からのFeature検出
             let bits = detected_feature_set.to_bits();
-            feature_bits1 = feature_bits1 | bits.0;
-            feature_bits2 = feature_bits2 | bits.1;
+            feature_bits1 |= bits.0;
+            feature_bits2 |= bits.1;
         }
 
         {
             let bits = story_as_skill.to_bits();
-            feature_bits1 = feature_bits1 | bits.0;
-            feature_bits2 = feature_bits2 | bits.1;
+            feature_bits1 |= bits.0;
+            feature_bits2 |= bits.1;
         }
 
         let full_name = to_half(&raw_card.name);
         let mut name: String;
         let mut pronunciation: String;
-        
+
         // <読み方>形式を検索して分離
         if let Some(start) = full_name.find('<') {
             if let Some(end) = full_name.find('>') {
@@ -713,10 +739,11 @@ impl SimpleRawCardAnalyzer {
             name = full_name.clone();
             pronunciation = full_name.clone();
         }
-        
+
         // nameが256バイトを超える場合は切り詰める
         if name.len() > 256 {
-            name = name.chars()
+            name = name
+                .chars()
                 .scan(0, |acc, c| {
                     let char_len = c.len_utf8();
                     if *acc + char_len <= 256 {
@@ -728,18 +755,19 @@ impl SimpleRawCardAnalyzer {
                 })
                 .collect();
         }
-        
+
         {
             let skills = Self::detect_story_from_name(&name);
             let bits = skills.to_bits();
-            feature_bits1 = feature_bits1 | bits.0;
-            feature_bits2 = feature_bits2 | bits.1;
+            feature_bits1 |= bits.0;
+            feature_bits2 |= bits.1;
         }
         // pronunciation が128文字を超える場合は切り詰める（バイト長ベース）
         if pronunciation.len() > 128 {
             // eprintln!("DEBUG: Truncating pronunciation from {} to 128 bytes", pronunciation.len());
             // UTF-8文字の境界を考慮して切り詰める
-            pronunciation = pronunciation.chars()
+            pronunciation = pronunciation
+                .chars()
                 .collect::<String>()
                 .chars()
                 .scan(0, |acc, c| {
@@ -754,7 +782,7 @@ impl SimpleRawCardAnalyzer {
                 .collect();
             // eprintln!("DEBUG: After truncation: {} bytes", pronunciation.len());
         }
-        
+
         let create_card = CreateCard {
             name,
             code: to_half(&raw_card.card_number),
@@ -809,41 +837,52 @@ impl CardRepository {
     pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
         Self { pool }
     }
-    
+
     /// 不正なKlass形式を検証
     fn is_invalid_klass(&self, cat1: &str, cat2: Option<&str>) -> bool {
         // 色のみのKlass（白、赤、青、緑、黒）は除外
         if cat2.is_none() && matches!(cat1, "白" | "赤" | "青" | "緑" | "黒") {
             return true;
         }
-        
+
         // 1文字だけのcat1（解析ミス）を除外
         if cat2.is_none() && cat1.chars().count() == 1 {
             return true;
         }
-        
+
         // 正しい形式のcat1をチェック
         let valid_cat1_prefixes = [
-            "奏像", "奏武", "奏羅", "奏械", "奏生", "奏元",
-            "精像", "精武", "精羅", "精械", "精生", "精元",
-            "解放派", "闘争派", "防衛派"
+            "奏像",
+            "奏武",
+            "奏羅",
+            "奏械",
+            "奏生",
+            "奏元",
+            "精像",
+            "精武",
+            "精羅",
+            "精械",
+            "精生",
+            "精元",
+            "解放派",
+            "闘争派",
+            "防衛派",
         ];
-        
+
         // cat2がない場合は、有効なcat1のリストに含まれている必要がある
         if cat2.is_none() {
             return !valid_cat1_prefixes.contains(&cat1);
         }
-        
+
         // cat2がある場合は、cat1が適切なプレフィックスである必要がある
         let valid_cat1_with_cat2 = [
-            "奏像", "奏武", "奏羅", "奏械", "奏生",
-            "精像", "精武", "精羅", "精械", "精生"
+            "奏像", "奏武", "奏羅", "奏械", "奏生", "精像", "精武", "精羅", "精械", "精生",
         ];
-        
+
         if !valid_cat1_with_cat2.contains(&cat1) {
             return true;
         }
-        
+
         false
     }
 
@@ -858,7 +897,7 @@ impl CardRepository {
         if self.is_invalid_klass(cat1, cat2) {
             return Ok(None);
         }
-        
+
         // まず正確なマッチを試行（既存データを優先）
         let existing_klass = sqlx::query(
             r#"
@@ -866,7 +905,7 @@ impl CardRepository {
             WHERE cat1 = $1 AND 
                   COALESCE(cat2, '') = COALESCE($2, '') AND 
                   COALESCE(cat3, '') = COALESCE($3, '')
-            "#
+            "#,
         )
         .bind(cat1)
         .bind(cat2)
@@ -878,7 +917,7 @@ impl CardRepository {
             let id: i64 = row.get("id");
             return Ok(Some(id));
         }
-        
+
         // 正確なマッチがない場合、5バイト制限で切り詰めて再試行
         let cat1_truncated = if cat1.len() > 5 {
             cat1.chars()
@@ -895,7 +934,7 @@ impl CardRepository {
         } else {
             cat1.to_string()
         };
-        
+
         let cat2_truncated = cat2.map(|s| {
             if s.len() > 5 {
                 s.chars()
@@ -913,7 +952,7 @@ impl CardRepository {
                 s.to_string()
             }
         });
-        
+
         let cat3_truncated = cat3.map(|s| {
             if s.len() > 5 {
                 s.chars()
@@ -931,7 +970,7 @@ impl CardRepository {
                 s.to_string()
             }
         });
-        
+
         // 切り詰められた値で検索
         let truncated_klass = sqlx::query(
             r#"
@@ -939,7 +978,7 @@ impl CardRepository {
             WHERE cat1 = $1 AND 
                   COALESCE(cat2, '') = COALESCE($2, '') AND 
                   COALESCE(cat3, '') = COALESCE($3, '')
-            "#
+            "#,
         )
         .bind(&cat1_truncated)
         .bind(cat2_truncated.as_deref())
@@ -967,7 +1006,7 @@ impl CardRepository {
             INSERT INTO wix_card_klass (card_id, klass_id)
             VALUES ($1, $2)
             ON CONFLICT (card_id, klass_id) DO NOTHING
-            "#
+            "#,
         )
         .bind(card_id)
         .bind(klass_id)
@@ -1058,10 +1097,10 @@ impl CardRepository {
         // } else {
         //     eprintln!("  ex1: None");
         // }
-        
+
         // デバッグ：制限違反をチェック（修正後の値で）
         let mut violations = Vec::new();
-        
+
         if create_card.name.len() > 256 {
             violations.push(format!("name too long: {} > 256", create_card.name.len()));
         }
@@ -1069,7 +1108,10 @@ impl CardRepository {
             violations.push(format!("code too long: {} > 16", create_card.code.len()));
         }
         if create_card.pronunciation.len() > 128 {
-            violations.push(format!("pronunciation too long: {} > 128", create_card.pronunciation.len()));
+            violations.push(format!(
+                "pronunciation too long: {} > 128",
+                create_card.pronunciation.len()
+            ));
         }
         if let Some(ref cost) = create_card.cost {
             if cost.len() > 16 {
@@ -1101,7 +1143,7 @@ impl CardRepository {
                 violations.push(format!("ex1 too long: {} > 256", ex1.len()));
             }
         }
-        
+
         if !violations.is_empty() {
             return Err(format!("Field length violations: {}", violations.join(", ")).into());
         }
@@ -1143,25 +1185,25 @@ impl CardRepository {
         .bind(&create_card.name)
         .bind(&create_card.code)
         .bind(&create_card.pronunciation)
-        .bind(&create_card.color)
+        .bind(create_card.color)
         .bind(&create_card.cost)
-        .bind(&create_card.level)
-        .bind(&create_card.limit)
-        .bind(&create_card.limit_ex)
-        .bind(&create_card.product)
-        .bind(&create_card.card_type)
+        .bind(create_card.level)
+        .bind(create_card.limit)
+        .bind(create_card.limit_ex)
+        .bind(create_card.product)
+        .bind(create_card.card_type)
         .bind(&create_card.power)
-        .bind(&create_card.has_burst)
+        .bind(create_card.has_burst)
         .bind(&create_card.skill_text)
         .bind(&create_card.burst_text)
-        .bind(&create_card.format)
+        .bind(create_card.format)
         .bind(&create_card.story)
         .bind(&create_card.rarity)
-        .bind(&create_card.timing)
+        .bind(create_card.timing)
         .bind(&create_card.url)
-        .bind(&create_card.feature_bits1)
-        .bind(&create_card.feature_bits2)
-        .bind(&create_card.burst_bits)
+        .bind(create_card.feature_bits1)
+        .bind(create_card.feature_bits2)
+        .bind(create_card.burst_bits)
         .bind(&create_card.ex1)
         .fetch_one(self.pool.as_ref())
         .await?;
@@ -1179,11 +1221,10 @@ impl CardRepository {
 
         // 検出されたKlassを処理
         for (cat1, cat2, cat3) in create_card_with_klass.detected_klasses {
-            if let Some(klass_id) = self.get_existing_klass(
-                &cat1,
-                cat2.as_deref(),
-                cat3.as_deref(),
-            ).await? {
+            if let Some(klass_id) = self
+                .get_existing_klass(&cat1, cat2.as_deref(), cat3.as_deref())
+                .await?
+            {
                 self.assign_klass_to_card(card_id, klass_id).await?;
             }
             // 既存のKlassが見つからない場合はスキップ（エラーにしない）
@@ -1216,7 +1257,9 @@ pub async fn analyze_and_save_card_with_product_id(
 
     // DBに保存（Klass情報も含む）
     let card_repo = CardRepository::new(Arc::new(pool.clone()));
-    let card_id = card_repo.save_card_with_klass(create_card_with_klass).await?;
+    let card_id = card_repo
+        .save_card_with_klass(create_card_with_klass)
+        .await?;
 
     // RawCardを解析済みにマーク
     sqlx::query(

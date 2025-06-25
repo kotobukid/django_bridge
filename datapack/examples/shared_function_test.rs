@@ -12,7 +12,7 @@ fn main() {
     let and_cards = filter_by_combined_bits(combined_bits, 0, "and");
     println!("AND条件結果: {}件", and_cards.len());
 
-    if and_cards.len() > 0 {
+    if !and_cards.is_empty() {
         for (i, card) in and_cards.iter().enumerate() {
             println!(
                 "  {}. {} (bits1={}, bits2={})",
@@ -35,7 +35,7 @@ fn main() {
     let features_and_cards = filter_by_features_and(&features);
     println!("features_and結果: {}件", features_and_cards.len());
 
-    if features_and_cards.len() > 0 {
+    if !features_and_cards.is_empty() {
         for (i, card) in features_and_cards.iter().enumerate() {
             println!(
                 "  {}. {} (bits1={}, bits2={})",
@@ -70,7 +70,7 @@ fn main() {
     );
 
     // 実際のカード名も比較
-    if and_cards.len() == features_and_cards.len() && and_cards.len() > 0 {
+    if and_cards.len() == features_and_cards.len() && !and_cards.is_empty() {
         let and_names: Vec<_> = and_cards.iter().map(|c| c.name()).collect();
         let features_names: Vec<_> = features_and_cards.iter().map(|c| c.name()).collect();
         println!("カード名も一致: {}", and_names == features_names);

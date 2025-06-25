@@ -1,16 +1,16 @@
-use leptos::prelude::*;
 use crate::components::svg_definition::{IconNext, IconPrevious};
+use leptos::prelude::*;
 
 // Simple browser detection
 fn is_firefox() -> bool {
     use wasm_bindgen::prelude::*;
-    
+
     #[wasm_bindgen]
     extern "C" {
         #[wasm_bindgen(js_name = "eval")]
         fn js_eval(code: &str) -> JsValue;
     }
-    
+
     let user_agent = js_eval("navigator.userAgent");
     if let Some(ua_str) = user_agent.as_string() {
         return ua_str.to_lowercase().contains("firefox");
@@ -23,20 +23,20 @@ fn scroll_to_pagination() {
     if let Some(window) = web_sys::window() {
         if let Some(document) = window.document() {
             use wasm_bindgen::JsCast;
-            
+
             // Try to find the top pagination element
             let top_pagination_element = document.query_selector("[data-pagination-top]");
-            
+
             let target_y = if let Ok(Some(element)) = top_pagination_element {
                 // Use JavaScript to get element position
                 use wasm_bindgen::prelude::*;
-                
+
                 #[wasm_bindgen]
                 extern "C" {
                     #[wasm_bindgen(js_name = "eval")]
                     fn js_eval(code: &str) -> JsValue;
                 }
-                
+
                 let js_code = r#"
                     (function() {
                         var element = document.querySelector('[data-pagination-top]');
@@ -47,30 +47,27 @@ fn scroll_to_pagination() {
                         return 100;
                     })();
                 "#;
-                
+
                 let result = js_eval(js_code);
-                if let Some(num) = result.as_f64() {
-                    num
-                } else {
-                    100.0
-                }
+                result.as_f64().unwrap_or(100.0)
             } else {
                 // Fallback: scroll to a reasonable position from top (not all the way to top)
                 100.0
             };
-            
+
             if is_firefox() {
                 // Firefox: Force immediate scroll using multiple methods
                 use wasm_bindgen::prelude::*;
-                
+
                 #[wasm_bindgen]
                 extern "C" {
                     #[wasm_bindgen(js_name = "eval")]
                     fn js_eval(code: &str) -> JsValue;
                 }
-                
+
                 // Method 1: Direct JavaScript execution for immediate scroll
-                let js_code = format!(r#"
+                let js_code = format!(
+                    r#"
                     (function() {{
                         var html = document.documentElement;
                         var body = document.body;
@@ -107,25 +104,29 @@ fn scroll_to_pagination() {
                             body.style.scrollBehavior = 'smooth';
                         }}, 150);
                     }})();
-                "#, target_y);
-                
+                "#,
+                    target_y
+                );
+
                 js_eval(&js_code);
-                
+
                 // Method 2: Additional Rust-side scroll as backup
                 window.scroll_to_with_x_and_y(0.0, target_y);
             } else {
                 // Chrome/Safari: Smooth animated scroll
                 window.scroll_to_with_x_and_y(0.0, target_y);
-                
+
                 // Additional delayed scroll to ensure it works
                 let timeout_closure = wasm_bindgen::closure::Closure::once(Box::new(move || {
                     if let Some(window) = web_sys::window() {
                         window.scroll_to_with_x_and_y(0.0, target_y);
                     }
-                }) as Box<dyn FnOnce()>);
-                
+                })
+                    as Box<dyn FnOnce()>);
+
                 let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(
-                    timeout_closure.as_ref().unchecked_ref(), 100
+                    timeout_closure.as_ref().unchecked_ref(),
+                    100,
                 );
                 timeout_closure.forget();
             }
@@ -137,19 +138,20 @@ fn scroll_to_pagination() {
 fn scroll_to_top() {
     if let Some(window) = web_sys::window() {
         use wasm_bindgen::JsCast;
-        
+
         if is_firefox() {
             // Firefox: Force immediate scroll using multiple methods
             use wasm_bindgen::prelude::*;
-            
+
             #[wasm_bindgen]
             extern "C" {
                 #[wasm_bindgen(js_name = "eval")]
                 fn js_eval(code: &str) -> JsValue;
             }
-            
+
             // Method 1: Direct JavaScript execution for immediate scroll
-            js_eval(r#"
+            js_eval(
+                r#"
                 (function() {
                     var html = document.documentElement;
                     var body = document.body;
@@ -185,23 +187,26 @@ fn scroll_to_top() {
                         body.style.scrollBehavior = 'smooth';
                     }, 150);
                 })();
-            "#);
-            
+            "#,
+            );
+
             // Method 2: Additional Rust-side scroll as backup
             window.scroll_to_with_x_and_y(0.0, 0.0);
         } else {
             // Chrome/Safari: Smooth animated scroll
             window.scroll_to_with_x_and_y(0.0, 0.0);
-            
+
             // Additional delayed scroll to ensure it works
             let timeout_closure = wasm_bindgen::closure::Closure::once(Box::new(move || {
                 if let Some(window) = web_sys::window() {
                     window.scroll_to_with_x_and_y(0.0, 0.0);
                 }
-            }) as Box<dyn FnOnce()>);
-            
+            })
+                as Box<dyn FnOnce()>);
+
             let _ = window.set_timeout_with_callback_and_timeout_and_arguments_0(
-                timeout_closure.as_ref().unchecked_ref(), 100
+                timeout_closure.as_ref().unchecked_ref(),
+                100,
             );
             timeout_closure.forget();
         }
@@ -231,7 +236,7 @@ pub fn Pagination(
                 <IconPrevious />
             </button>
 
-            <button 
+            <button
                 class="px-4 py-2 bg-gray-100 rounded border shadow-sm hover:bg-gray-200 active:bg-gray-300 transition-colors duration-150 cursor-pointer"
                 on:click=move |_| {
                     scroll_to_top();

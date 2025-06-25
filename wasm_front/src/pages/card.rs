@@ -1,8 +1,11 @@
 use crate::components::{
-    BurstFeatureOverlay, CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay, FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination,
-    PowerSelector, ProductOverlay, ScrollToTopButton, TextSearch,
+    BurstFeatureOverlay, CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay,
+    FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination, PowerSelector,
+    ProductOverlay, ScrollToTopButton, TextSearch,
 };
-use crate::types::{CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter};
+use crate::types::{
+    CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter,
+};
 use datapack::CardExport;
 use leptos::prelude::*;
 use std::collections::HashMap;
@@ -20,7 +23,8 @@ pub fn CardPage() -> impl IntoView {
     let selected_features = RwSignal::new(HashMap::<String, bool>::new());
     let (selected_feature_names, set_selected_feature_names) = signal(Vec::<String>::new());
     let selected_burst_features = RwSignal::new(HashMap::<String, bool>::new());
-    let (selected_burst_feature_names, set_selected_burst_feature_names) = signal(Vec::<String>::new());
+    let (selected_burst_feature_names, set_selected_burst_feature_names) =
+        signal(Vec::<String>::new());
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
     let (current_page, set_current_page) = signal(0usize);
     let cards_per_page = 20;
@@ -30,7 +34,7 @@ pub fn CardPage() -> impl IntoView {
     let (show_product_overlay, set_show_product_overlay) = signal(false);
     let (show_klass_overlay, set_show_klass_overlay) = signal(false);
     let (show_burst_feature_overlay, set_show_burst_feature_overlay) = signal(false);
-    
+
     // オーバーレイの強制再描画用
     let (feature_overlay_key, set_feature_overlay_key) = signal(0u32);
     let (product_overlay_key, set_product_overlay_key) = signal(0u32);
@@ -87,18 +91,19 @@ pub fn CardPage() -> impl IntoView {
 
             // BurstFeatureフィルタリングを追加適用
             if !burst_feature_names.is_empty() {
-                filtered = datapack::fetch_by_burst_features_and_native(&filtered, &burst_feature_names);
+                filtered =
+                    datapack::fetch_by_burst_features_and_native(&filtered, &burst_feature_names);
             }
 
             // LBフィルタリングを追加適用
             if lb.has_any() {
-                filtered = filtered.into_iter().filter(|card| {
+                filtered.retain(|card| {
                     match lb.selection {
                         1 => card.has_burst() == 1, // LBあり
                         2 => card.has_burst() == 2, // LBなし
                         _ => true,
                     }
-                }).collect();
+                });
             }
 
             set_filtered_cards.set(filtered);
@@ -117,7 +122,7 @@ pub fn CardPage() -> impl IntoView {
 
     let total_pages = Memo::new(move |_| {
         let total = filtered_cards.get().len();
-        (total + cards_per_page - 1) / cards_per_page
+        total.div_ceil(cards_per_page)
     });
 
     // フィルタの有効状態を判定
@@ -125,23 +130,23 @@ pub fn CardPage() -> impl IntoView {
     let has_active_burst_features = Memo::new(move |_| !selected_burst_features.read().is_empty());
 
     let has_active_products = Memo::new(move |_| product_filter.read().has_any());
-    
+
     let has_active_klass = Memo::new(move |_| klass_filter.read().has_any());
-    
+
     // いずれかのフィルタがアクティブかどうかを判定
     let has_any_active_filter = Memo::new(move |_| {
-        color_filter.get().has_any() ||
-        card_type_filter.get().has_any() ||
-        level_filter.get().has_any() ||
-        power_filter.get().has_any() ||
-        lb_filter.get().has_any() ||
-        !search_text.get().is_empty() ||
-        has_active_features.get() ||
-        has_active_burst_features.get() ||
-        has_active_products.get() ||
-        has_active_klass.get()
+        color_filter.get().has_any()
+            || card_type_filter.get().has_any()
+            || level_filter.get().has_any()
+            || power_filter.get().has_any()
+            || lb_filter.get().has_any()
+            || !search_text.get().is_empty()
+            || has_active_features.get()
+            || has_active_burst_features.get()
+            || has_active_products.get()
+            || has_active_klass.get()
     });
-    
+
     // 全クリア処理
     let clear_all_filters = move |_| {
         set_search_text.set(String::new());
@@ -190,13 +195,13 @@ pub fn CardPage() -> impl IntoView {
                         />
                     </div>
 
-                    // 常時表示フィルタ  
+                    // 常時表示フィルタ
                     <div class="space-y-3">
                         <TextSearch
                             search_text=search_text
                             set_search_text=set_search_text
                         />
-                        
+
                         // Color and Feature shortcuts in responsive grid
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                             <ColorSelector
@@ -208,7 +213,7 @@ pub fn CardPage() -> impl IntoView {
                                 on_feature_change=set_selected_feature_names
                             />
                         </div>
-                        
+
                         <LevelSelector
                             level_filter=level_filter
                             set_level_filter=set_level_filter
@@ -415,10 +420,10 @@ pub fn CardPage() -> impl IntoView {
             // Klassオーバーレイ
             <KlassOverlay
                 klass_filter=klass_filter
-                is_open=show_klass_overlay.into()
-                on_close=set_show_klass_overlay.into()
+                is_open=show_klass_overlay
+                on_close=set_show_klass_overlay
             />
-            
+
             // スクロールトップボタン
             <ScrollToTopButton />
         </div>

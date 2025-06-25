@@ -1,4 +1,4 @@
-use analyzer::{create_production_analyzer, Analyzer};
+use analyzer::{Analyzer, create_production_analyzer};
 use feature::CardFeature;
 
 /// 本番のフィーチャー検出ルールを使用するアナライザーを作成

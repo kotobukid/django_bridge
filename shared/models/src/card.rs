@@ -2,7 +2,7 @@ use std::fmt::{Display, Formatter};
 // 再エクスポート
 pub use crate::gen::django_models::{CardDb, CreateCard};
 use crate::new_type;
-use icon_encoder::{encode_skill_text, encode_burst_text};
+use icon_encoder::{encode_burst_text, encode_skill_text};
 
 new_type!(Card, CardDb);
 
@@ -37,17 +37,18 @@ impl Card {
         let story_: String = self.story.clone().unwrap_or("".into());
         let rarity_: String = self.rarity.clone().unwrap_or("".into());
         let ex1_: String = self.ex1.clone().unwrap_or("".into());
-        
+
         // Auto-calculate has_burst based on card_type and burst_text
         let has_burst_calculated = match self.card_type {
-            5 | 6 | 10 | 11 => { // シグニ、スペル、クラフト系
-                if !burst_text_.is_empty() { 
+            5 | 6 | 10 | 11 => {
+                // シグニ、スペル、クラフト系
+                if !burst_text_.is_empty() {
                     1 // LBあり
-                } else { 
+                } else {
                     2 // LBなし
                 }
-            },
-            _ => 0 // 指定なし（ルリグ、アーツなど）
+            }
+            _ => 0, // 指定なし（ルリグ、アーツなど）
         };
 
         format!(

@@ -192,7 +192,7 @@ mod tests {
 
         assert_eq!(fields.name, "name");
         assert_eq!(fields.f_type, "CharField");
-        assert_eq!(fields.is_nullable, false);
+        assert!(!fields.is_nullable);
         assert_eq!(fields.default_value, Some("default_value".to_string()));
         assert_eq!(fields.max_length, Some("100".to_string()));
         assert!(fields.tokens.is_empty());

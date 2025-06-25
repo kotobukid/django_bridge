@@ -162,7 +162,7 @@ mod tests {
         assert_eq!(hashmap.get("product_type"), Some(&"booster".to_string()));
         assert_eq!(hashmap.get("product_no"), Some(&"WXDi-P01".to_string()));
         assert_eq!(hashmap.get("card_page"), Some(&"1".to_string()));
-        assert_eq!(hashmap.get("support_formats"), Some(&"".to_string()));  // 2はDiva
+        assert_eq!(hashmap.get("support_formats"), Some(&"".to_string())); // 2はDiva
     }
 
     #[test]

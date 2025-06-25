@@ -1,7 +1,7 @@
 use crate::repositories::StaticCodeGenerator;
-use color::{Color, ColorTheme};
-use std::sync::Arc;
+use color::Color;
 use sqlx::{Pool, Postgres};
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct ColorRepository {
@@ -10,7 +10,9 @@ pub struct ColorRepository {
 
 impl ColorRepository {
     pub fn new(pool: Arc<Pool<Postgres>>) -> Self {
-        Self { _db_connector: pool }
+        Self {
+            _db_connector: pool,
+        }
     }
 }
 
@@ -49,13 +51,10 @@ impl StaticCodeGenerator for ColorRepository {
                     Color::Colorless => "Colorless",
                     _ => panic!("Unexpected color variant"),
                 };
-                
+
                 format!(
                     r#"("{}", "{}", "{}", "{}"),"#,
-                    color_name,
-                    theme.base,
-                    theme.accent,
-                    theme.light
+                    color_name, theme.base, theme.accent, theme.light
                 )
             })
             .collect()

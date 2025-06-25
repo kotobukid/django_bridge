@@ -1,13 +1,16 @@
 use regex::Regex;
 
 pub mod feature;
-pub use feature::{CardFeature, BurstFeature};
-use crate::BurstFeature::{BlockLrig, BlockSigni, Charge, Defend1, Defend2, Discard, Draw, EraseSkill, Freeze, Guard, Heal, OffenciveDefend, Others, Salvage, Search};
+use crate::BurstFeature::{
+    BlockLrig, BlockSigni, Charge, Defend1, Defend2, Discard, Draw, EraseSkill, Freeze, Guard,
+    Heal, OffenciveDefend, Others, Salvage, Search,
+};
+pub use feature::{BurstFeature, CardFeature};
 // public exports are done at the function level
 
 // フィーチャーのラベル定義を一元管理
 pub mod labels {
-    use super::feature::{CardFeature, BurstFeature};
+    use super::feature::{BurstFeature, CardFeature};
     use once_cell::sync::Lazy;
     use std::collections::HashMap;
 
@@ -489,10 +492,7 @@ pub fn create_detect_patterns() -> (
             r"\(カード名1つを宣言する。宣言されたカード名のカードの【絆】能力が有効になる\)",
             "*BOND*"
         ],
-        replace_pattern![
-            r"\(カード名1つを宣言し、その【絆】能力が有効\)",
-            "*BOND*"
-        ],
+        replace_pattern![r"\(カード名1つを宣言し、その【絆】能力が有効\)", "*BOND*"],
         replace_pattern![
             r"\(生徒とは、ブルーアーカイブにおけるキャラクターのことです。生徒との絆を獲得すると、その生徒のカードが持つ【絆】能力が有効になります。場や手札にいない生徒との絆も獲得できます。ルリグである生徒との絆を獲得した場合は、その生徒のすべてのカードの【絆】能力が有効になります。生徒との絆の数に上限はなく、失われることはありません\!\)",
             "*BOND*"
@@ -694,14 +694,21 @@ pub fn create_detect_patterns() -> (
             CardFeature::OnLifeCrush
         ],
         detect_pattern![r"リコレクトアイコン", CardFeature::Recollect],
-
-        detect_pattern![r"あなたのデッキの上からカードを\d+枚見(る。|て)", CardFeature::SeekTop],
+        detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚見(る。|て)",
+            CardFeature::SeekTop
+        ],
         detect_pattern![r"あなたのデッキの一番上を見", CardFeature::SeekTop],
         detect_pattern![r"あなたのデッキの一番上を公開する", CardFeature::SeekTop],
-        detect_pattern![r"あなたは自分のデッキの上からカードを\d+枚見る", CardFeature::SeekTop],
-        detect_pattern![r"あなたのデッキの上から、カードを\d+枚トラッシュに置きカードを\d+枚見る", CardFeature::SeekTop],   // アト//メモリア
+        detect_pattern![
+            r"あなたは自分のデッキの上からカードを\d+枚見る",
+            CardFeature::SeekTop
+        ],
+        detect_pattern![
+            r"あなたのデッキの上から、カードを\d+枚トラッシュに置きカードを\d+枚見る",
+            CardFeature::SeekTop
+        ], // アト//メモリア
         detect_pattern![r"デッキの上からカードを\d+枚見て", CardFeature::SeekTop],
-
         detect_pattern![r"デッキの一番上に(戻|置)", CardFeature::TopSet],
         detect_pattern![r"のシグニは能力を失う", CardFeature::EraseSkill],
         detect_pattern![r"それは能力を失う", CardFeature::EraseSkill],
@@ -888,126 +895,644 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
     let r_patterns = vec![
         // 基本的な置換パターン（今後拡張予定）
         burst_replace_pattern![r"ライフバースト:", "LB:"],
-        burst_replace_pattern![r"\(パワーが0以下のシグニはルールによってバニッシュされる\)", ""],
-        burst_replace_pattern![r"\(凍結されたシグニは次の自分のアップフェイズにアップしない\)", "", Freeze],
-        burst_replace_pattern![r"\(あなたのデッキの上からカードを\d+枚エナゾーンに置く\)", "", Charge],
-        burst_replace_pattern![r"\(あなたのデッキの一番上のカードをエナゾーンに置く\)", "", Charge],
-        burst_replace_pattern![r"\(《ガードアイコン》を持つシグニは【ガード】を得る\)", "", Guard],
+        burst_replace_pattern![
+            r"\(パワーが0以下のシグニはルールによってバニッシュされる\)",
+            ""
+        ],
+        burst_replace_pattern![
+            r"\(凍結されたシグニは次の自分のアップフェイズにアップしない\)",
+            "",
+            Freeze
+        ],
+        burst_replace_pattern![
+            r"\(あなたのデッキの上からカードを\d+枚エナゾーンに置く\)",
+            "",
+            Charge
+        ],
+        burst_replace_pattern![
+            r"\(あなたのデッキの一番上のカードをエナゾーンに置く\)",
+            "",
+            Charge
+        ],
+        burst_replace_pattern![
+            r"\(《ガードアイコン》を持つシグニは【ガード】を得る\)",
+            "",
+            Guard
+        ],
     ];
 
     let d_patterns = vec![
         burst_detect_pattern![r"【エナチャージ\d+】", Charge],
-        burst_detect_pattern![r"あなたか対戦相手のデッキの上からカードを\d+枚トラッシュに置く。", Others],
-        burst_detect_pattern![r"あなたのエナゾーンから.*のシグニを1枚まで対象とし、それを手札に加えるか場に出す。", Draw, BlockSigni, Defend1],
-        burst_detect_pattern![r"あなたのエナゾーンからシグニを1枚まで対象とし、それを手札に加える。", Draw, Guard],
-        burst_detect_pattern![r"あなたのエナゾーンからシグニを1枚まで対象とし、それを手札に加えるか場に出す。", Draw, BlockSigni, Defend1, Guard],
-        burst_detect_pattern![r"あなたのデッキから.*のシグニ1枚を探して公開し手札に加え、デッキをシャッフルする。", Search, Draw],
-        burst_detect_pattern![r"あなたのデッキから.*のシグニ1枚を探して公開し手札に加えるか場に出し、デッキをシャッフルする。", Search, Draw, Defend1],
-        burst_detect_pattern![r"あなたのデッキからスペル1枚を探して公開し手札に加え、デッキをシャッフルする。", Search, Draw],
-        burst_detect_pattern![r"あなたのデッキの一番上と一番下を見る。その中からシグニを1枚まで場に出し、残りを手札に加える。", Search, Draw, Defend1],
-        burst_detect_pattern![r"あなたのデッキの一番上のカードをエナゾーンに置く。その後、あなたのエナゾーンからカードを1枚まで対象とし、それを手札に加える。", Charge, Guard, Draw],
-        burst_detect_pattern![r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d+枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。", Draw, Guard, BlockLrig, Defend1],
-        burst_detect_pattern![r"あなたのデッキの上からカードを\d+枚見る。その中からシグニ1枚を公開し手札に加えるか場に出し、残りを好きな順番でデッキの一番下に置く。",Draw, Salvage, Defend1, BlockSigni, BlockLrig],
-        burst_detect_pattern![r"あなたのデッキの上からカードを\d+枚見る。その中からカードを1枚まで手札に加え、残りをデッキに加えてシャッフルする。", Search, Guard, Draw, BlockLrig],
-        burst_detect_pattern![r"あなたのデッキの上からカードを\d+枚トラッシュに置く。", Others],
-        burst_detect_pattern![r"あなたのトラッシュから無色ではないシグニ1枚を対象とし、それを手札に加える。", Salvage, Draw],
-        burst_detect_pattern![r"あなたのデッキの上からカードを\d+枚見る。その中からシグニ1枚を公開し手札に加えるか場に出し、残りを好きな順番でデッキの一番下に置く。", Search, Guard, Draw, BlockSigni, BlockLrig, Defend1],
-        burst_detect_pattern![r"あなたのデッキの上からカードを\d+枚見る。その中からシグニを\d+枚まで公開し手札に加え、残りを好きな順番でデッキの一番下に置く。", Search, Guard, Draw],
-        burst_detect_pattern![r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d+枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。", Search, Guard, Draw],
-        burst_detect_pattern![r"あなたのデッキをシャッフルし一番上のカードをライフクロスに加える。", Heal, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュから、対象のレベル\d+の.*のシグニ1枚を手札に加えて対象のレベル\d+の.*のシグニ1枚を場に出す。", Defend1, BlockSigni, Salvage, Draw],
-        burst_detect_pattern![r"あなたのトラッシュから.+のシグニ1枚を対象とし、それを手札に加える。", Salvage, Draw],
-        burst_detect_pattern![r"あなたのトラッシュから.+のシグニ1枚を対象とし、それを手札に加えるか場に出す。", Salvage, Draw, Defend1, BlockSigni],
-        burst_detect_pattern![r"あなたのトラッシュから.+のシグニ1枚を対象とし、それを場に出す。", Defend1, BlockSigni],
-        burst_detect_pattern![r"あなたのトラッシュから.+のシグニをd+枚まで対象とし、それらを手札に加える。", Salvage, Draw],
-        burst_detect_pattern![r"あなたのトラッシュから《ガードアイコン》を持たないシグニ1枚を対象とし、それを手札に加える。", Salvage, Draw],
-        burst_detect_pattern![r"あなたのトラッシュから《ガードアイコン》を持たないシグニ1枚を対象とし、それを手札に加えるか場に出す。", Salvage, Defend1, BlockSigni, Draw],
-        burst_detect_pattern![r"あなたのトラッシュから《ガードアイコン》を持たないシグニ\d+枚まで対象とし、それらを手札に加える。", Salvage, Draw],
-        burst_detect_pattern![r"あなたのトラッシュから《ガードアイコン》を持たないレベル\d+以下のシグニ1枚を対象とし、それを手札に加えるか場に出す。", Salvage, Defend1, BlockSigni, Draw],
-        burst_detect_pattern![r"あなたのトラッシュから《ガードアイコン》を持つシグニ1枚を対象とし、それを手札に加える。", Salvage, Guard, Draw, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュから《ディソナアイコン》のシグニ1枚を対象とし、それを手札に加えるか場に出す。", Salvage, Defend1, BlockSigni],
-        burst_detect_pattern![r"あなたのトラッシュから【ライフバースト】を持たないカード1枚を対象とし、それをライフクロスに加える。", Heal, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュからカード1枚を対象とし、それを手札に加える。", Salvage, Guard, Draw, BlockLrig, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュからシグニ1枚を手札に加える。", Salvage, Draw, Guard, BlockLrig, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュからシグニ1枚を対象とし、それを手札に加える。", Salvage, Guard, Draw, BlockLrig, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュからシグニ1枚を対象とし、それを手札に加えるか場に出す。", Salvage, Defend1, BlockSigni, Draw, Guard, BlockLrig],
-        burst_detect_pattern![r"あなたのトラッシュからシグニとスペルをそれぞれ1枚まで対象とし、それらを手札に加える。", Salvage, Guard, Draw, BlockLrig, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュからシグニを2枚まで対象とし、それらを手札に加える。", Salvage, Draw, BlockLrig, Defend1],
-        burst_detect_pattern![r"あなたのトラッシュからスペルを2枚まで対象とし、それらを手札に加える。", Salvage, Draw],
-        burst_detect_pattern![r"あなたのライフクロス1枚を手札に加えてもよい。そうした場合、あなたの手札を1枚ライフクロスに加える。", Draw, Heal],
-        burst_detect_pattern![r"あなたの手札が\d+枚以上ある場合、対戦相手のアップ状態のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"あなたの手札から.+のシグニを1枚まで場に出す。", Defend1, BlockSigni],
-        burst_detect_pattern![r"あなたの場に.+いる場合、対戦相手のパワー\d+以下のシグニ1体を対象とし、それを手札に戻す。", OffenciveDefend, Defend1, BlockSigni],
+        burst_detect_pattern![
+            r"あなたか対戦相手のデッキの上からカードを\d+枚トラッシュに置く。",
+            Others
+        ],
+        burst_detect_pattern![
+            r"あなたのエナゾーンから.*のシグニを1枚まで対象とし、それを手札に加えるか場に出す。",
+            Draw,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのエナゾーンからシグニを1枚まで対象とし、それを手札に加える。",
+            Draw,
+            Guard
+        ],
+        burst_detect_pattern![
+            r"あなたのエナゾーンからシグニを1枚まで対象とし、それを手札に加えるか場に出す。",
+            Draw,
+            BlockSigni,
+            Defend1,
+            Guard
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキから.*のシグニ1枚を探して公開し手札に加え、デッキをシャッフルする。",
+            Search,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキから.*のシグニ1枚を探して公開し手札に加えるか場に出し、デッキをシャッフルする。",
+            Search,
+            Draw,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキからスペル1枚を探して公開し手札に加え、デッキをシャッフルする。",
+            Search,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの一番上と一番下を見る。その中からシグニを1枚まで場に出し、残りを手札に加える。",
+            Search,
+            Draw,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの一番上のカードをエナゾーンに置く。その後、あなたのエナゾーンからカードを1枚まで対象とし、それを手札に加える。",
+            Charge,
+            Guard,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d+枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。",
+            Draw,
+            Guard,
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚見る。その中からシグニ1枚を公開し手札に加えるか場に出し、残りを好きな順番でデッキの一番下に置く。",
+            Draw,
+            Salvage,
+            Defend1,
+            BlockSigni,
+            BlockLrig
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚見る。その中からカードを1枚まで手札に加え、残りをデッキに加えてシャッフルする。",
+            Search,
+            Guard,
+            Draw,
+            BlockLrig
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚トラッシュに置く。",
+            Others
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから無色ではないシグニ1枚を対象とし、それを手札に加える。",
+            Salvage,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚見る。その中からシグニ1枚を公開し手札に加えるか場に出し、残りを好きな順番でデッキの一番下に置く。",
+            Search,
+            Guard,
+            Draw,
+            BlockSigni,
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚見る。その中からシグニを\d+枚まで公開し手札に加え、残りを好きな順番でデッキの一番下に置く。",
+            Search,
+            Guard,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d+枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。",
+            Search,
+            Guard,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのデッキをシャッフルし一番上のカードをライフクロスに加える。",
+            Heal,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから、対象のレベル\d+の.*のシグニ1枚を手札に加えて対象のレベル\d+の.*のシグニ1枚を場に出す。",
+            Defend1,
+            BlockSigni,
+            Salvage,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから.+のシグニ1枚を対象とし、それを手札に加える。",
+            Salvage,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから.+のシグニ1枚を対象とし、それを手札に加えるか場に出す。",
+            Salvage,
+            Draw,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから.+のシグニ1枚を対象とし、それを場に出す。",
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから.+のシグニをd+枚まで対象とし、それらを手札に加える。",
+            Salvage,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから《ガードアイコン》を持たないシグニ1枚を対象とし、それを手札に加える。",
+            Salvage,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから《ガードアイコン》を持たないシグニ1枚を対象とし、それを手札に加えるか場に出す。",
+            Salvage,
+            Defend1,
+            BlockSigni,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから《ガードアイコン》を持たないシグニ\d+枚まで対象とし、それらを手札に加える。",
+            Salvage,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから《ガードアイコン》を持たないレベル\d+以下のシグニ1枚を対象とし、それを手札に加えるか場に出す。",
+            Salvage,
+            Defend1,
+            BlockSigni,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから《ガードアイコン》を持つシグニ1枚を対象とし、それを手札に加える。",
+            Salvage,
+            Guard,
+            Draw,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから《ディソナアイコン》のシグニ1枚を対象とし、それを手札に加えるか場に出す。",
+            Salvage,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュから【ライフバースト】を持たないカード1枚を対象とし、それをライフクロスに加える。",
+            Heal,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュからカード1枚を対象とし、それを手札に加える。",
+            Salvage,
+            Guard,
+            Draw,
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュからシグニ1枚を手札に加える。",
+            Salvage,
+            Draw,
+            Guard,
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュからシグニ1枚を対象とし、それを手札に加える。",
+            Salvage,
+            Guard,
+            Draw,
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュからシグニ1枚を対象とし、それを手札に加えるか場に出す。",
+            Salvage,
+            Defend1,
+            BlockSigni,
+            Draw,
+            Guard,
+            BlockLrig
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュからシグニとスペルをそれぞれ1枚まで対象とし、それらを手札に加える。",
+            Salvage,
+            Guard,
+            Draw,
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュからシグニを2枚まで対象とし、それらを手札に加える。",
+            Salvage,
+            Draw,
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"あなたのトラッシュからスペルを2枚まで対象とし、それらを手札に加える。",
+            Salvage,
+            Draw
+        ],
+        burst_detect_pattern![
+            r"あなたのライフクロス1枚を手札に加えてもよい。そうした場合、あなたの手札を1枚ライフクロスに加える。",
+            Draw,
+            Heal
+        ],
+        burst_detect_pattern![
+            r"あなたの手札が\d+枚以上ある場合、対戦相手のアップ状態のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"あなたの手札から.+のシグニを1枚まで場に出す。",
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"あなたの場に.+いる場合、対戦相手のパワー\d+以下のシグニ1体を対象とし、それを手札に戻す。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
         burst_detect_pattern![r"カードを\d+枚引", Draw],
-        burst_detect_pattern![r"このターン、あなたの手札にあるシグニは《ガードアイコン》を得る。", Guard, Defend1, BlockLrig],
-        burst_detect_pattern![r"このターン、あなたは対戦相手のレベル\d+(以上|以下)のシグニによってダメージを受けない。", BlockSigni, Defend1, Defend2],
-        burst_detect_pattern![r"このターン、次にあなたがシグニ(から|によって)ダメージを受ける場合、代わりにダメージを受けない。", BlockSigni, Defend1],
-        burst_detect_pattern![r"このターン、次にあなたがルリグによってダメージを受ける場合、代わりにダメージを受けない。", BlockLrig, Defend1],
-        burst_detect_pattern![r"このターン、次にシグニがアタックしたとき、そのアタックを無効にする。", BlockSigni, Defend1],
-        burst_detect_pattern![r"このターンにアタックした対戦相手のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend],
-        burst_detect_pattern![r"ターン終了時まで、あなたのすべてのシグニのパワーを\+\d+する。", Others],
-        burst_detect_pattern![r"ターン終了時まで、対戦相手のすべてのシグニは能力を失う。", EraseSkill],
+        burst_detect_pattern![
+            r"このターン、あなたの手札にあるシグニは《ガードアイコン》を得る。",
+            Guard,
+            Defend1,
+            BlockLrig
+        ],
+        burst_detect_pattern![
+            r"このターン、あなたは対戦相手のレベル\d+(以上|以下)のシグニによってダメージを受けない。",
+            BlockSigni,
+            Defend1,
+            Defend2
+        ],
+        burst_detect_pattern![
+            r"このターン、次にあなたがシグニ(から|によって)ダメージを受ける場合、代わりにダメージを受けない。",
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"このターン、次にあなたがルリグによってダメージを受ける場合、代わりにダメージを受けない。",
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"このターン、次にシグニがアタックしたとき、そのアタックを無効にする。",
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"このターンにアタックした対戦相手のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend
+        ],
+        burst_detect_pattern![
+            r"ターン終了時まで、あなたのすべてのシグニのパワーを\+\d+する。",
+            Others
+        ],
+        burst_detect_pattern![
+            r"ターン終了時まで、対戦相手のすべてのシグニは能力を失う。",
+            EraseSkill
+        ],
         burst_detect_pattern![r"好きな生徒1人との絆を獲得する。", Others],
-
-        burst_detect_pattern![r"数字1つを宣言する。あなたのデッキの上からカードを5枚公開する。その中から宣言した数字と同じレベルを持つシグニを2枚まで手札に加え、残りをシャッフルしてデッキの一番下に置く。", Draw],
-        burst_detect_pattern![r"対戦相手のアップ状態のシグニ1体を対象とし、それをデッキの一番下に置く。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のアップ状態のシグニ1体を対象とし、それをトラッシュに置く。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のアップ状態のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のアップ状態のシグニ1体を対象とし、それを手札に戻す。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のアップ状態のシグニ1体を対象とし、ターン終了時まで、それのパワーを\-\d+する。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のアップ状態のシグニ1体を対象とし、手札を1枚捨ててもよい。そうした場合、それをデッキの一番下に置く。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のエナゾーンからカード1枚を対象とし、それをトラッシュに置く。", Others],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをデッキの一番下に置く。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それを手札に戻す。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、それをエナゾーンに置く。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、それをダウンし凍結する。", Defend1, BlockSigni, Freeze],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、それをダウンする。", BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、それを手札に戻す。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、ターン終了時まで、それのパワーを\-\d+する。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、ターン終了時まで、それのパワーをあなたのトラッシュにある.*のカード1枚につき\-\d+する。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、ターン終了時まで、それは「【常】:アタックできない。」を得る。", Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをデッキの一番下に置く。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをバニッシュする。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のシグニ1体を対象とし、対戦相手が.+を支払わないかぎり、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のシグニを2体まで対象とし、それらをダウンする。", BlockSigni, Defend2],
-        burst_detect_pattern![r"対戦相手のシグニを2体まで対象とし、ターン終了時まで、それらは「【常】:アタックできない。」を得る。", BlockSigni, Defend2],
-        burst_detect_pattern![r"対戦相手のセンタールリグかシグニ1体を対象とし、ターン終了時まで、それは「【常】:アタックできない。」を得る。", Defend1, BlockSigni, BlockLrig],
-        burst_detect_pattern![r"対戦相手のセンタールリグとすべてのシグニをダウンする。", Defend2, BlockSigni, BlockLrig],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それを手札に戻す。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それをデッキの一番下に置く。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それをバニッシュする。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それを手札に戻す。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをデッキの一番下に置く。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それを手札に戻す。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、手札を1枚捨ててもよい。そうした場合、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、対戦相手が.+を支払わないかぎり、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをエナゾーンに置く。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それをバニッシュする。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手のルリグ1体と対戦相手のシグニ1体を対象とし、それらを凍結する。", Freeze],
-        burst_detect_pattern![r"対戦相手のルリグ1体を対象とし、それをダウンする。", BlockLrig, Defend1],
+        burst_detect_pattern![
+            r"数字1つを宣言する。あなたのデッキの上からカードを5枚公開する。その中から宣言した数字と同じレベルを持つシグニを2枚まで手札に加え、残りをシャッフルしてデッキの一番下に置く。",
+            Draw
+        ],
+        burst_detect_pattern![
+            r"対戦相手のアップ状態のシグニ1体を対象とし、それをデッキの一番下に置く。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のアップ状態のシグニ1体を対象とし、それをトラッシュに置く。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のアップ状態のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のアップ状態のシグニ1体を対象とし、それを手札に戻す。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のアップ状態のシグニ1体を対象とし、ターン終了時まで、それのパワーを\-\d+する。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のアップ状態のシグニ1体を対象とし、手札を1枚捨ててもよい。そうした場合、それをデッキの一番下に置く。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のエナゾーンからカード1枚を対象とし、それをトラッシュに置く。",
+            Others
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをデッキの一番下に置く。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それを手札に戻す。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、それをエナゾーンに置く。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、それをダウンし凍結する。",
+            Defend1,
+            BlockSigni,
+            Freeze
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、それをダウンする。",
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、それを手札に戻す。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、ターン終了時まで、それのパワーを\-\d+する。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、ターン終了時まで、それのパワーをあなたのトラッシュにある.*のカード1枚につき\-\d+する。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、ターン終了時まで、それは「【常】:アタックできない。」を得る。",
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをデッキの一番下に置く。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをバニッシュする。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニ1体を対象とし、対戦相手が.+を支払わないかぎり、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニを2体まで対象とし、それらをダウンする。",
+            BlockSigni,
+            Defend2
+        ],
+        burst_detect_pattern![
+            r"対戦相手のシグニを2体まで対象とし、ターン終了時まで、それらは「【常】:アタックできない。」を得る。",
+            BlockSigni,
+            Defend2
+        ],
+        burst_detect_pattern![
+            r"対戦相手のセンタールリグかシグニ1体を対象とし、ターン終了時まで、それは「【常】:アタックできない。」を得る。",
+            Defend1,
+            BlockSigni,
+            BlockLrig
+        ],
+        burst_detect_pattern![
+            r"対戦相手のセンタールリグとすべてのシグニをダウンする。",
+            Defend2,
+            BlockSigni,
+            BlockLrig
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それを手札に戻す。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それをデッキの一番下に置く。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それをバニッシュする。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それを手札に戻す。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをデッキの一番下に置く。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それを手札に戻す。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、手札を1枚捨ててもよい。そうした場合、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、対戦相手が.+を支払わないかぎり、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、.+を支払ってもよい。そうした場合、それをエナゾーンに置く。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、《コインアイコン》を支払ってもよい。そうした場合、それをバニッシュする。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のパワー\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手のルリグ1体と対戦相手のシグニ1体を対象とし、それらを凍結する。",
+            Freeze
+        ],
+        burst_detect_pattern![
+            r"対戦相手のルリグ1体を対象とし、それをダウンする。",
+            BlockLrig,
+            Defend1
+        ],
         burst_detect_pattern![r"対戦相手のルリグ1体を対象とし、それを凍結する。", Freeze],
-        burst_detect_pattern![r"対戦相手のルリグ1体を対象とし、ターン終了時まで、それは「【常】:アタックできない。」を得る。", BlockLrig, Defend1],
-        burst_detect_pattern![r"対戦相手のルリグかシグニ1体を対象とする。このターン、それがアタックしたとき、対戦相手が手札を\d+枚捨てないかぎり、そのアタックを無効にする。", Defend1, BlockSigni, BlockLrig],
-        burst_detect_pattern![r"対戦相手のレベル\d+(以下|以下)のシグニ1体を対象とし、それをデッキの一番下に置く。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のレベル\d+(以下|以下)のシグニ1体を対象とし、それをトラッシュに置く。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のレベル\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, BlockSigni, Defend1],
-        burst_detect_pattern![r"対戦相手のレベル\d+のシグニ1体を対象とし、それをバニッシュする。", OffenciveDefend, Defend1, BlockSigni],
+        burst_detect_pattern![
+            r"対戦相手のルリグ1体を対象とし、ターン終了時まで、それは「【常】:アタックできない。」を得る。",
+            BlockLrig,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のルリグかシグニ1体を対象とする。このターン、それがアタックしたとき、対戦相手が手札を\d+枚捨てないかぎり、そのアタックを無効にする。",
+            Defend1,
+            BlockSigni,
+            BlockLrig
+        ],
+        burst_detect_pattern![
+            r"対戦相手のレベル\d+(以下|以下)のシグニ1体を対象とし、それをデッキの一番下に置く。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のレベル\d+(以下|以下)のシグニ1体を対象とし、それをトラッシュに置く。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のレベル\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            BlockSigni,
+            Defend1
+        ],
+        burst_detect_pattern![
+            r"対戦相手のレベル\d+のシグニ1体を対象とし、それをバニッシュする。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
         burst_detect_pattern![r"対戦相手の手札を\d+枚見ないで選び、捨てさせる。", Discard],
         burst_detect_pattern![r"対戦相手の手札を見て\d+枚選び、捨てさせる。", Discard],
-        burst_detect_pattern![r"対戦相手は自分のシグニ1体を選びデッキの一番下に置く。", OffenciveDefend, Defend1, BlockSigni],
-        burst_detect_pattern![r"対戦相手は自分のシグニ1体を選びトラッシュに置く。", OffenciveDefend, Defend1, BlockSigni],
+        burst_detect_pattern![
+            r"対戦相手は自分のシグニ1体を選びデッキの一番下に置く。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
+        burst_detect_pattern![
+            r"対戦相手は自分のシグニ1体を選びトラッシュに置く。",
+            OffenciveDefend,
+            Defend1,
+            BlockSigni
+        ],
         burst_detect_pattern![r"対戦相手は手札を\d+枚捨てる。", Discard],
-
         // selectエラー
         // burst_detect_pattern![r"あなたのアタックフェイズ開始時、あなたの場に<水獣>のシグニがある場合、カードを1枚引き、対戦相手のデッキの一番上を公開する。公開したそのカードが【ライフバースト】を持つ場合、カードを１枚引く。"],
         // burst_detect_pattern![r"【起】《ゲーム１回》リクエスト《青×0》：このターンと次のターンの間、あなたのすべての領域にあるカードは【ライフバースト】「カードを１枚引く。その後、対戦相手のシグニ１体を対象とし、手札を２枚捨ててもよい。そうした場合、それをダウンする。」を得る。"],

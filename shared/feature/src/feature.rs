@@ -343,9 +343,9 @@ impl BurstHashSetToBits for HashSet<BurstFeature> {
 // BurstFeature用のExport構造体
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ExportedBurstFeature {
-    pub name: String,        // Feature名（例: "BurstDraw"）
-    pub bit_shift: i64,      // ビットシフト値
-    pub tag: FeatureTag,     // タグカテゴリ
+    pub name: String,    // Feature名（例: "BurstDraw"）
+    pub bit_shift: i64,  // ビットシフト値
+    pub tag: FeatureTag, // タグカテゴリ
 }
 
 // Export用の方法を実装

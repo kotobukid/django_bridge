@@ -62,14 +62,14 @@ impl RawCardService {
             for element in document.select(&card_skill_selector) {
                 // HTMLを取得してIMGタグを置換する
                 let html_content = element.inner_html();
-                
+
                 // この要素がライフバーストで始まっていないかチェック
                 if !self.starts_with_life_burst_icon(&html_content) {
                     let processed_text = self.replace_img_tags_with_alt(&html_content);
-                    
+
                     // HTMLタグを除去してテキストのみ取得
                     let cleaned_text = self.remove_html_tags(&processed_text);
-                    
+
                     if !cleaned_text.trim().is_empty() {
                         return cleaned_text.trim().to_string();
                     }
@@ -91,11 +91,12 @@ impl RawCardService {
                                 if let Some(td) = tr.select(&td_selector).next() {
                                     // HTMLを取得してIMGタグを置換する
                                     let html_content = td.inner_html();
-                                    let processed_text = self.replace_img_tags_with_alt(&html_content);
-                                    
+                                    let processed_text =
+                                        self.replace_img_tags_with_alt(&html_content);
+
                                     // HTMLタグを除去してテキストのみ取得
                                     let cleaned_text = self.remove_html_tags(&processed_text);
-                                    
+
                                     return cleaned_text.trim().to_string();
                                 }
                             }
@@ -115,7 +116,7 @@ impl RawCardService {
         if let Ok(card_skill_selector) = ScraperSelector::parse(".cardSkill") {
             for element in document.select(&card_skill_selector) {
                 let html_content = element.inner_html();
-                
+
                 // この要素がライフバーストで始まっているかチェック
                 if self.starts_with_life_burst_icon(&html_content) {
                     burst_texts.extend(self.extract_burst_from_html_content(&html_content));
@@ -131,54 +132,58 @@ impl RawCardService {
     /// スキル要素の先頭にライフバーストアイコンがある場合のみ抽出する
     pub fn extract_burst_from_html_content(&self, html_content: &str) -> Vec<String> {
         let mut burst_texts = Vec::new();
-        
+
         // ライフバーストアイコンで始まっているかチェック
         if self.starts_with_life_burst_icon(html_content) {
             // IMGタグを置換してテキストを抽出
             let processed_text = self.replace_img_tags_with_alt(html_content);
             let cleaned_text = self.remove_html_tags(&processed_text);
-            
+
             // ライフバーストの後のテキストを抽出
             let burst_text = if let Some(colon_pos) = cleaned_text.find('：') {
                 cleaned_text[colon_pos + 3..].trim()
             } else if cleaned_text.starts_with("ライフバースト") {
                 // 「ライフバースト」の後の部分を取得
-                cleaned_text.strip_prefix("ライフバースト").unwrap_or("").trim()
+                cleaned_text
+                    .strip_prefix("ライフバースト")
+                    .unwrap_or("")
+                    .trim()
             } else {
                 // ライフバーストアイコンが置換された場合の処理
                 cleaned_text.trim()
             };
-            
+
             if !burst_text.is_empty() {
                 burst_texts.push(burst_text.to_string());
             }
         }
-        
+
         burst_texts
     }
 
     /// HTMLの先頭がライフバーストアイコンかどうかをチェック
     pub fn starts_with_life_burst_icon(&self, html: &str) -> bool {
         let trimmed = html.trim();
-        
+
         // ライフバーストアイコンのIMGタグで始まっているかチェック
         if trimmed.starts_with("<img") {
             // 最初のimgタグを抽出して、それがライフバーストアイコンかチェック
             if let Some(end_pos) = trimmed.find('>') {
                 let img_tag = &trimmed[..=end_pos];
-                if img_tag.contains("icon_txt_burst.png") || 
-                   img_tag.contains("alt=\"ライフバースト\"") ||
-                   img_tag.contains("alt='ライフバースト'") {
+                if img_tag.contains("icon_txt_burst.png")
+                    || img_tag.contains("alt=\"ライフバースト\"")
+                    || img_tag.contains("alt='ライフバースト'")
+                {
                     return true;
                 }
             }
         }
-        
+
         // 直接「ライフバースト」で始まっている場合（アイコンが既にテキストに変換されている場合）
         if trimmed.starts_with("ライフバースト") {
             return true;
         }
-        
+
         false
     }
 
@@ -197,7 +202,7 @@ impl RawCardService {
     fn remove_html_tags(&self, html: &str) -> String {
         let re = Regex::new(r"<[^>]*>").unwrap();
         let without_tags = re.replace_all(html, "");
-        
+
         // 改行とスペースを正規化
         let normalized = without_tags
             .lines()
@@ -205,7 +210,7 @@ impl RawCardService {
             .filter(|line| !line.is_empty())
             .collect::<Vec<_>>()
             .join("\n");
-        
+
         normalized
     }
 
@@ -281,9 +286,9 @@ impl RawCardService {
         .bind(&create_raw_card.skill_text)
         .bind(&create_raw_card.life_burst_text)
         .bind(&create_raw_card.source_url)
-        .bind(&create_raw_card.scraped_at)
-        .bind(&create_raw_card.last_analyzed_at)
-        .bind(&create_raw_card.is_analyzed)
+        .bind(create_raw_card.scraped_at)
+        .bind(create_raw_card.last_analyzed_at)
+        .bind(create_raw_card.is_analyzed)
         .bind(&create_raw_card.analysis_error)
         .bind(product_id)
         .fetch_one(pool.as_ref())

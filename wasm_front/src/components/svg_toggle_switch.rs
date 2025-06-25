@@ -16,17 +16,19 @@ pub fn SvgToggleSwitch(
     let is_on_2 = is_on.clone();
     let is_on_3 = is_on.clone();
     let is_on_4 = is_on.clone();
-    
-    let track_fill = move || if disabled {
-        "#d1d5db" // gray-300
-    } else {
-        "#e5e7eb" // gray-200 - 常に薄いグレー（ON/OFF関係なく）
+
+    let track_fill = move || {
+        if disabled {
+            "#d1d5db" // gray-300
+        } else {
+            "#e5e7eb" // gray-200 - 常に薄いグレー（ON/OFF関係なく）
+        }
     };
 
     let knob_x = move || if is_on_2() { 24.0 } else { 4.0 };
 
     view! {
-        <div 
+        <div
             class=move || format!(
                 "flex items-center space-x-3 cursor-pointer hover:bg-white rounded p-2 transition-colors {}",
                 if disabled { "opacity-50 cursor-not-allowed" } else { "" }
@@ -93,7 +95,7 @@ pub fn SvgToggleSwitch(
                     </g>
                 </svg>
             </div>
-            
+
             // ラベルテキスト
             <span class=move || format!(
                 "text-sm text-gray-700 select-none {}",

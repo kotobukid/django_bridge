@@ -29,24 +29,24 @@ pub fn to_half(text: &str) -> String {
             // Full-width space
             '　' => ' ',
             // Common full-width symbols
-            '－' => '-',  // Full-width hyphen/minus
-            '＋' => '+',  // Full-width plus
-            '．' => '.',  // Full-width period
-            '，' => ',',  // Full-width comma
-            '：' => ':',  // Full-width colon
-            '；' => ';',  // Full-width semicolon
-            '！' => '!',  // Full-width exclamation
-            '？' => '?',  // Full-width question mark
-            '（' => '(',  // Full-width left parenthesis
-            '）' => ')',  // Full-width right parenthesis
-            '［' => '[',  // Full-width left bracket
-            '］' => ']',  // Full-width right bracket
-            '＊' => '*',  // Full-width asterisk
-            '＆' => '&',  // Full-width ampersand
-            '＝' => '=',  // Full-width equals
-            '／' => '/',  // Full-width slash
-            '＜' => '<',  // Full-width less than
-            '＞' => '>',  // Full-width greater than
+            '－' => '-', // Full-width hyphen/minus
+            '＋' => '+', // Full-width plus
+            '．' => '.', // Full-width period
+            '，' => ',', // Full-width comma
+            '：' => ':', // Full-width colon
+            '；' => ';', // Full-width semicolon
+            '！' => '!', // Full-width exclamation
+            '？' => '?', // Full-width question mark
+            '（' => '(', // Full-width left parenthesis
+            '）' => ')', // Full-width right parenthesis
+            '［' => '[', // Full-width left bracket
+            '］' => ']', // Full-width right bracket
+            '＊' => '*', // Full-width asterisk
+            '＆' => '&', // Full-width ampersand
+            '＝' => '=', // Full-width equals
+            '／' => '/', // Full-width slash
+            '＜' => '<', // Full-width less than
+            '＞' => '>', // Full-width greater than
             // Keep other characters as-is
             _ => ch,
         })
@@ -96,7 +96,6 @@ pub trait RawCardAnalyzer {
     }
 }
 
-
 /// Convert a set of features to two 64-bit integers
 pub fn features_to_bits(features: &HashSet<CardFeature>) -> (i64, i64) {
     let mut bits1: i64 = 0;
@@ -115,21 +114,24 @@ pub fn features_to_bits(features: &HashSet<CardFeature>) -> (i64, i64) {
     (bits1, bits2)
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_to_half_uppercase() {
-        assert_eq!(to_half("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ"), 
-                   "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+        assert_eq!(
+            to_half("ＡＢＣＤＥＦＧＨＩＪＫＬＭＮＯＰＱＲＳＴＵＶＷＸＹＺ"),
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        );
     }
 
     #[test]
     fn test_to_half_lowercase() {
-        assert_eq!(to_half("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ"), 
-                   "abcdefghijklmnopqrstuvwxyz");
+        assert_eq!(
+            to_half("ａｂｃｄｅｆｇｈｉｊｋｌｍｎｏｐｑｒｓｔｕｖｗｘｙｚ"),
+            "abcdefghijklmnopqrstuvwxyz"
+        );
     }
 
     #[test]
@@ -158,7 +160,10 @@ mod tests {
     #[test]
     fn test_to_half_symbols() {
         // Test that full-width symbols are converted
-        assert_eq!(to_half("【チャーム】《ガードアイコン》：；・"), "【チャーム】《ガードアイコン》:;・");
+        assert_eq!(
+            to_half("【チャーム】《ガードアイコン》：；・"),
+            "【チャーム】《ガードアイコン》:;・"
+        );
         assert_eq!(to_half("（パワー＋１０００）"), "(パワー+1000)");
         assert_eq!(to_half("！？＝＜＞"), "!?=<>");
     }
@@ -166,11 +171,20 @@ mod tests {
     #[test]
     fn test_to_half_real_card_examples() {
         // Real card name examples
-        assert_eq!(to_half("コードアクセル　Ｈｙａｈｈａｈ"), "コードアクセル Hyahhah");
-        assert_eq!(to_half("羅植姫　ガーベラ／／Ｍｅｍｏｒｉａｌ"), "羅植姫 ガーベラ//Memorial");
-        
+        assert_eq!(
+            to_half("コードアクセル　Ｈｙａｈｈａｈ"),
+            "コードアクセル Hyahhah"
+        );
+        assert_eq!(
+            to_half("羅植姫　ガーベラ／／Ｍｅｍｏｒｉａｌ"),
+            "羅植姫 ガーベラ//Memorial"
+        );
+
         // Real skill text examples
-        assert_eq!(to_half("【エナチャージ１】をする"), "【エナチャージ1】をする");
+        assert_eq!(
+            to_half("【エナチャージ１】をする"),
+            "【エナチャージ1】をする"
+        );
         assert_eq!(to_half("パワーを＋２０００する"), "パワーを+2000する");
     }
 
@@ -195,5 +209,4 @@ mod tests {
         assert_eq!(bits1, draw_shift1 | banish_shift1);
         assert_eq!(bits2, draw_shift2 | banish_shift2);
     }
-
 }

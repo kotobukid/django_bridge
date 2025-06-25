@@ -25,8 +25,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .fetch_one(&pool)
         .await?;
 
-    println!("Retrieved RawCard: ID={}, Name={}", raw_card.id, raw_card.name);
-    println!("HTML snippet: {}", &raw_card.raw_html[..200.min(raw_card.raw_html.len())]);
+    println!(
+        "Retrieved RawCard: ID={}, Name={}",
+        raw_card.id, raw_card.name
+    );
+    println!(
+        "HTML snippet: {}",
+        &raw_card.raw_html[..200.min(raw_card.raw_html.len())]
+    );
 
     // WebAppアナライザーを作成
     let analyzer = WebAppRawCardAnalyzer::new();
@@ -40,7 +46,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Card type: {} (DB ID)", create_card.card_type);
             println!("Color: {}", create_card.color);
             println!("Has burst: {}", create_card.has_burst);
-            
+
             // card_typeが0でない場合は成功
             if create_card.card_type != 0 {
                 println!("✅ Card type detection successful! (was previously 0)");
@@ -72,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let type_name = match card_type {
             0 => "Unknown",
             1 => "Lrig",
-            2 => "LrigAssist", 
+            2 => "LrigAssist",
             3 => "Arts",
             4 => "Key",
             5 => "Signi",

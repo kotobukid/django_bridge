@@ -311,7 +311,7 @@ impl From<Card> for CreateCard {
             rarity: Some(val.rarity),
             timing: Some(val.time.to_bitset()),
             card_type: val.card_type.to_db_id(), // 検出されたcard_typeを使用
-            product: 0,   // default
+            product: 0,                          // default
             url: None,
             skill_text: Some(normal_skills.join("\n")),
             feature_bits1: val.feature_bits1,
@@ -360,7 +360,7 @@ impl Card {
         let selector_card_data = &*CARD_DATA_DD;
 
         let mut card_data: Vec<String> = Vec::new();
-        for element in document.select(&selector_card_data) {
+        for element in document.select(selector_card_data) {
             card_data.push(element.inner_html());
         }
 
@@ -436,13 +436,13 @@ fn element_to_name_and_pronounce(source: String) -> (String, String) {
     let mut name = String::new();
     let mut pronounce = String::new();
 
-    if let Some(br_element) = document.select(&br_selector).next() {
+    if let Some(br_element) = document.select(br_selector).next() {
         if let Some(text_node) = br_element.prev_sibling() {
             name = text_node.value().as_text().unwrap().to_string();
         }
     }
 
-    if let Some(span_element) = document.select(&span_selector).next() {
+    if let Some(span_element) = document.select(span_selector).next() {
         pronounce = span_element.inner_html();
     }
 
@@ -660,7 +660,7 @@ impl CardFeatureRule {
             },
         )
     }
-    
+
     // Direct feature detection without trait
     fn detect_features(&self, text: &str) -> HashSet<CardFeature> {
         let mut features = HashSet::new();

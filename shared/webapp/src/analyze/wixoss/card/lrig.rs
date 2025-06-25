@@ -102,7 +102,7 @@ impl WixossCard for Lrig {
         }
 
         let binding = card_data[9].clone();
-        let coin = binding.trim().split_whitespace().next();
+        let coin = binding.split_whitespace().next();
 
         let (skill, mut features) = parse_card_skill(card_skills.clone());
 

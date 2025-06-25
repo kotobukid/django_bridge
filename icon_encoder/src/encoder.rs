@@ -3,44 +3,44 @@
 use crate::definitions::ICON_RULES;
 
 /// スキルテキストを符号化する
-/// 
+///
 /// アイコンパターン（例：【出】）を一時符号（例：[c]）に置換する。
-/// 
+///
 /// # Arguments
 /// * `text` - 元のスキルテキスト
-/// 
+///
 /// # Returns
 /// 符号化されたテキスト
-/// 
+///
 /// # Example
 /// ```
 /// use icon_encoder::encode_skill_text;
-/// 
+///
 /// let input = "【出】：あなたのデッキの上からカードを5枚見る。そのシグニの【出】能力は発動しない。";
 /// let encoded = encode_skill_text(input);
 /// assert_eq!(encoded, "[c]：あなたのデッキの上からカードを5枚見る。そのシグニの[c]能力は発動しない。");
 /// ```
 pub fn encode_skill_text(text: &str) -> String {
     let mut result = text.to_string();
-    
+
     // 長いパターンから先に置換することで、部分的な置換を防ぐ
     let mut sorted_rules: Vec<_> = ICON_RULES.iter().collect();
     sorted_rules.sort_by(|a, b| b.pattern.len().cmp(&a.pattern.len()));
-    
+
     for rule in sorted_rules {
         result = result.replace(rule.pattern, rule.code);
     }
-    
+
     result
 }
 
 /// ライフバーストテキストを符号化する
-/// 
+///
 /// スキルテキストと同じ処理を行うが、将来的に異なる処理が必要な場合に備えて分離。
-/// 
+///
 /// # Arguments
 /// * `text` - 元のライフバーストテキスト
-/// 
+///
 /// # Returns
 /// 符号化されたテキスト
 pub fn encode_burst_text(text: &str) -> String {
@@ -48,10 +48,10 @@ pub fn encode_burst_text(text: &str) -> String {
 }
 
 /// 複数のテキストをまとめて符号化する
-/// 
+///
 /// # Arguments
 /// * `texts` - 符号化対象のテキストのスライス
-/// 
+///
 /// # Returns
 /// 符号化されたテキストのベクタ
 pub fn encode_multiple_texts(texts: &[&str]) -> Vec<String> {
@@ -71,8 +71,10 @@ mod tests {
 
     #[test]
     fn test_encode_multiple_same_icons() {
-        let input = "【出】：あなたのデッキの上からカードを5枚見る。そのシグニの【出】能力は発動しない。";
-        let expected = "[c]：あなたのデッキの上からカードを5枚見る。そのシグニの[c]能力は発動しない。";
+        let input =
+            "【出】：あなたのデッキの上からカードを5枚見る。そのシグニの【出】能力は発動しない。";
+        let expected =
+            "[c]：あなたのデッキの上からカードを5枚見る。そのシグニの[c]能力は発動しない。";
         assert_eq!(encode_skill_text(input), expected);
     }
 
@@ -124,15 +126,11 @@ mod tests {
 
     #[test]
     fn test_encode_multiple_texts() {
-        let texts = &[
-            "【出】：効果1",
-            "【自】：効果2",
-            "テキストなし"
-        ];
+        let texts = &["【出】：効果1", "【自】：効果2", "テキストなし"];
         let expected = vec![
             "[c]：効果1".to_string(),
             "[p]：効果2".to_string(),
-            "テキストなし".to_string()
+            "テキストなし".to_string(),
         ];
         assert_eq!(encode_multiple_texts(texts), expected);
     }

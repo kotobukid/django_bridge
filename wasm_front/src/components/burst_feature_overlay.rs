@@ -1,8 +1,8 @@
-use leptos::*;
-use leptos::prelude::*;
-use std::collections::HashMap;
-use crate::types::LBFilter;
 use crate::components::SvgToggleSwitch;
+use crate::types::LBFilter;
+use leptos::prelude::*;
+use leptos::*;
+use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 struct BurstFeatureTag {
@@ -88,7 +88,7 @@ pub fn BurstFeatureOverlay(
     let toggle_burst_feature = move |feature_name: String| {
         // トグル前の選択数を記録
         let had_selections_before = selected_burst_features.read().values().any(|&v| v);
-        
+
         let feature_was_turned_on = {
             let mut was_turned_on = false;
             selected_burst_features.update(|features| {
@@ -105,7 +105,7 @@ pub fn BurstFeatureOverlay(
 
         // トグル後の選択数を確認
         let has_selections_after = selected_burst_features.read().values().any(|&v| v);
-        
+
         // 1つ以上から0個になった場合のイベント
         if had_selections_before && !has_selections_after {
             leptos::logging::log!("All burst features were deselected - switching to 指定なし");
@@ -118,7 +118,8 @@ pub fn BurstFeatureOverlay(
         // LBフィーチャーがONになった場合、LBフィルタを「LBあり」に自動切り替え
         if feature_was_turned_on {
             let current_lb_selection = lb_filter.get().selection;
-            if current_lb_selection != 1 { // 「LBあり」でない場合
+            if current_lb_selection != 1 {
+                // 「LBあり」でない場合
                 set_lb_filter.update(|filter| {
                     filter.set_selection(1); // 「LBあり」に設定
                 });
@@ -150,25 +151,32 @@ pub fn BurstFeatureOverlay(
                 value == 2 // LBなしの場合はバースト効果をクリア
             }
         };
-        
+
         // 「LBなし」を選択した場合、バースト効果選択をクリア
         if should_clear_burst_features {
             // デバッグ: クリア前の状態をログ出力
-            leptos::logging::log!("Clearing burst features. Before: {:?}", selected_burst_features.read().len());
-            
+            leptos::logging::log!(
+                "Clearing burst features. Before: {:?}",
+                selected_burst_features.read().len()
+            );
+
             selected_burst_features.set(HashMap::new());
             on_burst_feature_change.set(Vec::new());
-            
+
             // デバッグ: クリア後の状態をログ出力
-            leptos::logging::log!("Cleared burst features. After: {:?}", selected_burst_features.read().len());
+            leptos::logging::log!(
+                "Cleared burst features. After: {:?}",
+                selected_burst_features.read().len()
+            );
         }
     };
 
     // LBフィルタボタンコンポーネント
-    let lb_button = move |value: u8, label: &'static str, inactive_class: &'static str, active_class: &'static str| {
-        let is_active = Memo::new(move |_| {
-            lb_filter.get().selection == value
-        });
+    let lb_button = move |value: u8,
+                          label: &'static str,
+                          inactive_class: &'static str,
+                          active_class: &'static str| {
+        let is_active = Memo::new(move |_| lb_filter.get().selection == value);
 
         view! {
             <button
@@ -191,31 +199,31 @@ pub fn BurstFeatureOverlay(
         <div class="p-6 max-h-[60vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg font-bold text-gray-900">"ライフバースト効果で絞り込み"</h3>
-                
+
                 // LBフィルタ部分
                 <div class="flex items-center gap-3">
                     <span class="text-sm font-bold text-gray-800">"LB:"</span>
                     {lb_button(
-                        0, 
-                        "指定なし", 
+                        0,
+                        "指定なし",
                         "bg-gray-50 border-gray-300 text-gray-600 hover:bg-gray-100 hover:border-gray-400 focus:ring-gray-300",
                         "bg-gray-600 border-gray-600 text-white focus:ring-gray-400"
                     )}
                     {lb_button(
-                        1, 
-                        "LBあり", 
+                        1,
+                        "LBあり",
                         "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 hover:border-blue-400 focus:ring-blue-300",
                         "bg-blue-600 border-blue-600 text-white focus:ring-blue-400"
                     )}
                     {lb_button(
-                        2, 
-                        "LBなし", 
+                        2,
+                        "LBなし",
                         "bg-red-50 border-red-300 text-red-700 hover:bg-red-100 hover:border-red-400 focus:ring-red-300",
                         "bg-red-600 border-red-600 text-white focus:ring-red-400"
                     )}
                 </div>
             </div>
-            
+
             <div class="space-y-2">
                 {feature_tags
                     .into_iter()
@@ -223,12 +231,12 @@ pub fn BurstFeatureOverlay(
                         let tag_id = tag.id.clone();
                         let tag_display = tag.display_name.clone();
                         let features = features_by_tag.get(&tag.id).cloned().unwrap_or_default();
-                        
+
                         // クローンを作成してクロージャで使用
                         let features_for_count = features.clone();
                         let tag_id_for_open = tag_id.clone();
                         let tag_id_for_click = tag_id.clone();
-                        
+
                         // このタグ内で選択されているBurstFeatureの数をカウント
                         let selected_count = Memo::new(move |_| {
                             selected_burst_features.read()
@@ -267,12 +275,12 @@ pub fn BurstFeatureOverlay(
                                             }
                                         }}
                                     </div>
-                                    <svg 
-                                        class=move || format!("w-5 h-5 text-gray-400 transition-transform {}", 
+                                    <svg
+                                        class=move || format!("w-5 h-5 text-gray-400 transition-transform {}",
                                             if is_open_fn() { "rotate-180" } else { "" }
                                         )
-                                        fill="none" 
-                                        stroke="currentColor" 
+                                        fill="none"
+                                        stroke="currentColor"
                                         viewBox="0 0 24 24"
                                     >
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -294,7 +302,7 @@ pub fn BurstFeatureOverlay(
                                                                 let feature_name = feature.name.clone();
                                                                 let feature_name_for_click = feature_name.clone();
                                                                 let feature_name_for_selected = feature_name.clone();
-                                                                
+
                                                                 let is_selected = Memo::new(move |_| {
                                                                     selected_burst_features.read()
                                                                         .get(&feature_name_for_selected)

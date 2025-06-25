@@ -1,3 +1,4 @@
+use crate::repositories::StaticCodeGenerator;
 use models::product::{Product, ProductDb};
 use sqlx::{Pool, Postgres};
 use std::collections::HashMap;
@@ -5,7 +6,6 @@ use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
-use crate::repositories::StaticCodeGenerator;
 
 #[derive(Clone)]
 pub struct ProductRepository {

@@ -230,7 +230,7 @@ impl SearchQuery {
             ProductType::SpecialCard(product_no) => format!("special/{}", product_no),
         };
         let path: PathBuf =
-            PathBuf::from(format!("{}/{}", dir, product_path)).join(&self.to_filename());
+            PathBuf::from(format!("{}/{}", dir, product_path)).join(self.to_filename());
 
         if path.exists() {
             let mut file: File = File::open(&path)?;
@@ -238,10 +238,7 @@ impl SearchQuery {
             file.read_to_string(&mut contents)?;
             Ok(contents)
         } else {
-            Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Cache file not found",
-            ))
+            Err(std::io::Error::other("Cache file not found"))
         }
     }
 }
@@ -301,7 +298,7 @@ pub async fn cache_product_index(
             let body: String = res.text().await?;
 
             let cache_filename: PathBuf =
-                PathBuf::from(format!("./text_cache/{}", p_no)).join(&search_query.to_filename());
+                PathBuf::from(format!("./text_cache/{}", p_no)).join(search_query.to_filename());
             println!("CFN {:?}", cache_filename);
 
             if let Some(parent_path) = cache_filename.parent() {
@@ -607,11 +604,11 @@ impl CardQuery {
         ));
 
         if cache_file.exists() {
-            let mut file: File = File::open(&cache_file).map_err(|e| AnalyzeError::Io(e))?;
+            let mut file: File = File::open(&cache_file).map_err(AnalyzeError::Io)?;
             let mut contents = String::new();
 
             file.read_to_string(&mut contents)
-                .map_err(|e| AnalyzeError::Io(e))?;
+                .map_err(AnalyzeError::Io)?;
             Ok(contents)
         } else {
             let url = "https://www.takaratomy.co.jp/products/wixoss/card_list.php";

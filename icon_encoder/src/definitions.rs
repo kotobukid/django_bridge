@@ -11,7 +11,7 @@ pub struct IconRule {
 }
 
 /// アイコンルールを定義するマクロ
-/// 
+///
 /// # 使用例
 /// ```
 /// # use icon_encoder::definitions::IconRule;
@@ -26,7 +26,7 @@ pub struct IconRule {
 ///         ];
 ///     };
 /// }
-/// 
+///
 /// define_icon_rules![
 ///     ["【出】", "[c]", "IconCip"],
 ///     ["【常】", "[a]", "IconAuto"],
@@ -48,33 +48,26 @@ macro_rules! define_icon_rules {
 // WIXOSSカードゲームのアイコンルール定義
 define_icon_rules![
     // タイミングアイコン
-    ["【出】", "[c]", "IconCip"],           // Comes into play（CIP）
-    ["【絆出】", "[bc]", "IconBondCip"],     // Bond comes into play
-    ["【絆常】", "[ba]", "IconBondAuto"],     // Bond auto
-    ["【絆自】", "[bp]", "IconBondPassive"],     // Bond auto
-    ["【絆起】", "[bac]", "IconBondActivated"],     // Bond activated
-    ["【常】", "[a]", "IconAuto"],          // Auto
-    ["【起】", "[ac]", "IconActivated"],    // Activated
-    ["【自】", "[p]", "IconPassive"],       // Passive
-
+    ["【出】", "[c]", "IconCip"],               // Comes into play（CIP）
+    ["【絆出】", "[bc]", "IconBondCip"],        // Bond comes into play
+    ["【絆常】", "[ba]", "IconBondAuto"],       // Bond auto
+    ["【絆自】", "[bp]", "IconBondPassive"],    // Bond auto
+    ["【絆起】", "[bac]", "IconBondActivated"], // Bond activated
+    ["【常】", "[a]", "IconAuto"],              // Auto
+    ["【起】", "[ac]", "IconActivated"],        // Activated
+    ["【自】", "[p]", "IconPassive"],           // Passive
     ["《ターン1回》", "[t1]", "IconOnceTurn"],
     ["《ゲーム1回》", "[g1]", "IconOnceGame"],
-
     ["《クロスアイコン》", "[cr]", "IconCross"],
     ["《ダウン》", "[d]", "IconDown"],
-    
     ["《相手ターン》", "[ot]", "IconOpponentTurn"],
     ["《自分ターン》", "[mt]", "IconMyTurn"],
-
-    ["【ライフバースト】", "[lb2]", "IconLifeBurst2"],  // 【】形式のライフバースト
-    
-    
+    ["【ライフバースト】", "[lb2]", "IconLifeBurst2"], // 【】形式のライフバースト
     // ゲームメカニクスアイコン
     ["《ガードアイコン》", "[gi]", "IconGuard"],
     ["《チーム》", "[t]", "IconTeam"],
     ["《ライフバースト》", "[lb]", "IconLifeBurst"],
     ["《リコレクトアイコン》", "[rc]", "IconRecollect"],
-    
     // コラボアイコン
     ["《プリパラ》", "[pp]", "IconPripara"],
     ["《にじさんじ》", "[nj]", "IconNijisanji"],
@@ -90,7 +83,7 @@ mod tests {
     #[test]
     fn test_icon_rules_defined() {
         assert!(!ICON_RULES.is_empty());
-        
+
         // 基本的なルールが定義されていることを確認
         let cip_rule = ICON_RULES.iter().find(|r| r.pattern == "【出】");
         assert!(cip_rule.is_some());
@@ -102,7 +95,11 @@ mod tests {
     fn test_no_duplicate_patterns() {
         let mut patterns = std::collections::HashSet::new();
         for rule in ICON_RULES {
-            assert!(patterns.insert(rule.pattern), "重複するパターンが見つかりました: {}", rule.pattern);
+            assert!(
+                patterns.insert(rule.pattern),
+                "重複するパターンが見つかりました: {}",
+                rule.pattern
+            );
         }
     }
 
@@ -110,7 +107,11 @@ mod tests {
     fn test_no_duplicate_codes() {
         let mut codes = std::collections::HashSet::new();
         for rule in ICON_RULES {
-            assert!(codes.insert(rule.code), "重複するコードが見つかりました: {}", rule.code);
+            assert!(
+                codes.insert(rule.code),
+                "重複するコードが見つかりました: {}",
+                rule.code
+            );
         }
     }
 }

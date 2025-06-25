@@ -6,7 +6,7 @@ pub fn ClearAllButton(
     #[prop(into)] on_click: Callback<()>,
 ) -> impl IntoView {
     view! {
-        <button 
+        <button
             class={move || {
                 let base = "px-4 py-2 rounded-lg border transition-colors duration-200 font-medium";
                 if is_active.get() {

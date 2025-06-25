@@ -64,7 +64,10 @@ fn search_cards_by_param(param: &str) -> Vec<CardExport> {
     // Remove duplicates by converting to a set-like structure
     let mut unique_results = Vec::new();
     for card in results {
-        if !unique_results.iter().any(|c: &CardExport| c.id() == card.id()) {
+        if !unique_results
+            .iter()
+            .any(|c: &CardExport| c.id() == card.id())
+        {
             unique_results.push(card);
         }
     }
@@ -75,7 +78,7 @@ fn search_cards_by_param(param: &str) -> Vec<CardExport> {
 #[component]
 pub fn CardDetailPage() -> impl IntoView {
     let params = use_params_map();
-    
+
     let cards = Signal::derive(move || {
         let param_map = params.get();
         if let Some(param_value) = param_map.get("param") {
@@ -85,9 +88,7 @@ pub fn CardDetailPage() -> impl IntoView {
         }
     });
 
-    let param_value = Signal::derive(move || {
-        params.get().get("param").unwrap_or_default()
-    });
+    let param_value = Signal::derive(move || params.get().get("param").unwrap_or_default());
 
     view! {
         <div class="container mx-auto px-4 py-8">
@@ -103,7 +104,7 @@ pub fn CardDetailPage() -> impl IntoView {
             {move || {
                 let card_list = cards.get();
                 let card_count = card_list.len();
-                
+
                 if card_count == 0 {
                     view! {
                         <div class="bg-white rounded-lg shadow p-8 text-center">
@@ -124,7 +125,7 @@ pub fn CardDetailPage() -> impl IntoView {
                             <div class="space-y-4">
                                 {card_list.into_iter().map(|card| {
                                     view! {
-                                        <CardItem card=card view_mode=Signal::derive(|| ViewMode::Detailed).into() />
+                                        <CardItem card=card view_mode=Signal::derive(|| ViewMode::Detailed) />
                                     }
                                 }).collect_view()}
                             </div>
@@ -134,8 +135,8 @@ pub fn CardDetailPage() -> impl IntoView {
             }}
 
             <div class="mt-8 text-center">
-                <a 
-                    href="/" 
+                <a
+                    href="/"
                     class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >
                     "← Back to Home"
