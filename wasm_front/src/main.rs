@@ -7,7 +7,7 @@ mod pages;
 mod types;
 
 use components::SvgDefinition;
-use pages::{CardDetailPage, CardPage, HomePage};
+use pages::{CardDetailPage, CardPage, CreditsPage, HomePage};
 
 #[component]
 fn App() -> impl IntoView {
@@ -20,6 +20,7 @@ fn App() -> impl IntoView {
                     <Route path=path!("/") view=HomePage/>
                     <Route path=path!("/card") view=CardPage/>
                     <Route path=path!("/card/:param") view=CardDetailPage/>
+                    <Route path=path!("/credits") view=CreditsPage/>
                 </Routes>
             </div>
         </Router>
