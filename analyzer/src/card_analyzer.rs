@@ -696,7 +696,28 @@ impl SimpleRawCardAnalyzer {
             feature_bits2 = feature_bits2 | bits.1;
         }
 
-        let mut name = to_half(&raw_card.name);
+        let full_name = to_half(&raw_card.name);
+        let mut name: String;
+        let mut pronunciation: String;
+        
+        // <読み方>形式を検索して分離
+        if let Some(start) = full_name.find('<') {
+            if let Some(end) = full_name.find('>') {
+                // 読み方を抽出（<>を除く）
+                pronunciation = full_name[start + 1..end].to_string();
+                // nameから<読み方>部分を削除（前後の空白も削除）
+                name = full_name[..start].trim_end().to_string();
+            } else {
+                // 閉じ括弧がない場合はフォールバック
+                name = full_name.clone();
+                pronunciation = full_name.clone();
+            }
+        } else {
+            // <読み方>形式ではない場合はフォールバック
+            name = full_name.clone();
+            pronunciation = full_name.clone();
+        }
+        
         // nameが256バイトを超える場合は切り詰める
         if name.len() > 256 {
             name = name.chars()
@@ -718,9 +739,6 @@ impl SimpleRawCardAnalyzer {
             feature_bits1 = feature_bits1 | bits.0;
             feature_bits2 = feature_bits2 | bits.1;
         }
-        
-        // 基本的なCreateCardを作成
-        let mut pronunciation = to_half(&raw_card.name);
         // pronunciation が128文字を超える場合は切り詰める（バイト長ベース）
         if pronunciation.len() > 128 {
             // eprintln!("DEBUG: Truncating pronunciation from {} to 128 bytes", pronunciation.len());

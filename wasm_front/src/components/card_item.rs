@@ -174,15 +174,7 @@ pub fn CardItem(
                                 <h3 class="font-semibold text-lg" style="color: #374151;">
                                     <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
                                         <Icons colors={get_colors_from_bits(card.color() as i32)} />
-                                        {
-                                            let full_name = card.name();
-                                            // Extract card name part (before <> if present)
-                                            if let Some(bracket_pos) = full_name.find(" <") {
-                                                full_name[..bracket_pos].to_string()
-                                            } else {
-                                                full_name
-                                            }
-                                        }
+                                        {card.name()}
                                         {
                                             let cost = card.cost();
                                             if !cost.is_empty() {
@@ -198,23 +190,13 @@ pub fn CardItem(
                                     </a>
                                 </h3>
                                 {
-                                    let full_name = card.name();
-                                    // Extract pronunciation part (inside <> if present)
-                                    if let Some(start) = full_name.find(" <") {
-                                        if let Some(end) = full_name.find(">") {
-                                            let pronunciation = full_name[start + 2..end].to_string();
-                                            if !pronunciation.is_empty() {
-                                                view! {
-                                                    <div class="text-sm mt-1 ml-4" style="color: #6b7280;">
-                                                        "<" {pronunciation} ">"
-                                                    </div>
-                                                }.into_any()
-                                            } else {
-                                                view! { <span></span> }.into_any()
-                                            }
-                                        } else {
-                                            view! { <span></span> }.into_any()
-                                        }
+                                    let pronunciation = card.pronunciation();
+                                    if !pronunciation.is_empty() {
+                                        view! {
+                                            <div class="text-sm mt-1 ml-4" style="color: #6b7280;">
+                                                "<" {pronunciation} ">"
+                                            </div>
+                                        }.into_any()
                                     } else {
                                         view! { <span></span> }.into_any()
                                     }
@@ -331,15 +313,7 @@ pub fn CardItem(
                                     <h3 class="font-semibold text-lg" style="color: #374151;">
                                         <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
                                             <Icons colors={get_colors_from_bits(card.color() as i32)} />
-                                            {
-                                                let full_name = card.name();
-                                                // Extract card name part (before <> if present)
-                                                if let Some(bracket_pos) = full_name.find(" <") {
-                                                    full_name[..bracket_pos].to_string()
-                                                } else {
-                                                    full_name
-                                                }
-                                            }
+                                            {card.name()}
                                             {
                                                 let cost = card.cost();
                                                 if !cost.is_empty() {
@@ -355,23 +329,13 @@ pub fn CardItem(
                                         </a>
                                     </h3>
                                     {
-                                        let full_name = card.name();
-                                        // Extract pronunciation part (inside <> if present)
-                                        if let Some(start) = full_name.find(" <") {
-                                            if let Some(end) = full_name.find(">") {
-                                                let pronunciation = full_name[start + 2..end].to_string();
-                                                if !pronunciation.is_empty() {
-                                                    view! {
-                                                        <div class="text-sm mt-1 ml-4" style="color: #6b7280;">
-                                                            "<" {pronunciation} ">"
-                                                        </div>
-                                                    }.into_any()
-                                                } else {
-                                                    view! { <span></span> }.into_any()
-                                                }
-                                            } else {
-                                                view! { <span></span> }.into_any()
-                                            }
+                                        let pronunciation = card.pronunciation();
+                                        if !pronunciation.is_empty() {
+                                            view! {
+                                                <div class="text-sm mt-1 ml-4" style="color: #6b7280;">
+                                                    "<" {pronunciation} ">"
+                                                </div>
+                                            }.into_any()
                                         } else {
                                             view! { <span></span> }.into_any()
                                         }
