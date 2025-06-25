@@ -68,6 +68,7 @@ define_icon_rules![
     ["《チーム》", "[t]", "IconTeam"],
     ["《ライフバースト》", "[lb]", "IconLifeBurst"],
     ["《リコレクトアイコン》", "[rc]", "IconRecollect"],
+    ["【使用条件】【ドリームチーム】", "[dt]", "IconDreamTeam"],
     // コラボアイコン
     ["《プリパラ》", "[pp]", "IconPripara"],
     ["《にじさんじ》", "[nj]", "IconNijisanji"],
