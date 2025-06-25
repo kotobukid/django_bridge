@@ -53,6 +53,9 @@ define_icon_rules![
     ["【常】", "[a]", "IconAuto"],          // Auto
     ["【起】", "[ac]", "IconActivated"],    // Activated
     ["【自】", "[p]", "IconPassive"],       // Passive
+
+    ["《ターン1回》", "[t1]", "IconOnceTurn"],
+    ["《ゲーム1回》", "[g1]", "IconOnceGame"],
     
     ["【ライフバースト】", "[lb2]", "IconLifeBurst2"],  // 【】形式のライフバースト
     
