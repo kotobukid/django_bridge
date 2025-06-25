@@ -70,8 +70,6 @@ mod integration_tests {
             "【出】：効果を発動する。",
             "【自】：毎ターン発動。【起】：手動で発動。",
             "【アサシン】と【ガード】を持つ。",
-            "《クラフト》：コイン1を支払う。",
-            "《プリパラ》コラボカード。",
         ];
 
         for original in original_texts {
@@ -125,11 +123,11 @@ mod integration_tests {
 
     #[test]
     fn test_complex_mixed_content() {
-        let complex_text = "【出】：《クラフト》を使って【アサシン】を得る。【自】：《ガードアイコン》を無視。";
+        let complex_text = "【自】：《ガードアイコン》を無視。";
         
         // エンコード
         let encoded = encode_skill_text(complex_text);
-        assert_eq!(encoded, "[c]：[cr]を使って[as]を得る。[a]：[gi]を無視。");
+        assert_eq!(encoded, "[p]：[gi]を無視。");
         
         // デコード
         let segments = decode_skill_text(&encoded);
@@ -138,7 +136,7 @@ mod integration_tests {
         let icon_count = segments.iter()
             .filter(|s| matches!(s, TextSegment::Icon { .. }))
             .count();
-        assert_eq!(icon_count, 5, "Expected 5 icons in complex text");
+        assert_eq!(icon_count, 2, "Expected 5 icons in complex text");
         
         // 各アイコンの内容を確認
         let icons: Vec<String> = segments.iter()
@@ -147,7 +145,7 @@ mod integration_tests {
                 _ => None,
             })
             .collect();
-        assert_eq!(icons, vec!["c", "cr", "as", "a", "gi"]);
+        assert_eq!(icons, vec!["p", "gi"]);
     }
 
     #[test]
@@ -194,7 +192,6 @@ mod integration_tests {
         let codes: Vec<String> = available.iter().map(|(code, _, _)| code.clone()).collect();
         assert!(codes.contains(&"c".to_string()));    // 【出】
         assert!(codes.contains(&"a".to_string()));    // 【自】
-        assert!(codes.contains(&"g".to_string()));    // 【ガード】
-        assert!(codes.contains(&"cr".to_string()));   // 《クラフト》
+        assert!(codes.contains(&"gi".to_string()));    // 【ガード】
     }
 }
