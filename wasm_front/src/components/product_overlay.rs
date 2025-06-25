@@ -10,7 +10,7 @@ fn get_product_list() -> Vec<(u8, &'static str, &'static str)> {
             // カードデータに実際に存在する商品のみ表示
             datapack::gen::cards::CARD_LIST
                 .iter()
-                .any(|card| card.18 == *id)
+                .any(|card| card.17 == *id)
         })
         .copied()
         .collect()
