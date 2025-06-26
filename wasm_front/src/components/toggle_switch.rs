@@ -1,8 +1,10 @@
 use leptos::prelude::*;
 
+#[allow(dead_code)]
 #[component]
 pub fn ToggleSwitch(
     /// 現在の状態（true = ON/右側、false = OFF/左側）
+    #[allow(unused)]
     is_on: bool,
     /// 状態変更時のコールバック
     on_toggle: impl Fn(bool) + 'static,

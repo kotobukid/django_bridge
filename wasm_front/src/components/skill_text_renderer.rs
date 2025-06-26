@@ -105,6 +105,7 @@ macro_rules! define_icon_components {
 ///     }
 /// }
 /// ```
+#[allow(unused_macros)]
 macro_rules! define_icon_with_impl {
     ($($component_func:ident, $component_name:literal => $impl_block:block),* $(,)?) => {
         $(

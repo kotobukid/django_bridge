@@ -12,7 +12,6 @@ pub fn SvgToggleSwitch(
     #[prop(optional)]
     disabled: bool,
 ) -> impl IntoView {
-    let is_on_1 = is_on.clone();
     let is_on_2 = is_on.clone();
     let is_on_3 = is_on.clone();
     let is_on_4 = is_on.clone();

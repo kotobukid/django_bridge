@@ -73,10 +73,7 @@ define_icon_rules![
     ["【使用条件】", "[l]", "IconLimitation"],
     ["【ハーモニー】", "[h]", "IconHarmony"],
     ["【ライズ】", "[rs]", "IconRise"],
-
     ["【  】", "[du]", "IconDuty"], // カーニバルメモリア
-
-
     ["《白》", "[iw]", "InlineWhite"],
     ["《青》", "[iu]", "InlineBlue"],
     ["《黒》", "[ik]", "InlineBlack"],
@@ -84,14 +81,12 @@ define_icon_rules![
     ["《緑》", "[ig]", "InlineGreen"],
     ["《無》", "[il]", "InlineColorless"],
     ["《コインアイコン》", "[ic]", "InlineCoin"],
-
     ["《白×0》", "[0w]", "WhiteZero"],
     ["《青×0》", "[0u]", "BlueZero"],
     ["《黒×0》", "[0k]", "BlackZero"],
     ["《赤×0》", "[0r]", "RedZero"],
     ["《緑×0》", "[0g]", "GreenZero"],
     ["《無×0》", "[0l]", "ColorlessZero"],
-
     // コラボアイコン
     ["《プリパラ》", "[pp]", "IconPripara"],
     ["《にじさんじ》", "[nj]", "IconNijisanji"],

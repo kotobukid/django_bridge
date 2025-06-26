@@ -5,7 +5,6 @@ use leptos::prelude::*;
 #[component]
 pub fn CardList(cards: Vec<CardExport>, total_count: usize) -> impl IntoView {
     let is_empty = cards.is_empty();
-    let cards_count = cards.len();
     // Load initial view mode from localStorage, default to Compact
     let initial_mode = ViewMode::load_from_storage();
     let (view_mode, set_view_mode) = signal(initial_mode);

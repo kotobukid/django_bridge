@@ -163,7 +163,7 @@ pub fn CardItem(
 
     // Get card type display name
     let card_type_name = datapack::get_card_type_display_name(card.card_type());
-    
+
     // Determine card type label styling based on card type
     let card_type_style = match card.card_type() {
         5 | 6 => "background-color: black; color: white; margin-top: 3px; margin-left: 3px;", // Signi or Spell
@@ -180,7 +180,7 @@ pub fn CardItem(
                 };
                 view! {
                     // Card type label positioned at top-left
-                    <div 
+                    <div
                         class=format!("absolute top-0 left-0 px-2 py-1 text-xs font-bold {} rounded-md", z_index)
                         style=card_type_style
                     >

@@ -168,6 +168,7 @@ impl CardTypeFilter {
     }
 
     /// 選択されたカードタイプの中に拡張タイプがあるかチェック（生成されたデータを使用）
+    #[allow(unused)]
     pub fn has_extended_selection_dynamic(&self) -> bool {
         use datapack::gen::card_types::EXTENDED_CARD_TYPES;
 
@@ -432,6 +433,7 @@ impl LBFilter {
         self.selection = 0;
     }
 
+    #[allow(unused)]
     pub fn get_label(&self) -> &'static str {
         match self.selection {
             1 => "LBあり",

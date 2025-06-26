@@ -9,16 +9,16 @@ pub fn HomePage() -> impl IntoView {
                 <h1 class="text-5xl font-bold text-center mb-12 text-gray-800">
                     "WIXOSS Card Database"
                 </h1>
-                
+
                 <div class="flex flex-col items-center space-y-4">
-                    <A 
-                        href="/card" 
+                    <A
+                        href="/card"
                         attr:class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-12 rounded-lg transition-all transform hover:scale-105 text-xl shadow-md"
                     >
                         "カードを検索"
                     </A>
-                    
-                    <A 
+
+                    <A
                         href="/credits"
                         attr:class="text-gray-600 hover:text-gray-800 underline transition-colors text-sm"
                     >

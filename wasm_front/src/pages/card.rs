@@ -181,14 +181,16 @@ pub fn CardPage() -> impl IntoView {
                         <OverlayButton
                             label=Signal::derive(move || {
                                 let lb_selection = lb_filter.get().selection;
+
+                                #[allow(unused)]
                                 let has_burst_features = has_active_burst_features.get();
-                                
+
                                 let base_label = match lb_selection {
                                     1 => "LBあり",
-                                    2 => "LBなし", 
+                                    2 => "LBなし",
                                     _ => "LB効果",
                                 };
-                                
+
                                 base_label.to_string()
                             })
                             is_active=Signal::derive(move || has_active_burst_features.get() || lb_filter.get().has_any())

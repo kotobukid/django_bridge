@@ -1,6 +1,5 @@
 use crate::types::ProductFilter;
 use leptos::prelude::*;
-use leptos::*;
 
 // 商品の種類を判定する関数
 fn get_product_category(code: &str) -> &'static str {
@@ -133,6 +132,7 @@ fn ProductCategorySection(
     }
 }
 
+#[allow(dead_code)]
 #[component]
 pub fn ProductSelector(product_filter: RwSignal<ProductFilter>) -> impl IntoView {
     leptos::logging::log!("ProductSelector component rendering...");

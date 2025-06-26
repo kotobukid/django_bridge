@@ -500,8 +500,14 @@ pub fn create_detect_patterns() -> (
             "*BOND*"
         ],
         replace_pattern![r"\(無色は色に含まれない\)", "*NO COLOR MEANS NO COLOR*"],
-        replace_pattern![r"\(あなたのルリグの下からカードを\d枚ルリグトラッシュに置く\)", "*EXCEED*"],
-        replace_pattern![r"\(このカードはレベル1のアシストルリグからしかグロウできない\)", "*GROW REQUIRES*"],
+        replace_pattern![
+            r"\(あなたのルリグの下からカードを\d枚ルリグトラッシュに置く\)",
+            "*EXCEED*"
+        ],
+        replace_pattern![
+            r"\(このカードはレベル1のアシストルリグからしかグロウできない\)",
+            "*GROW REQUIRES*"
+        ],
     ];
 
     let d_patterns: [DetectPattern; PATTERNS_AMOUNT_D] = [
@@ -742,7 +748,10 @@ pub fn create_detect_patterns() -> (
             r"(シグニ|それ)のパワーをこの方法で.+\-", // この+は正規表現の記法
             CardFeature::PowerDown
         ],
-        detect_pattern![r"すべてのシグニのパワーを場にあるシグニ1体につき\-\d+する", CardFeature::PowerDown],    // 羽沼マコト/エニグマメイデン
+        detect_pattern![
+            r"すべてのシグニのパワーを場にあるシグニ1体につき\-\d+する",
+            CardFeature::PowerDown
+        ], // 羽沼マコト/エニグマメイデン
         detect_pattern![r"ダメージを受けない", CardFeature::CancelDamage],
         detect_pattern![r"トラッシュからシグニ.+場に出", CardFeature::Reanimate],
         detect_pattern![
@@ -891,15 +900,32 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"<電音部>", CardFeature::Denonbu],
         detect_pattern![r"<ブルアカ>", CardFeature::BlueArchive],
         detect_pattern![r"<バーチャル>", CardFeature::Nijisanji],
-        detect_pattern![r"対戦相手(は|が)(追加で)?(手札を１枚捨てるか)?.*を支払わないかぎり", CardFeature::Tax],
-        detect_pattern![r"対戦相手が手札を\d枚捨てないかぎり", CardFeature::Tax, CardFeature::DiscardOpponent],
+        detect_pattern![
+            r"対戦相手(は|が)(追加で)?(手札を１枚捨てるか)?.*を支払わないかぎり",
+            CardFeature::Tax
+        ],
+        detect_pattern![
+            r"対戦相手が手札を\d枚捨てないかぎり",
+            CardFeature::Tax,
+            CardFeature::DiscardOpponent
+        ],
         detect_pattern![r"を支払わないかぎりアタックできない", CardFeature::Tax],
-
         // 茨木童子 自己課税
-        detect_pattern![r"(このシグニがアタックしたとき)?(あなたが|対戦相手が)?.+を支払わないかぎり", CardFeature::Tax],    // このシグニをバニッシュする このシグニはターン終了時までアサシンを得る
-
-        detect_pattern![r"対戦相手は.+を支払ってもよい。そうしなかった場合、対戦相手は次の自分のドローフェイズの間にカードを合計1枚までしか引けない。", CardFeature::Tax, CardFeature::RandomDiscard],    // みこみこさんさんまぜまぜ
-        detect_pattern![r"対戦相手が手札を2枚捨てないかぎり、カードを2枚引く", CardFeature::Tax, CardFeature::RandomDiscard, CardFeature::Draw],
+        detect_pattern![
+            r"(このシグニがアタックしたとき)?(あなたが|対戦相手が)?.+を支払わないかぎり",
+            CardFeature::Tax
+        ], // このシグニをバニッシュする このシグニはターン終了時までアサシンを得る
+        detect_pattern![
+            r"対戦相手は.+を支払ってもよい。そうしなかった場合、対戦相手は次の自分のドローフェイズの間にカードを合計1枚までしか引けない。",
+            CardFeature::Tax,
+            CardFeature::RandomDiscard
+        ], // みこみこさんさんまぜまぜ
+        detect_pattern![
+            r"対戦相手が手札を2枚捨てないかぎり、カードを2枚引く",
+            CardFeature::Tax,
+            CardFeature::RandomDiscard,
+            CardFeature::Draw
+        ],
     ];
 
     (r_patterns, d_patterns)

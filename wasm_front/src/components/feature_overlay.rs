@@ -1,6 +1,5 @@
 use crate::components::SvgToggleSwitch;
 use leptos::prelude::*;
-use leptos::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]

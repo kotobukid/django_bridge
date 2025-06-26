@@ -13,7 +13,7 @@ pub fn CreditsPage() -> impl IntoView {
                     <h2 class="text-2xl font-semibold text-gray-700 mb-4">
                         "フォント"
                     </h2>
-                    
+
                     <div class="space-y-6">
                         <div class="border-l-4 border-blue-500 pl-4">
                             <h3 class="text-xl font-medium text-gray-800 mb-2">
@@ -247,7 +247,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE."#####
                 // </div>
 
                 <div class="mt-8 text-center">
-                    <a 
+                    <a
                         href="/"
                         class="inline-block px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >

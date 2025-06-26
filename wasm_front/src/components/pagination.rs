@@ -27,6 +27,7 @@ fn scroll_to_pagination() {
             // Try to find the top pagination element
             let top_pagination_element = document.query_selector("[data-pagination-top]");
 
+            #[allow(unused)]
             let target_y = if let Ok(Some(element)) = top_pagination_element {
                 // Use JavaScript to get element position
                 use wasm_bindgen::prelude::*;

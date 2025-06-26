@@ -64,6 +64,7 @@ fn get_feature_data() -> (Vec<FeatureTag>, HashMap<String, Vec<CardFeature>>) {
     (feature_tags, features_by_tag)
 }
 
+#[allow(dead_code)]
 #[component]
 pub fn NavBar(
     _selected_features: ReadSignal<HashMap<i32, bool>>,

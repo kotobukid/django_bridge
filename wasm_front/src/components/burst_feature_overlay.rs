@@ -1,7 +1,6 @@
 use crate::components::SvgToggleSwitch;
 use crate::types::LBFilter;
 use leptos::prelude::*;
-use leptos::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
@@ -196,9 +195,8 @@ pub fn BurstFeatureOverlay(
     };
 
     // クリアボタンの表示判定
-    let should_show_clear = Memo::new(move |_| {
-        !selected_burst_features.read().is_empty() || lb_filter.get().has_any()
-    });
+    let should_show_clear =
+        Memo::new(move |_| !selected_burst_features.read().is_empty() || lb_filter.get().has_any());
 
     // クリアボタンの処理
     let clear_all = move |_| {
@@ -255,7 +253,7 @@ pub fn BurstFeatureOverlay(
 
                         // クローンを作成してクロージャで使用
                         let features_for_count = features.clone();
-                        let tag_id_for_open = tag_id.clone();
+                        let _tag_id_for_open = tag_id.clone();
                         let tag_id_for_click = tag_id.clone();
 
                         // このタグ内で選択されているBurstFeatureの数をカウント
