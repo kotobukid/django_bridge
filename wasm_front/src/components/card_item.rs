@@ -38,7 +38,7 @@ pub fn Icons(#[prop(into)] colors: Vec<i32>) -> impl IntoView {
     };
 
     view! {
-        <div class="color-icons" style=format!("width: {}px; flex-shrink: 0;", width)>
+        <div class="color-icons" style=format!("width: {}px; flex-shrink: 0; font-size: 1.2rem;", width)>
             {colors.into_iter().map(|color| {
                 match color {
                     1 => view! { <IconWhite /> }.into_any(),
@@ -147,6 +147,12 @@ pub fn CardItem(
     // Get color theme for this card
     let primary_color_name = datapack::get_primary_color_name_from_bits(card.color());
     let color_theme = datapack::get_color_theme_native(&primary_color_name);
+    
+    // Get colors for icons
+    let colors = get_colors_from_bits(card.color() as i32);
+    
+    // Get cost for display
+    let cost = card.cost();
 
     // Create dynamic styles based on card color
     let (bg_color, border_color) = if let Some((_, accent, light)) = color_theme {
@@ -166,8 +172,8 @@ pub fn CardItem(
 
     // Determine card type label styling based on card type
     let card_type_style = match card.card_type() {
-        5 | 6 => "background-color: black; color: white; margin-top: 3px; margin-left: 3px;", // Signi or Spell
-        _ => "background-color: white; color: black; margin-top: 3px; margin-left: 3px;", // Others
+        5 | 6 => "background-color: black; color: white; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px;", // Signi or Spell
+        _ => "background-color: white; color: black; padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px;", // Others
     };
 
     view! {
@@ -179,13 +185,32 @@ pub fn CardItem(
                     ViewMode::Detailed => "z-10",
                 };
                 view! {
-                    // Card type label positioned at top-left
+                    // Card type label positioned at top-left with color icon
                     <div
-                        class=format!("absolute top-0 left-0 px-2 py-1 text-xs font-bold {} rounded-md", z_index)
-                        style=card_type_style
+                        class=format!("absolute text-xs font-bold {}", z_index)
+                        style=format!("{} top: -6px; left: 8px;", card_type_style)
                     >
-                        {card_type_name.clone()}
+                        <Icons colors={colors.clone()} />
+                        <span>{card_type_name.clone()}</span>
                     </div>
+                }
+            }}
+            {move || {
+                if !cost.is_empty() {
+                    let z_index = match view_mode.get() {
+                        ViewMode::Compact => "z-0",
+                        ViewMode::Detailed => "z-10",
+                    };
+                    view! {
+                        <div
+                            class=format!("absolute {}" , z_index)
+                            style="top: 4px; right: 4px;"
+                        >
+                            <ColorIconsWithNum code={cost.clone()} />
+                        </div>
+                    }.into_any()
+                } else {
+                    view! { <span></span> }.into_any()
                 }
             }}
             {move || match view_mode.get() {
@@ -193,22 +218,9 @@ pub fn CardItem(
                     <div class="flex justify-between items-start">
                         <div class="flex-1">
                             <div>
-                                <h3 class="font-semibold text-lg" style="color: #374151;">
+                                <h3 class="font-semibold text-lg" style="color: #374151; margin-top: 20px;">
                                     <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
-                                        <Icons colors={get_colors_from_bits(card.color() as i32)} />
                                         {card.name()}
-                                        {
-                                            let cost = card.cost();
-                                            if !cost.is_empty() {
-                                                view! {
-                                                    <div class="ml-2 flex items-center">
-                                                        <ColorIconsWithNum code={cost} />
-                                                    </div>
-                                                }.into_any()
-                                            } else {
-                                                view! { <span></span> }.into_any()
-                                            }
-                                        }
                                     </a>
                                 </h3>
                                 {
@@ -330,20 +342,7 @@ pub fn CardItem(
                                 <div class="mb-2">
                                     <h3 class="font-semibold text-lg" style="color: #374151;">
                                         <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
-                                            <Icons colors={get_colors_from_bits(card.color() as i32)} />
                                             {card.name()}
-                                            {
-                                                let cost = card.cost();
-                                                if !cost.is_empty() {
-                                                    view! {
-                                                        <div class="ml-2 flex items-center">
-                                                            <ColorIconsWithNum code={cost} />
-                                                        </div>
-                                                    }.into_any()
-                                                } else {
-                                                    view! { <span></span> }.into_any()
-                                                }
-                                            }
                                         </a>
                                     </h3>
                                     {
