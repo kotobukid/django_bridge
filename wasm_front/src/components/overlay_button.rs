@@ -3,7 +3,7 @@ use leptos::*;
 
 #[component]
 pub fn OverlayButton(
-    #[prop(into)] label: String,
+    #[prop(into)] label: Signal<String>,
     #[prop(into)] is_active: Signal<bool>,
     #[prop(into)] on_click: Callback<()>,
 ) -> impl IntoView {
@@ -23,7 +23,7 @@ pub fn OverlayButton(
                 <Show when=move || is_active.get()>
                     <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
                 </Show>
-                <span>{label}</span>
+                <span>{move || label.get()}</span>
             </div>
         </button>
     }

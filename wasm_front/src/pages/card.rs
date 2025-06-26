@@ -174,22 +174,33 @@ pub fn CardPage() -> impl IntoView {
                             on_click=Callback::new(clear_all_filters)
                         />
                         <OverlayButton
-                            label="カード効果".to_string()
+                            label="カード効果"
                             is_active=Signal::derive(move || has_active_features.get())
                             on_click=Callback::new(move |_| set_show_feature_overlay.set(true))
                         />
                         <OverlayButton
-                            label="LB効果".to_string()
-                            is_active=Signal::derive(move || has_active_burst_features.get())
+                            label=Signal::derive(move || {
+                                let lb_selection = lb_filter.get().selection;
+                                let has_burst_features = has_active_burst_features.get();
+                                
+                                let base_label = match lb_selection {
+                                    1 => "LBあり",
+                                    2 => "LBなし", 
+                                    _ => "LB効果",
+                                };
+                                
+                                base_label.to_string()
+                            })
+                            is_active=Signal::derive(move || has_active_burst_features.get() || lb_filter.get().has_any())
                             on_click=Callback::new(move |_| set_show_burst_feature_overlay.set(true))
                         />
                         <OverlayButton
-                            label="製品".to_string()
+                            label="製品"
                             is_active=Signal::derive(move || has_active_products.get())
                             on_click=Callback::new(move |_| set_show_product_overlay.set(true))
                         />
                         <OverlayButton
-                            label="クラス".to_string()
+                            label="クラス"
                             is_active=Signal::derive(move || has_active_klass.get())
                             on_click=Callback::new(move |_| set_show_klass_overlay.set(true))
                         />
@@ -336,20 +347,7 @@ pub fn CardPage() -> impl IntoView {
                         on:click=|e| e.stop_propagation()
                     >
                         <div class="flex items-center justify-between p-4 border-b">
-                            <div class="flex items-center space-x-3">
-                                <h2 class="text-lg font-semibold">"ライフバースト効果選択"</h2>
-                                <Show when=move || has_active_burst_features.get()>
-                                    <button
-                                        class="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
-                                        on:click=move |_| {
-                                            selected_burst_features.update(|f| f.clear());
-                                            set_selected_burst_feature_names.set(Vec::new());
-                                        }
-                                    >
-                                        "クリア"
-                                    </button>
-                                </Show>
-                            </div>
+                            <h2 class="text-lg font-semibold">"ライフバースト効果選択"</h2>
                             <button
                                 class="text-gray-500 hover:text-gray-700 text-xl font-bold px-2"
                                 on:click=move |_| set_show_burst_feature_overlay.set(false)

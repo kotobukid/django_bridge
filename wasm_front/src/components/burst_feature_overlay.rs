@@ -195,14 +195,25 @@ pub fn BurstFeatureOverlay(
         }
     };
 
+    // クリアボタンの表示判定
+    let should_show_clear = Memo::new(move |_| {
+        !selected_burst_features.read().is_empty() || lb_filter.get().has_any()
+    });
+
+    // クリアボタンの処理
+    let clear_all = move |_| {
+        selected_burst_features.set(HashMap::new());
+        on_burst_feature_change.set(Vec::new());
+        set_lb_filter.update(|filter| {
+            filter.clear();
+        });
+    };
+
     view! {
         <div class="p-6 max-h-[60vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-bold text-gray-900">"ライフバースト効果で絞り込み"</h3>
-
                 // LBフィルタ部分
-                <div class="flex items-center gap-3">
-                    <span class="text-sm font-bold text-gray-800">"LB:"</span>
+                <div class="flex items-center gap-3 mb-4">
                     {lb_button(
                         0,
                         "指定なし",
@@ -222,7 +233,17 @@ pub fn BurstFeatureOverlay(
                         "bg-red-600 border-red-600 text-white focus:ring-red-400"
                     )}
                 </div>
+
+                <Show when=move || should_show_clear.get()>
+                    <button
+                        class="px-3 py-1 text-sm font-medium text-gray-600 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 hover:text-gray-700 transition-colors"
+                        on:click=clear_all
+                    >
+                        "クリア"
+                    </button>
+                </Show>
             </div>
+
 
             <div class="space-y-2">
                 {feature_tags
