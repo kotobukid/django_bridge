@@ -622,7 +622,9 @@ impl CardQuery {
                 .send()
                 .await?;
 
-            let body = response.text().await?;
+            let body_bytes = response.bytes().await?;
+            let body = String::from_utf8(body_bytes.to_vec())
+                .map_err(|e| AnalyzeError::Parse(format!("UTF-8 decode error: {}", e)))?;
             let body = format!("<html><body>{}", body);
             let content = find_one(&body, ".cardDetail".into());
 
