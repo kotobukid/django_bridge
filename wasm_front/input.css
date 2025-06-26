@@ -207,4 +207,45 @@ html {
     .feature-name {
         @apply text-xs flex-1;
     }
+
+    /* Legend-style box components */
+    .legend-box {
+        @apply relative mt-6 pt-4 px-3 pb-3 rounded border;
+    }
+
+    .legend-title {
+        @apply absolute -top-3 left-3 px-2 text-sm font-medium bg-white;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+    }
+
+    /* Specific legend box themes */
+    .legend-box-blue {
+        @apply bg-blue-50 border-blue-200;
+    }
+
+    .legend-box-blue .legend-title {
+        @apply text-blue-800 bg-blue-50;
+    }
+
+    .legend-box-white {
+        @apply bg-white border-gray-300;
+    }
+
+    .legend-box-white .legend-title {
+        @apply text-gray-700 bg-white;
+    }
+
+    .legend-box-black {
+        @apply bg-gray-800 border-gray-600 text-white;
+    }
+
+    .legend-box-black .legend-title {
+        @apply text-white bg-gray-800;
+    }
+
+    /* Empty state text */
+    .empty-state-text {
+        @apply text-gray-400 italic text-sm;
+    }
 }

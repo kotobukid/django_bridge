@@ -436,47 +436,55 @@ pub fn CardItem(
                                     let card_features = datapack::extract_card_features_from_bits(card.feature_bits1(), card.feature_bits2());
                                     let burst_features = datapack::extract_burst_features_from_bits(card.burst_bits());
 
-                                    if !card_features.is_empty() || !burst_features.is_empty() {
-                                        view! {
-                                            <div class="bg-blue-50 p-3 rounded border border-blue-200">
-                                                <h4 class="font-medium text-sm text-blue-800 mb-2">Card Features</h4>
-                                                <div class="flex flex-wrap gap-1">
-                                                    // CardFeatures (blue theme)
-                                                    {card_features.into_iter().map(|(tag_label, feature_label)| {
-                                                        view! {
-                                                            <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300">
-                                                                {format!("{} > {}", tag_label, feature_label)}
-                                                            </span>
-                                                        }
-                                                    }).collect_view()}
-                                                    // BurstFeatures (black theme)
-                                                    {burst_features.into_iter().map(|(tag_label, feature_label)| {
-                                                        view! {
-                                                            <span class="inline-block bg-gray-800 text-white px-2 py-1 rounded-full text-xs font-medium border border-gray-600">
-                                                                {format!("{} > {}", tag_label, feature_label)}
-                                                            </span>
-                                                        }
-                                                    }).collect_view()}
-                                                </div>
-                                            </div>
-                                        }.into_any()
-                                    } else {
-                                        view! { <span></span> }.into_any()
+                                    view! {
+                                        <div class="legend-box legend-box-blue">
+                                            <span class="legend-title">Card Features</span>
+                                            {if card_features.is_empty() && burst_features.is_empty() {
+                                                view! {
+                                                    <div class="empty-state-text">No features</div>
+                                                }.into_any()
+                                            } else {
+                                                view! {
+                                                    <div class="flex flex-wrap gap-1">
+                                                        // CardFeatures (blue theme)
+                                                        {card_features.into_iter().map(|(tag_label, feature_label)| {
+                                                            view! {
+                                                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300">
+                                                                    {format!("{} > {}", tag_label, feature_label)}
+                                                                </span>
+                                                            }
+                                                        }).collect_view()}
+                                                        // BurstFeatures (black theme)
+                                                        {burst_features.into_iter().map(|(tag_label, feature_label)| {
+                                                            view! {
+                                                                <span class="inline-block bg-gray-800 text-white px-2 py-1 rounded-full text-xs font-medium border border-gray-600">
+                                                                    {format!("{} > {}", tag_label, feature_label)}
+                                                                </span>
+                                                            }
+                                                        }).collect_view()}
+                                                    </div>
+                                                }.into_any()
+                                            }}
+                                        </div>
                                     }
                                 }
                                 {
                                     let skill_text = card.skill_text();
-                                    if !skill_text.is_empty() {
-                                        view! {
-                                            <div class="bg-white p-3 rounded border">
-                                                <h4 class="font-medium text-sm text-gray-600 mb-2">Skill Text</h4>
-                                                <div class="text-sm whitespace-pre-wrap" style="color: #374151;">
-                                                    <SkillTextRenderer skill_text={skill_text} />
-                                                </div>
-                                            </div>
-                                        }.into_any()
-                                    } else {
-                                        view! { <span></span> }.into_any()
+                                    view! {
+                                        <div class="legend-box legend-box-white">
+                                            <span class="legend-title">Skill Text</span>
+                                            {if skill_text.is_empty() {
+                                                view! {
+                                                    <div class="empty-state-text">No skills</div>
+                                                }.into_any()
+                                            } else {
+                                                view! {
+                                                    <div class="text-sm whitespace-pre-wrap" style="color: #374151;">
+                                                        <SkillTextRenderer skill_text={skill_text} />
+                                                    </div>
+                                                }.into_any()
+                                            }}
+                                        </div>
                                     }
                                 }
                                 {
@@ -484,13 +492,13 @@ pub fn CardItem(
                                     let has_burst = card.has_burst() > 0;
                                     if has_burst && !burst_text.is_empty() {
                                         view! {
-                                            <div class="bg-gray-800 text-white p-3 rounded border">
-                                                <div class="flex items-center gap-2 mb-2">
-                                                    <svg viewBox="0 0 32 32" width="20" height="20" style="flex-shrink: 0;">
+                                            <div class="legend-box legend-box-black">
+                                                <span class="legend-title flex items-center gap-2">
+                                                    <svg viewBox="0 0 32 32" width="16" height="16" style="flex-shrink: 0;">
                                                         <use href="#lb_white_wrapped" />
                                                     </svg>
-                                                    <h4 class="font-medium text-sm">Life Burst</h4>
-                                                </div>
+                                                    Life Burst
+                                                </span>
                                                 <div class="text-sm" style="line-height: 1.4;">
                                                     <BurstTextRenderer burst_text={burst_text} />
                                                 </div>
