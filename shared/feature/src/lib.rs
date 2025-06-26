@@ -486,7 +486,7 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"\(エナコストを支払う際、このカードは.+1つとして支払える\)",
-            "*MULTI ENER*",
+            "",
             CardFeature::DualColorEner
         ],
         replace_pattern![r"\(その生徒の【絆】能力が有効になる\)", "*BOND*"],
