@@ -973,14 +973,9 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_klass
         filtered_cards.retain(|card| has_klass_bits(card.klass_bits, klass_bits));
     }
 
-    // テキスト検索でフィルタリング
-    if !search_text.is_empty() {
-        let search_lower = search_text.to_lowercase();
-        filtered_cards.retain(|card| {
-            card.name.to_lowercase().contains(&search_lower)
-                || card.skill_text.to_lowercase().contains(&search_lower)
-                || card.burst_text.to_lowercase().contains(&search_lower)
-        });
+    // テキスト検索でフィルタリング（読み方対応）
+    if !search_text.trim().is_empty() {
+        filtered_cards = text_search::search_cards_by_text_optimized(&filtered_cards, search_text);
     }
 
     filtered_cards
