@@ -173,7 +173,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 83;
-pub const PATTERNS_AMOUNT_D: usize = 173;
+pub const PATTERNS_AMOUNT_D: usize = 174;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -674,6 +674,10 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"それらの場所を入れ替", CardFeature::Position],
         detect_pattern![
             r"対戦相手のシグニ\d+体(まで|を)対象とし、(それら|それ)を手札に戻",
+            CardFeature::Bounce
+        ],
+        detect_pattern![
+            r"あなたの他の.*のシグニ\d体を対象とし、それを手札に戻",
             CardFeature::Bounce
         ],
         detect_pattern![
