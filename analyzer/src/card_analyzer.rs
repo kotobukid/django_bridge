@@ -699,11 +699,8 @@ impl SimpleRawCardAnalyzer {
         let (burst_bits, replaced_burst_text) =
             self.detect_burst_features(&raw_card.life_burst_text);
 
-        // ライフバーストテキストからもCardFeatureを検出
-        let (burst_feature_bits1, burst_feature_bits2, _) =
-            self.detect_features_and_replace_text(&raw_card.life_burst_text);
-        feature_bits1 |= burst_feature_bits1;
-        feature_bits2 |= burst_feature_bits2;
+        // NOTE: ライフバーストテキストからはBurstFeatureのみを検出し、
+        // 通常のCardFeatureは検出しない（防御系＞ダウンなどの誤検出を防ぐため）
 
         {
             // テキスト以外からのFeature検出
