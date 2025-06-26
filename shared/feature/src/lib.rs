@@ -173,7 +173,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 83;
-pub const PATTERNS_AMOUNT_D: usize = 172;
+pub const PATTERNS_AMOUNT_D: usize = 173;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -892,6 +892,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"<ブルアカ>", CardFeature::BlueArchive],
         detect_pattern![r"<バーチャル>", CardFeature::Nijisanji],
         detect_pattern![r"対戦相手(は|が)(追加で)?(手札を１枚捨てるか)?.*を支払わないかぎり", CardFeature::Tax],
+        detect_pattern![r"対戦相手が手札を\d枚捨てないかぎり", CardFeature::Tax, CardFeature::DiscardOpponent],
         detect_pattern![r"を支払わないかぎりアタックできない", CardFeature::Tax],
 
         // 茨木童子 自己課税
