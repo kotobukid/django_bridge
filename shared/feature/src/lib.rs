@@ -170,7 +170,7 @@ concerned![
     r"\(【ランサー\(条件\)】は【ランサー】に含まれる\)"
 ];
 
-pub const PATTERNS_AMOUNT_R: usize = 81;
+pub const PATTERNS_AMOUNT_R: usize = 82;
 pub const PATTERNS_AMOUNT_D: usize = 172;
 
 pub fn create_detect_patterns() -> (
@@ -498,6 +498,7 @@ pub fn create_detect_patterns() -> (
             "*BOND*"
         ],
         replace_pattern![r"\(無色は色に含まれない\)", "*NO COLOR MEANS NO COLOR*"],
+        replace_pattern![r"\(あなたのルリグの下からカードを\d枚ルリグトラッシュに置く\)", "*EXCEED*"],
     ];
 
     let d_patterns: [DetectPattern; PATTERNS_AMOUNT_D] = [
