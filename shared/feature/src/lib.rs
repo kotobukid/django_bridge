@@ -167,10 +167,12 @@ concerned![
     r"\(そのシグニはバトルをせずあなたにダメージを与える\)",
     r"\(最初にすべての選択肢と対象を選ぶ\)",
     r"\(このアーツの使用後に場に出たシグニにもこの効果の影響を与える\)",
-    r"\(【ランサー\(条件\)】は【ランサー】に含まれる\)"
+    r"\(【ランサー\(条件\)】は【ランサー】に含まれる\)",
+    r"\(シグニとのバトルやパワーが0以下になった場合はバニッシュされる\)",
+    r"\(このシグニは対戦相手のレベル1のルリグとレベル1のシグニによって対象にされない。レベル2についても同様である\)"
 ];
 
-pub const PATTERNS_AMOUNT_R: usize = 82;
+pub const PATTERNS_AMOUNT_R: usize = 83;
 pub const PATTERNS_AMOUNT_D: usize = 172;
 
 pub fn create_detect_patterns() -> (
@@ -499,6 +501,7 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![r"\(無色は色に含まれない\)", "*NO COLOR MEANS NO COLOR*"],
         replace_pattern![r"\(あなたのルリグの下からカードを\d枚ルリグトラッシュに置く\)", "*EXCEED*"],
+        replace_pattern![r"\(このカードはレベル1のアシストルリグからしかグロウできない\)", "*GROW REQUIRES*"],
     ];
 
     let d_patterns: [DetectPattern; PATTERNS_AMOUNT_D] = [
