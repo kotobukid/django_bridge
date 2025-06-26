@@ -191,6 +191,7 @@ define_features! {
     Dissona => { tag: Unique, bit_shift: (0, 27), label: "ディソナ" },
     Denonbu => { tag: Unique, bit_shift: (0, 28), label: "電音部" },
     BlueArchive => { tag: Unique, bit_shift: (0, 29), label: "ブルーアーカイブ" },
+    Tax => { tag: Disturb, bit_shift: (0, 30), label: "課税" },
 }
 
 pub trait HashSetToBits {

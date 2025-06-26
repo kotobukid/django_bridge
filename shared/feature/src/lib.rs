@@ -171,7 +171,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 81;
-pub const PATTERNS_AMOUNT_D: usize = 165;
+pub const PATTERNS_AMOUNT_D: usize = 170;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -885,6 +885,14 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"<電音部>", CardFeature::Denonbu],
         detect_pattern![r"<ブルアカ>", CardFeature::BlueArchive],
         detect_pattern![r"<バーチャル>", CardFeature::Nijisanji],
+        detect_pattern![r"対戦相手(は|が)(追加で)?(手札を１枚捨てるか)?.*を支払わないかぎり", CardFeature::Tax],
+        detect_pattern![r"を支払わないかぎりアタックできない", CardFeature::Tax],
+
+        // 茨木童子 自己課税
+        detect_pattern![r"(このシグニがアタックしたとき)?(あなたが|対戦相手が)?.+を支払わないかぎり", CardFeature::Tax],    // このシグニをバニッシュする このシグニはターン終了時までアサシンを得る
+
+        detect_pattern![r"対戦相手は.+を支払ってもよい。そうしなかった場合、対戦相手は次の自分のドローフェイズの間にカードを合計1枚までしか引けない。", CardFeature::Tax, CardFeature::RandomDiscard],    // みこみこさんさんまぜまぜ
+        detect_pattern![r"対戦相手が手札を2枚捨てないかぎり、カードを2枚引く", CardFeature::Tax, CardFeature::RandomDiscard, CardFeature::Draw],
     ];
 
     (r_patterns, d_patterns)
