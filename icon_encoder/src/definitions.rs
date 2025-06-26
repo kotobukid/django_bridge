@@ -57,19 +57,25 @@ define_icon_rules![
     ["【起】", "[ac]", "IconActivated"],        // Activated
     ["【自】", "[p]", "IconPassive"],           // Passive
     ["《ターン1回》", "[t1]", "IconOnceTurn"],
+    ["《ターン2回》", "[t2]", "IconTwiceTurn"],
     ["《ゲーム1回》", "[g1]", "IconOnceGame"],
     ["《クロスアイコン》", "[cr]", "IconCross"],
     ["《ダウン》", "[d]", "IconDown"],
     ["《相手ターン》", "[ot]", "IconOpponentTurn"],
     ["《自分ターン》", "[mt]", "IconMyTurn"],
     ["【ライフバースト】", "[lb2]", "IconLifeBurst2"], // 【】形式のライフバースト
-    // ゲームメカニクスアイコン
     ["《ガードアイコン》", "[gi]", "IconGuard"],
-    ["《チーム》", "[t]", "IconTeam"],
+
+    ["【チーム】", "[t]", "IconTeam"],
+    ["【チーム自】", "[tp]", "IconTeamPassive"],
+    ["【チーム出】", "[tc]", "IconTeamCip"],
+    ["【チーム起】", "[ta]", "IconTeamActivated"],
+    ["【チーム常】", "[tu]", "IconTeamAuto"],
+
     ["《ライフバースト》", "[lb]", "IconLifeBurst"],
     ["《リコレクトアイコン》", "[rc]", "IconRecollect"],
     ["【使用条件】【ドリームチーム】", "[dt]", "IconDreamTeam"],
-    ["【使用条件】【チーム】", "[pt]", "IconTeam"],
+    ["【使用条件】【チーム】", "[pt]", "IconTeamPiece"],
     ["【使用条件】", "[l]", "IconLimitation"],
     ["【ハーモニー】", "[h]", "IconHarmony"],
     ["【ライズ】", "[rs]", "IconRise"],
@@ -87,12 +93,8 @@ define_icon_rules![
     ["《赤×0》", "[0r]", "RedZero"],
     ["《緑×0》", "[0g]", "GreenZero"],
     ["《無×0》", "[0l]", "ColorlessZero"],
-    // コラボアイコン
-    ["《プリパラ》", "[pp]", "IconPripara"],
-    ["《にじさんじ》", "[nj]", "IconNijisanji"],
-    ["《ディソナ》", "[ds]", "IconDissona"],
-    ["《電音部》", "[dn]", "IconDenonbu"],
-    ["《ブルーアーカイブ》", "[bl]", "IconBlueArchive"],
+
+    ["《ディソナアイコン》", "[ds]", "IconDissona"],
 ];
 
 #[cfg(test)]
