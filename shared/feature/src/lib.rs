@@ -171,7 +171,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 81;
-pub const PATTERNS_AMOUNT_D: usize = 170;
+pub const PATTERNS_AMOUNT_D: usize = 172;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -654,6 +654,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"凍結する", CardFeature::Freeze],
         detect_pattern![r"凍結状態", CardFeature::Freeze],
         detect_pattern![r"それらの場所を入れ替え", CardFeature::Position],
+        detect_pattern![r"配置し直", CardFeature::Position],
         detect_pattern![r"場に出すことができない", CardFeature::LimitSigni],
         detect_pattern![r"シグニゾーン1つに配置する", CardFeature::Position],
         detect_pattern![r"シグニゾーン1つを消す", CardFeature::LimitSigni],
@@ -737,6 +738,7 @@ pub fn create_detect_patterns() -> (
             r"(シグニ|それ)のパワーをこの方法で.+\-", // この+は正規表現の記法
             CardFeature::PowerDown
         ],
+        detect_pattern![r"すべてのシグニのパワーを場にあるシグニ1体につき\-\d+する", CardFeature::PowerDown],    // 羽沼マコト/エニグマメイデン
         detect_pattern![r"ダメージを受けない", CardFeature::CancelDamage],
         detect_pattern![r"トラッシュからシグニ.+場に出", CardFeature::Reanimate],
         detect_pattern![
