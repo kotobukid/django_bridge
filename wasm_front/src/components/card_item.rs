@@ -161,8 +161,33 @@ pub fn CardItem(
         _ => "card-border-white",
     };
 
+    // Get card type display name
+    let card_type_name = datapack::get_card_type_display_name(card.card_type());
+    
+    // Determine card type label styling based on card type
+    let card_type_style = match card.card_type() {
+        5 | 6 => "background-color: black; color: white; margin-top: 3px; margin-left: 3px;", // Signi or Spell
+        _ => "background-color: white; color: black; margin-top: 3px; margin-left: 3px;", // Others
+    };
+
     view! {
-        <div class=format!("card-item {}", border_class) style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0;", color_style)>
+        <div class=format!("card-item {}", border_class) style=format!("{}; border-radius: 8px; padding: 16px; margin: 8px 0; position: relative;", color_style)>
+            {move || {
+                let current_vm = view_mode.get();
+                let z_index = match current_vm {
+                    ViewMode::Compact => "z-0",
+                    ViewMode::Detailed => "z-10",
+                };
+                view! {
+                    // Card type label positioned at top-left
+                    <div 
+                        class=format!("absolute top-0 left-0 px-2 py-1 text-xs font-bold {} rounded-md", z_index)
+                        style=card_type_style
+                    >
+                        {card_type_name.clone()}
+                    </div>
+                }
+            }}
             {move || match view_mode.get() {
                 ViewMode::Compact => view! {
                     <div class="flex justify-between items-start">
@@ -300,14 +325,6 @@ pub fn CardItem(
                         class="border-l-4 p-4 rounded"
                         style=format!("background-color: {}; border-left-color: {};", bg_color, border_color)
                     >
-                        <div class="flex items-center gap-2 mb-3">
-                            <span
-                                class="font-bold text-sm uppercase tracking-wide"
-                                style="color: black;"
-                            >
-                                "🔍 Detailed Mode"
-                            </span>
-                        </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <div class="mb-2">

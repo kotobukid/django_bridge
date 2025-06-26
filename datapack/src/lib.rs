@@ -83,19 +83,19 @@ impl CardType {
     pub fn display_name(&self) -> &'static str {
         match self {
             CardType::Lrig => "ルリグ",
-            CardType::LrigAssist => "ルリグアシスト",
+            CardType::LrigAssist => "アシストルリグ",
             CardType::Arts => "アーツ",
             CardType::Key => "キー",
             CardType::Signi => "シグニ",
             CardType::Spell => "スペル",
             CardType::Resona => "レゾナ",
-            CardType::SigniCraft => "シグニクラフト",
-            CardType::ArtsCraft => "アーツクラフト",
-            CardType::ResonaCraft => "レゾナクラフト",
-            CardType::SpellCraft => "スペルクラフト",
+            CardType::SigniCraft => "クラフトシグニ",
+            CardType::ArtsCraft => "クラフトアーツ",
+            CardType::ResonaCraft => "クラフトレゾナ",
+            CardType::SpellCraft => "クラフトスペル",
             CardType::Piece => "ピース",
-            CardType::PieceRelay => "ピースリレー",
-            CardType::PieceCraft => "ピースクラフト",
+            CardType::PieceRelay => "リレーピース",
+            CardType::PieceCraft => "クラフトピース",
             CardType::Token => "トークン",
             CardType::Coin => "コイン",
             CardType::Unknown => "不明",
@@ -1669,4 +1669,10 @@ pub fn fetch_by_colors_features_card_types_products_levels_power_threshold_klass
     }
 
     filtered_cards
+}
+
+// カード種別のu8値から日本語表示名を取得する関数
+#[wasm_bindgen]
+pub fn get_card_type_display_name(card_type_u8: u8) -> String {
+    CardType::from_u8(card_type_u8).display_name().to_string()
 }
