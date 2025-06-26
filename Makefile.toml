@@ -130,6 +130,18 @@ args = [
     "--max-delay", "800"
 ]
 
+[tasks.analyze]
+description = "カード番号を指定して再解析"
+command = "cargo"
+args = [
+    "run",
+    "-p",
+    "analyzer",
+    "--",
+    "--card-number",
+    "${@}",
+    "--force"
+]
 [tasks.analyze_all]
 description = "DB保存済みの全カードを(再)解析"
 command = "cargo"
