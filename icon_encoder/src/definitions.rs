@@ -72,11 +72,15 @@ define_icon_rules![
     ["【チーム起】", "[ta]", "IconTeamActivated"],
     ["【チーム常】", "[tu]", "IconTeamAuto"],
 
+    ["【クロス自】", "[xp]", "IconCrossPassive"],
+    ["《ヘブン》", "[h]", "IconHeaven"],
+    
     ["《ライフバースト》", "[lb]", "IconLifeBurst"],
     ["《リコレクトアイコン》", "[rc]", "IconRecollect"],
     ["【使用条件】【ドリームチーム】", "[dt]", "IconDreamTeam"],
     ["【使用条件】【チーム】", "[pt]", "IconTeamPiece"],
     ["【使用条件】", "[l]", "IconLimitation"],
+    ["【出現条件】", "[ap]", "IconAppear"],
     ["【ハーモニー】", "[h]", "IconHarmony"],
     ["【ライズ】", "[rs]", "IconRise"],
     ["【  】", "[du]", "IconDuty"], // カーニバルメモリア
@@ -87,6 +91,7 @@ define_icon_rules![
     ["《緑》", "[ig]", "InlineGreen"],
     ["《無》", "[il]", "InlineColorless"],
     ["《コインアイコン》", "[ic]", "InlineCoin"],
+    ["【コイン】", "[ico]", "LabelCoin"],
     ["《ライズアイコン》", "[ri]", "RiseIcon"],
     ["《白×0》", "[0w]", "WhiteZero"],
     ["《青×0》", "[0u]", "BlueZero"],
@@ -99,6 +104,7 @@ define_icon_rules![
     
     ["《メインフェイズアイコン》", "[pa]", "IconMainPhase"],
     ["《アタックフェイズアイコン》", "[pm]", "IconAttackPhase"],
+    ["《アタックフェイズアイコン2_黒》", "[ak]", "IconAttackPhase2k"],
 ];
 
 #[cfg(test)]
