@@ -90,6 +90,14 @@ define_icon_rules![
     ["《赤》", "[ir]", "InlineRed"],
     ["《緑》", "[ig]", "InlineGreen"],
     ["《無》", "[il]", "InlineColorless"],
+
+    ["《白2》", "[iw]", "InlineWhite"], // 凶天ガープ用
+    ["《青2》", "[iu]", "InlineBlue"],
+    ["《黒2》", "[ik]", "InlineBlack"],
+    ["《赤2》", "[ir]", "InlineRed"],
+    ["《緑2》", "[ig]", "InlineGreen"],
+    ["《無2》", "[il]", "InlineColorless"],
+
     ["《コインアイコン》", "[ic]", "InlineCoin"],
     ["【コイン】", "[ico]", "LabelCoin"],
     ["《ライズアイコン》", "[ri]", "RiseIcon"],
