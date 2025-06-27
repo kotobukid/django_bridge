@@ -87,6 +87,7 @@ define_icon_rules![
     ["《緑》", "[ig]", "InlineGreen"],
     ["《無》", "[il]", "InlineColorless"],
     ["《コインアイコン》", "[ic]", "InlineCoin"],
+    ["《ライズアイコン》", "[ri]", "RiseIcon"],
     ["《白×0》", "[0w]", "WhiteZero"],
     ["《青×0》", "[0u]", "BlueZero"],
     ["《黒×0》", "[0k]", "BlackZero"],
