@@ -36,6 +36,9 @@ cargo make front_server
 
 # Django admin (port 8003)
 python manage.py runserver 0.0.0.0:8003  # Run from table_definition/ using .venv
+
+# Fixed Data Server (port 8004) - Manual feature override management
+cargo make fixed_data_server
 ```
 
 ### Scraping and Analysis
@@ -88,8 +91,9 @@ cargo make static && cargo make wasm_linux && cargo make trunk_build
 - `syncdb/` - Converts Django models to Rust structs
 - `datapack/` - WebAssembly module for frontend filtering
 - `shared/feature/` - Card feature detection logic
-- `static_generator/` - Generates static Rust code from database
+- `static_generator/` - Generates static Rust code from database (with manual override support)
 - `icon_encoder/` - Icon encoding/decoding system for skill text rendering
+- `fixed_data_server/` - Manual CardFeature override management server (port 8004)
 
 ## Development Workflow
 
@@ -165,6 +169,8 @@ table_definition/.venv/bin/python scripts/analyze_data.py
 
 **Important**: The `Card::to_rust_code()` method in `shared/models/src/card.rs` handles the conversion from database `Option<i32>` fields to string representation for static data.
 
+**Manual Override System**: The static generator now checks for manual feature overrides in the `wix_card_feature_override` table. If an override exists for a card's pronunciation, the fixed feature bits are used instead of the auto-detected ones.
+
 ## Data Flow Architecture
 
 ### Production Data Pipeline ✅ **COMPLETED**
@@ -188,6 +194,46 @@ table_definition/.venv/bin/python scripts/analyze_data.py
    - Products are pre-loaded in database with unique codes
    - Scraper maps product codes to IDs via ProductRepository
    - Both `RawCard` and `Card` tables maintain product foreign keys
+
+## Manual Feature Override System
+The project now includes a manual feature override system for fine-tuning CardFeature detection beyond what rule-based automation can achieve.
+
+### Architecture Overview
+1. **CardFeatureOverride Model**: Django model storing manual corrections by pronunciation
+2. **Fixed Data Server**: Axum server (port 8004) providing CRUD API for overrides
+3. **Static Generator Integration**: Automatically applies overrides during code generation
+4. **Frontend Integration**: Maintenance mode for editing features (coming soon)
+
+### Key Commands
+```bash
+# Start Fixed Data Server
+cargo make fixed_data_server
+
+# Apply overrides and regenerate static data
+cargo make static && cargo make wasm_linux && cargo make trunk_build
+```
+
+### API Endpoints (port 8004)
+- `GET /api/overrides` - List all overrides
+- `POST /api/overrides` - Create/update override
+- `GET /api/overrides/:pronunciation` - Get specific override
+- `DELETE /api/overrides/:pronunciation` - Delete override
+- `POST /api/analyze/:pronunciation` - Re-analyze specific cards
+- `GET /api/export` - Export all overrides (for backup/sync)
+- `POST /api/import` - Import overrides (for backup/sync)
+- `GET /api/check-consistency` - Check which overrides match rule-based detection
+
+### Data Flow
+1. **Rule-based detection** generates initial CardFeature bits
+2. **Manual overrides** stored in `wix_card_feature_override` table (by pronunciation)
+3. **Static generator** checks for overrides and applies them during code generation
+4. **Frontend** receives corrected feature data through static generation
+
+### Override Data Structure
+- **pronunciation**: Primary key (same pronunciation = same features)
+- **fixed_bits1/fixed_bits2**: Manual CardFeature bit flags
+- **fixed_burst_bits**: Manual BurstFeature bit flags
+- **note**: Optional explanation for the override
 
 ## Rule Editor Tool
 `rule_editor/` is a specialized tool for creating and managing regex patterns to detect card features from WIXOSS card text.

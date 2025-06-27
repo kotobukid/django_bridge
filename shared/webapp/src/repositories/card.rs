@@ -211,6 +211,29 @@ impl StaticCodeGenerator for CardRepository {
             .await
             .unwrap(); // エラー処理は適宜修正してください
 
+        // CardFeatureOverrideを取得
+        let overrides = sqlx::query(
+            r#"
+            SELECT pronunciation, fixed_bits1, fixed_bits2, fixed_burst_bits
+            FROM wix_card_feature_override
+            "#
+        )
+        .fetch_all(&*self.db_connector)
+        .await
+        .unwrap();
+
+        // Override mapを作成
+        let override_map: HashMap<String, (i64, i64, i64)> = overrides
+            .into_iter()
+            .map(|row| {
+                let pronunciation: String = row.get("pronunciation");
+                let fixed_bits1: i64 = row.get("fixed_bits1");
+                let fixed_bits2: i64 = row.get("fixed_bits2");
+                let fixed_burst_bits: i64 = row.get("fixed_burst_bits");
+                (pronunciation, (fixed_bits1, fixed_bits2, fixed_burst_bits))
+            })
+            .collect();
+
         // 商品の sort_asc 値を取得するためのマップを作成
         let products = sqlx::query("SELECT id, sort_asc FROM wix_product")
             .fetch_all(&*self.db_connector)
@@ -267,9 +290,17 @@ impl StaticCodeGenerator for CardRepository {
             .map(|card| {
                 let card_obj = Card::from(card);
 
+                // Apply CardFeatureOverride if exists
+                let final_card_obj = if let Some((fixed_bits1, fixed_bits2, fixed_burst_bits)) = 
+                    override_map.get(&card_obj.pronunciation) {
+                    card_obj.with_feature_override(*fixed_bits1, *fixed_bits2, *fixed_burst_bits)
+                } else {
+                    card_obj
+                };
+
                 // Calculate klass_bits for this card
                 let empty_vec = vec![];
-                let klass_ids = card_klass_map.get(&card_obj.id).unwrap_or(&empty_vec);
+                let klass_ids = card_klass_map.get(&final_card_obj.id).unwrap_or(&empty_vec);
                 let mut klass_bits = 0u64;
                 for &klass_id in klass_ids {
                     if let Some(&bit_pos) = klass_bit_map.get(&klass_id) {
@@ -277,7 +308,7 @@ impl StaticCodeGenerator for CardRepository {
                     }
                 }
 
-                card_obj.to_rust_code_with_klass_bits(klass_bits)
+                final_card_obj.to_rust_code_with_klass_bits(klass_bits)
             })
             .collect()
     }

@@ -213,3 +213,43 @@ class RulePattern(models.Model):
     
     def __str__(self):
         return f"{self.keyword} - {self.pattern}"
+
+
+class CardFeatureOverride(models.Model):
+    """カードフィーチャーの手動修正データを保存するモデル"""
+    
+    pronunciation = models.CharField(
+        verbose_name="読み方", 
+        max_length=200, 
+        unique=True, 
+        db_index=True,
+        help_text="同じ読み方のカードは全て同じフィーチャーが適用されます"
+    )
+    fixed_bits1 = models.BigIntegerField(
+        verbose_name="修正済み効果1群",
+        help_text="手動で修正されたCardFeatureのビット値（1群）"
+    )
+    fixed_bits2 = models.BigIntegerField(
+        verbose_name="修正済み効果2群",
+        help_text="手動で修正されたCardFeatureのビット値（2群）"
+    )
+    fixed_burst_bits = models.BigIntegerField(
+        verbose_name="修正済みライフバースト効果",
+        help_text="手動で修正されたBurstFeatureのビット値"
+    )
+    created_at = models.DateTimeField(verbose_name="作成日時", auto_now_add=True)
+    updated_at = models.DateTimeField(verbose_name="更新日時", auto_now=True)
+    note = models.TextField(
+        verbose_name="メモ", 
+        blank=True,
+        help_text="修正理由や特記事項"
+    )
+    
+    class Meta:
+        verbose_name = "カードフィーチャー修正"
+        verbose_name_plural = "カードフィーチャー修正"
+        db_table = 'wix_card_feature_override'
+        ordering = ['pronunciation']
+    
+    def __str__(self):
+        return f"{self.pronunciation} - 修正済み"

@@ -627,6 +627,73 @@ pub fn fetch_by_colors_features_card_types_and_products_native(
     filtered_cards
 }
 
+// CardFeatureをカテゴリ別にグループ化して返す関数（FeatureTagの数値でソート済み）
+pub fn extract_card_features_grouped() -> Vec<(String, Vec<String>)> {
+    use feature::feature::{export_features, CardFeature};
+    
+    let features_map = export_features();
+    let mut result: Vec<(String, Vec<String>)> = Vec::new();
+    
+    for (tag_label, features) in features_map {
+        let feature_labels: Vec<String> = features
+            .into_iter()
+            .map(|f| f.name)
+            .collect();
+        result.push((tag_label, feature_labels));
+    }
+    
+    // FeatureTagのラベルの先頭数値でソート（01リーサル、02攻撃系、...）
+    result.sort_by(|a, b| a.0.cmp(&b.0));
+    
+    result
+}
+
+// 全てのBurstFeatureを返す関数
+pub fn extract_burst_features_all() -> Vec<String> {
+    use feature::feature::{export_burst_features, BurstFeature};
+    
+    let burst_features_map = export_burst_features();
+    let mut all_features = Vec::new();
+    
+    for (_tag_label, features) in burst_features_map {
+        for feature in features {
+            all_features.push(feature.name);
+        }
+    }
+    
+    all_features
+}
+
+// 読み方から該当するカードを検索し、最初のカードのフィーチャーを返す関数
+pub fn get_card_features_by_pronunciation(pronunciation: &str) -> Option<(Vec<String>, Vec<String>)> {
+    let cards = get_all_cards().ok()?;
+    
+    // 読み方でカードを検索
+    let matching_card = cards
+        .iter()
+        .find(|card| card.pronunciation() == pronunciation)?;
+    
+    // CardFeatureとBurstFeatureを抽出
+    let card_features = extract_card_features_from_bits(
+        matching_card.feature_bits1(), 
+        matching_card.feature_bits2()
+    );
+    let burst_features = extract_burst_features_from_bits(matching_card.burst_bits());
+    
+    // ラベルのみを抽出
+    let card_feature_labels: Vec<String> = card_features
+        .into_iter()
+        .map(|(_tag, label)| label)
+        .collect();
+        
+    let burst_feature_labels: Vec<String> = burst_features
+        .into_iter()
+        .map(|(_tag, label)| label)
+        .collect();
+    
+    Some((card_feature_labels, burst_feature_labels))
+}
+
 // 色、feature、カード種別、商品、レベルの複合フィルタリング関数（全てAND条件）
 pub fn fetch_by_colors_features_card_types_products_and_levels_native(
     cards: &[CardExport],

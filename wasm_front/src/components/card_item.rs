@@ -2,6 +2,7 @@ use crate::components::svg_definition::{
     ColorIconsWithNum, IconBlack, IconBlue, IconColorless, IconGreen, IconRed, IconWhite,
 };
 use crate::components::{BurstTextRenderer, SkillTextRenderer};
+use crate::utils::maintenance::is_maintenance_mode;
 use datapack::CardExport;
 use leptos::prelude::*;
 
@@ -239,6 +240,27 @@ pub fn CardItem(
                             <div class="flex items-center gap-2 text-sm mt-1" style="color: #374151; opacity: 0.8;">
                                 <span>{card.code()}</span>
                                 {
+                                    // メンテナンスモードでのみ編集リンクを表示
+                                    if is_maintenance_mode() {
+                                        let pronunciation = card.pronunciation();
+                                        if !pronunciation.is_empty() {
+                                            view! {
+                                                <a
+                                                    href=format!("/edit/{}", pronunciation)
+                                                    class="bg-yellow-100 hover:bg-yellow-200 px-1 py-0.5 rounded text-yellow-800 hover:text-yellow-900 transition-colors cursor-pointer text-xs"
+                                                    title="フィーチャーを編集"
+                                                >
+                                                    "🛠️"
+                                                </a>
+                                            }.into_any()
+                                        } else {
+                                            view! { <span></span> }.into_any()
+                                        }
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }
+                                {
                                     // レベル表示
                                     let level = card.level();
                                     if !level.is_empty() {
@@ -368,6 +390,27 @@ pub fn CardItem(
                                         >
                                             {card.code()}
                                         </a>
+                                        {
+                                            // メンテナンスモードでのみ編集リンクを表示
+                                            if is_maintenance_mode() {
+                                                let pronunciation = card.pronunciation();
+                                                if !pronunciation.is_empty() {
+                                                    view! {
+                                                        <a
+                                                            href=format!("/edit/{}", pronunciation)
+                                                            class="bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded text-yellow-800 hover:text-yellow-900 transition-colors cursor-pointer text-xs"
+                                                            title="フィーチャーを編集"
+                                                        >
+                                                            "🛠️ Edit"
+                                                        </a>
+                                                    }.into_any()
+                                                } else {
+                                                    view! { <span></span> }.into_any()
+                                                }
+                                            } else {
+                                                view! { <span></span> }.into_any()
+                                            }
+                                        }
                                     </div>
                                     <div class="flex flex-wrap gap-2">
                                         {

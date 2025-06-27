@@ -1,4 +1,5 @@
 use crate::components::card_item::{CardItem, ViewMode};
+use crate::utils::maintenance::is_maintenance_mode;
 use datapack::CardExport;
 use leptos::prelude::*;
 use leptos_router::hooks::use_params_map;
@@ -117,10 +118,47 @@ pub fn CardDetailPage() -> impl IntoView {
                         </div>
                     }.into_any()
                 } else {
+                    // Get pronunciation for edit link before consuming card_list
+                    let edit_pronunciation = if is_maintenance_mode() && !card_list.is_empty() {
+                        let first_card = &card_list[0];
+                        let full_name = first_card.name();
+                        if let Some(start) = full_name.find(" <") {
+                            if let Some(end) = full_name.find(">") {
+                                Some(full_name[start + 2..end].to_string())
+                            } else {
+                                None
+                            }
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    };
+
                     view! {
                         <div>
-                            <div class="mb-4 text-sm text-gray-600">
-                                {format!("Found {} card{}", card_count, if card_count == 1 { "" } else { "s" })}
+                            <div class="mb-4 flex justify-between items-center">
+                                <div class="text-sm text-gray-600">
+                                    {format!("Found {} card{}", card_count, if card_count == 1 { "" } else { "s" })}
+                                </div>
+                                {move || {
+                                    if let Some(pronunciation) = &edit_pronunciation {
+                                        if !pronunciation.is_empty() {
+                                            view! {
+                                                <a
+                                                    href=format!("/edit/{}", pronunciation)
+                                                    class="inline-flex items-center px-3 py-1 bg-yellow-500 text-white text-sm rounded hover:bg-yellow-600 transition-colors"
+                                                >
+                                                    "🛠️ Edit Features"
+                                                </a>
+                                            }.into_any()
+                                        } else {
+                                            view! { <span></span> }.into_any()
+                                        }
+                                    } else {
+                                        view! { <span></span> }.into_any()
+                                    }
+                                }}
                             </div>
                             <div class="space-y-4">
                                 {card_list.into_iter().map(|card| {

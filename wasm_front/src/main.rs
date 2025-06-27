@@ -5,9 +5,10 @@ use leptos_router::path;
 mod components;
 mod pages;
 mod types;
+mod utils;
 
 use components::SvgDefinition;
-use pages::{CardDetailPage, CardPage, CreditsPage, HomePage};
+use pages::{CardDetailPage, CardPage, CreditsPage, HomePage, FeatureEditPage};
 
 #[component]
 fn App() -> impl IntoView {
@@ -21,6 +22,7 @@ fn App() -> impl IntoView {
                     <Route path=path!("/card") view=CardPage/>
                     <Route path=path!("/card/:param") view=CardDetailPage/>
                     <Route path=path!("/credits") view=CreditsPage/>
+                    <Route path=path!("/edit/:pronunciation") view=FeatureEditPage/>
                 </Routes>
             </div>
         </Router>

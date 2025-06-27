@@ -17,4 +17,4 @@ port = 8080
 open = false
 
 [[proxy]]
-backend = "http://localhost:8002/api/"
+backend = "http://localhost:8004/api/"

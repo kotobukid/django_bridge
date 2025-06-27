@@ -96,6 +96,9 @@ define_icon_rules![
     ["《無×0》", "[0l]", "ColorlessZero"],
 
     ["《ディソナアイコン》", "[ds]", "IconDissona"],
+    
+    ["《メインフェイズアイコン》", "[pa]", "IconMainPhase"],
+    ["《アタックフェイズアイコン》", "[pm]", "IconAttackPhase"],
 ];
 
 #[cfg(test)]

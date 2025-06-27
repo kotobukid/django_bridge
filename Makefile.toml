@@ -13,6 +13,11 @@ script = [
     "cargo run"
 ]
 
+[tasks.fixed_data_server]
+description = "FixedDataサーバーを起動 (手動フィーチャー修正用)"
+command = "cargo"
+args = ["run", "-p", "fixed_data_server"]
+
 [tasks.static]
 description = "DBに保存済みのデータをRustコードとして書き出す"
 script = [
