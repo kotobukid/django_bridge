@@ -8,24 +8,8 @@ pub fn PowerSelector(
 ) -> impl IntoView {
     let thresholds = PowerFilter::threshold_options();
 
-    // Clear button click handler
-    let on_clear = move |_| {
-        set_power_filter.update(|f| f.clear_all());
-    };
-
     view! {
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-3">
-            <div class="flex items-center justify-between mb-2">
-                <h3 class="text-sm font-medium text-gray-700">"パワー"</h3>
-                <button
-                    on:click=on_clear
-                    class="text-xs text-gray-500 hover:text-gray-700 transition-colors"
-                    class:invisible=move || !power_filter.get().has_any()
-                >
-                    "クリア"
-                </button>
-            </div>
-
             <div class="flex flex-wrap gap-1.5">
                 <button
                     on:click=move |_| {

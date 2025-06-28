@@ -57,12 +57,6 @@ impl TimingFilter {
         self.main_phase || self.attack_phase || self.spell_cutins
     }
 
-    pub fn clear_all(&mut self) {
-        self.main_phase = false;
-        self.attack_phase = false;
-        self.spell_cutins = false;
-    }
-
     /// Check if a timing value matches the current filter
     /// Multiple filters are treated as AND conditions
     pub fn matches(&self, timing: u8) -> bool {
@@ -428,10 +422,6 @@ impl PowerFilter {
 
     pub fn set_threshold(&mut self, threshold: Option<i32>) {
         self.min_power = threshold;
-    }
-
-    pub fn clear_all(&mut self) {
-        self.min_power = None;
     }
 
     pub fn threshold_options() -> Vec<i32> {

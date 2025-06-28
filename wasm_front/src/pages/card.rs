@@ -219,10 +219,17 @@ pub fn CardPage() -> impl IntoView {
 
                     // 常時表示フィルタ
                     <div class="space-y-3">
-                        <TextSearch
-                            search_text=search_text
-                            set_search_text=set_search_text
-                        />
+                        // Text search and Level in responsive grid
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <TextSearch
+                                search_text=search_text
+                                set_search_text=set_search_text
+                            />
+                            <LevelSelector
+                                level_filter=level_filter
+                                set_level_filter=set_level_filter
+                            />
+                        </div>
 
                         // Color and Feature shortcuts in responsive grid
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -236,21 +243,21 @@ pub fn CardPage() -> impl IntoView {
                             />
                         </div>
 
-                        <LevelSelector
-                            level_filter=level_filter
-                            set_level_filter=set_level_filter
-                        />
-                        <PowerSelector
-                            power_filter=power_filter
-                            set_power_filter=set_power_filter
-                        />
+                        // Power and Timing in responsive grid
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <PowerSelector
+                                power_filter=power_filter
+                                set_power_filter=set_power_filter
+                            />
+                            <TimingSelector
+                                timing_filter=timing_filter
+                                set_timing_filter=set_timing_filter
+                            />
+                        </div>
+
                         <CardTypeSelector
                             card_type_filter=card_type_filter
                             set_card_type_filter=set_card_type_filter
-                        />
-                        <TimingSelector
-                            timing_filter=timing_filter
-                            set_timing_filter=set_timing_filter
                         />
                     </div>
                 </div>
