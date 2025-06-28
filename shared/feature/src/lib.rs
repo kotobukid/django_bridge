@@ -169,25 +169,31 @@ concerned![
     r"\(このアーツの使用後に場に出たシグニにもこの効果の影響を与える\)",
     r"\(【ランサー\(条件\)】は【ランサー】に含まれる\)",
     r"\(シグニとのバトルやパワーが0以下になった場合はバニッシュされる\)",
-    r"\(このシグニは対戦相手のレベル1のルリグとレベル1のシグニによって対象にされない。レベル2についても同様である\)"
+    r"\(このシグニは対戦相手のレベル1のルリグとレベル1のシグニによって対象にされない。レベル2についても同様である\)",
+    r"\(ゲームを開始する際に、このルリグを表向きにしたとき、このルリグがセンタールリグであるなら、(《コインアイコン》)+を得る\)"
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 83;
-pub const PATTERNS_AMOUNT_D: usize = 174;
+pub const PATTERNS_AMOUNT_D: usize = 173;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
     [DetectPattern; PATTERNS_AMOUNT_D],
 ) {
     let r_patterns: [ReplacePattern; PATTERNS_AMOUNT_R] = [
-        replace_pattern![r"『", ""],
+        // replace_pattern![r"『", ""],
         replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
-        replace_pattern![r"』", ""],
+        // replace_pattern![r"』", ""],
         replace_pattern![r"ライフバースト:", "LB:", CardFeature::LifeBurst],
         replace_pattern![
             r"\(対戦相手のライフクロスが1枚以上ある場合、ライフクロス1枚をクラッシュし、0枚の場合、あなたはゲームに勝利する\)",
             "",
             CardFeature::Damage
+        ],
+        replace_pattern![
+            r"\(ライフクロスは一番上からクラッシュされる\)",
+            "",
+            // CardFeature::LifeCrush
         ],
         replace_pattern![
             r"\(パワーが0以下のシグニはルールによってバニッシュされる\)",
@@ -397,7 +403,7 @@ pub fn create_detect_patterns() -> (
             "*ASSASSIN LIMITED*"
         ],
         replace_pattern![
-            r"\(【ランサー\(.*\)】を持つシグニがバトルで.*のシグニをバニッシュしたとき、対戦相手のライフクロスを1枚クラッシュする\)",
+            r"\(【ランサー\(.*\)】を持つシグニがバトルで.*のシグニをバニッシュしたとき、対戦相手のライフクロス(を1枚|1枚を)クラッシュする\)",
             "*LANCER LIMITED*"
         ],
         replace_pattern![
@@ -421,7 +427,7 @@ pub fn create_detect_patterns() -> (
             "*LRIG/SIGNI BARRIER*"
         ],
         replace_pattern![
-            r"\((この|それらの)シグニは.+によって対象にされない\)",
+            r"\((この|それらの|その)シグニは.+によって対象にされない\)",
             "*SHADOW*"
         ],
         replace_pattern![
@@ -470,7 +476,13 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"\(あなたのデッキの一番上のカードをエナゾーンに置く\)",
-            "*ENER CHARGE*"
+            "*ENER CHARGE*",
+            CardFeature::Charge
+        ],
+        replace_pattern![
+            r"\(あなたのデッキの上からカードを\d枚エナゾーンに置く\)",
+            "*ENER CHARGE*",
+            CardFeature::Charge
         ],
         replace_pattern![
             r"\(対戦相手のシグニが【シュート】を持つシグニとのバトルによってバニッシュされる場合、エナゾーンに置かれる代わりにトラッシュに置かれる\)",
@@ -673,13 +685,13 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"新たに場に出せない", CardFeature::LimitSigni],
         detect_pattern![r"それらの場所を入れ替", CardFeature::Position],
         detect_pattern![
-            r"対戦相手のシグニ\d+体(まで|を)対象とし、(それら|それ)を手札に戻",
+            r"対戦相手のシグニ(を)?\d+体(まで|を)対象とし、(それら|それ)を手札に戻",
             CardFeature::Bounce
         ],
-        detect_pattern![
-            r"あなたの他の.*のシグニ\d体を対象とし、それを手札に戻",
-            CardFeature::Bounce
-        ],
+        // detect_pattern![
+        //     r"あなたの他の.*のシグニ\d体を対象とし、それを手札に戻",
+        //     CardFeature::Bounce
+        // ],
         detect_pattern![
             r"対戦相手のパワー\d+.*\d+体(まで|を)対象とし、(それら|それ)を手札に戻",
             CardFeature::Bounce
@@ -759,8 +771,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"ダメージを受けない", CardFeature::CancelDamage],
         detect_pattern![r"トラッシュからシグニ.+場に出", CardFeature::Reanimate],
         detect_pattern![
-            // あなたのトラッシュから黒のシグニ1枚を対象とし、それを場に出す  // TODO
-            r"あなたのトラッシュから(シグニ|.+のシグニ)\d+枚を対象とし、それを場に出",
+            r"あなたのトラッシュから(シグニ|.+のシグニ|.+のシグニを)\d+枚(を|まで)対象とし、(それ|それら)を場に出",
             CardFeature::Reanimate
         ],
         detect_pattern![
@@ -778,7 +789,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::Salvage
         ],
         detect_pattern![
-            r"あなたのトラッシュから.?(シグニ|シグニを|シグニをそれぞれ)\d+枚(を|まで)対象とし、それを手札に加え",
+            r"あなたのトラッシュから.?(シグニ|シグニを|シグニをそれぞれ|.+のシグニ|.+のシグニを)\d+枚(を|まで)対象とし、(それ|それら)を手札に加え",
             CardFeature::Salvage
         ],
         detect_pattern![
