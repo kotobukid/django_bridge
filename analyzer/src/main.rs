@@ -10,6 +10,19 @@ use std::env;
 /// WIXOSS カード解析ツール
 ///
 /// RawCardテーブルから未解析のカードを取得し、解析してCardテーブルに保存します。
+///
+/// 使用例:
+///   # 最新100件を解析
+///   cargo run -p analyzer
+///   
+///   # 特定のプロダクトのカードをすべて解析（名前で指定）
+///   cargo run -p analyzer -- --product "GLOWING DIVA" --limit 1000
+///   
+///   # 特定のプロダクトのカードをすべて解析（コードで指定）
+///   cargo run -p analyzer -- --product "WXDi-P01" --limit 1000
+///   
+///   # 強制再解析
+///   cargo run -p analyzer -- --product "WXDi-P01" --force
 #[derive(Parser, Debug)]
 #[command(name = "analyzer")]
 #[command(about = "WIXOSS カード解析ツール")]
@@ -33,6 +46,10 @@ struct Args {
     /// 強制再解析（既に解析済みのカードも対象にする）
     #[arg(long)]
     force: bool,
+
+    /// 特定のプロダクト名またはプロダクトコードのカードのみを解析
+    #[arg(long)]
+    product: Option<String>,
 }
 
 #[tokio::main]
@@ -40,6 +57,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     println!("WIXOSS カード解析ツール");
+    
+    if let Some(product_filter) = &args.product {
+        println!("プロダクトでフィルタリング: {}", product_filter);
+    }
 
     let workspace_env = format!(
         "{}/.env",
@@ -76,27 +97,40 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Build query based on arguments
     let mut query = String::from(
-        "SELECT id, card_number, name, raw_html, skill_text, life_burst_text, 
-               source_url, scraped_at, last_analyzed_at, is_analyzed, analysis_error,
-               product_id
-        FROM wix_rawcard",
+        "SELECT r.id, r.card_number, r.name, r.raw_html, r.skill_text, r.life_burst_text, 
+               r.source_url, r.scraped_at, r.last_analyzed_at, r.is_analyzed, r.analysis_error,
+               r.product_id
+        FROM wix_rawcard r",
     );
 
     let mut conditions = Vec::new();
 
+    if let Some(product_filter) = &args.product {
+        query.push_str(" INNER JOIN wix_product p ON r.product_id = p.id");
+        // SQLインジェクション対策: シングルクォートをエスケープ
+        let safe_product_filter = product_filter.replace("'", "''");
+        // プロダクト名またはプロダクトコードでマッチ
+        conditions.push(format!(
+            "(p.name = '{}' OR p.product_code = '{}')", 
+            safe_product_filter, safe_product_filter
+        ));
+    }
+
     if let Some(card_no) = &args.card_number {
-        conditions.push(format!("card_number = '{}'", card_no));
+        // SQLインジェクション対策: シングルクォートをエスケープ
+        let safe_card_no = card_no.replace("'", "''");
+        conditions.push(format!("r.card_number = '{}'", safe_card_no));
     }
 
     if !args.force {
-        conditions.push("is_analyzed = false".to_string());
+        conditions.push("r.is_analyzed = false".to_string());
     }
 
     if !conditions.is_empty() {
         query.push_str(&format!(" WHERE {}", conditions.join(" AND ")));
     }
 
-    query.push_str(&format!(" ORDER BY scraped_at DESC LIMIT {}", args.limit));
+    query.push_str(&format!(" ORDER BY r.scraped_at DESC LIMIT {}", args.limit));
 
     if args.verbose {
         println!("Query: {}", query);
@@ -112,6 +146,24 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if !args.force {
             println!("既に解析済みのカードも含める場合は --force オプションを使用してください。");
         }
+        
+        // プロダクトでフィルタリングしていて見つからない場合、利用可能なプロダクトを表示
+        if args.product.is_some() {
+            println!("\n利用可能なプロダクト (名前 [コード]):");
+            let available_products: Vec<(String, String)> = sqlx::query_as(
+                "SELECT DISTINCT p.name, p.product_code 
+                 FROM wix_product p 
+                 INNER JOIN wix_rawcard r ON p.id = r.product_id 
+                 ORDER BY p.name"
+            )
+            .fetch_all(&pool)
+            .await?;
+            
+            for (product_name, product_code) in available_products {
+                println!("  - {} [{}]", product_name, product_code);
+            }
+        }
+        
         return Ok(());
     }
 

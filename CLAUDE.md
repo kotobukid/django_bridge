@@ -54,6 +54,15 @@ cargo make scraper-fast booster WX24-P1
 # Analyze scraped RawCard data
 cargo run -p analyzer -- --limit 100 --verbose
 
+# Analyze cards from a specific product (by name)
+cargo run -p analyzer -- --product "GLOWING DIVA" --limit 1000
+
+# Analyze cards from a specific product (by code)
+cargo run -p analyzer -- --product "WXDi-P01" --limit 1000
+
+# Force re-analysis of specific product cards
+cargo run -p analyzer -- --product "WXDi-P01" --force
+
 # Force re-analysis of all cards
 cargo make analyze_all
 ```
