@@ -275,20 +275,6 @@ pub fn CardItem(
                                     }
                                 }
                                 {
-                                    // パワー表示
-                                    let power = card.power();
-                                    if !power.is_empty() {
-                                        view! {
-                                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
-                                                "Pow: " {power}
-                                            </span>
-                                        }.into_any()
-                                    } else {
-                                        view! {};
-                                        ().into_any()
-                                    }
-                                }
-                                {
                                     // リミット表示
                                     let limit = card.limit();
                                     if !limit.is_empty() {
@@ -303,6 +289,17 @@ pub fn CardItem(
                                     }
                                 }
                                 {
+                                    // 使用タイミング表示
+                                    let timing_strings = datapack::timing_to_strings(card.timing());
+                                    timing_strings.into_iter().map(|timing_str| {
+                                        view! {
+                                            <span class="bg-black text-white px-2 py-1 rounded text-xs font-medium">
+                                                {timing_str}
+                                            </span>
+                                        }.into_any()
+                                    }).collect_view()
+                                }
+                                {
                                     // クラス表示
                                     let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
                                     if !klass_names.is_empty() {
@@ -314,6 +311,20 @@ pub fn CardItem(
                                                     </span>
                                                 }
                                             }).collect_view()}
+                                        }.into_any()
+                                    } else {
+                                        view! {};
+                                        ().into_any()
+                                    }
+                                }
+                                {
+                                    // パワー表示
+                                    let power = card.power();
+                                    if !power.is_empty() {
+                                        view! {
+                                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
+                                                "Pow: " {power}
+                                            </span>
                                         }.into_any()
                                     } else {
                                         view! {};
@@ -412,6 +423,7 @@ pub fn CardItem(
                                             }
                                         }
                                     </div>
+                                    // レベル, リミット, 種族の行
                                     <div class="flex flex-wrap gap-2">
                                         {
                                             let level = card.level();
@@ -419,19 +431,6 @@ pub fn CardItem(
                                                 view! {
                                                     <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
                                                         "Level: " {level}
-                                                    </span>
-                                                }.into_any()
-                                            } else {
-                                                view! {};
-                                                ().into_any()
-                                            }
-                                        }
-                                        {
-                                            let power = card.power();
-                                            if !power.is_empty() {
-                                                view! {
-                                                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                                                        "Power: " {power}
                                                     </span>
                                                 }.into_any()
                                             } else {
@@ -463,6 +462,33 @@ pub fn CardItem(
                                                             </span>
                                                         }
                                                     }).collect_view()}
+                                                }.into_any()
+                                            } else {
+                                                view! {};
+                                                ().into_any()
+                                            }
+                                        }
+                                    </div>
+                                    // 使用タイミングの行
+                                    <div class="flex flex-wrap gap-2">
+                                        {
+                                            // 使用タイミング表示
+                                            let timing_strings = datapack::timing_to_strings(card.timing());
+                                            timing_strings.into_iter().map(|timing_str| {
+                                                view! {
+                                                    <span class="bg-black text-white px-3 py-1 rounded-full text-sm font-medium">
+                                                        {timing_str}
+                                                    </span>
+                                                }.into_any()
+                                            }).collect_view()
+                                        }
+                                        {
+                                            let power = card.power();
+                                            if !power.is_empty() {
+                                                view! {
+                                                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                        "Power: " {power}
+                                                    </span>
                                                 }.into_any()
                                             } else {
                                                 view! {};

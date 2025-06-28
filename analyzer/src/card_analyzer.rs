@@ -314,7 +314,7 @@ impl SimpleRawCardAnalyzer {
         }
     }
 
-    /// HTMLから使用タイミング情報を検出する（dd[9]、アーツ/ピースのみ）
+    /// HTMLから使用タイミング情報を検出する（dd[9]、アーツ/ピース/アシストルリグ）
     pub fn detect_timing_from_html(&self, html: &str) -> Option<String> {
         let dd_elements = self.extract_dd_elements(html);
 
@@ -322,14 +322,27 @@ impl SimpleRawCardAnalyzer {
             return None;
         }
 
-        // アーツまたはピースカードかどうかをチェック
+        // 使用タイミングを持つカードタイプをチェック
         let card_type = &dd_elements[0];
-        let is_arts_or_piece = card_type.contains("アーツ") || card_type.contains("ピース");
+        let has_timing = card_type.contains("アーツ") 
+                      || card_type.contains("ピース") 
+                      || card_type.contains("アシストルリグ");
 
-        if is_arts_or_piece && dd_elements.len() > 9 {
+        if has_timing && dd_elements.len() > 9 {
             let timing_text = dd_elements[9].trim();
-            if !timing_text.is_empty() && timing_text != "-" {
-                Some(timing_text.to_string())
+            
+            // HTMLタグを除去してクリーンなテキストにする
+            let clean_timing_text = timing_text
+                .replace("<br>", "")
+                .replace("<br/>", "")
+                .replace("<br />", "")
+                .replace('\n', "")
+                .replace('\r', "")
+                .trim()
+                .to_string();
+            
+            if !clean_timing_text.is_empty() && clean_timing_text != "-" {
+                Some(clean_timing_text)
             } else {
                 None
             }
@@ -680,13 +693,15 @@ impl SimpleRawCardAnalyzer {
         let limit: Option<i32> = limit_str.and_then(|s| s.parse().ok());
         let limit_ex: Option<i32> = limit_ex_str.and_then(|s| s.parse().ok());
 
-        // タイミングは数値ではなく文字列のままにしておく（"メインフェイズ"等）
-        // 将来的に数値コード化が必要であれば別途マッピング処理を追加
+        // 使用タイミング文字列を数値にマッピング（ビットフラグ形式）
         let timing: Option<i32> = timing_str.and_then(|s| {
-            // タイミング文字列を数値にマッピング（仮の実装）
             match s.as_str() {
-                "メインフェイズ" => Some(1),
-                "アタックフェイズ" => Some(2),
+                "アタックフェイズ" => Some(1),
+                "アタックフェイズスペルカットイン" => Some(2),
+                "メインフェイズ" => Some(4),
+                "メインフェイズアタックフェイズ" => Some(8),
+                "メインフェイズアタックフェイズスペルカットイン" => Some(16),
+                "メインフェイズスペルカットイン" => Some(32),
                 _ => None,
             }
         });

@@ -37,6 +37,79 @@ impl ProductFilter {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct TimingFilter {
+    pub main_phase: bool,
+    pub attack_phase: bool,
+    pub spell_cutins: bool,
+}
+
+impl TimingFilter {
+    pub fn new() -> Self {
+        Self {
+            main_phase: false,
+            attack_phase: false,
+            spell_cutins: false,
+        }
+    }
+
+    pub fn has_any(&self) -> bool {
+        self.main_phase || self.attack_phase || self.spell_cutins
+    }
+
+    pub fn clear_all(&mut self) {
+        self.main_phase = false;
+        self.attack_phase = false;
+        self.spell_cutins = false;
+    }
+
+    /// Check if a timing value matches the current filter
+    /// Multiple filters are treated as AND conditions
+    pub fn matches(&self, timing: u8) -> bool {
+        if !self.has_any() {
+            return true; // No filter applied
+        }
+
+        // Based on analyzer mapping:
+        // アタックフェイズ = 1
+        // アタックフェイズスペルカットイン = 2  
+        // メインフェイズ = 4
+        // メインフェイズアタックフェイズ = 8
+        // メインフェイズアタックフェイズスペルカットイン = 16
+        // メインフェイズスペルカットイン = 32
+
+        // Check which phases the timing value supports
+        let timing_has_main = match timing {
+            4 | 8 | 16 | 32 => true,
+            _ => false,
+        };
+        
+        let timing_has_attack = match timing {
+            1 | 2 | 8 | 16 => true,
+            _ => false,
+        };
+        
+        let timing_has_spell_cutins = match timing {
+            2 | 16 | 32 => true,
+            _ => false,
+        };
+
+        // AND logic: all selected phases must be supported by the timing
+        if self.main_phase && !timing_has_main {
+            return false;
+        }
+        if self.attack_phase && !timing_has_attack {
+            return false;
+        }
+        if self.spell_cutins && !timing_has_spell_cutins {
+            return false;
+        }
+
+        // If we reach here, all selected phases are supported
+        timing > 0
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ColorFilter {
     pub white: bool,

@@ -19,6 +19,7 @@ mod skill_text_renderer;
 mod svg_definition;
 mod svg_toggle_switch;
 mod text_search;
+mod timing_selector;
 mod toggle_switch;
 
 pub use burst_feature_overlay::BurstFeatureOverlay;
@@ -39,3 +40,4 @@ pub use skill_text_renderer::{BurstTextRenderer, SkillTextRenderer};
 pub use svg_definition::{IconRed, SvgDefinition};
 pub use svg_toggle_switch::SvgToggleSwitch;
 pub use text_search::TextSearch;
+pub use timing_selector::TimingSelector;

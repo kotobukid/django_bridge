@@ -113,6 +113,49 @@ pub fn say_goodbye() -> String {
     "Goodbye!".to_string()
 }
 
+/// Convert timing bits to display strings
+#[wasm_bindgen]
+pub fn timing_to_strings(timing: u8) -> Vec<String> {
+    let mut result = Vec::new();
+    
+    if timing == 0 {
+        return result; // No timing
+    }
+    
+    // Based on analyzer mapping:
+    // アタックフェイズ = 1
+    // アタックフェイズスペルカットイン = 2  
+    // メインフェイズ = 4
+    // メインフェイズアタックフェイズ = 8
+    // メインフェイズアタックフェイズスペルカットイン = 16
+    // メインフェイズスペルカットイン = 32
+    
+    match timing {
+        1 => result.push("アタックフェイズ".to_string()),
+        2 => {
+            result.push("アタックフェイズ".to_string());
+            result.push("スペルカットイン".to_string());
+        },
+        4 => result.push("メインフェイズ".to_string()),
+        8 => {
+            result.push("メインフェイズ".to_string());
+            result.push("アタックフェイズ".to_string());
+        },
+        16 => {
+            result.push("メインフェイズ".to_string());
+            result.push("アタックフェイズ".to_string());
+            result.push("スペルカットイン".to_string());
+        },
+        32 => {
+            result.push("メインフェイズ".to_string());
+            result.push("スペルカットイン".to_string());
+        },
+        _ => {} // Unknown timing value
+    }
+    
+    result
+}
+
 struct CardCompact(
     (
         i32,          // id
@@ -272,6 +315,12 @@ impl CardExport {
     #[wasm_bindgen(getter)]
     pub fn timing(&self) -> u8 {
         self.timing
+    }
+
+    /// Get timing as string array (for display)
+    #[wasm_bindgen]
+    pub fn timing_strings(&self) -> Vec<String> {
+        timing_to_strings(self.timing)
     }
 
     #[wasm_bindgen(getter)]

@@ -1,10 +1,10 @@
 use crate::components::{
     BurstFeatureOverlay, CardList, CardTypeSelector, ClearAllButton, ColorSelector, FeatureOverlay,
     FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination, PowerSelector,
-    ProductOverlay, ScrollToTopButton, TextSearch,
+    ProductOverlay, ScrollToTopButton, TextSearch, TimingSelector,
 };
 use crate::types::{
-    CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter,
+    CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter, TimingFilter,
 };
 use datapack::CardExport;
 use leptos::prelude::*;
@@ -17,6 +17,7 @@ pub fn CardPage() -> impl IntoView {
     let (level_filter, set_level_filter) = signal(LevelFilter::new());
     let (power_filter, set_power_filter) = signal(PowerFilter::new());
     let (lb_filter, set_lb_filter) = signal(LBFilter::new());
+    let (timing_filter, set_timing_filter) = signal(TimingFilter::new());
     let (search_text, set_search_text) = signal(String::new());
     let product_filter = RwSignal::new(ProductFilter::new());
     let klass_filter = RwSignal::new(KlassFilter::new());
@@ -50,6 +51,7 @@ pub fn CardPage() -> impl IntoView {
             let level = level_filter.get();
             let power = power_filter.get();
             let lb = lb_filter.get();
+            let timing = timing_filter.get();
             let product = product_filter.read();
             let klass = klass_filter.read();
             let feature_names = selected_feature_names.get();
@@ -106,6 +108,11 @@ pub fn CardPage() -> impl IntoView {
                 });
             }
 
+            // Timingフィルタリングを追加適用
+            if timing.has_any() {
+                filtered.retain(|card| timing.matches(card.timing()));
+            }
+
             set_filtered_cards.set(filtered);
             set_current_page.set(0);
         }
@@ -140,6 +147,7 @@ pub fn CardPage() -> impl IntoView {
             || level_filter.get().has_any()
             || power_filter.get().has_any()
             || lb_filter.get().has_any()
+            || timing_filter.get().has_any()
             || !search_text.get().is_empty()
             || has_active_features.get()
             || has_active_burst_features.get()
@@ -155,6 +163,7 @@ pub fn CardPage() -> impl IntoView {
         set_level_filter.set(LevelFilter::new());
         set_power_filter.set(PowerFilter::new());
         set_lb_filter.set(LBFilter::new());
+        set_timing_filter.set(TimingFilter::new());
         selected_features.update(|f| f.clear());
         set_selected_feature_names.set(Vec::new());
         selected_burst_features.update(|f| f.clear());
@@ -238,6 +247,10 @@ pub fn CardPage() -> impl IntoView {
                         <CardTypeSelector
                             card_type_filter=card_type_filter
                             set_card_type_filter=set_card_type_filter
+                        />
+                        <TimingSelector
+                            timing_filter=timing_filter
+                            set_timing_filter=set_timing_filter
                         />
                     </div>
                 </div>
