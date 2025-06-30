@@ -152,7 +152,7 @@ define_features! {
     // Untouchable => { tag: Others, bit_shift: (49, 0), label: "不可触" },    //旧アークゲイン
     TopSet => { tag: Enhance, bit_shift: (50, 0), label: "トップ操作" },
     BottomCheck => { tag: Enhance, bit_shift: (51, 0), label: "ボトム操作" },
-    Barrier => { tag: Endure, bit_shift: (52, 0), label: "バリア" },
+    Barrier => { tag: Endure, bit_shift: (52, 0), label: "シグニバリア・ルリグバリア" },
     // MultiEner => { tag: Enhance, bit_shift: (53, 0), label: "マルチエナ" },
     LrigTrash => { tag: Enhance, bit_shift: (54, 0), label: "ルリグトラッシュ参照" },
     Charm => { tag: Unique, bit_shift: (55, 0), label: "チャーム" },

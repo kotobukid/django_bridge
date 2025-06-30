@@ -174,7 +174,7 @@ concerned![
 ];
 
 pub const PATTERNS_AMOUNT_R: usize = 83;
-pub const PATTERNS_AMOUNT_D: usize = 179;
+pub const PATTERNS_AMOUNT_D: usize = 180;
 
 pub fn create_detect_patterns() -> (
     [ReplacePattern; PATTERNS_AMOUNT_R],
@@ -416,15 +416,18 @@ pub fn create_detect_patterns() -> (
         ],
         replace_pattern![
             r"\(あなたが次にルリグからダメージを受ける場合、代わりに【ルリグバリア】1つを消費し、そのダメージを受けない\)",
-            "*LRIG BARRIER*"
+            "*LRIG BARRIER*",
+            CardFeature::CancelDamage
         ],
         replace_pattern![
             r"\(あなたが次にシグニからダメージを受ける場合、代わりに【シグニバリア】1つを消費し、そのダメージを受けない\)",
-            "*SIGNI BARRIER*"
+            "*SIGNI BARRIER*",
+            CardFeature::CancelDamage
         ],
         replace_pattern![
             r"\(あなたが次にシグニからダメージを受ける場合、代わりに【シグニバリア】1つを消費し、そのダメージを受けない。あなたが次にルリグからダメージを受ける場合、代わりに【ルリグバリア】1つを消費し、そのダメージを受けない\)",
-            "*LRIG/SIGNI BARRIER*"
+            "*LRIG/SIGNI BARRIER*",
+            CardFeature::CancelDamage
         ],
         replace_pattern![
             r"\((この|それらの|その)シグニは.+によって対象にされない\)",
@@ -584,8 +587,8 @@ pub fn create_detect_patterns() -> (
             CardFeature::BottomCheck
         ],
         detect_pattern![r"(それ|シグニ)をトラッシュに置", CardFeature::Trash],
-        detect_pattern![r"シグニバリア", CardFeature::Barrier],
-        detect_pattern![r"ルリグバリア", CardFeature::Barrier],
+        detect_pattern![r"【シグニバリア】^(1つを失う)", CardFeature::Barrier],
+        detect_pattern![r"【ルリグバリア】", CardFeature::Barrier],
         detect_pattern![r"アサシン", CardFeature::Assassin],
         detect_pattern![r"【リミットアッパー】", CardFeature::EnhanceLimit],
         detect_pattern![r"それのリミットを\+1", CardFeature::EnhanceLimit],
@@ -685,7 +688,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"新たに場に出せない", CardFeature::LimitSigni],
         detect_pattern![r"それらの場所を入れ替", CardFeature::Position],
         detect_pattern![
-            r"対戦相手のシグニ(を)?\d+体(まで|を)対象とし、(それら|それ)を手札に戻",
+            r"対戦相手のシグニ(を)?\d+体(まで|を)対象とし、(.*そうした場合、)?(それら|それ)を手札に戻",
             CardFeature::Bounce
         ],
         // detect_pattern![
@@ -773,7 +776,8 @@ pub fn create_detect_patterns() -> (
             r"すべてのシグニのパワーを場にあるシグニ1体につき\-\d+する",
             CardFeature::PowerDown
         ], // 羽沼マコト/エニグマメイデン
-        detect_pattern![r"ダメージを受けない", CardFeature::CancelDamage],
+        detect_pattern![r"あなたは.+によってダメージを受けない", CardFeature::CancelDamage],
+        detect_pattern![r"あなたが(.+によって)?ダメージを受ける場合、代わりに", CardFeature::CancelDamage],
         detect_pattern![r"トラッシュからシグニ.+場に出", CardFeature::Reanimate],
         detect_pattern![
             r"あなたのトラッシュから(シグニ|.+のシグニ|.+のシグニを)\d+枚(を|まで)対象とし、(それ|それら)を場に出",
