@@ -329,7 +329,7 @@ pub fn create_detect_patterns() -> (
             "*COMMON PIECE*"
         ],
         replace_pattern![
-            r"\(あなたのルリグの下からカードを合計\d+枚ルリグトラッシュに置く\)",
+            r"\(あなたのルリグの下からカードを合計\d枚ルリグトラッシュに置く\)",
             ""
         ],
         replace_pattern![
@@ -549,7 +549,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"アクセされてい", CardFeature::Acce], // されている・されていた
         detect_pattern![r"アクセされたとき", CardFeature::Acce],
         detect_pattern![r"アクセするための", CardFeature::Acce],
-        detect_pattern![r"エクシード\d+", CardFeature::Exceed],
+        detect_pattern![r"エクシード\d", CardFeature::Exceed],
         detect_pattern![
             r"\(ゲームを開始する際に、このルリグを表向きにしたとき、このルリグがセンタールリグであるなら、[《コインアイコン》]+を得る\)",
             CardFeature::GainCoin
@@ -565,7 +565,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"《コインアイコン》を得る", CardFeature::GainCoin],
         detect_pattern![r"ガードアイコン", CardFeature::Guard],
         detect_pattern![r"捨てさせる。", CardFeature::DiscardOpponent],
-        detect_pattern![r"対戦相手は手札を\d+枚捨て", CardFeature::DiscardOpponent],
+        detect_pattern![r"対戦相手は手札を\d枚捨て", CardFeature::DiscardOpponent],
         detect_pattern![
             r"各プレイヤーは手札をすべてエナゾーンに置",
             CardFeature::DiscardOpponent,
@@ -581,7 +581,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"対象になったとき", CardFeature::OnTouch],
         detect_pattern![r"ダウンする。", CardFeature::Down],
         detect_pattern![r"エナチャージ", CardFeature::Charge],
-        detect_pattern![r"カードを\d+枚までエナゾーンに置", CardFeature::Charge],
+        detect_pattern![r"カードを\d枚までエナゾーンに置", CardFeature::Charge],
         detect_pattern![
             r"残りを好きな順番でデッキの一番下に置く",
             CardFeature::BottomCheck
@@ -621,7 +621,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"Sランサー", CardFeature::SLancer, CardFeature::Lancer],
         detect_pattern![r"【マジックボックス】", CardFeature::MagicBox],
         detect_pattern![
-            r"対戦相手のシグニ\d+体を対象とし、それをゲームから除外する",
+            r"対戦相手のシグニ\d体を対象とし、それをゲームから除外する",
             CardFeature::RemoveSigni
         ],
         detect_pattern![r"バニッシュ", CardFeature::Banish],
@@ -638,7 +638,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::EnerOffensive
         ],
         detect_pattern![
-            r"対戦相手のシグニを\d+体(まで|を)対象とし、(それら|それ)をエナゾーンに置",
+            r"対戦相手のシグニを\d体(まで|を)対象とし、(それら|それ)をエナゾーンに置",
             CardFeature::EnerOffensive
         ],
         detect_pattern![
@@ -646,7 +646,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::EnerOffensive
         ],
         detect_pattern![
-            r"対戦相手の.+のシグニ\d+体を対象とし、それをエナゾーンに置",
+            r"対戦相手の.+のシグニ\d体を対象とし、それをエナゾーンに置",
             CardFeature::EnerOffensive
         ],
         detect_pattern![
@@ -673,7 +673,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"フェゾーネマジックのクラフト", CardFeature::Craft],
         detect_pattern![r"シグニをアップ", CardFeature::Up],
         detect_pattern![
-            r"シグニ\d+体を対象とし、(それ|それら)をアップ",
+            r"シグニ\d体を対象とし、(それ|それら)をアップ",
             CardFeature::Up
         ],
         detect_pattern![r"凍結する", CardFeature::Freeze],
@@ -688,7 +688,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"新たに場に出せない", CardFeature::LimitSigni],
         detect_pattern![r"それらの場所を入れ替", CardFeature::Position],
         detect_pattern![
-            r"対戦相手のシグニ(を)?\d+体(まで|を)対象とし、(.*そうした場合、)?(それら|それ)を手札に戻",
+            r"対戦相手のシグニ(を)?\d体(まで|を)対象とし、(.*そうした場合、)?(それら|それ)を手札に戻",
             CardFeature::Bounce
         ],
         // detect_pattern![
@@ -696,17 +696,17 @@ pub fn create_detect_patterns() -> (
         //     CardFeature::Bounce
         // ],
         detect_pattern![
-            r"対戦相手のパワー\d+.*\d+体(まで|を)対象とし、(それら|それ)を手札に戻",
+            r"対戦相手のパワー\d+.*\d体(まで|を)対象とし、(それら|それ)を手札に戻",
             CardFeature::Bounce
         ],
         detect_pattern![
-            r"対戦相手のシグニ\d+体を対象とし、それを手札に戻",
+            r"対戦相手のシグニ\d体を対象とし、それを手札に戻",
             CardFeature::Bounce
         ],
         // (    r"手札に加え", do_remove:  "*SALVAGE*", CardFeature::Salvage]),
-        detect_pattern![r"ライフクロス\d+枚をトラッシュに置", CardFeature::LifeTrash],
+        detect_pattern![r"ライフクロス\d枚をトラッシュに置", CardFeature::LifeTrash],
         detect_pattern![
-            r"エナゾーンからカード\d+枚(を|選び).+トラッシュに置",
+            r"エナゾーンからカード\d枚(を|選び).+トラッシュに置",
             CardFeature::EnerAttack
         ],
         detect_pattern![r"ルリグトラッシュに置", CardFeature::LrigTrash],
@@ -743,7 +743,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"のシグニは能力を失う", CardFeature::EraseSkill],
         detect_pattern![r"それは能力を失う", CardFeature::EraseSkill],
         detect_pattern![
-            r"シグニを\d+体(まで|を)対象とし、ターン終了時まで、それは能力を失う",
+            r"シグニを\d体(まで|を)対象とし、ターン終了時まで、それは能力を失う",
             CardFeature::EraseSkill
         ],
         detect_pattern![r"それを《サーバント ZERO》にする", CardFeature::EraseSkill],
@@ -754,7 +754,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::Drop
         ],
         detect_pattern![
-            r"対戦相手のエナゾーンからカードを\d+枚まで対象とし、それらを手札に戻",
+            r"対戦相手のエナゾーンからカードを\d枚まで対象とし、それらを手札に戻",
             CardFeature::EnerAttack
         ],
         detect_pattern![r"対戦相手の(.?の)?シグニ\d体を対象とし、それ(とこのシグニ)?をデッキの一番下に", CardFeature::DeckBounce],
@@ -780,7 +780,7 @@ pub fn create_detect_patterns() -> (
         detect_pattern![r"あなたが(.+によって)?ダメージを受ける場合、代わりに", CardFeature::CancelDamage],
         detect_pattern![r"トラッシュからシグニ.+場に出", CardFeature::Reanimate],
         detect_pattern![
-            r"あなたのトラッシュから(シグニ|.+のシグニ|.+のシグニを)\d+枚(を|まで)対象とし、(それ|それら)を場に出",
+            r"あなたのトラッシュから(シグニ|.+のシグニ|.+のシグニを)\d枚(を|まで)対象とし、(それ|それら)を場に出",
             CardFeature::Reanimate
         ],
         detect_pattern![
@@ -792,17 +792,17 @@ pub fn create_detect_patterns() -> (
             r"を支払わないかぎり【ガード】ができない",
             CardFeature::UnGuardable
         ],
-        detect_pattern![r"スペル\d+枚を.+手札に加え", CardFeature::SalvageSpell],
+        detect_pattern![r"スペル\d枚を.+手札に加え", CardFeature::SalvageSpell],
         detect_pattern![
-            r"あなたのトラッシュから.?(シグニ|シグニを|シグニをそれぞれ)\d+枚(を|まで).+手札に加え",
+            r"あなたのトラッシュから.?(シグニ|シグニを|シグニをそれぞれ)\d枚(を|まで).+手札に加え",
             CardFeature::Salvage
         ],
         detect_pattern![
-            r"あなたのトラッシュから.?(シグニ|シグニを|シグニをそれぞれ|.+のシグニ|.+のシグニを)\d+枚(を|まで)対象とし、(それ|それら)を手札に加え",
+            r"あなたのトラッシュから.?(シグニ|シグニを|シグニをそれぞれ|.+のシグニ|.+のシグニを)\d枚(を|まで)対象とし、(それ|それら)を手札に加え",
             CardFeature::Salvage
         ],
         detect_pattern![
-            r"スペル\d+枚をコストを支払わずに使用する",
+            r"スペル\d枚をコストを支払わずに使用する",
             CardFeature::FreeSpell
         ],
         detect_pattern![r"このアーツの使用コストは.+減る", CardFeature::FreeArts],
@@ -828,13 +828,13 @@ pub fn create_detect_patterns() -> (
             r"(エクシードのコストとして|あなたがエクシードのコストを支払ったとき、)",
             CardFeature::OnExceed
         ],
-        detect_pattern![r"手札を\d+枚捨ててもよい", CardFeature::HandCost],
+        detect_pattern![r"手札を\d枚捨ててもよい", CardFeature::HandCost],
         detect_pattern![
             r"アップ状態のルリグ(を好きな数|1体を)ダウンする",
             CardFeature::RligDownCost
         ],
         detect_pattern![
-            r"アップ状態のルリグ\d+体をダウンしてもよい",
+            r"アップ状態のルリグ\d体をダウンしてもよい",
             CardFeature::RligDownCost
         ],
         detect_pattern![
@@ -843,7 +843,7 @@ pub fn create_detect_patterns() -> (
         ],
         detect_pattern![r"グロウするためのコスト", CardFeature::PreventGrowCost],
         detect_pattern![
-            r"シグニを\d+枚まで対象とし、それを場に出す",
+            r"シグニを\d枚まで対象とし、それを場に出す",
             CardFeature::PutSigniDefense,
             CardFeature::PutSigniOffense
         ],
@@ -933,7 +933,7 @@ pub fn create_detect_patterns() -> (
             CardFeature::Tax,
             CardFeature::DiscardOpponent
         ],
-        detect_pattern![r"対戦相手の手札を見て.*\d+枚(を)?選び、デッキの一番下へ。", CardFeature::RandomDiscard],
+        detect_pattern![r"対戦相手の手札を見て.*\d枚(を)?選び、デッキの一番下へ。", CardFeature::RandomDiscard],
         detect_pattern![r"を支払わないかぎりアタックできない", CardFeature::Tax],
         // 茨木童子 自己課税
         detect_pattern![
@@ -988,7 +988,7 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
     ];
 
     let d_patterns = vec![
-        burst_detect_pattern![r"【エナチャージ\d+】", Charge],
+        burst_detect_pattern![r"【エナチャージ\d】", Charge],
         burst_detect_pattern![
             r"あなたか対戦相手のデッキの上からカードを\d+枚トラッシュに置く。",
             Others
@@ -1040,7 +1040,7 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             Draw
         ],
         burst_detect_pattern![
-            r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d+枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。",
+            r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。",
             Draw,
             Guard,
             BlockLrig,
@@ -1086,7 +1086,7 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             Draw
         ],
         burst_detect_pattern![
-            r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d+枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。",
+            r"あなたのデッキの上からカードを\d+枚見る。その中からカードを\d枚まで手札に加え、残りを好きな順番でデッキの一番下に置く。",
             Search,
             Guard,
             Draw
@@ -1097,7 +1097,7 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             Defend1
         ],
         burst_detect_pattern![
-            r"あなたのトラッシュから、対象のレベル\d+の.*のシグニ1枚を手札に加えて対象のレベル\d+の.*のシグニ1枚を場に出す。",
+            r"あなたのトラッシュから、対象のレベル\dの.*のシグニ1枚を手札に加えて対象のレベル\dの.*のシグニ1枚を場に出す。",
             Defend1,
             BlockSigni,
             Salvage,
@@ -1138,12 +1138,12 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             Draw
         ],
         burst_detect_pattern![
-            r"あなたのトラッシュから《ガードアイコン》を持たないシグニ\d+枚まで対象とし、それらを手札に加える。",
+            r"あなたのトラッシュから《ガードアイコン》を持たないシグニ\d枚まで対象とし、それらを手札に加える。",
             Salvage,
             Draw
         ],
         burst_detect_pattern![
-            r"あなたのトラッシュから《ガードアイコン》を持たないレベル\d+以下のシグニ1枚を対象とし、それを手札に加えるか場に出す。",
+            r"あなたのトラッシュから《ガードアイコン》を持たないレベル\d以下のシグニ1枚を対象とし、それを手札に加えるか場に出す。",
             Salvage,
             Defend1,
             BlockSigni,
@@ -1250,7 +1250,7 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             BlockLrig
         ],
         burst_detect_pattern![
-            r"このターン、あなたは対戦相手のレベル\d+(以上|以下)のシグニによってダメージを受けない。",
+            r"このターン、あなたは対戦相手のレベル\d(以上|以下)のシグニによってダメージを受けない。",
             BlockSigni,
             Defend1,
             Defend2
@@ -1404,25 +1404,25 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             BlockSigni
         ],
         burst_detect_pattern![
-            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをデッキの一番下に置く。",
+            r"対戦相手のシグニ1体を対象とし、手札を\d枚捨ててもよい。そうした場合、それをデッキの一番下に置く。",
             OffenciveDefend,
             BlockSigni,
             Defend1
         ],
         burst_detect_pattern![
-            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをバニッシュする。",
+            r"対戦相手のシグニ1体を対象とし、手札を\d枚捨ててもよい。そうした場合、それをバニッシュする。",
             OffenciveDefend,
             BlockSigni,
             Defend1
         ],
         burst_detect_pattern![
-            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。",
+            r"対戦相手のシグニ1体を対象とし、手札を\d枚捨ててもよい。そうした場合、ターン終了時まで、それのパワーを\-\d+する。",
             OffenciveDefend,
             BlockSigni,
             Defend1
         ],
         burst_detect_pattern![
-            r"対戦相手のシグニ1体を対象とし、手札を\d+枚捨ててもよい。そうした場合、それをバニッシュする。",
+            r"対戦相手のシグニ1体を対象とし、手札を\d枚捨ててもよい。そうした場合、それをバニッシュする。",
             OffenciveDefend,
             Defend1,
             BlockSigni
@@ -1555,37 +1555,37 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             Defend1
         ],
         burst_detect_pattern![
-            r"対戦相手のルリグかシグニ1体を対象とする。このターン、それがアタックしたとき、対戦相手が手札を\d+枚捨てないかぎり、そのアタックを無効にする。",
+            r"対戦相手のルリグかシグニ1体を対象とする。このターン、それがアタックしたとき、対戦相手が手札を\d枚捨てないかぎり、そのアタックを無効にする。",
             Defend1,
             BlockSigni,
             BlockLrig
         ],
         burst_detect_pattern![
-            r"対戦相手のレベル\d+(以下|以下)のシグニ1体を対象とし、それをデッキの一番下に置く。",
+            r"対戦相手のレベル\d(以下|以下)のシグニ1体を対象とし、それをデッキの一番下に置く。",
             OffenciveDefend,
             BlockSigni,
             Defend1
         ],
         burst_detect_pattern![
-            r"対戦相手のレベル\d+(以下|以下)のシグニ1体を対象とし、それをトラッシュに置く。",
+            r"対戦相手のレベル\d(以下|以下)のシグニ1体を対象とし、それをトラッシュに置く。",
             OffenciveDefend,
             BlockSigni,
             Defend1
         ],
         burst_detect_pattern![
-            r"対戦相手のレベル\d+(以上|以下)のシグニ1体を対象とし、それをバニッシュする。",
+            r"対戦相手のレベル\d(以上|以下)のシグニ1体を対象とし、それをバニッシュする。",
             OffenciveDefend,
             BlockSigni,
             Defend1
         ],
         burst_detect_pattern![
-            r"対戦相手のレベル\d+のシグニ1体を対象とし、それをバニッシュする。",
+            r"対戦相手のレベル\dのシグニ1体を対象とし、それをバニッシュする。",
             OffenciveDefend,
             Defend1,
             BlockSigni
         ],
-        burst_detect_pattern![r"対戦相手の手札を\d+枚見ないで選び、捨てさせる。", Discard],
-        burst_detect_pattern![r"対戦相手の手札を見て\d+枚選び、捨てさせる。", Discard],
+        burst_detect_pattern![r"対戦相手の手札を\d枚見ないで選び、捨てさせる。", Discard],
+        burst_detect_pattern![r"対戦相手の手札を見て\d枚選び、捨てさせる。", Discard],
         burst_detect_pattern![
             r"対戦相手は自分のシグニ1体を選びデッキの一番下に置く。",
             OffenciveDefend,
@@ -1598,7 +1598,7 @@ pub fn create_burst_detect_patterns() -> (Vec<BurstReplacePattern>, Vec<BurstDet
             Defend1,
             BlockSigni
         ],
-        burst_detect_pattern![r"対戦相手は手札を\d+枚捨てる。", Discard],
+        burst_detect_pattern![r"対戦相手は手札を\d枚捨てる。", Discard],
         // selectエラー
         // burst_detect_pattern![r"あなたのアタックフェイズ開始時、あなたの場に<水獣>のシグニがある場合、カードを1枚引き、対戦相手のデッキの一番上を公開する。公開したそのカードが【ライフバースト】を持つ場合、カードを１枚引く。"],
         // burst_detect_pattern![r"【起】《ゲーム１回》リクエスト《青×0》：このターンと次のターンの間、あなたのすべての領域にあるカードは【ライフバースト】「カードを１枚引く。その後、対戦相手のシグニ１体を対象とし、手札を２枚捨ててもよい。そうした場合、それをダウンする。」を得る。"],
