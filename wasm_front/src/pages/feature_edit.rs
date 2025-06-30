@@ -51,7 +51,7 @@ pub fn FeatureEditPage() -> impl IntoView {
         params.read().get("pronunciation").unwrap_or_default()
     };
 
-    let (current_override, set_current_override) = signal(None::<OverrideResponse>);
+    let (_current_override, set_current_override) = signal(None::<OverrideResponse>);
     let (selected_features, set_selected_features) = signal(Vec::<String>::new());
     let (selected_burst_features, set_selected_burst_features) = signal(Vec::<String>::new());
     let (note, set_note) = signal(String::new());

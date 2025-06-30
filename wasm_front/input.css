@@ -24,6 +24,12 @@ html {
         @apply ring-4 ring-offset-2 ring-transparent border-2 border-transparent;
     }
     
+    /* Color selector specific SVG styling to match feature shortcuts */
+    .color-selector-button svg {
+        width: 28px;
+        height: 28px;
+    }
+    
     .color-selector-active {
         @apply ring-blue-600 shadow-lg border-blue-800;
     }

@@ -678,7 +678,7 @@ pub fn fetch_by_colors_features_card_types_and_products_native(
 
 // CardFeatureをカテゴリ別にグループ化して返す関数（FeatureTagの数値でソート済み）
 pub fn extract_card_features_grouped() -> Vec<(String, Vec<String>)> {
-    use feature::feature::{export_features, CardFeature};
+    use feature::feature::export_features;
     
     let features_map = export_features();
     let mut result: Vec<(String, Vec<String>)> = Vec::new();
@@ -699,7 +699,7 @@ pub fn extract_card_features_grouped() -> Vec<(String, Vec<String>)> {
 
 // 全てのBurstFeatureを返す関数
 pub fn extract_burst_features_all() -> Vec<String> {
-    use feature::feature::{export_burst_features, BurstFeature};
+    use feature::feature::export_burst_features;
     
     let burst_features_map = export_burst_features();
     let mut all_features = Vec::new();
