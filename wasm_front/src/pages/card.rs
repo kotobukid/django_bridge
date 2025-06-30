@@ -3,6 +3,7 @@ use crate::components::{
     FeatureShortcuts, KlassOverlay, LevelSelector, OverlayButton, Pagination, PowerSelector,
     ProductOverlay, ScrollToTopButton, TextSearch, TimingSelector,
 };
+use crate::contexts::FilterContext;
 use crate::types::{
     CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter, TimingFilter,
 };
@@ -155,6 +156,17 @@ pub fn CardPage() -> impl IntoView {
             || has_active_klass.get()
     });
 
+    // FilterContextを作成
+    let filter_context = FilterContext::new(
+        selected_features,
+        selected_burst_features,
+        set_selected_feature_names,
+        set_selected_burst_feature_names,
+    );
+
+    // FilterContextを提供
+    provide_context(filter_context);
+
     // 全クリア処理
     let clear_all_filters = move |_| {
         set_search_text.set(String::new());
@@ -280,7 +292,10 @@ pub fn CardPage() -> impl IntoView {
                                             </div>
                                         </Show>
 
-                                        <CardList cards=displayed_cards.get() total_count=filtered_cards.get().len()/>
+                                        <CardList 
+                                            cards=displayed_cards.get() 
+                                            total_count=filtered_cards.get().len()
+                                        />
 
                                         // Bottom Pagination
                                         <Show when=move || !filtered_cards.get().is_empty()>

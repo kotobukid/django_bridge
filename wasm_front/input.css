@@ -33,7 +33,7 @@ html {
     }
     
     .card-item {
-        @apply border-b border-gray-200 py-3 px-4 hover:bg-gray-50 cursor-pointer;
+        @apply border-b border-gray-200 py-3 px-4 hover:bg-gray-50;
         /* Page transition feedback animation */
         animation: cardFadeIn 0.6s ease-out;
         opacity: 1;

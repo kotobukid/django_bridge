@@ -2,6 +2,7 @@ use crate::components::svg_definition::{
     ColorIconsWithNum, IconBlack, IconBlue, IconColorless, IconGreen, IconRed, IconWhite,
 };
 use crate::components::{BurstTextRenderer, SkillTextRenderer};
+use crate::contexts::FilterContext;
 use crate::utils::maintenance::is_maintenance_mode;
 use datapack::CardExport;
 use leptos::prelude::*;
@@ -141,6 +142,9 @@ pub fn CardItem(
     // Use provided view_mode or default to Compact
     let view_mode = view_mode.unwrap_or_else(|| Signal::derive(|| ViewMode::Compact));
 
+    // FilterContextを取得（存在しない場合はNone）
+    let filter_context = use_context::<FilterContext>();
+
     // Calculate styles
     let color_style = datapack::bits_to_gradient_native(card.color() as i32);
     let card_url = card.build_url();
@@ -220,7 +224,7 @@ pub fn CardItem(
                         <div class="flex-1">
                             <div>
                                 <h3 class="font-semibold text-lg" style="color: #374151; margin-top: 20px;">
-                                    <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
+                                    <a href=card_url.clone() target="_blank" class="inline-block cursor-pointer hover:text-blue-600 transition-colors">
                                         {card.name()}
                                     </a>
                                 </h3>
@@ -393,7 +397,7 @@ pub fn CardItem(
                             <div>
                                 <div class="mb-2">
                                     <h3 class="font-semibold text-lg" style="color: #374151;">
-                                        <a href=card_url.clone() target="_blank" class="flex items-center gap-1">
+                                        <a href=card_url.clone() target="_blank" class="inline-block cursor-pointer hover:text-blue-600 transition-colors">
                                             {card.name()}
                                         </a>
                                     </h3>
@@ -557,21 +561,99 @@ pub fn CardItem(
                                                 view! {
                                                     <div class="flex flex-wrap gap-1">
                                                         // CardFeatures (blue theme)
-                                                        {card_features.into_iter().map(|(tag_label, feature_label)| {
-                                                            view! {
-                                                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300">
-                                                                    {format!("{} > {}", tag_label, feature_label)}
-                                                                </span>
-                                                            }
-                                                        }).collect_view()}
+                                                        {
+                                                            let ctx_for_features = filter_context.clone();
+                                                            card_features.into_iter().map(|(tag_label, feature_label)| {
+                                                                if let Some(ctx) = ctx_for_features.clone() {
+                                                                    // FilterContextが存在する場合はインタラクティブボタンとして表示
+                                                                    let feature_label_clone = feature_label.clone();
+                                                                    let feature_label_for_click = feature_label.clone();
+                                                                    let feature_label_for_display = feature_label.clone();
+                                                                    let tag_label_for_display = tag_label.clone();
+                                                                    
+                                                                    view! {
+                                                                        <button
+                                                                            class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300 cursor-pointer hover:bg-blue-200 transition-colors"
+                                                                            on:click=move |e| {
+                                                                                e.prevent_default();
+                                                                                e.stop_propagation();
+                                                                                ctx.toggle_feature.run(feature_label_for_click.clone());
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                let ctx_for_view = ctx.clone();
+                                                                                let feature_label_for_view = feature_label_clone.clone();
+                                                                                let tag_label_for_view = tag_label_for_display.clone();
+                                                                                let feature_display = feature_label_for_display.clone();
+                                                                                move || {
+                                                                                    let is_active = ctx_for_view.selected_features.get().contains_key(&feature_label_for_view);
+                                                                                    
+                                                                                    if is_active {
+                                                                                        format!("● {} > {}", tag_label_for_view, feature_display)
+                                                                                    } else {
+                                                                                        format!("{} > {}", tag_label_for_view, feature_display)
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        </button>
+                                                                    }.into_any()
+                                                                } else {
+                                                                    // FilterContextが存在しない場合は静的表示
+                                                                    view! {
+                                                                        <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300">
+                                                                            {format!("{} > {}", tag_label, feature_label)}
+                                                                        </span>
+                                                                    }.into_any()
+                                                                }
+                                                            }).collect_view()
+                                                        }
                                                         // BurstFeatures (black theme)
-                                                        {burst_features.into_iter().map(|(tag_label, feature_label)| {
-                                                            view! {
-                                                                <span class="inline-block bg-gray-800 text-white px-2 py-1 rounded-full text-xs font-medium border border-gray-600">
-                                                                    {format!("{} > {}", tag_label, feature_label)}
-                                                                </span>
-                                                            }
-                                                        }).collect_view()}
+                                                        {
+                                                            let ctx_for_burst_features = filter_context.clone();
+                                                            burst_features.into_iter().map(|(tag_label, feature_label)| {
+                                                                if let Some(ctx) = ctx_for_burst_features.clone() {
+                                                                    // FilterContextが存在する場合はインタラクティブボタンとして表示
+                                                                    let feature_label_clone = feature_label.clone();
+                                                                    let feature_label_for_click = feature_label.clone();
+                                                                    let feature_label_for_display = feature_label.clone();
+                                                                    let tag_label_for_display = tag_label.clone();
+                                                                    
+                                                                    view! {
+                                                                        <button
+                                                                            class="inline-block bg-gray-800 text-white px-2 py-1 rounded-full text-xs font-medium border border-gray-600 cursor-pointer hover:bg-gray-700 transition-colors"
+                                                                            on:click=move |e| {
+                                                                                e.prevent_default();
+                                                                                e.stop_propagation();
+                                                                                ctx.toggle_burst_feature.run(feature_label_for_click.clone());
+                                                                            }
+                                                                        >
+                                                                            {
+                                                                                let ctx_for_view = ctx.clone();
+                                                                                let feature_label_for_view = feature_label_clone.clone();
+                                                                                let tag_label_for_view = tag_label_for_display.clone();
+                                                                                let feature_display = feature_label_for_display.clone();
+                                                                                move || {
+                                                                                    let is_active = ctx_for_view.selected_burst_features.get().contains_key(&feature_label_for_view);
+                                                                                    
+                                                                                    if is_active {
+                                                                                        format!("● {} > {}", tag_label_for_view, feature_display)
+                                                                                    } else {
+                                                                                        format!("{} > {}", tag_label_for_view, feature_display)
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        </button>
+                                                                    }.into_any()
+                                                                } else {
+                                                                    // FilterContextが存在しない場合は静的表示
+                                                                    view! {
+                                                                        <span class="inline-block bg-gray-800 text-white px-2 py-1 rounded-full text-xs font-medium border border-gray-600">
+                                                                            {format!("{} > {}", tag_label, feature_label)}
+                                                                        </span>
+                                                                    }.into_any()
+                                                                }
+                                                            }).collect_view()
+                                                        }
                                                     </div>
                                                 }.into_any()
                                             }}

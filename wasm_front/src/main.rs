@@ -3,6 +3,7 @@ use leptos_router::components::{Route, Router, Routes};
 use leptos_router::path;
 
 mod components;
+mod contexts;
 mod pages;
 mod types;
 mod utils;

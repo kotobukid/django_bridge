@@ -3,7 +3,10 @@ use datapack::CardExport;
 use leptos::prelude::*;
 
 #[component]
-pub fn CardList(cards: Vec<CardExport>, total_count: usize) -> impl IntoView {
+pub fn CardList(
+    cards: Vec<CardExport>, 
+    total_count: usize,
+) -> impl IntoView {
     let is_empty = cards.is_empty();
     // Load initial view mode from localStorage, default to Compact
     let initial_mode = ViewMode::load_from_storage();
@@ -61,7 +64,10 @@ pub fn CardList(cards: Vec<CardExport>, total_count: usize) -> impl IntoView {
             <div class="p-4">
                 {cards.into_iter().map(|card| {
                     view! {
-                        <CardItem card=card view_mode=view_mode.into() />
+                        <CardItem 
+                            card=card 
+                            view_mode=view_mode.into()
+                        />
                     }
                 }).collect_view()}
             </div>
