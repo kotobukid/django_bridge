@@ -260,78 +260,97 @@ pub fn CardItem(
                                         view! { <span></span> }.into_any()
                                     }
                                 }
-                                {
-                                    // レベル表示
-                                    let level = card.level();
-                                    if !level.is_empty() {
-                                        view! {
-                                            <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
-                                                "Lv: " {level}
-                                            </span>
-                                        }.into_any()
-                                    } else {
-                                        view! {};
-                                        ().into_any()
-                                    }
-                                }
-                                {
-                                    // リミット表示
-                                    let limit = card.limit();
-                                    if !limit.is_empty() {
-                                        view! {
-                                            <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
-                                                "Lim: " {limit}
-                                            </span>
-                                        }.into_any()
-                                    } else {
-                                        view! {};
-                                        ().into_any()
-                                    }
-                                }
-                                {
-                                    // 使用タイミング表示
-                                    let timing_strings = datapack::timing_to_strings(card.timing());
-                                    timing_strings.into_iter().map(|timing_str| {
-                                        view! {
-                                            <span class="bg-black text-white px-2 py-1 rounded text-xs font-medium">
-                                                {timing_str}
-                                            </span>
-                                        }.into_any()
-                                    }).collect_view()
-                                }
-                                {
-                                    // クラス表示
-                                    let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
-                                    if !klass_names.is_empty() {
-                                        view! {
-                                            {klass_names.into_iter().map(|klass_name| {
-                                                view! {
-                                                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
-                                                        {klass_name}
-                                                    </span>
-                                                }
-                                            }).collect_view()}
-                                        }.into_any()
-                                    } else {
-                                        view! {};
-                                        ().into_any()
-                                    }
-                                }
-                                {
-                                    // パワー表示
-                                    let power = card.power();
-                                    if !power.is_empty() {
-                                        view! {
-                                            <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
-                                                "Pow: " {power}
-                                            </span>
-                                        }.into_any()
-                                    } else {
-                                        view! {};
-                                        ().into_any()
-                                    }
-                                }
                             </div>
+                            {
+                                // Get all the values upfront
+                                let level = card.level();
+                                let limit = card.limit();
+                                let timing_strings = datapack::timing_to_strings(card.timing());
+                                let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
+                                let power = card.power();
+                                
+                                // Check if we have any content to display
+                                let has_content = !level.is_empty() 
+                                    || !limit.is_empty() 
+                                    || !timing_strings.is_empty() 
+                                    || !klass_names.is_empty() 
+                                    || !power.is_empty();
+                                
+                                if has_content {
+                                    view! {
+                                        <div class="flex items-center gap-2 text-sm mt-1" style="color: #374151; opacity: 0.8;">
+                                            {
+                                                // レベル表示
+                                                if !level.is_empty() {
+                                                    view! {
+                                                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium">
+                                                            "Lv: " {level}
+                                                        </span>
+                                                    }.into_any()
+                                                } else {
+                                                    view! {};
+                                                    ().into_any()
+                                                }
+                                            }
+                                            {
+                                                // リミット表示
+                                                if !limit.is_empty() {
+                                                    view! {
+                                                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-medium">
+                                                            "Lim: " {limit}
+                                                        </span>
+                                                    }.into_any()
+                                                } else {
+                                                    view! {};
+                                                    ().into_any()
+                                                }
+                                            }
+                                            {
+                                                // 使用タイミング表示
+                                                timing_strings.into_iter().map(|timing_str| {
+                                                    view! {
+                                                        <span class="bg-black text-white px-2 py-1 rounded text-xs font-medium">
+                                                            {timing_str}
+                                                        </span>
+                                                    }.into_any()
+                                                }).collect_view()
+                                            }
+                                            {
+                                                // クラス表示
+                                                if !klass_names.is_empty() {
+                                                    view! {
+                                                        {klass_names.into_iter().map(|klass_name| {
+                                                            view! {
+                                                                <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                                                                    {klass_name}
+                                                                </span>
+                                                            }
+                                                        }).collect_view()}
+                                                    }.into_any()
+                                                } else {
+                                                    view! {};
+                                                    ().into_any()
+                                                }
+                                            }
+                                            {
+                                                // パワー表示
+                                                if !power.is_empty() {
+                                                    view! {
+                                                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium">
+                                                            "Pow: " {power}
+                                                        </span>
+                                                    }.into_any()
+                                                } else {
+                                                    view! {};
+                                                    ().into_any()
+                                                }
+                                            }
+                                        </div>
+                                    }.into_any()
+                                } else {
+                                    view! { <span></span> }.into_any()
+                                }
+                            }
                             {
                                 let skill_text = card.skill_text();
                                 if !skill_text.is_empty() {
@@ -393,7 +412,6 @@ pub fn CardItem(
                                 </div>
                                 <div class="space-y-2">
                                     <div class="flex items-center gap-2 text-sm" style="color: #374151;">
-                                        <span class="font-medium">Code:</span>
                                         <a
                                             href=format!("/card/{}", card.code())
                                             target="_blank"
@@ -423,79 +441,103 @@ pub fn CardItem(
                                             }
                                         }
                                     </div>
-                                    // レベル, リミット, 種族の行
-                                    <div class="flex flex-wrap gap-2">
-                                        {
-                                            let level = card.level();
-                                            if !level.is_empty() {
-                                                view! {
-                                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
-                                                        "Level: " {level}
-                                                    </span>
-                                                }.into_any()
-                                            } else {
-                                                view! {};
-                                                ().into_any()
-                                            }
-                                        }
-                                        {
-                                            let limit = card.limit();
-                                            if !limit.is_empty() {
-                                                view! {
-                                                    <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
-                                                        "Limit: " {limit}
-                                                    </span>
-                                                }.into_any()
-                                            } else {
-                                                view! {};
-                                                ().into_any()
-                                            }
-                                        }
-                                        {
-                                            let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
-                                            if !klass_names.is_empty() {
-                                                view! {
-                                                    {klass_names.into_iter().map(|klass_name| {
-                                                        view! {
-                                                            <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-                                                                {klass_name}
-                                                            </span>
+                                    {
+                                        // レベル, リミット, 種族の行
+                                        let level = card.level();
+                                        let limit = card.limit();
+                                        let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
+                                        
+                                        // Check if we have any content to display
+                                        let has_level_limit_klass_content = !level.is_empty() || !limit.is_empty() || !klass_names.is_empty();
+                                        
+                                        if has_level_limit_klass_content {
+                                            view! {
+                                                <div class="flex flex-wrap gap-2">
+                                                    {
+                                                        if !level.is_empty() {
+                                                            view! {
+                                                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                                    "Level: " {level}
+                                                                </span>
+                                                            }.into_any()
+                                                        } else {
+                                                            view! {};
+                                                            ().into_any()
                                                         }
-                                                    }).collect_view()}
-                                                }.into_any()
-                                            } else {
-                                                view! {};
-                                                ().into_any()
-                                            }
+                                                    }
+                                                    {
+                                                        if !limit.is_empty() {
+                                                            view! {
+                                                                <span class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                                    "Limit: " {limit}
+                                                                </span>
+                                                            }.into_any()
+                                                        } else {
+                                                            view! {};
+                                                            ().into_any()
+                                                        }
+                                                    }
+                                                    {
+                                                        if !klass_names.is_empty() {
+                                                            view! {
+                                                                {klass_names.into_iter().map(|klass_name| {
+                                                                    view! {
+                                                                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                                            {klass_name}
+                                                                        </span>
+                                                                    }
+                                                                }).collect_view()}
+                                                            }.into_any()
+                                                        } else {
+                                                            view! {};
+                                                            ().into_any()
+                                                        }
+                                                    }
+                                                </div>
+                                            }.into_any()
+                                        } else {
+                                            view! { <span></span> }.into_any()
                                         }
-                                    </div>
-                                    // 使用タイミングの行
-                                    <div class="flex flex-wrap gap-2">
-                                        {
-                                            // 使用タイミング表示
-                                            let timing_strings = datapack::timing_to_strings(card.timing());
-                                            timing_strings.into_iter().map(|timing_str| {
-                                                view! {
-                                                    <span class="bg-black text-white px-3 py-1 rounded-full text-sm font-medium">
-                                                        {timing_str}
-                                                    </span>
-                                                }.into_any()
-                                            }).collect_view()
+                                    }
+                                    {
+                                        // 使用タイミングとパワーの行
+                                        let timing_strings = datapack::timing_to_strings(card.timing());
+                                        let power = card.power();
+                                        
+                                        // Check if we have any content to display
+                                        let has_timing_power_content = !timing_strings.is_empty() || !power.is_empty();
+                                        
+                                        if has_timing_power_content {
+                                            view! {
+                                                <div class="flex flex-wrap gap-2">
+                                                    {
+                                                        // 使用タイミング表示
+                                                        timing_strings.into_iter().map(|timing_str| {
+                                                            view! {
+                                                                <span class="bg-black text-white px-3 py-1 rounded-full text-sm font-medium">
+                                                                    {timing_str}
+                                                                </span>
+                                                            }.into_any()
+                                                        }).collect_view()
+                                                    }
+                                                    {
+                                                        if !power.is_empty() {
+                                                            view! {
+                                                                <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
+                                                                    "Power: " {power}
+                                                                </span>
+                                                            }.into_any()
+                                                        } else {
+                                                            view! {};
+                                                            ().into_any()
+                                                        }
+                                                    }
+                                                </div>
+                                            }.into_any()
+                                        } else {
+                                            view! { <span></span> }.into_any()
                                         }
-                                        {
-                                            let power = card.power();
-                                            if !power.is_empty() {
-                                                view! {
-                                                    <span class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm font-medium">
-                                                        "Power: " {power}
-                                                    </span>
-                                                }.into_any()
-                                            } else {
-                                                view! {};
-                                                ().into_any()
-                                            }
-                                        }
-                                    </div>
+                                    }
                                 </div>
                             </div>
                             <div class="space-y-3">
