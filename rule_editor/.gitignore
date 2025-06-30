@@ -1,5 +1,0 @@
-ui/node_modules
-ui/package-lock.json
-ui/dist
-/ui/.nuxt/
-/ui/.output/

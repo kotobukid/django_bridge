@@ -1,9 +1,0 @@
-[package]
-name = "feature"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-serde = { workspace = true}
-regex = { workspace = true }
-once_cell = "1.19"
