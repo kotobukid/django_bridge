@@ -147,6 +147,20 @@ args = [
     "${@}",
     "--force"
 ]
+
+[tasks.analyze_product]
+description = "製品コードを指定して再解析"
+command = "cargo"
+args = [
+    "run",
+    "-p",
+    "analyzer",
+    "--",
+    "--product",
+    "${@}",
+    "--force"
+]
+
 [tasks.analyze_all]
 description = "DB保存済みの全カードを(再)解析"
 command = "cargo"
