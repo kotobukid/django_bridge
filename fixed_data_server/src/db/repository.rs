@@ -2,7 +2,6 @@
 // Currently handled directly in handlers, but can be refactored here if needed
 
 use sqlx::PgPool;
-use crate::models::CardFeatureOverride;
 
 #[allow(dead_code)]
 pub struct OverrideRepository {

@@ -5,7 +5,7 @@ use axum::{
 };
 use sqlx::{PgPool, Row};
 use crate::models::{CardFeatureOverride, CreateOverrideRequest, OverrideResponse, ConsistencyCheckResult};
-use feature::feature::{CardFeature, BurstFeature};
+use feature::feature::{CardFeature, BurstFeature, HashSetToBits, BurstHashSetToBits};
 use std::collections::HashSet;
 
 pub async fn list_overrides(
@@ -45,7 +45,7 @@ pub async fn create_or_update_override(
     State(pool): State<PgPool>,
     Json(request): Json<CreateOverrideRequest>,
 ) -> Result<Json<OverrideResponse>, StatusCode> {
-    // Convert feature names to bits
+    // Convert features to bit flags
     let (bits1, bits2) = convert_features_to_bits(&request.features);
     let burst_bits = convert_burst_features_to_bits(&request.burst_features);
 
@@ -64,10 +64,48 @@ pub async fn create_or_update_override(
         "#
     )
     .bind(&request.pronunciation)
-    .bind(bits1 as i64)
-    .bind(bits2 as i64)
-    .bind(burst_bits as i64)
-    .bind(&request.note)
+    .bind(bits1)
+    .bind(bits2)
+    .bind(burst_bits)
+    .bind(request.note.as_deref().unwrap_or(""))
+    .fetch_one(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(Json(convert_to_response(override_data)))
+}
+
+pub async fn update_override(
+    State(pool): State<PgPool>,
+    Path(pronunciation): Path<String>,
+    Json(mut request): Json<CreateOverrideRequest>,
+) -> Result<Json<OverrideResponse>, StatusCode> {
+    // Use pronunciation from URL path
+    request.pronunciation = pronunciation;
+    
+    // Convert features to bit flags
+    let (bits1, bits2) = convert_features_to_bits(&request.features);
+    let burst_bits = convert_burst_features_to_bits(&request.burst_features);
+
+    let override_data = sqlx::query_as::<_, CardFeatureOverride>(
+        r#"
+        INSERT INTO wix_card_feature_override 
+        (pronunciation, fixed_bits1, fixed_bits2, fixed_burst_bits, note, created_at, updated_at)
+        VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        ON CONFLICT (pronunciation) DO UPDATE SET
+            fixed_bits1 = EXCLUDED.fixed_bits1,
+            fixed_bits2 = EXCLUDED.fixed_bits2,
+            fixed_burst_bits = EXCLUDED.fixed_burst_bits,
+            note = EXCLUDED.note,
+            updated_at = CURRENT_TIMESTAMP
+        RETURNING *
+        "#
+    )
+    .bind(&request.pronunciation)
+    .bind(bits1)
+    .bind(bits2)
+    .bind(burst_bits)
+    .bind(request.note.as_deref().unwrap_or(""))
     .fetch_one(&pool)
     .await
     .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
@@ -147,90 +185,83 @@ pub async fn check_consistency(
     Ok(Json(consistency_results))
 }
 
-// Helper functions
-fn convert_features_to_bits(features: &[String]) -> (u64, u64) {
-    let mut bits1 = 0i64;
-    let mut bits2 = 0i64;
-
-    // Create all features and find matches by display name
-    let all_features = CardFeature::create_vec();
+// Helper functions using feature crate dynamically
+fn convert_features_to_bits(features: &[String]) -> (i64, i64) {
+    let feature_set: HashSet<CardFeature> = features
+        .iter()
+        .filter_map(|f| {
+            // Try to match by display string (Japanese label)
+            CardFeature::create_vec()
+                .into_iter()
+                .find(|feature| format!("{}", feature) == *f)
+        })
+        .collect();
     
-    for feature_name in features {
-        for feature in &all_features {
-            if feature.to_string() == *feature_name {
-                let (shift1, shift2) = feature.to_bit_shifts();
-                bits1 |= 1_i64 << shift1;
-                bits2 |= 1_i64 << shift2;
-                break;
-            }
-        }
-    }
-
-    (bits1 as u64, bits2 as u64)
+    feature_set.to_bits()
 }
 
-fn convert_burst_features_to_bits(features: &[String]) -> u64 {
-    let mut bits = 0i64;
-
-    // Create all burst features and find matches by display name
-    let all_features = BurstFeature::create_vec();
-    for feature_name in features {
-        for feature in &all_features {
-            if feature.to_string() == *feature_name {
-                let shift = feature.to_bit_shift();
-                bits |= 1_i64 << shift;
-                break;
-            }
-        }
-    }
-
-    bits as u64
+fn convert_burst_features_to_bits(features: &[String]) -> i64 {
+    let feature_set: HashSet<BurstFeature> = features
+        .iter()
+        .filter_map(|f| {
+            // Try to match by display string (Japanese label)
+            BurstFeature::create_vec()
+                .into_iter()
+                .find(|feature| format!("{}", feature) == *f)
+        })
+        .collect();
+    
+    feature_set.to_burst_bits()
 }
 
 fn convert_bits_to_features(bits1: u64, bits2: u64) -> Vec<String> {
-    let mut features = Vec::new();
-    let bits1 = bits1 as i64;
-    let bits2 = bits2 as i64;
-
-    // Check each feature against the bits
     let all_features = CardFeature::create_vec();
+    let mut features = Vec::new();
+    
     for feature in all_features {
         let (shift1, shift2) = feature.to_bit_shifts();
-        let has_feature = if shift2 == 0 {
-            (bits1 & (1_i64 << shift1)) != 0
+        let bit_is_set = if shift1 != 0 {
+            // Check bits1
+            bits1 & (1u64 << shift1) != 0
+        } else if shift2 != 0 {
+            // Check bits2  
+            bits2 & (1u64 << shift2) != 0
         } else {
-            (bits2 & (1_i64 << shift2)) != 0
+            false
         };
         
-        if has_feature {
-            features.push(feature.to_string());
+        if bit_is_set {
+            features.push(format!("{}", feature));
         }
     }
-
+    
     features
 }
 
 fn convert_burst_bits_to_features(bits: u64) -> Vec<String> {
-    let mut features = Vec::new();
-    let bits = bits as i64;
-
-    // Check each burst feature against the bits
     let all_features = BurstFeature::create_vec();
+    let mut features = Vec::new();
+    
     for feature in all_features {
         let shift = feature.to_bit_shift();
-        if (bits & (1_i64 << shift)) != 0 {
-            features.push(feature.to_string());
+        if bits & (1u64 << shift) != 0 {
+            features.push(format!("{}", feature));
         }
     }
-
+    
     features
 }
 
 fn convert_to_response(override_data: CardFeatureOverride) -> OverrideResponse {
     OverrideResponse {
         pronunciation: override_data.pronunciation,
-        features: convert_bits_to_features(override_data.fixed_bits1 as u64, override_data.fixed_bits2 as u64),
-        burst_features: convert_burst_bits_to_features(override_data.fixed_burst_bits as u64),
+        features: convert_bits_to_features(
+            override_data.fixed_bits1 as u64, 
+            override_data.fixed_bits2 as u64
+        ),
+        burst_features: convert_burst_bits_to_features(
+            override_data.fixed_burst_bits as u64
+        ),
         created_at: override_data.created_at,
         updated_at: override_data.updated_at,
         note: override_data.note,

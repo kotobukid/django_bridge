@@ -7,6 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project Overview
 This is a WIXOSS Trading Card Game management system that bridges Django (for database management) with Rust (for performance-critical operations) and a Leptos frontend.
 
+## Related Projects
+- `/home/kakehashi/RustroverProjects/admin_backend` - Admin backend project (separate from this main project)
+
 ## Important Directories to Avoid
 - **DO NOT EXPLORE**: `text_cache/`, `custom_cache` - Contains thousands of cached HTML files
 - **DO NOT EXPLORE**: `datapack/src/gen/` - Contains large generated files (especially cards.rs)
@@ -37,7 +40,7 @@ cargo make front_server
 # Django admin (port 8003)
 python manage.py runserver 0.0.0.0:8003  # Run from table_definition/ using .venv
 
-# Fixed Data Server (port 8004) - Manual feature override management
+# Fixed Data Server (port 8004) - Manual feature override management with admin_backend sync
 cargo make fixed_data_server
 ```
 
@@ -115,6 +118,9 @@ cargo make static && cargo make wasm_linux && cargo make trunk_build
 ## Environment Variables
 - `BACKEND_PORT` - Main server port (default: 8002)
 - `DJANGO_ADMIN_PORT` - Django admin port (default: 8003)
+- `ADMIN_BACKEND_URL` - Admin backend gRPC server URL (default: https://ik1-341-30725.vs.sakura.ne.jp:50051)
+- `ADMIN_BACKEND_API_KEY` - API key for admin backend authentication
+- `SYNC_CLIENT_ID` - Client identifier for sync operations (default: wx_db_local)
 
 ## Database
 - PostgreSQL is required
@@ -231,6 +237,38 @@ cargo make static && cargo make wasm_linux && cargo make trunk_build
 - `GET /api/export` - Export all overrides (for backup/sync)
 - `POST /api/import` - Import overrides (for backup/sync)
 - `GET /api/check-consistency` - Check which overrides match rule-based detection
+
+### Admin Backend Sync API Endpoints (port 8004)
+- `POST /api/sync/push` - Push all local overrides to admin_backend
+- `POST /api/sync/pull` - Pull all overrides from admin_backend  
+- `GET /api/sync/status` - Check sync status and admin_backend connectivity
+- `POST /api/sync/bidirectional` - Pull then push (full sync)
+
+### Sync Configuration
+```bash
+# Required environment variables
+export ADMIN_BACKEND_URL=https://ik1-341-30725.vs.sakura.ne.jp:50051
+export ADMIN_BACKEND_API_KEY=ADM_your_api_key_here
+export SYNC_CLIENT_ID=wx_db_local
+```
+
+### Sync Usage Examples
+```bash
+# Check connectivity
+curl http://localhost:8004/api/sync/status
+
+# Pull remote changes before editing
+curl -X POST http://localhost:8004/api/sync/pull
+
+# Push local changes after editing
+curl -X POST http://localhost:8004/api/sync/push
+
+# Full sync (recommended for daily workflow)
+curl -X POST http://localhost:8004/api/sync/bidirectional
+
+# Test sync functionality
+./test_sync.sh
+```
 
 ### Data Flow
 1. **Rule-based detection** generates initial CardFeature bits
