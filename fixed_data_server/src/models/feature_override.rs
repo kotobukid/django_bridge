@@ -47,3 +47,20 @@ pub struct ImportExportData {
     pub exported_at: DateTime<Utc>,
     pub version: String,
 }
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SyncResponse {
+    pub success: bool,
+    pub message: String,
+    pub items_affected: Option<usize>,
+    pub details: Option<serde_json::Value>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct SyncStatusResponse {
+    pub success: bool,
+    pub last_sync_attempt: Option<String>,
+    pub admin_backend_connected: bool,
+    pub local_overrides_count: i64,
+    pub sync_status: Option<serde_json::Value>,
+}

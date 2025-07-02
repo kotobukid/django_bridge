@@ -90,7 +90,7 @@ async fn main() -> Result<()> {
         .route("/api/export", get(import_export::export_all))
         .route("/api/import", post(import_export::import_data))
         
-        // Sync endpoints
+        // Sync endpoints - testing status only for TLS verification
         .route("/api/sync/push", post(push_sync))
         .route("/api/sync/pull", post(pull_sync))
         .route("/api/sync/status", get(get_sync_status))

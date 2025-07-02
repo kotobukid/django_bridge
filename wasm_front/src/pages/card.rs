@@ -52,9 +52,11 @@ pub fn CardPage() -> impl IntoView {
     // Load override pronunciations if in maintenance mode
     Effect::new(move |_| {
         if is_maintenance_mode() {
+            leptos::logging::log!("Maintenance mode detected, fetching override pronunciations");
             spawn_local(async move {
                 match fetch_override_pronunciations().await {
                     Ok(pronunciations) => {
+                        leptos::logging::log!("Successfully fetched {} override pronunciations: {:?}", pronunciations.len(), pronunciations);
                         set_override_pronunciations.set(pronunciations.into_iter().collect());
                     }
                     Err(e) => {
@@ -62,6 +64,8 @@ pub fn CardPage() -> impl IntoView {
                     }
                 }
             });
+        } else {
+            leptos::logging::log!("Not in maintenance mode, skipping override pronunciations fetch");
         }
     });
 

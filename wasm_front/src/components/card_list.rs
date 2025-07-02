@@ -64,16 +64,28 @@ pub fn CardList(
             </Show>
 
             <div class="p-4">
-                {cards.into_iter().map(|card| {
-                    let has_override = override_pronunciations.get().contains(&card.pronunciation());
-                    view! {
-                        <CardItem 
-                            card=card 
-                            view_mode=view_mode.into()
-                            has_override=has_override
-                        />
-                    }
-                }).collect_view()}
+                {move || {
+                    let override_set = override_pronunciations.get();
+                    leptos::logging::log!("CardList render: override_set has {} items", override_set.len());
+                    
+                    cards.clone().into_iter().map(|card| {
+                        let pronunciation = card.pronunciation();
+                        let has_override = override_set.contains(&pronunciation);
+                        
+                        // デバッグ：すべてのカードの判定を出力
+                        if override_set.len() > 0 && (pronunciation.contains("エンケンノマイ") || pronunciation.contains("バブルスボマー") || pronunciation.contains("ミーンナデハジメルアイドルライフ")) {
+                            leptos::logging::log!("Card pronunciation: '{}', has_override: {}", pronunciation, has_override);
+                        }
+                        
+                        view! {
+                            <CardItem 
+                                card=card 
+                                view_mode=view_mode.into()
+                                has_override=has_override
+                            />
+                        }
+                    }).collect_view()
+                }}
             </div>
 
             <Show when=move || is_empty>

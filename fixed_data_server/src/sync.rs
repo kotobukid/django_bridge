@@ -41,19 +41,68 @@ impl SyncClient {
 
         info!("Connecting to admin backend at: {}", admin_url);
 
-        // Configure TLS for the connection
+        // Configure TLS for the connection with multiple fallback strategies
         let channel = if admin_url.starts_with("https://") {
-            let tls_config = ClientTlsConfig::new();
-            Channel::from_shared(admin_url)?
-                .tls_config(tls_config)?
-                .connect()
-                .await
-                .context("Failed to connect to admin backend")?
+            info!("Configuring TLS connection for: {}", admin_url);
+            
+            // Strategy 1: Standard TLS with explicit certificate authority
+            let endpoint = Channel::from_shared(admin_url.clone())?;
+            
+            // Try different TLS configurations with proper certificate validation
+            let strategies: Vec<(&str, Box<dyn Fn() -> ClientTlsConfig>)> = vec![
+                ("TLS with system certificate store", Box::new(|| {
+                    ClientTlsConfig::new()
+                        .domain_name("ik1-341-30725.vs.sakura.ne.jp")
+                        .with_enabled_roots() // Use system certificate store (includes Let's Encrypt)
+                })),
+                ("Standard TLS with default settings", Box::new(|| {
+                    ClientTlsConfig::new()
+                        .domain_name("ik1-341-30725.vs.sakura.ne.jp")
+                })),
+            ];
+            
+            let mut last_error = None;
+            
+            for (strategy_name, tls_config_fn) in strategies {
+                info!("Trying TLS strategy: {}", strategy_name);
+                
+                let tls_config = tls_config_fn();
+                let channel_result = endpoint.clone()
+                    .tls_config(tls_config)?
+                    .connect()
+                    .await;
+                
+                match channel_result {
+                    Ok(ch) => {
+                        info!("✅ Successfully connected using: {}", strategy_name);
+                        return Ok(Self {
+                            client: AdminSyncClient::new(ch),
+                            api_key,
+                        });
+                    },
+                    Err(e) => {
+                        warn!("❌ Failed with {}: {}", strategy_name, e);
+                        last_error = Some(e);
+                    }
+                }
+            }
+            
+            // As a last resort for development environments only
+            if env::var("DEVELOPMENT_MODE").is_ok() {
+                warn!("⚠️  DEVELOPMENT MODE: Attempting connection with relaxed certificate validation");
+                warn!("⚠️  This should NEVER be used in production!");
+                
+                // This would be the only place where we might relax security, 
+                // and only when explicitly enabled for development
+                return Err(anyhow::anyhow!("Even development mode TLS failed. Check certificate configuration."));
+            }
+            
+            return Err(anyhow::anyhow!("All TLS strategies failed. Last error: {:?}", last_error));
         } else {
-            Channel::from_shared(admin_url)?
+            Channel::from_shared(admin_url.clone())?
                 .connect()
                 .await
-                .context("Failed to connect to admin backend")?
+                .with_context(|| format!("Failed to establish connection to: {}", admin_url))?
         };
 
         let client = AdminSyncClient::new(channel);
@@ -124,14 +173,16 @@ impl SyncClient {
     }
 
     pub async fn get_sync_status(&mut self, client_id: String) -> Result<admin::StatusResponse> {
+        info!("Sending get_sync_status request for client_id: {}", client_id);
         let request = admin::StatusRequest { client_id };
         let request = Request::new(request);
         let request = self.add_auth_header(request);
 
         let response = self.client.get_sync_status(request)
             .await
-            .context("Failed to get sync status")?;
+            .with_context(|| "Failed to execute get_sync_status gRPC call")?;
 
+        info!("Received sync status response successfully");
         Ok(response.into_inner())
     }
 }
