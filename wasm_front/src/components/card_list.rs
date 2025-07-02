@@ -1,11 +1,13 @@
 use crate::components::card_item::{CardItem, ViewMode};
 use datapack::CardExport;
 use leptos::prelude::*;
+use std::collections::HashSet;
 
 #[component]
 pub fn CardList(
     cards: Vec<CardExport>, 
     total_count: usize,
+    override_pronunciations: ReadSignal<HashSet<String>>,
 ) -> impl IntoView {
     let is_empty = cards.is_empty();
     // Load initial view mode from localStorage, default to Compact
@@ -63,10 +65,12 @@ pub fn CardList(
 
             <div class="p-4">
                 {cards.into_iter().map(|card| {
+                    let has_override = override_pronunciations.get().contains(&card.pronunciation());
                     view! {
                         <CardItem 
                             card=card 
                             view_mode=view_mode.into()
+                            has_override=has_override
                         />
                     }
                 }).collect_view()}

@@ -138,6 +138,7 @@ impl ViewMode {
 pub fn CardItem(
     card: CardExport,
     #[prop(optional)] view_mode: Option<Signal<ViewMode>>,
+    #[prop(optional)] has_override: bool,
 ) -> impl IntoView {
     // Use provided view_mode or default to Compact
     let view_mode = view_mode.unwrap_or_else(|| Signal::derive(|| ViewMode::Compact));
@@ -254,7 +255,7 @@ pub fn CardItem(
                                                     class="bg-yellow-100 hover:bg-yellow-200 px-1 py-0.5 rounded text-yellow-800 hover:text-yellow-900 transition-colors cursor-pointer text-xs"
                                                     title="フィーチャーを編集"
                                                 >
-                                                    "🛠️"
+                                                    {if has_override { "✅" } else { "🛠️" }}
                                                 </a>
                                             }.into_any()
                                         } else {
@@ -434,7 +435,7 @@ pub fn CardItem(
                                                             class="bg-yellow-100 hover:bg-yellow-200 px-2 py-1 rounded text-yellow-800 hover:text-yellow-900 transition-colors cursor-pointer text-xs"
                                                             title="フィーチャーを編集"
                                                         >
-                                                            "🛠️ Edit"
+                                                            {if has_override { "✅ Edit" } else { "🛠️ Edit" }}
                                                         </a>
                                                     }.into_any()
                                                 } else {

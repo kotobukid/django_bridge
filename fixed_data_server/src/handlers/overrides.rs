@@ -26,6 +26,22 @@ pub async fn list_overrides(
     Ok(Json(responses))
 }
 
+pub async fn list_override_pronunciations(
+    State(pool): State<PgPool>,
+) -> Result<Json<Vec<String>>, StatusCode> {
+    let pronunciations: Vec<String> = sqlx::query(
+        "SELECT DISTINCT pronunciation FROM wix_card_feature_override ORDER BY pronunciation"
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
+    .into_iter()
+    .map(|row| row.get("pronunciation"))
+    .collect();
+
+    Ok(Json(pronunciations))
+}
+
 pub async fn get_override(
     State(pool): State<PgPool>,
     Path(pronunciation): Path<String>,

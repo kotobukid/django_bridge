@@ -78,6 +78,7 @@ async fn main() -> Result<()> {
         // Override CRUD endpoints
         .route("/api/overrides", get(overrides::list_overrides))
         .route("/api/overrides", post(overrides::create_or_update_override))
+        .route("/api/overrides/pronunciations", get(overrides::list_override_pronunciations))
         .route("/api/overrides/:pronunciation", get(overrides::get_override))
         .route("/api/overrides/:pronunciation", put(overrides::update_override))
         .route("/api/overrides/:pronunciation", delete(overrides::delete_override))
