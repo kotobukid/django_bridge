@@ -126,7 +126,7 @@ impl ColorFilter {
         }
     }
 
-    pub fn to_bits(&self) -> u32 {
+    pub fn to_bits(self) -> u32 {
         let mut bits = 0u32;
         if self.white {
             bits |= 2;

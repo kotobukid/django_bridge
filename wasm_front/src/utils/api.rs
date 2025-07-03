@@ -6,6 +6,7 @@ use super::maintenance::get_fixed_data_server_url;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct OverridePronunciations {
+    #[allow(dead_code)]
     pub pronunciations: Vec<String>,
 }
 
