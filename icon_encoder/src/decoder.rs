@@ -74,7 +74,7 @@ pub fn decode_skill_text(encoded_text: &str) -> Vec<TextSegment> {
                     });
                 } else {
                     // 未知のコードはそのまま表示
-                    segments.push(TextSegment::Text(format!("[{}]", code)));
+                    segments.push(TextSegment::Text(format!("[{code}]")));
                 }
             } else {
                 // 閉じ括弧がない場合はそのまま表示
@@ -114,7 +114,7 @@ pub fn decode_burst_text(encoded_text: &str) -> Vec<TextSegment> {
 /// # Returns
 /// 対応するコンポーネント名（例："IconCip"）。見つからない場合はNone。
 fn get_component_name(code: &str) -> Option<String> {
-    let full_code = format!("[{}]", code);
+    let full_code = format!("[{code}]");
     ICON_RULES
         .iter()
         .find(|rule| rule.code == full_code)
@@ -129,7 +129,7 @@ fn get_component_name(code: &str) -> Option<String> {
 /// # Returns
 /// 対応する元のパターン（例："【出】"）。見つからない場合はNone。
 pub fn get_original_pattern(code: &str) -> Option<String> {
-    let full_code = format!("[{}]", code);
+    let full_code = format!("[{code}]");
     ICON_RULES
         .iter()
         .find(|rule| rule.code == full_code)

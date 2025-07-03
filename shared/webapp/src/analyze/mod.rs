@@ -31,10 +31,10 @@ pub enum AnalyzeError {
 impl Display for AnalyzeError {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            AnalyzeError::Io(err) => write!(f, "IO error: {}", err),
-            AnalyzeError::Request(err) => write!(f, "Request error: {}", err),
-            AnalyzeError::Parse(msg) => write!(f, "Parse error: {}", msg),
-            AnalyzeError::Cache(msg) => write!(f, "Cache error: {}", msg),
+            AnalyzeError::Io(err) => write!(f, "IO error: {err}"),
+            AnalyzeError::Request(err) => write!(f, "Request error: {err}"),
+            AnalyzeError::Parse(msg) => write!(f, "Parse error: {msg}"),
+            AnalyzeError::Cache(msg) => write!(f, "Cache error: {msg}"),
             AnalyzeError::ParentPathMissing => write!(f, "Parent path missing"),
         }
     }
@@ -96,10 +96,10 @@ impl ProductType {
     /// The relative path for the product type
     fn get_path_relative(&self) -> String {
         match self {
-            ProductType::Booster(product_no) => format!("booster/{}", product_no),
-            ProductType::Starter(product_no) => format!("starter/{}", product_no),
+            ProductType::Booster(product_no) => format!("booster/{product_no}"),
+            ProductType::Starter(product_no) => format!("starter/{product_no}"),
             ProductType::PromotionCard => String::from("promotion"),
-            ProductType::SpecialCard(product_no) => format!("special/{}", product_no),
+            ProductType::SpecialCard(product_no) => format!("special/{product_no}"),
         }
     }
 
@@ -224,13 +224,13 @@ impl SearchQuery {
     /// * `Err(std::io::Error)` if the cache file does not exist
     fn cache_check(&self, dir: String) -> Result<String, std::io::Error> {
         let product_path = match &self.product_type {
-            ProductType::Booster(product_no) => format!("booster/{}", product_no),
-            ProductType::Starter(product_no) => format!("starter/{}", product_no),
+            ProductType::Booster(product_no) => format!("booster/{product_no}"),
+            ProductType::Starter(product_no) => format!("starter/{product_no}"),
             ProductType::PromotionCard => String::from("promotion"),
-            ProductType::SpecialCard(product_no) => format!("special/{}", product_no),
+            ProductType::SpecialCard(product_no) => format!("special/{product_no}"),
         };
         let path: PathBuf =
-            PathBuf::from(format!("{}/{}", dir, product_path)).join(self.to_filename());
+            PathBuf::from(format!("{dir}/{product_path}")).join(self.to_filename());
 
         if path.exists() {
             let mut file: File = File::open(&path)?;
@@ -298,8 +298,8 @@ pub async fn cache_product_index(
             let body: String = res.text().await?;
 
             let cache_filename: PathBuf =
-                PathBuf::from(format!("./text_cache/{}", p_no)).join(search_query.to_filename());
-            println!("CFN {:?}", cache_filename);
+                PathBuf::from(format!("./text_cache/{p_no}")).join(search_query.to_filename());
+            println!("CFN {cache_filename:?}");
 
             if let Some(parent_path) = cache_filename.parent() {
                 // Use ? operator instead of unwrap
@@ -360,7 +360,7 @@ pub fn find_one(content: &str, selector: String) -> Option<String> {
     let main_selector = match Selector::parse(selector.as_str()) {
         Ok(selector) => selector,
         Err(e) => {
-            eprintln!("Invalid selector '{}': {}", selector, e);
+            eprintln!("Invalid selector '{selector}': {e}");
             return None;
         }
     };
@@ -385,7 +385,7 @@ pub async fn collect_card_detail_links(
     product_type: &ProductType,
 ) -> Result<Vec<String>, AnalyzeError> {
     let product_root: String = product_type.get_path_relative();
-    let path_s: String = format!("./text_cache/{}", product_root);
+    let path_s: String = format!("./text_cache/{product_root}");
     let product_dir: &Path = Path::new(&path_s);
 
     // ディレクトリが存在しない場合は作成
@@ -401,7 +401,7 @@ pub async fn collect_card_detail_links(
         match fs::read_to_string(&file_path) {
             Ok(content) => all_text.push_str(&content),
             Err(e) => {
-                eprintln!("ファイル読み込みエラー: {:?}: {}", file_path, e);
+                eprintln!("ファイル読み込みエラー: {file_path:?}: {e}");
                 // ファイル読み込みエラーは無視して続行
             }
         }
@@ -410,7 +410,7 @@ pub async fn collect_card_detail_links(
     let parsed_html: Html = Html::parse_document(&all_text);
     // 静的なセレクタなので、パニックする可能性は低いが、より安全に
     let selector: Selector = Selector::parse("a.c-box")
-        .map_err(|e| AnalyzeError::Parse(format!("セレクタパースエラー: {}", e)))?;
+        .map_err(|e| AnalyzeError::Parse(format!("セレクタパースエラー: {e}")))?;
 
     let links: Vec<String> = parsed_html
         .select(&selector)
@@ -426,7 +426,7 @@ pub async fn collect_card_detail_links_compat(
     product_type: &ProductType,
 ) -> Result<Vec<String>, ()> {
     collect_card_detail_links(product_type).await.map_err(|e| {
-        eprintln!("カード詳細リンク収集エラー: {}", e);
+        eprintln!("カード詳細リンク収集エラー: {e}");
     })
 }
 
@@ -449,7 +449,7 @@ pub fn find_many(content: &str, selector: String) -> Vec<String> {
     let main_selector = match Selector::parse(selector.as_str()) {
         Ok(selector) => selector,
         Err(e) => {
-            eprintln!("Invalid selector '{}': {}", selector, e);
+            eprintln!("Invalid selector '{selector}': {e}");
             return Vec::new();
         }
     };
@@ -509,7 +509,7 @@ impl CardQuery {
             tokens.join("-")
         };
 
-        format!("{}/{}.html", dir, id)
+        format!("{dir}/{id}.html")
     }
 
     /// Create a new CardQuery
@@ -563,13 +563,13 @@ impl CardQuery {
                     match file.read_to_string(&mut contents) {
                         Ok(_) => Some(contents),
                         Err(e) => {
-                            eprintln!("Error reading cache file: {}", e);
+                            eprintln!("Error reading cache file: {e}");
                             None
                         }
                     }
                 }
                 Err(e) => {
-                    eprintln!("Error opening cache file: {}", e);
+                    eprintln!("Error opening cache file: {e}");
                     None
                 }
             }
@@ -624,13 +624,13 @@ impl CardQuery {
 
             let body_bytes = response.bytes().await?;
             let body = String::from_utf8(body_bytes.to_vec())
-                .map_err(|e| AnalyzeError::Parse(format!("UTF-8 decode error: {}", e)))?;
-            let body = format!("<html><body>{}", body);
+                .map_err(|e| AnalyzeError::Parse(format!("UTF-8 decode error: {e}")))?;
+            let body = format!("<html><body>{body}");
             let content = find_one(&body, ".cardDetail".into());
 
             if let Some(body_) = content {
                 write_to_cache(cache_file, body_.clone()).map_err(|e| {
-                    AnalyzeError::Cache(format!("Failed to write to cache: {:?}", e))
+                    AnalyzeError::Cache(format!("Failed to write to cache: {e:?}"))
                 })?;
                 Ok(body_)
             } else {
@@ -652,10 +652,10 @@ impl CardQuery {
 /// * `Err(AnalyzeError)` if an error occurred
 pub fn parse_card_url(url_string: impl Display) -> Result<CardQuery, AnalyzeError> {
     let parsed_url: Url = Url::parse(&url_string.to_string())
-        .map_err(|e| AnalyzeError::Parse(format!("Failed to parse URL: {}", e)))?;
+        .map_err(|e| AnalyzeError::Parse(format!("Failed to parse URL: {e}")))?;
     let query: &str = parsed_url.query().unwrap_or_default();
     serde_qs::from_str::<CardQuery>(query)
-        .map_err(|e| AnalyzeError::Parse(format!("Failed to parse query: {}", e)))
+        .map_err(|e| AnalyzeError::Parse(format!("Failed to parse query: {e}")))
 }
 
 /// Errors that can occur when caching data
@@ -673,8 +673,8 @@ impl std::fmt::Display for CacheError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             CacheError::ParentPathMissing => write!(f, "Parent path is missing"),
-            CacheError::FileCreationFailed(err) => write!(f, "Failed to create file: {}", err),
-            CacheError::WriteFailed(err) => write!(f, "Failed to write to file: {}", err),
+            CacheError::FileCreationFailed(err) => write!(f, "Failed to create file: {err}"),
+            CacheError::WriteFailed(err) => write!(f, "Failed to write to file: {err}"),
         }
     }
 }

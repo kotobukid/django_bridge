@@ -10,9 +10,9 @@ pub fn ClearAllButton(
             class={move || {
                 let base = "px-4 py-2 rounded-lg border transition-colors duration-200 font-medium";
                 if is_active.get() {
-                    format!("{} bg-red-100 border-red-500 text-red-700 hover:bg-red-200", base)
+                    format!("{base} bg-red-100 border-red-500 text-red-700 hover:bg-red-200")
                 } else {
-                    format!("{} bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed", base)
+                    format!("{base} bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed")
                 }
             }}
             on:click=move |_| {

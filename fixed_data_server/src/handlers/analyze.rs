@@ -3,8 +3,8 @@ use axum::{
     http::StatusCode,
     Json,
 };
-use sqlx::PgPool;
 use serde::{Deserialize, Serialize};
+use sqlx::PgPool;
 use std::process::Command;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -20,13 +20,12 @@ pub async fn analyze_card(
     Path(pronunciation): Path<String>,
 ) -> Result<Json<AnalyzeResponse>, StatusCode> {
     // Get card numbers for this pronunciation
-    let card_numbers: Vec<String> = sqlx::query_scalar(
-        "SELECT code FROM wix_card WHERE pronunciation = $1"
-    )
-    .bind(&pronunciation)
-    .fetch_all(&pool)
-    .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let card_numbers: Vec<String> =
+        sqlx::query_scalar("SELECT code FROM wix_card WHERE pronunciation = $1")
+            .bind(&pronunciation)
+            .fetch_all(&pool)
+            .await
+            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
 
     if card_numbers.is_empty() {
         return Ok(Json(AnalyzeResponse {
@@ -62,7 +61,12 @@ pub async fn analyze_card(
         message: if errors.is_empty() {
             format!("Successfully analyzed {} cards", success_count)
         } else {
-            format!("Analyzed {} of {} cards. Errors: {}", success_count, card_numbers.len(), errors.join("; "))
+            format!(
+                "Analyzed {} of {} cards. Errors: {}",
+                success_count,
+                card_numbers.len(),
+                errors.join("; ")
+            )
         },
     };
 

@@ -8,16 +8,16 @@ fn main() {
     println!("Testing feature label parsing:");
     for name in test_cases {
         match parse_feature_name(name) {
-            Ok(feature) => println!("✓ '{}' -> {:?}", name, feature),
-            Err(e) => println!("✗ '{}' -> Error: {}", name, e),
+            Ok(feature) => println!("✓ '{name}' -> {feature:?}"),
+            Err(e) => println!("✗ '{name}' -> Error: {e}"),
         }
     }
 
     // エラーケース
     println!("\nTesting error case:");
     match parse_feature_name("ランダムハンデス") {
-        Ok(feature) => println!("✗ 'ランダムハンデス' should fail but got: {:?}", feature),
-        Err(e) => println!("✓ 'ランダムハンデス' -> Error: {}", e),
+        Ok(feature) => println!("✗ 'ランダムハンデス' should fail but got: {feature:?}"),
+        Err(e) => println!("✓ 'ランダムハンデス' -> Error: {e}"),
     }
 
     // すべてのラベルを表示
@@ -25,6 +25,6 @@ fn main() {
     let mut labels: Vec<_> = FEATURE_LABELS.keys().copied().collect();
     labels.sort();
     for label in labels {
-        println!("  - {}", label);
+        println!("  - {label}");
     }
 }

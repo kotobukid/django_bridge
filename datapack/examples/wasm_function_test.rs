@@ -25,7 +25,7 @@ fn main() {
     // テスト5: filter_by_features_and
     println!("\n5. filter_by_features_and テスト");
     let features_array = [6, 0, 12, 0]; // アサシン(6,0) + Sランサー(12,0)
-    println!("入力配列: {:?}", features_array);
+    println!("入力配列: {features_array:?}");
     let and_result = filter_by_features_and(&features_array);
     println!("AND結果: {}件", and_result.len());
 
@@ -48,9 +48,9 @@ fn main() {
     let slancer_bit = 1_i64 << 12; // Sランサー
     let combined_bits = assassin_bit | slancer_bit; // 組み合わせ
 
-    println!("アサシンビット: {}", assassin_bit);
-    println!("Sランサービット: {}", slancer_bit);
-    println!("組み合わせビット: {}", combined_bits);
+    println!("アサシンビット: {assassin_bit}");
+    println!("Sランサービット: {slancer_bit}");
+    println!("組み合わせビット: {combined_bits}");
 
     let and_cards = filter_by_combined_bits(combined_bits, 0, "and");
     println!("AND条件結果: {}件", and_cards.len());
@@ -95,7 +95,7 @@ fn main() {
         let _cards = filter_by_combined_bits(combined_bits, 0, "and");
     }
     let duration = start.elapsed();
-    println!("100回実行時間: {:?}", duration);
+    println!("100回実行時間: {duration:?}");
 
     println!("\n=== 共通フィルター関数テスト完了 ===");
 }

@@ -66,7 +66,7 @@ impl TimingFilter {
 
         // Based on analyzer mapping:
         // アタックフェイズ = 1
-        // アタックフェイズスペルカットイン = 2  
+        // アタックフェイズスペルカットイン = 2
         // メインフェイズ = 4
         // メインフェイズアタックフェイズ = 8
         // メインフェイズアタックフェイズスペルカットイン = 16
@@ -77,12 +77,12 @@ impl TimingFilter {
             4 | 8 | 16 | 32 => true,
             _ => false,
         };
-        
+
         let timing_has_attack = match timing {
             1 | 2 | 8 | 16 => true,
             _ => false,
         };
-        
+
         let timing_has_spell_cutins = match timing {
             2 | 16 | 32 => true,
             _ => false,
@@ -431,7 +431,7 @@ impl PowerFilter {
     }
 
     pub fn label_for_threshold(threshold: i32) -> String {
-        format!("{}+", threshold)
+        format!("{threshold}+")
     }
 }
 

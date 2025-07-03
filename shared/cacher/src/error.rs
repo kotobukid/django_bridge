@@ -12,11 +12,11 @@ pub enum CacherError {
 impl fmt::Display for CacherError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            CacherError::Io(e) => write!(f, "IO error: {}", e),
-            CacherError::Request(e) => write!(f, "Request error: {}", e),
-            CacherError::UnknownProductType(t) => write!(f, "Unknown product type: {}", t),
+            CacherError::Io(e) => write!(f, "IO error: {e}"),
+            CacherError::Request(e) => write!(f, "Request error: {e}"),
+            CacherError::UnknownProductType(t) => write!(f, "Unknown product type: {t}"),
             CacherError::CacheNotFound => write!(f, "Cache not found"),
-            CacherError::ParseError(msg) => write!(f, "Parse error: {}", msg),
+            CacherError::ParseError(msg) => write!(f, "Parse error: {msg}"),
         }
     }
 }

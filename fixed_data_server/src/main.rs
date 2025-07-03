@@ -1,20 +1,23 @@
 use anyhow::Result;
-use axum::{routing::{get, post, put, delete}, Router};
+use axum::{
+    routing::{delete, get, post, put},
+    Router,
+};
 use sqlx::postgres::PgPoolOptions;
-use std::net::SocketAddr;
 use std::env;
+use std::net::SocketAddr;
 use tower_http::cors::{Any, CorsLayer};
 use tower_http::trace::TraceLayer;
 use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod db;
 mod handlers;
 mod models;
-mod db;
 mod sync;
 
-use handlers::{overrides, analyze, import_export};
-use handlers::sync::{push_sync, pull_sync, get_sync_status, bidirectional_sync};
+use handlers::sync::{bidirectional_sync, get_sync_status, pull_sync, push_sync};
+use handlers::{analyze, import_export, overrides};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -61,7 +64,7 @@ async fn main() -> Result<()> {
             ))
         })
         .expect("DATABASE_URL or DB_* components must be set");
-    
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
         .connect(&database_url)
@@ -78,33 +81,38 @@ async fn main() -> Result<()> {
         // Override CRUD endpoints
         .route("/api/overrides", get(overrides::list_overrides))
         .route("/api/overrides", post(overrides::create_or_update_override))
-        .route("/api/overrides/pronunciations", get(overrides::list_override_pronunciations))
-        .route("/api/overrides/:pronunciation", get(overrides::get_override))
-        .route("/api/overrides/:pronunciation", put(overrides::update_override))
-        .route("/api/overrides/:pronunciation", delete(overrides::delete_override))
-        
+        .route(
+            "/api/overrides/pronunciations",
+            get(overrides::list_override_pronunciations),
+        )
+        .route(
+            "/api/overrides/:pronunciation",
+            get(overrides::get_override),
+        )
+        .route(
+            "/api/overrides/:pronunciation",
+            put(overrides::update_override),
+        )
+        .route(
+            "/api/overrides/:pronunciation",
+            delete(overrides::delete_override),
+        )
         // Analysis endpoints
         .route("/api/analyze/:pronunciation", post(analyze::analyze_card))
-        
         // Import/Export endpoints
         .route("/api/export", get(import_export::export_all))
         .route("/api/import", post(import_export::import_data))
-        
         // Sync endpoints - testing status only for TLS verification
         .route("/api/sync/push", post(push_sync))
         .route("/api/sync/pull", post(pull_sync))
         .route("/api/sync/status", get(get_sync_status))
         .route("/api/sync/bidirectional", post(bidirectional_sync))
-        
         // Consistency check
         .route("/api/check-consistency", get(overrides::check_consistency))
-        
         // Health check
         .route("/health", get(|| async { "OK" }))
-        
         // 404 handler for unmatched routes
         .fallback(|| async { axum::http::StatusCode::NOT_FOUND })
-        
         .layer(cors)
         .layer(TraceLayer::new_for_http())
         .with_state(pool);
@@ -112,7 +120,7 @@ async fn main() -> Result<()> {
     // Start server
     let addr = SocketAddr::from(([127, 0, 0, 1], 8004));
     info!("Fixed Data Server listening on {}", addr);
-    
+
     let listener = tokio::net::TcpListener::bind(&addr).await?;
     axum::serve(listener, app).await?;
 

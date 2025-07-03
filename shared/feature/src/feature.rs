@@ -80,7 +80,7 @@ impl Display for FeatureTag {
             FeatureTag::Unique => "06固有系",
             FeatureTag::Others => "07その他",
         };
-        write!(f, "{}", label)
+        write!(f, "{label}")
     }
 }
 
@@ -228,7 +228,7 @@ pub struct ExportedFeatureGroup {
 impl CardFeature {
     pub fn export(&self) -> ExportedCardFeature {
         ExportedCardFeature {
-            name: format!("{}", self),       // Enum名を文字列化
+            name: format!("{self}"),       // Enum名を文字列化
             bit_shift: self.to_bit_shifts(), // to_bit_shift の結果を使用
             tag: self.tag(),                 // タグカテゴリを取得
         }
@@ -353,7 +353,7 @@ pub struct ExportedBurstFeature {
 impl BurstFeature {
     pub fn export(&self) -> ExportedBurstFeature {
         ExportedBurstFeature {
-            name: format!("{}", self),      // Enum名を文字列化
+            name: format!("{self}"),      // Enum名を文字列化
             bit_shift: self.to_bit_shift(), // to_bit_shift の結果を使用
             tag: self.tag(),                // タグカテゴリを取得
         }

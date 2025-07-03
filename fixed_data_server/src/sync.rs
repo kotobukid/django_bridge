@@ -1,9 +1,9 @@
-use anyhow::{Result, Context};
+use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use std::env;
-use tonic::transport::{Channel, ClientTlsConfig};
 use tonic::metadata::AsciiMetadataValue;
+use tonic::transport::{Channel, ClientTlsConfig};
 use tonic::Request;
 use tracing::{info, warn};
 
@@ -35,7 +35,7 @@ impl SyncClient {
     pub async fn new() -> Result<Self> {
         let admin_url = env::var("ADMIN_BACKEND_URL")
             .unwrap_or_else(|_| "https://ik1-341-30725.vs.sakura.ne.jp:50051".to_string());
-        
+
         let api_key = env::var("ADMIN_BACKEND_API_KEY")
             .context("ADMIN_BACKEND_API_KEY environment variable is required")?;
 
@@ -44,34 +44,36 @@ impl SyncClient {
         // Configure TLS for the connection with multiple fallback strategies
         let channel = if admin_url.starts_with("https://") {
             info!("Configuring TLS connection for: {}", admin_url);
-            
+
             // Strategy 1: Standard TLS with explicit certificate authority
             let endpoint = Channel::from_shared(admin_url.clone())?;
-            
+
             // Try different TLS configurations with proper certificate validation
             let strategies: Vec<(&str, Box<dyn Fn() -> ClientTlsConfig>)> = vec![
-                ("TLS with system certificate store", Box::new(|| {
-                    ClientTlsConfig::new()
-                        .domain_name("ik1-341-30725.vs.sakura.ne.jp")
-                        .with_enabled_roots() // Use system certificate store (includes Let's Encrypt)
-                })),
-                ("Standard TLS with default settings", Box::new(|| {
-                    ClientTlsConfig::new()
-                        .domain_name("ik1-341-30725.vs.sakura.ne.jp")
-                })),
+                (
+                    "TLS with system certificate store",
+                    Box::new(|| {
+                        ClientTlsConfig::new()
+                            .domain_name("ik1-341-30725.vs.sakura.ne.jp")
+                            .with_enabled_roots() // Use system certificate store (includes Let's Encrypt)
+                    }),
+                ),
+                (
+                    "Standard TLS with default settings",
+                    Box::new(|| {
+                        ClientTlsConfig::new().domain_name("ik1-341-30725.vs.sakura.ne.jp")
+                    }),
+                ),
             ];
-            
+
             let mut last_error = None;
-            
+
             for (strategy_name, tls_config_fn) in strategies {
                 info!("Trying TLS strategy: {}", strategy_name);
-                
+
                 let tls_config = tls_config_fn();
-                let channel_result = endpoint.clone()
-                    .tls_config(tls_config)?
-                    .connect()
-                    .await;
-                
+                let channel_result = endpoint.clone().tls_config(tls_config)?.connect().await;
+
                 match channel_result {
                     Ok(ch) => {
                         info!("✅ Successfully connected using: {}", strategy_name);
@@ -79,25 +81,30 @@ impl SyncClient {
                             client: AdminSyncClient::new(ch),
                             api_key,
                         });
-                    },
+                    }
                     Err(e) => {
                         warn!("❌ Failed with {}: {}", strategy_name, e);
                         last_error = Some(e);
                     }
                 }
             }
-            
+
             // As a last resort for development environments only
             if env::var("DEVELOPMENT_MODE").is_ok() {
                 warn!("⚠️  DEVELOPMENT MODE: Attempting connection with relaxed certificate validation");
                 warn!("⚠️  This should NEVER be used in production!");
-                
-                // This would be the only place where we might relax security, 
+
+                // This would be the only place where we might relax security,
                 // and only when explicitly enabled for development
-                return Err(anyhow::anyhow!("Even development mode TLS failed. Check certificate configuration."));
+                return Err(anyhow::anyhow!(
+                    "Even development mode TLS failed. Check certificate configuration."
+                ));
             }
-            
-            return Err(anyhow::anyhow!("All TLS strategies failed. Last error: {:?}", last_error));
+
+            return Err(anyhow::anyhow!(
+                "All TLS strategies failed. Last error: {:?}",
+                last_error
+            ));
         } else {
             Channel::from_shared(admin_url.clone())?
                 .connect()
@@ -107,35 +114,40 @@ impl SyncClient {
 
         let client = AdminSyncClient::new(channel);
 
-        Ok(Self {
-            client,
-            api_key,
-        })
+        Ok(Self { client, api_key })
     }
 
     fn add_auth_header<T>(&self, mut request: Request<T>) -> Request<T> {
-        let api_key_value: AsciiMetadataValue = self.api_key.parse()
-            .expect("API key should be valid ASCII");
+        let api_key_value: AsciiMetadataValue =
+            self.api_key.parse().expect("API key should be valid ASCII");
         request.metadata_mut().insert("api-key", api_key_value);
         request
     }
 
-    pub async fn push_overrides(&mut self, overrides: Vec<FeatureOverride>) -> Result<PushResponse> {
-        info!("Pushing {} feature overrides to admin backend", overrides.len());
+    pub async fn push_overrides(
+        &mut self,
+        overrides: Vec<FeatureOverride>,
+    ) -> Result<PushResponse> {
+        info!(
+            "Pushing {} feature overrides to admin backend",
+            overrides.len()
+        );
 
         let stream = tokio_stream::iter(overrides);
         let request = Request::new(stream);
         let request = self.add_auth_header(request);
 
-        let response = self.client.push_feature_overrides(request)
+        let response = self
+            .client
+            .push_feature_overrides(request)
             .await
             .context("Failed to push feature overrides")?;
 
         let push_response = response.into_inner();
-        info!("Push completed: {} received, {} created, {} updated", 
-               push_response.items_received, 
-               push_response.items_created, 
-               push_response.items_updated);
+        info!(
+            "Push completed: {} received, {} created, {} updated",
+            push_response.items_received, push_response.items_created, push_response.items_updated
+        );
 
         if !push_response.errors.is_empty() {
             warn!("Push completed with errors: {:?}", push_response.errors);
@@ -144,7 +156,10 @@ impl SyncClient {
         Ok(push_response)
     }
 
-    pub async fn pull_overrides(&mut self, since: Option<DateTime<Utc>>) -> Result<Vec<FeatureOverride>> {
+    pub async fn pull_overrides(
+        &mut self,
+        since: Option<DateTime<Utc>>,
+    ) -> Result<Vec<FeatureOverride>> {
         info!("Pulling feature overrides from admin backend");
 
         let request = PullRequest {
@@ -158,7 +173,9 @@ impl SyncClient {
         let request = Request::new(request);
         let request = self.add_auth_header(request);
 
-        let mut stream = self.client.pull_feature_overrides(request)
+        let mut stream = self
+            .client
+            .pull_feature_overrides(request)
             .await
             .context("Failed to pull feature overrides")?
             .into_inner();
@@ -168,17 +185,25 @@ impl SyncClient {
             overrides.push(override_item);
         }
 
-        info!("Pulled {} feature overrides from admin backend", overrides.len());
+        info!(
+            "Pulled {} feature overrides from admin backend",
+            overrides.len()
+        );
         Ok(overrides)
     }
 
     pub async fn get_sync_status(&mut self, client_id: String) -> Result<admin::StatusResponse> {
-        info!("Sending get_sync_status request for client_id: {}", client_id);
+        info!(
+            "Sending get_sync_status request for client_id: {}",
+            client_id
+        );
         let request = admin::StatusRequest { client_id };
         let request = Request::new(request);
         let request = self.add_auth_header(request);
 
-        let response = self.client.get_sync_status(request)
+        let response = self
+            .client
+            .get_sync_status(request)
             .await
             .with_context(|| "Failed to execute get_sync_status gRPC call")?;
 
@@ -235,7 +260,7 @@ pub async fn sync_push_all(pool: &PgPool) -> Result<PushResponse> {
         "SELECT pronunciation, fixed_bits1, fixed_bits2, fixed_burst_bits, 
                 created_at, updated_at, note 
          FROM wix_card_feature_override 
-         ORDER BY updated_at DESC"
+         ORDER BY updated_at DESC",
     )
     .fetch_all(pool)
     .await
@@ -265,7 +290,7 @@ pub async fn sync_pull_all(pool: &PgPool) -> Result<usize> {
 
         // Check if local version exists and is newer
         let existing = sqlx::query_scalar::<_, Option<chrono::DateTime<chrono::Utc>>>(
-            "SELECT updated_at FROM wix_card_feature_override WHERE pronunciation = $1"
+            "SELECT updated_at FROM wix_card_feature_override WHERE pronunciation = $1",
         )
         .bind(&local_override.pronunciation)
         .fetch_optional(pool)
@@ -275,7 +300,7 @@ pub async fn sync_pull_all(pool: &PgPool) -> Result<usize> {
             Some(Some(existing_updated)) => {
                 let remote_updated = local_override.updated_at.unwrap_or_default();
                 remote_updated > existing_updated
-            },
+            }
             Some(None) | None => true, // New record or no timestamp
         };
 
@@ -307,6 +332,9 @@ pub async fn sync_pull_all(pool: &PgPool) -> Result<usize> {
         }
     }
 
-    info!("Imported {} feature overrides from admin backend", imported_count);
+    info!(
+        "Imported {} feature overrides from admin backend",
+        imported_count
+    );
     Ok(imported_count)
 }

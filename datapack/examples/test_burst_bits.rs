@@ -51,7 +51,7 @@ fn main() {
             }
         }
         Err(e) => {
-            println!("✗ Error loading static data: {}", e);
+            println!("✗ Error loading static data: {e}");
         }
     }
 

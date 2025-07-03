@@ -87,7 +87,7 @@ impl Serialize for OptionString {
 impl Display for OptionString {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match &self.value {
-            Some(v) => write!(f, "{}", v),
+            Some(v) => write!(f, "{v}"),
             None => write!(f, ""),
         }
     }
@@ -118,7 +118,7 @@ impl Display for OptionInteger {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self.value {
             None => write!(f, ""),
-            Some(v) => write!(f, "{}", v),
+            Some(v) => write!(f, "{v}"),
         }
     }
 }
@@ -156,8 +156,8 @@ impl Serialize for CardSkill {
 impl Display for CardSkill {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            CardSkill::Normal(text) => write!(f, "{}{}", SKILL_PREFIX_NORMAL, text),
-            CardSkill::LifeBurst(text) => write!(f, "{}{}", SKILL_PREFIX_LB, text),
+            CardSkill::Normal(text) => write!(f, "{SKILL_PREFIX_NORMAL}{text}"),
+            CardSkill::LifeBurst(text) => write!(f, "{SKILL_PREFIX_LB}{text}"),
         }
     }
 }
@@ -390,7 +390,7 @@ impl Card {
     }
 
     pub fn check_have_feature(&self, card_feature: CardFeature) -> bool {
-        println!("feature check: positive {}", card_feature);
+        println!("feature check: positive {card_feature}");
         self.features.contains(&card_feature)
     }
 

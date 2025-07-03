@@ -123,11 +123,7 @@ pub fn CardDetailPage() -> impl IntoView {
                         let first_card = &card_list[0];
                         let full_name = first_card.name();
                         if let Some(start) = full_name.find(" <") {
-                            if let Some(end) = full_name.find(">") {
-                                Some(full_name[start + 2..end].to_string())
-                            } else {
-                                None
-                            }
+                            full_name.find(">").map(|end| full_name[start + 2..end].to_string())
                         } else {
                             None
                         }

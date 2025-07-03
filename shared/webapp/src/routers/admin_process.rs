@@ -62,7 +62,7 @@ fn find_working_python() -> Option<String> {
 
     for candidate in candidates.into_iter().flatten() {
         if test_python_with_django(&candidate) {
-            println!("Found working Python: {}", candidate);
+            println!("Found working Python: {candidate}");
             return Some(candidate);
         }
     }
@@ -130,7 +130,7 @@ fn detect_poetry_python() -> Option<String> {
         {
             if output.status.success() {
                 let venv_path = String::from_utf8_lossy(&output.stdout).trim().to_string();
-                let python_path = format!("{}/bin/python", venv_path);
+                let python_path = format!("{venv_path}/bin/python");
                 if Path::new(&python_path).exists() {
                     return Some(python_path);
                 }
@@ -197,7 +197,7 @@ fn get_cached_python_path() -> Option<String> {
 
 fn create_python_command() -> Command {
     if let Some(python_path) = get_cached_python_path() {
-        println!("Using verified Python: {}", python_path);
+        println!("Using verified Python: {python_path}");
         Command::new(python_path)
     } else {
         println!("Warning: No working Python found, using fallback");
@@ -223,7 +223,7 @@ fn create_gunicorn_command(
         "--config",
         "../table_definition/gunicorn_config.py",
         "--bind",
-        &format!("127.0.0.1:{}", django_admin_port),
+        &format!("127.0.0.1:{django_admin_port}"),
         "--workers",
         "1",
         "--timeout",
@@ -245,7 +245,7 @@ async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> im
     let mut handle = process_handle.lock().await;
 
     let rand_string = random_string();
-    let admin_root = format!("admin_proxy/{}/", rand_string);
+    let admin_root = format!("admin_proxy/{rand_string}/");
 
     if handle.is_some() {
         println!("Django server is already running!");
@@ -304,7 +304,7 @@ async fn start_django_server(State(router_state): State<Arc<RouterState>>) -> im
             )
         }
         Err(error) => {
-            println!("Failed to start Django server: {}", error);
+            println!("Failed to start Django server: {error}");
             (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 Json(DjangoStartResult {
@@ -343,7 +343,7 @@ async fn stop_django_server(State(state): State<Arc<RouterState>>) -> impl IntoR
             use nix::unistd::Pid;
 
             if let Err(err) = killpg(Pid::from_raw(child.id() as i32), Signal::SIGINT) {
-                println!("Failed to send SIGINT to Django server: {}", err);
+                println!("Failed to send SIGINT to Django server: {err}");
             } else {
                 println!("SIGINT sent to Django server");
             }
@@ -351,7 +351,7 @@ async fn stop_django_server(State(state): State<Arc<RouterState>>) -> impl IntoR
 
         // プロセスが自動停止せずにまだ動作している場合にkillを試みる
         if let Err(err) = child.kill() {
-            println!("Error stopping Django server: {}", err);
+            println!("Error stopping Django server: {err}");
             Json(DjangoStartResult {
                 success: false,
                 entry: None,
@@ -438,7 +438,7 @@ async fn get_django_status(State(state): State<Arc<RouterState>>) -> impl IntoRe
                     success: false,
                     is_running: true,
                     admin_root: None,
-                    error: Some(format!("Django command failed: {}", stderr)),
+                    error: Some(format!("Django command failed: {stderr}")),
                 })
             }
         }
@@ -446,7 +446,7 @@ async fn get_django_status(State(state): State<Arc<RouterState>>) -> impl IntoRe
             success: false,
             is_running: true,
             admin_root: None,
-            error: Some(format!("Failed to execute Django command: {}", e)),
+            error: Some(format!("Failed to execute Django command: {e}")),
         }),
     }
 }
@@ -491,13 +491,13 @@ async fn proxy_handler(
     mut req: Request<Body>,
 ) -> impl IntoResponse {
     let proxy_host_port = format!("127.0.0.1:{}", state.django_admin_port);
-    let proxy_host = format!("http://{}", proxy_host_port);
-    let target_uri = format!("{}{}", proxy_host, uri);
+    let proxy_host = format!("http://{proxy_host_port}");
+    let target_uri = format!("{proxy_host}{uri}");
 
     let url = match Uri::try_from(target_uri) {
         Ok(uri) => uri,
         Err(err) => {
-            eprintln!("Invalid URI: {}", err);
+            eprintln!("Invalid URI: {err}");
             return Response::builder()
                 .status(500)
                 .body(Body::from("Invalid URI"))
@@ -507,7 +507,7 @@ async fn proxy_handler(
 
     *req.uri_mut() = uri.clone();
 
-    println!("[proxy to2] {:?}", url);
+    println!("[proxy to2] {url:?}");
 
     match tokio::net::TcpStream::connect(&proxy_host_port).await {
         Ok(stream) => {
@@ -516,7 +516,7 @@ async fn proxy_handler(
             let (mut sender, connection) = match http1::handshake(io).await {
                 Ok(conn) => conn,
                 Err(err) => {
-                    eprintln!("Handshake failed: {:?}", err);
+                    eprintln!("Handshake failed: {err:?}");
                     return Response::builder()
                         .status(500)
                         .body(Body::from("Internal Server Error"))
@@ -526,7 +526,7 @@ async fn proxy_handler(
 
             tokio::spawn(async move {
                 if let Err(err) = connection.await {
-                    eprintln!("Connection closed with error: {:?}", err);
+                    eprintln!("Connection closed with error: {err:?}");
                 }
             });
 
@@ -550,7 +550,7 @@ async fn proxy_handler(
             let proxied_res = match sender.send_request(proxied_req).await {
                 Ok(res) => res,
                 Err(err) => {
-                    eprintln!("Request failed: {:?}", err);
+                    eprintln!("Request failed: {err:?}");
                     return Response::builder()
                         .status(502)
                         .body(Body::from("Bad Gateway"))
@@ -576,7 +576,7 @@ async fn proxy_handler(
                     }
                     Ok(_) => {}
                     Err(err) => {
-                        eprintln!("Error reading response body: {:?}", err);
+                        eprintln!("Error reading response body: {err:?}");
                         break;
                     }
                 };
@@ -585,7 +585,7 @@ async fn proxy_handler(
             response_builder.body(Body::from(response_bytes)).unwrap()
         }
         Err(err) => {
-            eprintln!("Failed to connect to target: {:?}", err);
+            eprintln!("Failed to connect to target: {err:?}");
             Response::builder()
                 .status(500)
                 .body(Body::from("Internal Server Error"))

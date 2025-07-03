@@ -174,5 +174,5 @@ impl Display for Lrig {
 }
 
 fn serialize_ex1_to_coin(coin: String) -> String {
-    format!("coin:[{}]", coin)
+    format!("coin:[{coin}]")
 }

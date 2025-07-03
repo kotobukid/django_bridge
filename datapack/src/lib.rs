@@ -117,42 +117,42 @@ pub fn say_goodbye() -> String {
 #[wasm_bindgen]
 pub fn timing_to_strings(timing: u8) -> Vec<String> {
     let mut result = Vec::new();
-    
+
     if timing == 0 {
         return result; // No timing
     }
-    
+
     // Based on analyzer mapping:
     // アタックフェイズ = 1
-    // アタックフェイズスペルカットイン = 2  
+    // アタックフェイズスペルカットイン = 2
     // メインフェイズ = 4
     // メインフェイズアタックフェイズ = 8
     // メインフェイズアタックフェイズスペルカットイン = 16
     // メインフェイズスペルカットイン = 32
-    
+
     match timing {
         1 => result.push("アタックフェイズ".to_string()),
         2 => {
             result.push("アタックフェイズ".to_string());
             result.push("スペルカットイン".to_string());
-        },
+        }
         4 => result.push("メインフェイズ".to_string()),
         8 => {
             result.push("メインフェイズ".to_string());
             result.push("アタックフェイズ".to_string());
-        },
+        }
         16 => {
             result.push("メインフェイズ".to_string());
             result.push("アタックフェイズ".to_string());
             result.push("スペルカットイン".to_string());
-        },
+        }
         32 => {
             result.push("メインフェイズ".to_string());
             result.push("スペルカットイン".to_string());
-        },
+        }
         _ => {} // Unknown timing value
     }
-    
+
     result
 }
 
@@ -590,7 +590,7 @@ pub fn parse_feature_name(name: &str) -> Result<feature::feature::CardFeature, S
     feature::labels::FEATURE_LABELS
         .get(name)
         .cloned()
-        .ok_or_else(|| format!("Unknown feature: {}", name))
+        .ok_or_else(|| format!("Unknown feature: {name}"))
 }
 
 // 色とfeatureの複合フィルタリング関数（全てAND条件）
@@ -679,67 +679,66 @@ pub fn fetch_by_colors_features_card_types_and_products_native(
 // CardFeatureをカテゴリ別にグループ化して返す関数（FeatureTagの数値でソート済み）
 pub fn extract_card_features_grouped() -> Vec<(String, Vec<String>)> {
     use feature::feature::export_features;
-    
+
     let features_map = export_features();
     let mut result: Vec<(String, Vec<String>)> = Vec::new();
-    
+
     for (tag_label, features) in features_map {
-        let feature_labels: Vec<String> = features
-            .into_iter()
-            .map(|f| f.name)
-            .collect();
+        let feature_labels: Vec<String> = features.into_iter().map(|f| f.name).collect();
         result.push((tag_label, feature_labels));
     }
-    
+
     // FeatureTagのラベルの先頭数値でソート（01リーサル、02攻撃系、...）
     result.sort_by(|a, b| a.0.cmp(&b.0));
-    
+
     result
 }
 
 // 全てのBurstFeatureを返す関数
 pub fn extract_burst_features_all() -> Vec<String> {
     use feature::feature::export_burst_features;
-    
+
     let burst_features_map = export_burst_features();
     let mut all_features = Vec::new();
-    
+
     for (_tag_label, features) in burst_features_map {
         for feature in features {
             all_features.push(feature.name);
         }
     }
-    
+
     all_features
 }
 
 // 読み方から該当するカードを検索し、最初のカードのフィーチャーを返す関数
-pub fn get_card_features_by_pronunciation(pronunciation: &str) -> Option<(Vec<String>, Vec<String>)> {
+pub fn get_card_features_by_pronunciation(
+    pronunciation: &str,
+) -> Option<(Vec<String>, Vec<String>)> {
     let cards = get_all_cards().ok()?;
-    
+
     // 読み方でカードを検索
     let matching_card = cards
         .iter()
         .find(|card| card.pronunciation() == pronunciation)?;
-    
+
     // CardFeatureとBurstFeatureを抽出
     let card_features = extract_card_features_from_bits(
-        matching_card.feature_bits1(), 
-        matching_card.feature_bits2()
+        matching_card.feature_bits1(),
+        matching_card.feature_bits2(),
     );
     let burst_features = extract_burst_features_from_bits(matching_card.burst_bits());
-    
+
     // ラベルのみを抽出
     let card_feature_labels: Vec<String> = card_features
         .into_iter()
         .map(|(_tag, label)| label)
         .collect();
-        
+
     let burst_feature_labels: Vec<String> = burst_features
         .into_iter()
         .map(|(_tag, label)| label)
         .collect();
-    
+
     Some((card_feature_labels, burst_feature_labels))
 }
 

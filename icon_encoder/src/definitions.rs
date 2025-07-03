@@ -65,16 +65,13 @@ define_icon_rules![
     ["《自分ターン》", "[mt]", "IconMyTurn"],
     ["【ライフバースト】", "[lb2]", "IconLifeBurst2"], // 【】形式のライフバースト
     ["《ガードアイコン》", "[gi]", "IconGuard"],
-
     ["【チーム】", "[t]", "IconTeam"],
     ["【チーム自】", "[tp]", "IconTeamPassive"],
     ["【チーム出】", "[tc]", "IconTeamCip"],
     ["【チーム起】", "[ta]", "IconTeamActivated"],
     ["【チーム常】", "[tu]", "IconTeamAuto"],
-
     ["【クロス自】", "[xp]", "IconCrossPassive"],
     ["《ヘブン》", "[h]", "IconHeaven"],
-    
     ["《ライフバースト》", "[lb]", "IconLifeBurst"],
     ["《リコレクトアイコン》", "[rc]", "IconRecollect"],
     ["【使用条件】【ドリームチーム】", "[dt]", "IconDreamTeam"],
@@ -90,14 +87,12 @@ define_icon_rules![
     ["《赤》", "[ir]", "InlineRed"],
     ["《緑》", "[ig]", "InlineGreen"],
     ["《無》", "[il]", "InlineColorless"],
-
     ["《白2》", "[iw]", "InlineWhite"], // 凶天ガープ用
     ["《青2》", "[iu]", "InlineBlue"],
     ["《黒2》", "[ik]", "InlineBlack"],
     ["《赤2》", "[ir]", "InlineRed"],
     ["《緑2》", "[ig]", "InlineGreen"],
     ["《無2》", "[il]", "InlineColorless"],
-
     ["《コインアイコン》", "[ic]", "InlineCoin"],
     ["【コイン】", "[ico]", "LabelCoin"],
     ["《ライズアイコン》", "[ri]", "RiseIcon"],
@@ -107,12 +102,14 @@ define_icon_rules![
     ["《赤×0》", "[0r]", "RedZero"],
     ["《緑×0》", "[0g]", "GreenZero"],
     ["《無×0》", "[0l]", "ColorlessZero"],
-
     ["《ディソナアイコン》", "[ds]", "IconDissona"],
-    
     ["《メインフェイズアイコン》", "[pa]", "IconMainPhase"],
     ["《アタックフェイズアイコン》", "[pm]", "IconAttackPhase"],
-    ["《アタックフェイズアイコン2_黒》", "[ak]", "IconAttackPhase2k"],
+    [
+        "《アタックフェイズアイコン2_黒》",
+        "[ak]",
+        "IconAttackPhase2k"
+    ],
 ];
 
 #[cfg(test)]

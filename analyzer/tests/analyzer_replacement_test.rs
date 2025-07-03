@@ -30,7 +30,7 @@ async fn test_analyzer_applies_replacements() {
     let skill_text = result.skill_text.unwrap();
 
     println!("Original skill text: {}", raw_card.skill_text);
-    println!("Processed skill text: {}", skill_text);
+    println!("Processed skill text: {skill_text}");
 
     // The text should contain the replacement marker
     assert!(skill_text.contains("*SELF ASSASSIN*"));
@@ -69,13 +69,13 @@ async fn test_analyzer_multiple_replacements() {
 
     // Check skill text replacement
     let skill_text = result.skill_text.unwrap();
-    println!("Skill text: {}", skill_text);
+    println!("Skill text: {skill_text}");
     assert!(skill_text.contains("*ASSASSIN*"));
     assert!(skill_text.contains("【アサシン】"));
 
     // Check burst text replacement
     let burst_text = result.burst_text.unwrap();
-    println!("Burst text: {}", burst_text);
+    println!("Burst text: {burst_text}");
     // assert!(burst_text.contains("*ASSASSIN*"));
     assert!(burst_text.contains("【ライフバースト】:"));
 }

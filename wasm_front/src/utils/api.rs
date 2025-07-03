@@ -16,8 +16,8 @@ pub async fn fetch_override_pronunciations() -> Result<Vec<String>, String> {
         return Ok(Vec::new());
     }
 
-    let url = format!("{}/api/overrides/pronunciations", server_url);
-    
+    let url = format!("{server_url}/api/overrides/pronunciations");
+
     let opts = RequestInit::new();
     opts.set_method("GET");
     opts.set_mode(RequestMode::Cors);
@@ -31,7 +31,7 @@ pub async fn fetch_override_pronunciations() -> Result<Vec<String>, String> {
         .map_err(|_| "Network error")?;
 
     let resp: Response = resp_value.dyn_into().unwrap();
-    
+
     if !resp.ok() {
         return Err(format!("HTTP error: {}", resp.status()));
     }
@@ -41,7 +41,7 @@ pub async fn fetch_override_pronunciations() -> Result<Vec<String>, String> {
         .map_err(|_| "Failed to read response")?;
 
     let pronunciations: Vec<String> = serde_json::from_str(&text.as_string().unwrap())
-        .map_err(|e| format!("JSON parse error: {}", e))?;
+        .map_err(|e| format!("JSON parse error: {e}"))?;
 
     Ok(pronunciations)
 }

@@ -1,17 +1,11 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    Json,
-};
+use crate::models::{CardFeatureOverride, ImportExportData};
+use axum::{extract::State, http::StatusCode, Json};
 use chrono::Utc;
 use sqlx::PgPool;
-use crate::models::{CardFeatureOverride, ImportExportData};
 
-pub async fn export_all(
-    State(pool): State<PgPool>,
-) -> Result<Json<ImportExportData>, StatusCode> {
+pub async fn export_all(State(pool): State<PgPool>) -> Result<Json<ImportExportData>, StatusCode> {
     let overrides = sqlx::query_as::<_, CardFeatureOverride>(
-        "SELECT * FROM wix_card_feature_override ORDER BY pronunciation"
+        "SELECT * FROM wix_card_feature_override ORDER BY pronunciation",
     )
     .fetch_all(&pool)
     .await
@@ -66,7 +60,11 @@ pub async fn import_data(
     let success = errors.is_empty();
     let result = ImportResult {
         imported,
-        errors: if errors.is_empty() { None } else { Some(errors) },
+        errors: if errors.is_empty() {
+            None
+        } else {
+            Some(errors)
+        },
         success,
     };
 

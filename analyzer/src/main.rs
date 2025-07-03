@@ -57,9 +57,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Args::parse();
 
     println!("WIXOSS カード解析ツール");
-    
+
     if let Some(product_filter) = &args.product {
-        println!("プロダクトでフィルタリング: {}", product_filter);
+        println!("プロダクトでフィルタリング: {product_filter}");
     }
 
     let workspace_env = format!(
@@ -87,8 +87,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let password = env::var("DB_PASSWORD").expect("DB_PASSWORD not found in .env");
         let db_name = env::var("DB_NAME").expect("DB_NAME not found in .env");
         format!(
-            "postgres://{}:{}@{}:{}/{}",
-            user, password, host, port, db_name
+            "postgres://{user}:{password}@{host}:{port}/{db_name}"
         )
     };
 
@@ -111,15 +110,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let safe_product_filter = product_filter.replace("'", "''");
         // プロダクト名またはプロダクトコードでマッチ
         conditions.push(format!(
-            "(p.name = '{}' OR p.product_code = '{}')", 
-            safe_product_filter, safe_product_filter
+            "(p.name = '{safe_product_filter}' OR p.product_code = '{safe_product_filter}')"
         ));
     }
 
     if let Some(card_no) = &args.card_number {
         // SQLインジェクション対策: シングルクォートをエスケープ
         let safe_card_no = card_no.replace("'", "''");
-        conditions.push(format!("r.card_number = '{}'", safe_card_no));
+        conditions.push(format!("r.card_number = '{safe_card_no}'"));
     }
 
     if !args.force {
@@ -133,7 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     query.push_str(&format!(" ORDER BY r.scraped_at DESC LIMIT {}", args.limit));
 
     if args.verbose {
-        println!("Query: {}", query);
+        println!("Query: {query}");
     }
 
     // Query for cards to analyze
@@ -146,7 +144,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if !args.force {
             println!("既に解析済みのカードも含める場合は --force オプションを使用してください。");
         }
-        
+
         // プロダクトでフィルタリングしていて見つからない場合、利用可能なプロダクトを表示
         if args.product.is_some() {
             println!("\n利用可能なプロダクト (名前 [コード]):");
@@ -154,16 +152,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "SELECT DISTINCT p.name, p.product_code 
                  FROM wix_product p 
                  INNER JOIN wix_rawcard r ON p.id = r.product_id 
-                 ORDER BY p.name"
+                 ORDER BY p.name",
             )
             .fetch_all(&pool)
             .await?;
-            
+
             for (product_name, product_code) in available_products {
-                println!("  - {} [{}]", product_name, product_code);
+                println!("  - {product_name} [{product_code}]");
             }
         }
-        
+
         return Ok(());
     }
 
@@ -227,11 +225,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                                             cat3
                                         )
                                     } else if let Some(cat2) = cat2 {
-                                        format!("{}:{}", cat1, cat2)
+                                        format!("{cat1}:{cat2}")
                                     } else {
                                         cat1.clone()
                                     };
-                                    println!("        - {}", klass_str);
+                                    println!("        - {klass_str}");
                                 }
                             }
                         }
@@ -244,17 +242,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                         .await
                         {
                             Ok(card_id) => {
-                                println!("    ✓ 保存完了 (ID: {})", card_id);
+                                println!("    ✓ 保存完了 (ID: {card_id})");
                                 total_success += 1;
                             }
                             Err(e) => {
-                                println!("    ✗ 保存失敗: {}", e);
+                                println!("    ✗ 保存失敗: {e}");
                                 total_errors += 1;
                             }
                         }
                     }
                     Err(e) => {
-                        println!("    ✗ 解析失敗: {}", e);
+                        println!("    ✗ 解析失敗: {e}");
                         total_errors += 1;
                     }
                 }
@@ -298,8 +296,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\n=== 解析完了 ===");
-    println!("成功: {}", total_success);
-    println!("エラー: {}", total_errors);
+    println!("成功: {total_success}");
+    println!("エラー: {total_errors}");
     println!("合計: {}", raw_cards.len());
 
     if total_errors > 0 {

@@ -60,7 +60,7 @@ fn main() {
 
     println!("\n=== Statistics ===");
     println!("Total cards: {}", cards.len());
-    println!("Cards with level: {}", level_count);
-    println!("Cards with power: {}", power_count);
-    println!("Cards with limit: {}", limit_count);
+    println!("Cards with level: {level_count}");
+    println!("Cards with power: {power_count}");
+    println!("Cards with limit: {limit_count}");
 }

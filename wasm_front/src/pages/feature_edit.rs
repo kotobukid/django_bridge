@@ -43,13 +43,12 @@ pub fn FeatureEditPage() -> impl IntoView {
                     <p>"この機能はローカル環境でのみ利用可能です。"</p>
                 </div>
             </div>
-        }.into_any();
+        }
+        .into_any();
     }
 
     let params = use_params_map();
-    let pronunciation = move || {
-        params.read().get("pronunciation").unwrap_or_default()
-    };
+    let pronunciation = move || params.read().get("pronunciation").unwrap_or_default();
 
     let (_current_override, set_current_override) = signal(None::<OverrideResponse>);
     let (selected_features, set_selected_features) = signal(Vec::<String>::new());
@@ -59,18 +58,17 @@ pub fn FeatureEditPage() -> impl IntoView {
     let (error_message, set_error_message) = signal(None::<String>);
     let (success_message, set_success_message) = signal(None::<String>);
 
-
     // Load on mount
     Effect::new(move |_| {
         let pronunciation = pronunciation();
         if pronunciation.is_empty() {
             return;
         }
-        
+
         spawn_local(async move {
             let server_url = get_fixed_data_server_url();
-            let url = format!("{}/api/overrides/{}", server_url, pronunciation);
-            
+            let url = format!("{server_url}/api/overrides/{pronunciation}");
+
             match load_override_from_api(&url).await {
                 Ok(Some(override_data)) => {
                     // オーバーライドが存在する場合はそれを使用
@@ -81,14 +79,16 @@ pub fn FeatureEditPage() -> impl IntoView {
                 }
                 Ok(None) => {
                     // オーバーライドが存在しない場合は該当カードのフィーチャーで初期化
-                    if let Some((card_features, burst_features)) = datapack::get_card_features_by_pronunciation(&pronunciation) {
+                    if let Some((card_features, burst_features)) =
+                        datapack::get_card_features_by_pronunciation(&pronunciation)
+                    {
                         set_selected_features.set(card_features);
                         set_selected_burst_features.set(burst_features);
                     }
                     set_current_override.set(None);
                 }
                 Err(e) => {
-                    set_error_message.set(Some(format!("読み込みエラー: {}", e)));
+                    set_error_message.set(Some(format!("読み込みエラー: {e}")));
                 }
             }
         });
@@ -129,27 +129,32 @@ pub fn FeatureEditPage() -> impl IntoView {
             pronunciation: pronunciation.clone(),
             features: selected_features.get(),
             burst_features: selected_burst_features.get(),
-            note: if note.get().trim().is_empty() { None } else { Some(note.get()) },
+            note: if note.get().trim().is_empty() {
+                None
+            } else {
+                Some(note.get())
+            },
         };
 
         spawn_local(async move {
             let server_url = get_fixed_data_server_url();
-            let url = format!("{}/api/overrides", server_url);
-            
+            let url = format!("{server_url}/api/overrides");
+
             match save_override_to_api(&url, &override_data).await {
                 Ok(_) => {
                     set_success_message.set(Some("保存しました".to_string()));
                     // Reload to get updated data
-                    let reload_url = format!("{}/api/overrides/{}", get_fixed_data_server_url(), pronunciation);
-                    match load_override_from_api(&reload_url).await {
-                        Ok(Some(updated_data)) => {
-                            set_current_override.set(Some(updated_data));
-                        }
-                        _ => {}
+                    let reload_url = format!(
+                        "{}/api/overrides/{}",
+                        get_fixed_data_server_url(),
+                        pronunciation
+                    );
+                    if let Ok(Some(updated_data)) = load_override_from_api(&reload_url).await {
+                        set_current_override.set(Some(updated_data));
                     }
                 }
                 Err(e) => {
-                    set_error_message.set(Some(format!("保存エラー: {}", e)));
+                    set_error_message.set(Some(format!("保存エラー: {e}")));
                 }
             }
             set_loading.set(false);
@@ -194,7 +199,6 @@ pub fn FeatureEditPage() -> impl IntoView {
                                                 let feature_name = feature_name.clone();
                                                 move |_| toggle_feature(feature_name.clone())
                                             };
-                                            
                                             view! {
                                                 <button
                                                     class=move || format!(
@@ -232,7 +236,7 @@ pub fn FeatureEditPage() -> impl IntoView {
                                     let feature_name = feature_name.clone();
                                     move |_| toggle_burst_feature(feature_name.clone())
                                 };
-                                
+
                                 view! {
                                     <button
                                         class=move || format!(
@@ -292,8 +296,8 @@ async fn load_override_from_api(url: &str) -> Result<Option<OverrideResponse>, S
     opts.set_method("GET");
     opts.set_mode(RequestMode::Cors);
 
-    let request = web_sys::Request::new_with_str_and_init(url, &opts)
-        .map_err(|_| "リクエスト作成エラー")?;
+    let request =
+        web_sys::Request::new_with_str_and_init(url, &opts).map_err(|_| "リクエスト作成エラー")?;
 
     let window = web_sys::window().unwrap();
     let resp_value = wasm_bindgen_futures::JsFuture::from(window.fetch_with_request(&request))
@@ -301,11 +305,11 @@ async fn load_override_from_api(url: &str) -> Result<Option<OverrideResponse>, S
         .map_err(|_| "ネットワークエラー")?;
 
     let resp: Response = resp_value.dyn_into().unwrap();
-    
+
     if resp.status() == 404 {
         return Ok(None);
     }
-    
+
     if !resp.ok() {
         return Err(format!("HTTPエラー: {}", resp.status()));
     }
@@ -315,24 +319,25 @@ async fn load_override_from_api(url: &str) -> Result<Option<OverrideResponse>, S
         .map_err(|_| "レスポンス読み取りエラー")?;
 
     let override_data: OverrideResponse = serde_json::from_str(&text.as_string().unwrap())
-        .map_err(|e| format!("JSONパースエラー: {}", e))?;
+        .map_err(|e| format!("JSONパースエラー: {e}"))?;
 
     Ok(Some(override_data))
 }
 
 async fn save_override_to_api(url: &str, data: &FeatureOverride) -> Result<(), String> {
-    let json = serde_json::to_string(data)
-        .map_err(|e| format!("JSONシリアライズエラー: {}", e))?;
+    let json = serde_json::to_string(data).map_err(|e| format!("JSONシリアライズエラー: {e}"))?;
 
     let opts = RequestInit::new();
     opts.set_method("POST");
     opts.set_mode(RequestMode::Cors);
     opts.set_body(&wasm_bindgen::JsValue::from_str(&json));
 
-    let request = web_sys::Request::new_with_str_and_init(url, &opts)
-        .map_err(|_| "リクエスト作成エラー")?;
+    let request =
+        web_sys::Request::new_with_str_and_init(url, &opts).map_err(|_| "リクエスト作成エラー")?;
 
-    request.headers().set("Content-Type", "application/json")
+    request
+        .headers()
+        .set("Content-Type", "application/json")
         .map_err(|_| "ヘッダー設定エラー")?;
 
     let window = web_sys::window().unwrap();
@@ -341,7 +346,7 @@ async fn save_override_to_api(url: &str, data: &FeatureOverride) -> Result<(), S
         .map_err(|_| "ネットワークエラー")?;
 
     let resp: Response = resp_value.dyn_into().unwrap();
-    
+
     if !resp.ok() {
         return Err(format!("HTTPエラー: {}", resp.status()));
     }

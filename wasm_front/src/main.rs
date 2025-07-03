@@ -9,7 +9,7 @@ mod types;
 mod utils;
 
 use components::SvgDefinition;
-use pages::{CardDetailPage, CardPage, CreditsPage, HomePage, FeatureEditPage};
+use pages::{CardDetailPage, CardPage, CreditsPage, FeatureEditPage, HomePage};
 
 #[component]
 fn App() -> impl IntoView {
@@ -39,15 +39,13 @@ fn SpaRedirectHandler() -> impl IntoView {
 
     Effect::new(move |_| {
         if let Some(window) = web_sys::window() {
-            if let Ok(storage) = window.session_storage() {
-                if let Some(storage) = storage {
-                    if let Ok(Some(redirect_path)) = storage.get_item("spa_redirect_path") {
-                        // Clear the stored path
-                        let _ = storage.remove_item("spa_redirect_path");
+            if let Ok(Some(storage)) = window.session_storage() {
+                if let Ok(Some(redirect_path)) = storage.get_item("spa_redirect_path") {
+                    // Clear the stored path
+                    let _ = storage.remove_item("spa_redirect_path");
 
-                        // Navigate to the stored path
-                        navigate(&redirect_path, Default::default());
-                    }
+                    // Navigate to the stored path
+                    navigate(&redirect_path, Default::default());
                 }
             }
         }

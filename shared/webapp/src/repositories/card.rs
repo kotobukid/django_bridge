@@ -216,7 +216,7 @@ impl StaticCodeGenerator for CardRepository {
             r#"
             SELECT pronunciation, fixed_bits1, fixed_bits2, fixed_burst_bits
             FROM wix_card_feature_override
-            "#
+            "#,
         )
         .fetch_all(&*self.db_connector)
         .await
@@ -291,8 +291,9 @@ impl StaticCodeGenerator for CardRepository {
                 let card_obj = Card::from(card);
 
                 // Apply CardFeatureOverride if exists
-                let final_card_obj = if let Some((fixed_bits1, fixed_bits2, fixed_burst_bits)) = 
-                    override_map.get(&card_obj.pronunciation) {
+                let final_card_obj = if let Some((fixed_bits1, fixed_bits2, fixed_burst_bits)) =
+                    override_map.get(&card_obj.pronunciation)
+                {
                     card_obj.with_feature_override(*fixed_bits1, *fixed_bits2, *fixed_burst_bits)
                 } else {
                     card_obj
@@ -315,8 +316,7 @@ impl StaticCodeGenerator for CardRepository {
 
     fn headline(length: i32) -> String {
         format!(
-            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, u8, u8, u8, i64, i64, u64, i64, &'static str);pub const CARD_LIST: &[CardStatic; {}] = &[",
-            length
+            r"pub type CardStatic = (i32, &'static str, &'static str, &'static str, u32, &'static str, &'static str, &'static str, &'static str, &'static str, u8, &'static str, &'static str, u8, &'static str, &'static str, u8, u8, u8, i64, i64, u64, i64, &'static str);pub const CARD_LIST: &[CardStatic; {length}] = &["
         )
     }
 

@@ -324,23 +324,22 @@ impl SimpleRawCardAnalyzer {
 
         // 使用タイミングを持つカードタイプをチェック
         let card_type = &dd_elements[0];
-        let has_timing = card_type.contains("アーツ") 
-                      || card_type.contains("ピース") 
-                      || card_type.contains("アシストルリグ");
+        let has_timing = card_type.contains("アーツ")
+            || card_type.contains("ピース")
+            || card_type.contains("アシストルリグ");
 
         if has_timing && dd_elements.len() > 9 {
             let timing_text = dd_elements[9].trim();
-            
+
             // HTMLタグを除去してクリーンなテキストにする
             let clean_timing_text = timing_text
                 .replace("<br>", "")
                 .replace("<br/>", "")
                 .replace("<br />", "")
-                .replace('\n', "")
-                .replace('\r', "")
+                .replace(['\n', '\r'], "")
                 .trim()
                 .to_string();
-            
+
             if !clean_timing_text.is_empty() && clean_timing_text != "-" {
                 Some(clean_timing_text)
             } else {
@@ -694,16 +693,14 @@ impl SimpleRawCardAnalyzer {
         let limit_ex: Option<i32> = limit_ex_str.and_then(|s| s.parse().ok());
 
         // 使用タイミング文字列を数値にマッピング（ビットフラグ形式）
-        let timing: Option<i32> = timing_str.and_then(|s| {
-            match s.as_str() {
-                "アタックフェイズ" => Some(1),
-                "アタックフェイズスペルカットイン" => Some(2),
-                "メインフェイズ" => Some(4),
-                "メインフェイズアタックフェイズ" => Some(8),
-                "メインフェイズアタックフェイズスペルカットイン" => Some(16),
-                "メインフェイズスペルカットイン" => Some(32),
-                _ => None,
-            }
+        let timing: Option<i32> = timing_str.and_then(|s| match s.as_str() {
+            "アタックフェイズ" => Some(1),
+            "アタックフェイズスペルカットイン" => Some(2),
+            "メインフェイズ" => Some(4),
+            "メインフェイズアタックフェイズ" => Some(8),
+            "メインフェイズアタックフェイズスペルカットイン" => Some(16),
+            "メインフェイズスペルカットイン" => Some(32),
+            _ => None,
         });
 
         // スキルテキストとライフバーストテキストから特徴を検出し、置換後のテキストを取得

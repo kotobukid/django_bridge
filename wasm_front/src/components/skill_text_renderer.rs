@@ -172,9 +172,9 @@ define_icon_components! {
     "InlineGreen" => InlineGreen(),
     "InlineColorless" => InlineColorless(),
     "InlineCoin" => InlineCoin(),
-    
+
     "LabelCoin" => LabelCoin(),
-    
+
     "RiseIcon" => RiseIcon(),
 
     "WhiteZero" => WhiteZero(),

@@ -28,10 +28,10 @@ fn main() {
     let bit2 = 0_i64;
 
     println!("検索条件:");
-    println!("  アサシンビット: {}", assassin_bit);
-    println!("  Sランサービット: {}", slancer_bit);
-    println!("  組み合わせbit1: {}", bit1);
-    println!("  組み合わせbit2: {}", bit2);
+    println!("  アサシンビット: {assassin_bit}");
+    println!("  Sランサービット: {slancer_bit}");
+    println!("  組み合わせbit1: {bit1}");
+    println!("  組み合わせbit2: {bit2}");
 
     // AND条件での手動フィルタリング
     let and_cards: Vec<CardExport> = cards::CARD_LIST

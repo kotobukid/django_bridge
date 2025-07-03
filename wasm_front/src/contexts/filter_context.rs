@@ -38,7 +38,8 @@ impl FilterContext {
                 }
             });
             // selected_burst_feature_namesも更新
-            let updated_names: Vec<String> = selected_burst_features.read().keys().cloned().collect();
+            let updated_names: Vec<String> =
+                selected_burst_features.read().keys().cloned().collect();
             set_selected_burst_feature_names.set(updated_names);
         });
 

@@ -14,10 +14,9 @@ fn main() {
     let assassin_bit1 = 1_i64 << assassin_shift.0;
     let assassin_bit2 = 1_i64 << assassin_shift.1;
 
-    println!("アサシン bit_shift: {:?}", assassin_shift);
+    println!("アサシン bit_shift: {assassin_shift:?}");
     println!(
-        "アサシン bits: bit1={}, bit2={}",
-        assassin_bit1, assassin_bit2
+        "アサシン bits: bit1={assassin_bit1}, bit2={assassin_bit2}"
     );
 
     let assassin_cards: Vec<&_> = all_cards
@@ -60,10 +59,9 @@ fn main() {
     let slancer_bit1 = 1_i64 << slancer_shift.0;
     let slancer_bit2 = 1_i64 << slancer_shift.1;
 
-    println!("Sランサー bit_shift: {:?}", slancer_shift);
+    println!("Sランサー bit_shift: {slancer_shift:?}");
     println!(
-        "Sランサー bits: bit1={}, bit2={}",
-        slancer_bit1, slancer_bit2
+        "Sランサー bits: bit1={slancer_bit1}, bit2={slancer_bit2}"
     );
 
     let slancer_cards: Vec<&_> = all_cards
@@ -108,8 +106,7 @@ fn main() {
     let combined_bit2 = assassin_bit2 | slancer_bit2;
 
     println!(
-        "組み合わせ bits: bit1={}, bit2={}",
-        combined_bit1, combined_bit2
+        "組み合わせ bits: bit1={combined_bit1}, bit2={combined_bit2}"
     );
 
     let combined_cards: Vec<&_> = all_cards
@@ -152,7 +149,7 @@ fn main() {
         .iter()
         .filter(|c| {
             let feature_bits1 = c.19;
-            let feature_bits2 = c.20;
+            let _feature_bits2 = c.20;
 
             // OR条件: どちらかのビットが立っている
             (assassin_bit1 > 0 && (feature_bits1 & assassin_bit1) != 0)

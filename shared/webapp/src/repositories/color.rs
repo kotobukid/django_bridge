@@ -63,8 +63,7 @@ impl StaticCodeGenerator for ColorRepository {
     fn headline(length: i32) -> String {
         format!(
             r#"pub type ColorThemeStatic = (&'static str, &'static str, &'static str, &'static str);
-pub const COLOR_THEMES: &[ColorThemeStatic; {}] = &["#,
-            length
+pub const COLOR_THEMES: &[ColorThemeStatic; {length}] = &["#
         )
     }
 

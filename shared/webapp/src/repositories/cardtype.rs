@@ -74,7 +74,7 @@ impl CardTypeRepository {
         match self.get_all().await {
             Ok(card_types) => self.generate_card_type_code(card_types),
             Err(e) => {
-                eprintln!("Failed to fetch card types: {}", e);
+                eprintln!("Failed to fetch card types: {e}");
                 String::new()
             }
         }

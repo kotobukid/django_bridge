@@ -138,8 +138,7 @@ fn test_card_feature_detection_virustotal() {
 
     // 検出されたフィーチャーの詳細を出力（デバッグ用）
     println!(
-        "Detected features for virustotal test: {:?}",
-        detected_features
+        "Detected features for virustotal test: {detected_features:?}"
     );
 }
 
@@ -222,7 +221,7 @@ fn test_card_feature_analyzer() {
 
     let (_processed, features) = analyzer.analyze_with_preprocessing(complex_text.as_str());
 
-    println!("検出されたフィーチャー: {:?}", features);
+    println!("検出されたフィーチャー: {features:?}");
 
     // 基本的な検証 - 何らかのフィーチャーが検出されることを確認
     assert!(!features.is_empty(), "何らかのフィーチャーが検出される");
@@ -260,8 +259,7 @@ fn test_migration_compatibility() {
     );
 
     println!(
-        "移行されたアナライザーで検出されたフィーチャー: {:?}",
-        migrated_features
+        "移行されたアナライザーで検出されたフィーチャー: {migrated_features:?}"
     );
 }
 
@@ -295,7 +293,7 @@ fn test_parallel_performance() {
         "少なくとも3つのフィーチャーが検出される"
     );
 
-    println!("並列処理で検出されたフィーチャー: {:?}", all_features);
+    println!("並列処理で検出されたフィーチャー: {all_features:?}");
 }
 
 #[test]
@@ -370,7 +368,7 @@ fn test_end_to_end_card_feature_detection_with_real_data() {
     // スキルテキストから検出
     let skill_features = analyzer.analyze(&processed_skill);
     println!("=== スキルテキストから検出されたフィーチャー ===");
-    println!("{:?}", skill_features);
+    println!("{skill_features:?}");
 
     // 3. 期待されるフィーチャーが正しく検出されることを検証
 
@@ -443,7 +441,7 @@ fn test_complex_card_end_to_end_detection() {
     let analyzer = common::get_production_analyzer();
     let detected_features = analyzer.analyze(&processed_text);
 
-    println!("検出されたフィーチャー: {:?}", detected_features);
+    println!("検出されたフィーチャー: {detected_features:?}");
 
     // 実際に検出された機能に基づいて期待値を修正
     let expected_features = vec![
@@ -458,8 +456,7 @@ fn test_complex_card_end_to_end_detection() {
     for expected_feature in expected_features {
         assert!(
             detected_features.contains(&expected_feature),
-            "複雑なカードから{:?}が検出されるべき",
-            expected_feature
+            "複雑なカードから{expected_feature:?}が検出されるべき"
         );
     }
 
@@ -759,7 +756,7 @@ async fn test_end_to_end_with_mock_raw_card() {
             );
         }
         Err(e) => {
-            panic!("カード解析に失敗しました: {}", e);
+            panic!("カード解析に失敗しました: {e}");
         }
     }
 }

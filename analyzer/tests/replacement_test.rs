@@ -20,7 +20,7 @@ fn test_replacement_patterns() {
             let replaced = pattern
                 .pattern_r
                 .replace_all(test_text1, pattern.replace_to);
-            println!("Result: '{}'", replaced);
+            println!("Result: '{replaced}'");
 
             if pattern.replace_to == "*SELF ASSASSIN*" {
                 found_self_assassin = true;
@@ -49,7 +49,7 @@ fn test_replacement_patterns() {
             let replaced = pattern
                 .pattern_r
                 .replace_all(test_text2, pattern.replace_to);
-            println!("Result: '{}'", replaced);
+            println!("Result: '{replaced}'");
 
             if pattern.replace_to == "*ASSASSIN*" {
                 found_assassin = true;
@@ -72,8 +72,8 @@ fn test_replacement_patterns() {
                 .pattern_r
                 .replace_all(test_text3, pattern.replace_to);
             println!("\nContext preservation test:");
-            println!("Original: '{}'", test_text3);
-            println!("Replaced: '{}'", replaced);
+            println!("Original: '{test_text3}'");
+            println!("Replaced: '{replaced}'");
 
             assert!(replaced.contains("【自】：このシグニがアタックしたとき、"));
             assert!(replaced.contains("*SELF ASSASSIN*"));
@@ -105,8 +105,8 @@ fn test_apply_all_replacements() {
     let replaced = apply_replacements(skill_text, &replace_patterns);
 
     println!("\nFull replacement test:");
-    println!("Original: '{}'", skill_text);
-    println!("Replaced: '{}'", replaced);
+    println!("Original: '{skill_text}'");
+    println!("Replaced: '{replaced}'");
 
     assert!(replaced.contains("*SELF ASSASSIN*"));
     assert!(!replaced.contains(

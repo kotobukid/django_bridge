@@ -35,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             println!("Burst text: {}", create_card.burst_text.unwrap_or_default());
         }
         Err(e) => {
-            println!("Analysis failed: {}", e);
+            println!("Analysis failed: {e}");
         }
     }
 

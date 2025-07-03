@@ -108,14 +108,7 @@ pub const CARD_TYPES: &[CardTypeInfo] = &[
     },
 ];
 
-pub const PRIMARY_CARD_TYPES: &[&str] = &[
-    "lrig",
-    "arts",
-    "lrig_assist",
-    "piece",
-    "signi",
-    "spell"
-];
+pub const PRIMARY_CARD_TYPES: &[&str] = &["lrig", "arts", "lrig_assist", "piece", "signi", "spell"];
 
 pub const EXTENDED_CARD_TYPES: &[&str] = &[
     "resona",
@@ -127,7 +120,7 @@ pub const EXTENDED_CARD_TYPES: &[&str] = &[
     "piece_craft",
     "resona_craft",
     "token",
-    "coin"
+    "coin",
 ];
 
 impl CardTypeInfo {

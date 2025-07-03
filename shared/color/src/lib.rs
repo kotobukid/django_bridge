@@ -172,7 +172,7 @@ impl Display for Colors {
             .map(|c| c.to_string())
             .collect::<Vec<String>>()
             .join("");
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 
@@ -215,7 +215,7 @@ impl Colors {
             .collect::<Vec<String>>()
             .join(",");
 
-        let result = format!("background: linear-gradient(to right, {});", gradient_code);
+        let result = format!("background: linear-gradient(to right, {gradient_code});");
 
         result
     }
@@ -298,7 +298,7 @@ pub fn convert_cost(cost_string: &str) -> Result<String, String> {
             } else {
                 *natural_to_internal
                     .get(color.as_str())
-                    .ok_or_else(|| format!("Unexpected color '{}'", color))?
+                    .ok_or_else(|| format!("Unexpected color '{color}'"))?
             };
 
             // 次が "×" か確認

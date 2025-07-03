@@ -261,7 +261,7 @@ impl NumericVariationRule {
         pattern_tail: &str,
         features: Vec<CardFeature>,
     ) -> Result<Self, regex::Error> {
-        let base_pattern = format!("{}{}", pattern_head, pattern_tail);
+        let base_pattern = format!("{pattern_head}{pattern_tail}");
         let patterns =
             Self::generate_numeric_patterns(pattern_head, pattern_tail, features.clone())?;
 

@@ -72,7 +72,7 @@ fn generate_struct_from_python(
     // トークンを収集
     let tokens = lex(python_code, Mode::Module)
         .collect::<Result<Vec<_>, _>>()
-        .map_err(|e| SyncDbError::TokenizationError(format!("{:?}", e)))?;
+        .map_err(|e| SyncDbError::TokenizationError(format!("{e:?}")))?;
 
     let mut fields_vec: Vec<Fields> = Vec::new();
 
@@ -90,7 +90,7 @@ fn generate_struct_from_python(
                     if let Tok::Name { name: class_name } = &tokens[i + 1].0 {
                         current_class_name = class_name.clone();
                         in_class_def = true;
-                        println!("Found class: {}", current_class_name);
+                        println!("Found class: {current_class_name}");
                     }
                 }
                 i += 1;
@@ -106,8 +106,7 @@ fn generate_struct_from_python(
                                     if let (Tok::Name { name: field_type }, _) = &tokens[i + 4] {
                                         if field_type.ends_with("Field") {
                                             println!(
-                                                "Found field: {} of type {}",
-                                                name, field_type
+                                                "Found field: {name} of type {field_type}"
                                             );
 
                                             // 属性を解析
@@ -240,8 +239,8 @@ fn generate_struct_from_python(
             let related_model = analyze_relation_field(fields.tokens.clone(), fields.name.as_str());
 
             if let Some(model) = related_model {
-                rust_struct.push_str(&format!("\n    /// Related field to model: {}", model));
-                create_struct.push_str(&format!("\n    /// Related field to model: {}", model));
+                rust_struct.push_str(&format!("\n    /// Related field to model: {model}"));
+                create_struct.push_str(&format!("\n    /// Related field to model: {model}"));
             } else {
                 rust_struct.push_str(&format!(
                     "\n    /// Related field: {} (unknown related model)",
@@ -258,12 +257,12 @@ fn generate_struct_from_python(
             DjangoFieldType::Valid(ty) => {
                 // コメント生成（default値とmax_lengthを含める）
                 if let Some(comment) = generate_field_comment(fields) {
-                    rust_struct.push_str(&format!("    {}\n", comment));
-                    create_struct.push_str(&format!("    {}\n", comment));
+                    rust_struct.push_str(&format!("    {comment}\n"));
+                    create_struct.push_str(&format!("    {comment}\n"));
                 }
 
                 let ty = if fields.is_nullable {
-                    format!("Option<{}>", ty)
+                    format!("Option<{ty}>")
                 } else {
                     ty.to_string()
                 };
@@ -299,7 +298,7 @@ fn generate_struct_from_python(
                 intermediate_structs.push(intermediate_struct);
             }
             DjangoFieldType::None(ty) => {
-                rust_struct.push_str(&format!("    /// No field type matches: {}\n", ty));
+                rust_struct.push_str(&format!("    /// No field type matches: {ty}\n"));
             }
         }
     }
@@ -375,11 +374,11 @@ fn generate_field_comment(fields: &Fields) -> Option<String> {
     let mut parts = Vec::new();
 
     if let Some(default) = &fields.default_value {
-        parts.push(format!("Default: {}", default));
+        parts.push(format!("Default: {default}"));
     }
 
     if let Some(length) = &fields.max_length {
-        parts.push(format!("Max length: {}", length));
+        parts.push(format!("Max length: {length}"));
     }
 
     if parts.is_empty() {

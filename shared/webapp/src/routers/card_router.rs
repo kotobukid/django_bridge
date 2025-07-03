@@ -75,7 +75,7 @@ async fn card_list(State(state): State<RouterState>) -> impl IntoResponse {
             result
         }
         Err(e) => {
-            eprintln!("カード一覧取得エラー: {:?}", e);
+            eprintln!("カード一覧取得エラー: {e:?}");
             "カード一覧の取得に失敗しました".to_string()
         }
     }
@@ -117,14 +117,14 @@ async fn card_list_json(
     println!("カード一覧JSON形式の取得を開始");
 
     let cards = state.card_repo.get_all().await.map_err(|e| {
-        eprintln!("カード一覧取得エラー: {:?}", e);
+        eprintln!("カード一覧取得エラー: {e:?}");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
     let cards: Vec<Card> = cards.into_iter().map(|card| card.into()).collect();
 
     let total = cards.len();
-    println!("カード一覧JSON形式の取得が成功: {}件", total);
+    println!("カード一覧JSON形式の取得が成功: {total}件");
 
     let res = CardListJson::new(cards);
     Ok(Json(res))

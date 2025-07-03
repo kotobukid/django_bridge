@@ -5,7 +5,7 @@ use std::collections::HashSet;
 
 #[component]
 pub fn CardList(
-    cards: Vec<CardExport>, 
+    cards: Vec<CardExport>,
     total_count: usize,
     override_pronunciations: ReadSignal<HashSet<String>>,
 ) -> impl IntoView {
@@ -26,7 +26,7 @@ pub fn CardList(
                 <div class="px-4 py-3 border-b border-gray-200">
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-gray-600">
-                            {format!("Found {} cards", total_count)}
+                            {format!("Found {total_count} cards")}
                         </span>
                         <div class="flex items-center gap-2">
                             <span class="text-sm text-gray-600">View:</span>
@@ -67,19 +67,19 @@ pub fn CardList(
                 {move || {
                     let override_set = override_pronunciations.get();
                     leptos::logging::log!("CardList render: override_set has {} items", override_set.len());
-                    
+
                     cards.clone().into_iter().map(|card| {
                         let pronunciation = card.pronunciation();
                         let has_override = override_set.contains(&pronunciation);
-                        
+
                         // デバッグ：すべてのカードの判定を出力
-                        if override_set.len() > 0 && (pronunciation.contains("エンケンノマイ") || pronunciation.contains("バブルスボマー") || pronunciation.contains("ミーンナデハジメルアイドルライフ")) {
+                        if !override_set.is_empty() && (pronunciation.contains("エンケンノマイ") || pronunciation.contains("バブルスボマー") || pronunciation.contains("ミーンナデハジメルアイドルライフ")) {
                             leptos::logging::log!("Card pronunciation: '{}', has_override: {}", pronunciation, has_override);
                         }
-                        
+
                         view! {
-                            <CardItem 
-                                card=card 
+                            <CardItem
+                                card=card
                                 view_mode=view_mode.into()
                                 has_override=has_override
                             />

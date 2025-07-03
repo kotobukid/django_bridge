@@ -72,7 +72,7 @@ fn scroll_to_pagination() {
                     (function() {{
                         var html = document.documentElement;
                         var body = document.body;
-                        var targetY = {};
+                        var targetY = {target_y};
                         
                         // Add Firefox instant scroll class
                         html.classList.add('firefox-instant-scroll');
@@ -105,8 +105,7 @@ fn scroll_to_pagination() {
                             body.style.scrollBehavior = 'smooth';
                         }}, 150);
                     }})();
-                "#,
-                    target_y
+                "#
                 );
 
                 js_eval(&js_code);

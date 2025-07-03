@@ -146,7 +146,7 @@ impl Display for Resona {
         writeln!(f, "絵\t:{}", self.artist)?;
         writeln!(f, "Type\t:{}", self.card_type)?;
         writeln!(f, "色\t:{}", self.color)?;
-        writeln!(f, "種族\t:{}", k)?;
+        writeln!(f, "種族\t:{k}")?;
         writeln!(f, "レベル\t:{}", self.level)?;
         writeln!(f, "コスト\t:{}", self.cost)?;
         // write!(f, "リミット\t:{}\n", self.limit)?;

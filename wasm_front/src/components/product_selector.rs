@@ -110,7 +110,7 @@ fn ProductCategorySection(
                 } else {
                     products.into_iter().map(|(id, code, name)| {
                         let is_selected = move || product_filter.read().is_selected(id);
-                        let display_name = format!("{} {}", code, name);
+                        let display_name = format!("{code} {name}");
                         let title = display_name.clone();
                         view! {
                             <label class="flex items-center space-x-2 cursor-pointer p-1 hover:bg-gray-100 ml-2">

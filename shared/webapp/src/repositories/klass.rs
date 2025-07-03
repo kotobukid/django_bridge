@@ -77,7 +77,7 @@ impl KlassRelRepository {
 
     pub fn get_id_by_create_klass(&self, klass: &CreateKlass) -> Option<i64> {
         println!("tree: {:?}", self.cache);
-        println!("klass: {:?}", klass);
+        println!("klass: {klass:?}");
         self.cache.get(klass).cloned()
     }
 
@@ -253,8 +253,7 @@ impl StaticCodeGenerator for KlassRepository {
         format!(
             r#"// Klass data: (id, cat1, cat2, cat3, bit_position)
 pub type KlassStatic = (i64, &'static str, &'static str, &'static str, u32);
-pub const KLASS_LIST: &[KlassStatic; {}] = &["#,
-            length
+pub const KLASS_LIST: &[KlassStatic; {length}] = &["#
         )
     }
 

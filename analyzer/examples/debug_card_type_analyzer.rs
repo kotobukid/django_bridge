@@ -52,11 +52,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     "{}: card_type = {} ({})",
                     name, create_card.card_type, type_name
                 );
-                println!("  HTML: {}", html);
+                println!("  HTML: {html}");
                 println!();
             }
             Err(e) => {
-                println!("{}: Error - {:?}", name, e);
+                println!("{name}: Error - {e:?}");
             }
         }
     }

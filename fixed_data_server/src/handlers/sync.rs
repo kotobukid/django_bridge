@@ -1,10 +1,6 @@
-use axum::{
-    extract::State,
-    http::StatusCode,
-    Json,
-};
+use axum::{extract::State, http::StatusCode, Json};
 use sqlx::PgPool;
-use tracing::{info, error};
+use tracing::{error, info};
 
 use crate::models::{SyncResponse, SyncStatusResponse};
 
@@ -19,23 +15,22 @@ async fn do_pull_sync(pool: &PgPool) -> anyhow::Result<usize> {
 
 async fn do_sync_status(pool: &PgPool) -> (bool, Option<serde_json::Value>, i64) {
     use crate::sync::SyncClient;
-    
+
     // Get local overrides count
-    let local_count = match sqlx::query_scalar::<_, i64>(
-        "SELECT COUNT(*) FROM wix_card_feature_override"
-    )
-    .fetch_one(pool)
-    .await
-    {
-        Ok(count) => count,
-        Err(_) => return (false, None, 0),
-    };
+    let local_count =
+        match sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM wix_card_feature_override")
+            .fetch_one(pool)
+            .await
+        {
+            Ok(count) => count,
+            Err(_) => return (false, None, 0),
+        };
 
     // Try to connect to admin backend and get status
     let (admin_connected, sync_status) = match SyncClient::new().await {
         Ok(mut client) => {
-            let client_id = std::env::var("SYNC_CLIENT_ID")
-                .unwrap_or_else(|_| "wx_db_local".to_string());
+            let client_id =
+                std::env::var("SYNC_CLIENT_ID").unwrap_or_else(|_| "wx_db_local".to_string());
 
             match client.get_sync_status(client_id).await {
                 Ok(status) => {
@@ -63,11 +58,9 @@ async fn do_sync_status(pool: &PgPool) -> (bool, Option<serde_json::Value>, i64)
 }
 
 /// Push all local feature overrides to admin backend
-pub async fn push_sync(
-    State(_pool): State<PgPool>,
-) -> Result<Json<SyncResponse>, StatusCode> {
+pub async fn push_sync(State(_pool): State<PgPool>) -> Result<Json<SyncResponse>, StatusCode> {
     info!("Starting push sync to admin backend");
-    
+
     Ok(Json(SyncResponse {
         success: true,
         message: "Test push sync".to_string(),
@@ -77,11 +70,9 @@ pub async fn push_sync(
 }
 
 /// Pull all feature overrides from admin backend
-pub async fn pull_sync(
-    State(_pool): State<PgPool>,
-) -> Result<Json<SyncResponse>, StatusCode> {
+pub async fn pull_sync(State(_pool): State<PgPool>) -> Result<Json<SyncResponse>, StatusCode> {
     info!("Starting pull sync from admin backend");
-    
+
     Ok(Json(SyncResponse {
         success: true,
         message: "Test pull sync".to_string(),

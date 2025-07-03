@@ -90,13 +90,13 @@ mod integration_tests {
                         if let Some(pattern) = get_original_pattern(&code) {
                             restored.push_str(&pattern);
                         } else {
-                            restored.push_str(&format!("[{}]", code));
+                            restored.push_str(&format!("[{code}]"));
                         }
                     }
                 }
             }
 
-            assert_eq!(original, restored, "Round-trip failed for: {}", original);
+            assert_eq!(original, restored, "Round-trip failed for: {original}");
         }
     }
 

@@ -133,7 +133,7 @@ pub fn ProductOverlay(product_filter: RwSignal<ProductFilter>) -> impl IntoView 
                                 } else {
                                     "bg-white text-gray-700 hover:bg-gray-50"
                                 };
-                                format!("{} {}", base, state_class)
+                                format!("{base} {state_class}")
                             }}
                             on:click=move |_| toggle_category(category_id_for_toggle.clone())
                         >

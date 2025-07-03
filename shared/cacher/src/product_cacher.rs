@@ -141,7 +141,7 @@ impl ProductCacher {
         let mut file = File::create(&cache_path)?;
         file.write_all(content.as_bytes())?;
 
-        println!("Cached to: {:?}", cache_path);
+        println!("Cached to: {cache_path:?}");
         Ok(())
     }
 
@@ -167,7 +167,7 @@ impl ProductCacher {
 
             if path.extension().and_then(|s| s.to_str()) == Some("html") {
                 // TODO: Parse HTML and extract card detail links
-                println!("Processing: {:?}", path);
+                println!("Processing: {path:?}");
             }
         }
 

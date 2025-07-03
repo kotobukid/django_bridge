@@ -18,7 +18,12 @@ impl Card {
         self.name.to_string()
     }
 
-    pub fn with_feature_override(&self, fixed_bits1: i64, fixed_bits2: i64, fixed_burst_bits: i64) -> Self {
+    pub fn with_feature_override(
+        &self,
+        fixed_bits1: i64,
+        fixed_bits2: i64,
+        fixed_burst_bits: i64,
+    ) -> Self {
         let mut card_db = self.0.clone();
         card_db.feature_bits1 = fixed_bits1;
         card_db.feature_bits2 = fixed_bits2;

@@ -757,12 +757,30 @@ pub fn create_detect_patterns() -> (
             r"対戦相手のエナゾーンからカードを\d枚まで対象とし、それらを手札に戻",
             CardFeature::EnerAttack
         ],
-        detect_pattern![r"対戦相手の(.?の)?シグニ\d体を対象とし、それ(とこのシグニ)?をデッキの一番下に", CardFeature::DeckBounce],
-        detect_pattern![r"対戦相手のすべてのシグニをデッキの一番下に置", CardFeature::DeckBounce],   // 角楯カリン
-        detect_pattern![r"このシグニがエナゾーンに置かれる場合、代わりにデッキの一番下に置かれる", CardFeature::DeckBounce],   // ニンジン作戦
-        detect_pattern![r"対戦相手のシグニ\d体を対象とし、.*そうした場合、それをデッキの一番下に置", CardFeature::DeckBounce],   // ニンジン作戦
-        detect_pattern![r"それを対戦相手のデッキの一番下に置いてもよい", CardFeature::DeckBounce],   // ニンジン作戦
-        detect_pattern![r"対戦相手は手札を\d枚捨てないかぎり、それをデッキの一番下に置", CardFeature::DeckBounce],   // ニンジン作戦
+        detect_pattern![
+            r"対戦相手の(.?の)?シグニ\d体を対象とし、それ(とこのシグニ)?をデッキの一番下に",
+            CardFeature::DeckBounce
+        ],
+        detect_pattern![
+            r"対戦相手のすべてのシグニをデッキの一番下に置",
+            CardFeature::DeckBounce
+        ], // 角楯カリン
+        detect_pattern![
+            r"このシグニがエナゾーンに置かれる場合、代わりにデッキの一番下に置かれる",
+            CardFeature::DeckBounce
+        ], // ニンジン作戦
+        detect_pattern![
+            r"対戦相手のシグニ\d体を対象とし、.*そうした場合、それをデッキの一番下に置",
+            CardFeature::DeckBounce
+        ], // ニンジン作戦
+        detect_pattern![
+            r"それを対戦相手のデッキの一番下に置いてもよい",
+            CardFeature::DeckBounce
+        ], // ニンジン作戦
+        detect_pattern![
+            r"対戦相手は手札を\d枚捨てないかぎり、それをデッキの一番下に置",
+            CardFeature::DeckBounce
+        ], // ニンジン作戦
         detect_pattern![r"シグニのパワーを\+", CardFeature::PowerUp],
         detect_pattern![r"のパワーを\+", CardFeature::PowerUp], // 範囲が広く検討の余地あり
         detect_pattern![r"このシグニのパワーは\+", CardFeature::PowerUp],
@@ -776,8 +794,14 @@ pub fn create_detect_patterns() -> (
             r"すべてのシグニのパワーを場にあるシグニ1体につき\-\d+する",
             CardFeature::PowerDown
         ], // 羽沼マコト/エニグマメイデン
-        detect_pattern![r"あなたは.+によってダメージを受けない", CardFeature::CancelDamage],
-        detect_pattern![r"あなたが(.+によって)?ダメージを受ける場合、代わりに", CardFeature::CancelDamage],
+        detect_pattern![
+            r"あなたは.+によってダメージを受けない",
+            CardFeature::CancelDamage
+        ],
+        detect_pattern![
+            r"あなたが(.+によって)?ダメージを受ける場合、代わりに",
+            CardFeature::CancelDamage
+        ],
         detect_pattern![r"トラッシュからシグニ.+場に出", CardFeature::Reanimate],
         detect_pattern![
             r"あなたのトラッシュから(シグニ|.+のシグニ|.+のシグニを)\d枚(を|まで)対象とし、(それ|それら)を場に出",
@@ -933,7 +957,10 @@ pub fn create_detect_patterns() -> (
             CardFeature::Tax,
             CardFeature::DiscardOpponent
         ],
-        detect_pattern![r"対戦相手の手札を見て.*\d枚(を)?選び、デッキの一番下へ。", CardFeature::RandomDiscard],
+        detect_pattern![
+            r"対戦相手の手札を見て.*\d枚(を)?選び、デッキの一番下へ。",
+            CardFeature::RandomDiscard
+        ],
         detect_pattern![r"を支払わないかぎりアタックできない", CardFeature::Tax],
         // 茨木童子 自己課税
         detect_pattern![

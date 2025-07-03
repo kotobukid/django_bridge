@@ -72,7 +72,7 @@ impl Display for CardType {
             CardType::Token => "トークン",
             _ => "不明",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 

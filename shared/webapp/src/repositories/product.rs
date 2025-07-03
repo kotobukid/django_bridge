@@ -79,9 +79,8 @@ impl StaticCodeGenerator for ProductRepository {
     fn headline(length: i32) -> String {
         format!(
             r"pub type ProductStatic = (u8, &'static str, &'static str);
-pub const PRODUCT_LIST: &[ProductStatic; {}] = &[
-",
-            length
+pub const PRODUCT_LIST: &[ProductStatic; {length}] = &[
+"
         )
     }
 

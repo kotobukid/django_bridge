@@ -153,10 +153,10 @@ pub fn CardItem(
     // Get color theme for this card
     let primary_color_name = datapack::get_primary_color_name_from_bits(card.color());
     let color_theme = datapack::get_color_theme_native(&primary_color_name);
-    
+
     // Get colors for icons
     let colors = get_colors_from_bits(card.color() as i32);
-    
+
     // Get cost for display
     let cost = card.cost();
 
@@ -273,14 +273,14 @@ pub fn CardItem(
                                 let timing_strings = datapack::timing_to_strings(card.timing());
                                 let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
                                 let power = card.power();
-                                
+
                                 // Check if we have any content to display
-                                let has_content = !level.is_empty() 
-                                    || !limit.is_empty() 
-                                    || !timing_strings.is_empty() 
-                                    || !klass_names.is_empty() 
+                                let has_content = !level.is_empty()
+                                    || !limit.is_empty()
+                                    || !timing_strings.is_empty()
+                                    || !klass_names.is_empty()
                                     || !power.is_empty();
-                                
+
                                 if has_content {
                                     view! {
                                         <div class="flex items-center gap-2 text-sm mt-1" style="color: #374151; opacity: 0.8;">
@@ -451,10 +451,10 @@ pub fn CardItem(
                                         let level = card.level();
                                         let limit = card.limit();
                                         let klass_names = datapack::extract_klass_names_from_bits(card.klass_bits());
-                                        
+
                                         // Check if we have any content to display
                                         let has_level_limit_klass_content = !level.is_empty() || !limit.is_empty() || !klass_names.is_empty();
-                                        
+
                                         if has_level_limit_klass_content {
                                             view! {
                                                 <div class="flex flex-wrap gap-2">
@@ -508,10 +508,10 @@ pub fn CardItem(
                                         // 使用タイミングとパワーの行
                                         let timing_strings = datapack::timing_to_strings(card.timing());
                                         let power = card.power();
-                                        
+
                                         // Check if we have any content to display
                                         let has_timing_power_content = !timing_strings.is_empty() || !power.is_empty();
-                                        
+
                                         if has_timing_power_content {
                                             view! {
                                                 <div class="flex flex-wrap gap-2">
@@ -571,7 +571,7 @@ pub fn CardItem(
                                                                     let feature_label_for_click = feature_label.clone();
                                                                     let feature_label_for_display = feature_label.clone();
                                                                     let tag_label_for_display = tag_label.clone();
-                                                                    
+
                                                                     view! {
                                                                         <button
                                                                             class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300 cursor-pointer hover:bg-blue-200 transition-colors"
@@ -588,11 +588,11 @@ pub fn CardItem(
                                                                                 let feature_display = feature_label_for_display.clone();
                                                                                 move || {
                                                                                     let is_active = ctx_for_view.selected_features.get().contains_key(&feature_label_for_view);
-                                                                                    
+
                                                                                     if is_active {
-                                                                                        format!("● {} > {}", tag_label_for_view, feature_display)
+                                                                                        format!("● {tag_label_for_view} > {feature_display}")
                                                                                     } else {
-                                                                                        format!("{} > {}", tag_label_for_view, feature_display)
+                                                                                        format!("{tag_label_for_view} > {feature_display}")
                                                                                     }
                                                                                 }
                                                                             }
@@ -602,7 +602,7 @@ pub fn CardItem(
                                                                     // FilterContextが存在しない場合は静的表示
                                                                     view! {
                                                                         <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium border border-blue-300">
-                                                                            {format!("{} > {}", tag_label, feature_label)}
+                                                                            {format!("{tag_label} > {feature_label}")}
                                                                         </span>
                                                                     }.into_any()
                                                                 }
@@ -618,7 +618,7 @@ pub fn CardItem(
                                                                     let feature_label_for_click = feature_label.clone();
                                                                     let feature_label_for_display = feature_label.clone();
                                                                     let tag_label_for_display = tag_label.clone();
-                                                                    
+
                                                                     view! {
                                                                         <button
                                                                             class="inline-block bg-gray-800 text-white px-2 py-1 rounded-full text-xs font-medium border border-gray-600 cursor-pointer hover:bg-gray-700 transition-colors"
@@ -635,11 +635,11 @@ pub fn CardItem(
                                                                                 let feature_display = feature_label_for_display.clone();
                                                                                 move || {
                                                                                     let is_active = ctx_for_view.selected_burst_features.get().contains_key(&feature_label_for_view);
-                                                                                    
+
                                                                                     if is_active {
-                                                                                        format!("● {} > {}", tag_label_for_view, feature_display)
+                                                                                        format!("● {tag_label_for_view} > {feature_display}")
                                                                                     } else {
-                                                                                        format!("{} > {}", tag_label_for_view, feature_display)
+                                                                                        format!("{tag_label_for_view} > {feature_display}")
                                                                                     }
                                                                                 }
                                                                             }
@@ -649,7 +649,7 @@ pub fn CardItem(
                                                                     // FilterContextが存在しない場合は静的表示
                                                                     view! {
                                                                         <span class="inline-block bg-gray-800 text-white px-2 py-1 rounded-full text-xs font-medium border border-gray-600">
-                                                                            {format!("{} > {}", tag_label, feature_label)}
+                                                                            {format!("{tag_label} > {feature_label}")}
                                                                         </span>
                                                                     }.into_any()
                                                                 }

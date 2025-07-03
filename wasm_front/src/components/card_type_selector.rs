@@ -54,7 +54,8 @@ pub fn CardTypeSelector(
                         </div>
                     }.into_any()
                 } else {
-                    view! {}.into_any()
+                    view! {};
+                    ().into_any()
                 }
             }}
 

@@ -81,7 +81,7 @@ fn test_limit_detection_from_html() {
         <dt>リミット</dt><dd>5</dd>
     "#;
 
-    let (limit, feature) = analyzer.detect_limit_from_html(lrig_html);
+    let (limit, _feature) = analyzer.detect_limit_from_html(lrig_html);
     assert_eq!(limit, Some("5".to_string()));
 
     // シグニカード（リミットがないはず）

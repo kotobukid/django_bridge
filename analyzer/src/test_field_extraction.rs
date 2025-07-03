@@ -90,26 +90,26 @@ mod field_extraction_tests {
         // レベル検出テスト
         let level = analyzer.detect_level_from_html(&lrig_test_html());
         assert_eq!(level, Some("2".to_string()));
-        println!("✅ Level detection: {:?}", level);
+        println!("✅ Level detection: {level:?}");
 
         // リミット検出テスト（ルリグのみ）
         let (limit, _feature) = analyzer.detect_limit_from_html(&lrig_test_html());
         assert_eq!(limit, Some("5".to_string()));
-        println!("✅ Limit detection: {:?}", limit);
+        println!("✅ Limit detection: {limit:?}");
 
         // パワー検出テスト（シグニのみ）
         let power = analyzer.detect_power_from_html(&signi_test_html());
         assert_eq!(power, Some("3000".to_string()));
-        println!("✅ Power detection: {:?}", power);
+        println!("✅ Power detection: {power:?}");
 
         // タイミング検出テスト（アーツ/ピースのみ）
         let timing_arts = analyzer.detect_timing_from_html(&arts_test_html());
         assert_eq!(timing_arts, Some("メインフェイズ".to_string()));
-        println!("✅ Timing detection (Arts): {:?}", timing_arts);
+        println!("✅ Timing detection (Arts): {timing_arts:?}");
 
         let timing_piece = analyzer.detect_timing_from_html(&piece_test_html());
         assert_eq!(timing_piece, Some("アタックフェイズ".to_string()));
-        println!("✅ Timing detection (Piece): {:?}", timing_piece);
+        println!("✅ Timing detection (Piece): {timing_piece:?}");
     }
 
     #[test]

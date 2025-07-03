@@ -62,13 +62,13 @@ impl SearchQuery {
         let path = cache_root.join(&self.product_type).join(self.to_filename());
 
         if path.exists() {
-            println!("Cache found: {:?}", path);
+            println!("Cache found: {path:?}");
             let mut file = File::open(&path)?;
             let mut contents = String::new();
             file.read_to_string(&mut contents)?;
             Ok(contents)
         } else {
-            println!("Cache not found: {:?}", path);
+            println!("Cache not found: {path:?}");
             Err(CacherError::CacheNotFound)
         }
     }

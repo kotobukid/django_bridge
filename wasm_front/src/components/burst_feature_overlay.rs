@@ -182,9 +182,9 @@ pub fn BurstFeatureOverlay(
                 class=move || {
                     let base = "px-4 py-2 text-sm font-semibold rounded-md border-2 transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2";
                     if is_active.get() {
-                        format!("{} {} shadow-md transform scale-105", base, active_class)
+                        format!("{base} {active_class} shadow-md transform scale-105")
                     } else {
-                        format!("{} {} hover:shadow-sm hover:scale-102", base, inactive_class)
+                        format!("{base} {inactive_class} hover:shadow-sm hover:scale-102")
                     }
                 }
                 on:click=move |_| set_lb_selection(value)

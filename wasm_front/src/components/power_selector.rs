@@ -51,7 +51,7 @@ pub fn PowerSelector(
                             class:text-gray-700=move || !is_selected()
                             class:border-gray-300=move || !is_selected()
                             class:hover:bg-gray-50=move || !is_selected()
-                            title=move || format!("パワー{}以上", threshold)
+                            title=move || format!("パワー{threshold}以上")
                         >
                             {PowerFilter::label_for_threshold(threshold)}
                         </button>

@@ -37,10 +37,10 @@ mod regex_tests {
             let re = Regex::new(pattern).unwrap();
             let has_match = re.is_match(text);
 
-            println!("\nText: '{}'", text);
-            println!("Pattern: '{}'", pattern);
-            println!("Description: {}", description);
-            println!("Match: {}", has_match);
+            println!("\nText: '{text}'");
+            println!("Pattern: '{pattern}'");
+            println!("Description: {description}");
+            println!("Match: {has_match}");
 
             if let Some(m) = re.find(text) {
                 println!("Matched text: '{}'", m.as_str());

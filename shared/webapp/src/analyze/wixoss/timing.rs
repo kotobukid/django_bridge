@@ -28,7 +28,7 @@ impl Display for Timing {
             Timing::Cutin => "スペルカットイン",
             _ => "",
         };
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }
 
@@ -73,6 +73,6 @@ impl Display for TimingList {
             .map(|timing| timing.to_string())
             .collect::<Vec<String>>()
             .join(", ");
-        write!(f, "{}", s)
+        write!(f, "{s}")
     }
 }

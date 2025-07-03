@@ -14,7 +14,7 @@ fn main() -> std::io::Result<()> {
     // トークン解析
     let tokens = lex(&python_source, Mode::Module);
 
-    let mut class_name = String::new();
+    let mut _class_name = String::new();
     let mut fields = vec![];
     let mut inside_target_class = false;
 
@@ -24,8 +24,8 @@ fn main() -> std::io::Result<()> {
             Tok::Class => {
                 // 次のトークンがクラス名
                 if let Some(Ok((Tok::Name { name }, _))) = tokens_iter.next() {
-                    class_name = name;
-                    inside_target_class = class_name == target_class; // 対象クラスのみ処理
+                    _class_name = name;
+                    inside_target_class = _class_name == target_class; // 対象クラスのみ処理
                 }
             }
             Tok::Name { name } => {
@@ -87,17 +87,17 @@ fn main() -> std::io::Result<()> {
     }
 
     if inside_target_class {
-        println!("Class Name: {}", target_class);
+        println!("Class Name: {target_class}");
         println!("Fields:");
         for (field_name, field_type, attributes) in fields {
-            println!("  {}: {} {{", field_name, field_type);
+            println!("  {field_name}: {field_type} {{");
             for (attr_name, attr_value) in attributes {
-                println!("    {}: {}", attr_name, attr_value);
+                println!("    {attr_name}: {attr_value}");
             }
             println!("  }}");
         }
     } else {
-        println!("Class '{}' not found in {}", target_class, file_path);
+        println!("Class '{target_class}' not found in {file_path}");
     }
 
     Ok(())
@@ -107,10 +107,10 @@ fn main() -> std::io::Result<()> {
 fn format_tok_value(tok: &Tok) -> String {
     match tok {
         Tok::Int { value } => value.to_string(), // 整数を直接文字列化
-        Tok::String { value, .. } => format!("{:?}", value), // 文字列をエスケープ付きで出力
+        Tok::String { value, .. } => format!("{value:?}"), // 文字列をエスケープ付きで出力
         Tok::True => "true".to_string(),         // PythonのTrueをRustのtrueにマッピング
         Tok::False => "false".to_string(),       // PythonのFalseをRustのfalseにマッピング
         Tok::Name { name } => name.clone(),      // その他の名前をそのまま使用
-        _ => format!("{:?}", tok),               // 未知の型（デバッグ用）
+        _ => format!("{tok:?}"),               // 未知の型（デバッグ用）
     }
 }

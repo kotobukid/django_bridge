@@ -16,8 +16,8 @@ pub struct CardFeatureOverride {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateOverrideRequest {
     pub pronunciation: String,
-    pub features: Vec<String>,  // CardFeature enum names
-    pub burst_features: Vec<String>,  // BurstFeature enum names
+    pub features: Vec<String>,       // CardFeature enum names
+    pub burst_features: Vec<String>, // BurstFeature enum names
     pub note: Option<String>,
 }
 

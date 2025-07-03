@@ -11,9 +11,9 @@ pub fn OverlayButton(
             class={move || {
                 let base = "px-4 py-2 rounded-lg border transition-colors duration-200";
                 if is_active.get() {
-                    format!("{} bg-blue-100 border-blue-500 text-blue-700 font-medium", base)
+                    format!("{base} bg-blue-100 border-blue-500 text-blue-700 font-medium")
                 } else {
-                    format!("{} bg-white border-gray-300 text-gray-700 hover:bg-gray-50", base)
+                    format!("{base} bg-white border-gray-300 text-gray-700 hover:bg-gray-50")
                 }
             }}
             on:click=move |_| on_click.run(())

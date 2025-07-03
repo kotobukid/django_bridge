@@ -5,7 +5,8 @@ use crate::components::{
 };
 use crate::contexts::FilterContext;
 use crate::types::{
-    CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter, TimingFilter,
+    CardTypeFilter, ColorFilter, KlassFilter, LBFilter, LevelFilter, PowerFilter, ProductFilter,
+    TimingFilter,
 };
 use crate::utils::{api::fetch_override_pronunciations, maintenance::is_maintenance_mode};
 use datapack::CardExport;
@@ -32,7 +33,7 @@ pub fn CardPage() -> impl IntoView {
     let (filtered_cards, set_filtered_cards) = signal(Vec::<CardExport>::new());
     let (current_page, set_current_page) = signal(0usize);
     let cards_per_page = 20;
-    
+
     // オーバーライドが存在するpronunciationのセット
     let (override_pronunciations, set_override_pronunciations) = signal(HashSet::<String>::new());
 
@@ -48,7 +49,7 @@ pub fn CardPage() -> impl IntoView {
 
     // Load all cards from datapack
     let all_cards = Resource::new(|| {}, |_| async move { datapack::get_all_cards() });
-    
+
     // Load override pronunciations if in maintenance mode
     Effect::new(move |_| {
         if is_maintenance_mode() {
@@ -56,7 +57,11 @@ pub fn CardPage() -> impl IntoView {
             spawn_local(async move {
                 match fetch_override_pronunciations().await {
                     Ok(pronunciations) => {
-                        leptos::logging::log!("Successfully fetched {} override pronunciations: {:?}", pronunciations.len(), pronunciations);
+                        leptos::logging::log!(
+                            "Successfully fetched {} override pronunciations: {:?}",
+                            pronunciations.len(),
+                            pronunciations
+                        );
                         set_override_pronunciations.set(pronunciations.into_iter().collect());
                     }
                     Err(e) => {
@@ -65,7 +70,9 @@ pub fn CardPage() -> impl IntoView {
                 }
             });
         } else {
-            leptos::logging::log!("Not in maintenance mode, skipping override pronunciations fetch");
+            leptos::logging::log!(
+                "Not in maintenance mode, skipping override pronunciations fetch"
+            );
         }
     });
 
@@ -317,8 +324,8 @@ pub fn CardPage() -> impl IntoView {
                                             </div>
                                         </Show>
 
-                                        <CardList 
-                                            cards=displayed_cards.get() 
+                                        <CardList
+                                            cards=displayed_cards.get()
                                             total_count=filtered_cards.get().len()
                                             override_pronunciations=override_pronunciations
                                         />
@@ -337,7 +344,7 @@ pub fn CardPage() -> impl IntoView {
                                 }.into_any(),
                                 Err(e) => view! {
                                     <div class="text-red-600">
-                                        {format!("Error loading cards: {:?}", e)}
+                                        {format!("Error loading cards: {e:?}")}
                                     </div>
                                 }.into_any()
                             }

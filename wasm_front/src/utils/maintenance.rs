@@ -4,7 +4,7 @@ pub fn is_maintenance_mode() -> bool {
     if let Some(window) = window() {
         let location = window.location();
         if let Ok(hostname) = location.hostname() {
-            return hostname == "localhost" 
+            return hostname == "localhost"
                 || hostname == "127.0.0.1"
                 || hostname.contains("local")
                 || hostname.contains("dev");

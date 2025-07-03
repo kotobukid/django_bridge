@@ -13,9 +13,9 @@ fn LevelButton(
     view! {
         <button
             class=move || {
-                let base = format!("color-selector-button {}", bg_class);
+                let base = format!("color-selector-button {bg_class}");
                 if is_active.get() {
-                    format!("{} color-selector-active", base)
+                    format!("{base} color-selector-active")
                 } else {
                     base
                 }

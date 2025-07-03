@@ -385,7 +385,7 @@ fn parse_multiple_color_codes(code: &str) -> Vec<String> {
                 if current_number.is_empty() {
                     current_number = "0".to_string();
                 }
-                result.push(format!("{}{}", color, current_number));
+                result.push(format!("{color}{current_number}"));
             }
             // Start new pair
             current_color = Some(ch.to_ascii_lowercase());
@@ -407,7 +407,7 @@ fn parse_multiple_color_codes(code: &str) -> Vec<String> {
         if current_number.is_empty() {
             current_number = "0".to_string();
         }
-        result.push(format!("{}{}", color, current_number));
+        result.push(format!("{color}{current_number}"));
     }
 
     result
