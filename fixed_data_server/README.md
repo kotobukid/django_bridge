@@ -8,6 +8,12 @@ WIXOSS Trading Card Game データベースのフィーチャーオーバーラ�
 - **admin_backend同期**: 複数の開発環境間でデータを同期
 - **Web UI連携**: フロントエンド（wasm_front）からの編集をサポート
 
+## 前提条件
+
+### Protocol Buffers コンパイラ
+
+このプロジェクトは Protocol Buffers を使用しており、ビルドするには `protoc` コンパイラが必要です。インストール方法については [PROTOC_INSTALLATION.md](./PROTOC_INSTALLATION.md) を参照してください。
+
 ## 起動方法
 
 ### 1. 環境変数設定
