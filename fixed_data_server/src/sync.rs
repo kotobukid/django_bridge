@@ -51,6 +51,14 @@ impl SyncClient {
             // Try different TLS configurations with proper certificate validation
             let strategies: Vec<(&str, Box<dyn Fn() -> ClientTlsConfig>)> = vec![
                 (
+                    "TLS with enabled roots only",
+                    Box::new(|| {
+                        ClientTlsConfig::new()
+                            .domain_name("ik1-341-30725.vs.sakura.ne.jp")
+                            .with_enabled_roots()
+                    }),
+                ),
+                (
                     "TLS with system certificate store",
                     Box::new(|| {
                         ClientTlsConfig::new()
@@ -94,11 +102,22 @@ impl SyncClient {
                 warn!("⚠️  DEVELOPMENT MODE: Attempting connection with relaxed certificate validation");
                 warn!("⚠️  This should NEVER be used in production!");
 
-                // This would be the only place where we might relax security,
-                // and only when explicitly enabled for development
-                return Err(anyhow::anyhow!(
-                    "Even development mode TLS failed. Check certificate configuration."
-                ));
+                let insecure_tls = ClientTlsConfig::new()
+                    .domain_name("ik1-341-30725.vs.sakura.ne.jp")
+                    .with_enabled_roots();
+
+                match endpoint.tls_config(insecure_tls)?.connect().await {
+                    Ok(ch) => {
+                        warn!("⚠️  DEVELOPMENT MODE: Connected with potentially insecure settings");
+                        return Ok(Self {
+                            client: AdminSyncClient::new(ch),
+                            api_key,
+                        });
+                    }
+                    Err(e) => {
+                        warn!("❌ Even development mode TLS failed: {}", e);
+                    }
+                }
             }
 
             return Err(anyhow::anyhow!(
@@ -141,7 +160,7 @@ impl SyncClient {
             .client
             .push_feature_overrides(request)
             .await
-            .context("Failed to push feature overrides")?;
+            .with_context(|| "Failed to push feature overrides")?;
 
         let push_response = response.into_inner();
         info!(

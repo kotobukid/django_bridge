@@ -3,9 +3,18 @@ name = "fixed_data_server"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "fixed_data_server"
+path = "src/lib.rs"
+
+[[bin]]
+name = "fixed_data_server"
+path = "src/main.rs"
+
 [dependencies]
-axum = "0.7"
-tokio = { version = "1", features = ["full"] }
+# tonicが要求するaxum 0.7.9に合わせる
+axum = "0.7.9"
+tokio = { version = "1.45", features = ["full"] }
 tower = "0.4"
 tower-http = { version = "0.5", features = ["cors", "trace"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -19,15 +28,17 @@ thiserror = "1.0"
 dotenvy = "0.15"
 
 # gRPC dependencies for admin_backend integration
-tonic = { version = "0.12", features = ["tls"] }
+tonic = { version = "0.12", features = ["tls", "tls-roots"] }
 prost = "0.13"
 prost-types = "0.13"
 tokio-stream = "0.1"
+webpki-roots = "0.26"
+rustls-native-certs = "0.8"
 
 # 共有モジュールを使用
 models = { path = "../shared/models" }
-webapp = { path = "../shared/webapp" }
 feature = { path = "../shared/feature" }
+analyzer = { path = "../analyzer" }
 
 [build-dependencies]
 tonic-build = "0.12"

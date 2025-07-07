@@ -16,8 +16,8 @@ mod handlers;
 mod models;
 mod sync;
 
-use handlers::sync::{bidirectional_sync, get_sync_status, pull_sync, push_sync};
 use handlers::{analyze, import_export, overrides};
+
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -102,11 +102,11 @@ async fn main() -> Result<()> {
         // Import/Export endpoints
         .route("/api/export", get(import_export::export_all))
         .route("/api/import", post(import_export::import_data))
-        // Sync endpoints - testing status only for TLS verification
-        .route("/api/sync/push", post(push_sync))
-        .route("/api/sync/pull", post(pull_sync))
-        .route("/api/sync/status", get(get_sync_status))
-        .route("/api/sync/bidirectional", post(bidirectional_sync))
+        // Sync endpoints
+        .route("/api/sync/push", post(handlers::sync::push_sync))
+        .route("/api/sync/pull", post(handlers::sync::pull_sync))
+        .route("/api/sync/status", get(handlers::sync::get_sync_status))
+        .route("/api/sync/bidirectional", post(handlers::sync::bidirectional_sync))
         // Consistency check
         .route("/api/check-consistency", get(overrides::check_consistency))
         // Health check
